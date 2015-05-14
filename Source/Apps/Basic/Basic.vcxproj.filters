@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>9c50892f-3b5f-4d1c-ac76-606f0128e50c</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>21a48aba-1637-4f01-8bd6-4f7d6c6f18bb</UniqueIdentifier>
+      <Extensions>bmp;fbx;gif;jpg;jpeg;tga;tiff;tif;png</Extensions>
+    </Filter>
+    <Filter Include="Content">
+      <UniqueIdentifier>e1214e87-8fe2-4b1b-8f79-56ae0474c451</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.xaml.cpp" />
+    <ClCompile Include="KodiakMain.cpp" />
+    <ClCompile Include="DirectXPage.xaml.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="DeviceResources.cpp" />
+    <ClCompile Include="SampleFpsTextRenderer.cpp" />
+    <ClCompile Include="Sample3DSceneRenderer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.xaml.h" />
+    <ClInclude Include="KodiakMain.h" />
+    <ClInclude Include="DirectXPage.xaml.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="DeviceResources.h" />
+    <ClInclude Include="DirectXHelper.h" />
+    <ClInclude Include="StepTimer.h" />
+    <ClInclude Include="Sample3DSceneRenderer.h" />
+    <ClInclude Include="SampleFpsTextRenderer.h" />
+    <ClInclude Include="ShaderStructures.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Kodiak_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="DirectXPage.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\Assets\Basic\Logo.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="..\..\..\Assets\Basic\SmallLogo.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="..\..\..\Assets\Basic\SplashScreen.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="..\..\..\Assets\Basic\StoreLogo.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\SplashScreen.scale-100.png">
+      <Filter>Assets</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\..\..\Assets\Basic\SamplePixelShader.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\..\Assets\Basic\SampleVertexShader.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>
