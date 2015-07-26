@@ -8,7 +8,7 @@ using namespace Windows::System::Threading;
 using namespace Concurrency;
 
 // Loads and initializes application assets when the application is loaded.
-KodiakMain::KodiakMain(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+KodiakMain::KodiakMain(const std::shared_ptr<Kodiak::DeviceResources>& deviceResources) :
 	m_deviceResources(deviceResources), m_pointerLocationX(0.0f)
 {
 	// Register to be notified if the Device is lost or recreated

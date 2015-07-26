@@ -14,3 +14,6 @@
 #include <concrt.h>
 #include <collection.h>
 #include "App.xaml.h"
+
+// Engine project headers
+#include "Engine\Source\EngineAPI.h"

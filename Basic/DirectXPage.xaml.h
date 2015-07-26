@@ -7,8 +7,10 @@
 
 #include "DirectXPage.g.h"
 
-#include "DeviceResources.h"
+#include "Engine\Source\EngineAPI.h"
+#include "Engine\Source\DeviceResources.h"
 #include "KodiakMain.h"
+#include "BasicApplication.h"
 
 namespace Kodiak
 {
@@ -51,8 +53,9 @@ namespace Kodiak
 		void OnPointerReleased(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e);
 
 		// Resources used to render the DirectX content in the XAML page background.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		std::shared_ptr<Kodiak::DeviceResources> m_deviceResources;
 		std::unique_ptr<KodiakMain> m_main; 
+        std::unique_ptr<BasicApplication> m_application;
 		bool m_windowVisible;
 	};
 }

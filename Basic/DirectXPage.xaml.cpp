@@ -60,7 +60,7 @@ DirectXPage::DirectXPage():
 
 	// At this point we have access to the device. 
 	// We can create the device-dependent resources.
-	m_deviceResources = std::make_shared<DX::DeviceResources>();
+	m_deviceResources = std::make_shared<Kodiak::DeviceResources>();
 	m_deviceResources->SetSwapChainPanel(swapChainPanel);
 
 	// Register our SwapChainPanel to get independent input pointer events
@@ -84,6 +84,10 @@ DirectXPage::DirectXPage():
 
 	// Run task on a dedicated high priority background thread.
 	m_inputLoopWorker = ThreadPool::RunAsync(workItemHandler, WorkItemPriority::High, WorkItemOptions::TimeSliced);
+
+    m_application = std::make_unique<BasicApplication>(m_deviceResources);
+    m_application->Initialize();
+    m_application->Run();
 
 	m_main = std::unique_ptr<KodiakMain>(new KodiakMain(m_deviceResources));
 	m_main->StartRenderLoop();

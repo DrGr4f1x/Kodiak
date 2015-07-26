@@ -1,17 +1,18 @@
 ﻿#pragma once
 
 #include "StepTimer.h"
-#include "DeviceResources.h"
+#include "Engine\Source\EngineAPI.h"
+#include "Engine\Source\DeviceResources.h"
 #include "Sample3DSceneRenderer.h"
 #include "SampleFpsTextRenderer.h"
 
 // Renders Direct2D and 3D content on the screen.
 namespace Kodiak
 {
-	class KodiakMain : public DX::IDeviceNotify
+	class KodiakMain : public Kodiak::IDeviceNotify
 	{
 	public:
-		KodiakMain(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		KodiakMain(const std::shared_ptr<Kodiak::DeviceResources>& deviceResources);
 		~KodiakMain();
 		void CreateWindowSizeDependentResources();
 		void StartTracking() { m_sceneRenderer->StartTracking(); }
@@ -32,7 +33,7 @@ namespace Kodiak
 		bool Render();
 
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		std::shared_ptr<Kodiak::DeviceResources> m_deviceResources;
 
 		// TODO: Replace with your own content renderers.
 		std::unique_ptr<Sample3DSceneRenderer> m_sceneRenderer;

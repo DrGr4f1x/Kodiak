@@ -1,7 +1,8 @@
 ﻿#pragma once
 
 #include <string>
-#include "DeviceResources.h"
+#include "Engine\Source\EngineAPI.h"
+#include "Engine\Source\DeviceResources.h"
 #include "StepTimer.h"
 
 namespace Kodiak
@@ -10,7 +11,7 @@ namespace Kodiak
 	class SampleFpsTextRenderer
 	{
 	public:
-		SampleFpsTextRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		SampleFpsTextRenderer(const std::shared_ptr<Kodiak::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources();
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
@@ -18,7 +19,7 @@ namespace Kodiak
 
 	private:
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		std::shared_ptr<Kodiak::DeviceResources> m_deviceResources;
 
 		// Resources related to text rendering.
 		std::wstring                                    m_text;

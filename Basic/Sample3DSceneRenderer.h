@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include "DeviceResources.h"
+#include "Engine\Source\EngineAPI.h"
+#include "Engine\Source\DeviceResources.h"
 #include "ShaderStructures.h"
 #include "StepTimer.h"
 
@@ -10,7 +11,7 @@ namespace Kodiak
 	class Sample3DSceneRenderer
 	{
 	public:
-		Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		Sample3DSceneRenderer(const std::shared_ptr<Kodiak::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
@@ -27,7 +28,7 @@ namespace Kodiak
 
 	private:
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		std::shared_ptr<Kodiak::DeviceResources> m_deviceResources;
 
 		// Direct3D resources for cube geometry.
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;

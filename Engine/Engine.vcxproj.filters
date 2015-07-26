@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Application.cpp" />
+    <ClCompile Include="Source\DeviceResources.cpp" />
+    <ClCompile Include="Source\Effect.cpp" />
+    <ClCompile Include="Source\Engine.cpp" />
+    <ClCompile Include="Source\pch.cpp" />
+    <ClCompile Include="Source\RenderingEngine.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Application.h" />
+    <ClInclude Include="Source\DeviceResources.h" />
+    <ClInclude Include="Source\DirectXUtils.h" />
+    <ClInclude Include="Source\Effect.h" />
+    <ClInclude Include="Source\Engine.h" />
+    <ClInclude Include="Source\pch.h" />
+    <ClInclude Include="Source\RenderingEngine.h" />
+    <ClInclude Include="Source\targetver.h" />
+    <ClInclude Include="Source\Timer.h" />
+    <ClInclude Include="Source\EngineAPI.h" />
+  </ItemGroup>
+</Project>
