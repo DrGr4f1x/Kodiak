@@ -9,7 +9,7 @@ class RenderTargetView;
 class Renderer
 {
 public:
-	void Initialize(uint32_t width, uint32_t height, HWND hwnd);
+	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
 	void Finalize();
 
 	std::shared_ptr<RenderTargetView> GetBackBuffer();

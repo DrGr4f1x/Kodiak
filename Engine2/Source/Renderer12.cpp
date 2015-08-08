@@ -10,7 +10,7 @@ using namespace Kodiak;
 using namespace Microsoft::WRL;
 using namespace std;
 
-void Renderer::Initialize(uint32_t width, uint32_t height, HWND hwnd)
+void Renderer::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
 {
 #ifdef _DEBUG
 	// Enable D3D12 debug layer
