@@ -15,10 +15,11 @@ public:
     Application(const std::shared_ptr<DeviceResources>& deviceResources);
     virtual ~Application();
 
-    virtual void Initialize() = 0;
+    virtual void Initialize();
     void Run();
 
 protected:
+    virtual void Shutdown();
     virtual void Update() = 0;
 
 protected:

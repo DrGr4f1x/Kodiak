@@ -13,6 +13,7 @@
     <ClCompile Include="Source\Engine.cpp" />
     <ClCompile Include="Source\pch.cpp" />
     <ClCompile Include="Source\RenderingEngine.cpp" />
+    <ClCompile Include="Source\Paths.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Application.h" />
@@ -25,5 +26,7 @@
     <ClInclude Include="Source\targetver.h" />
     <ClInclude Include="Source\Timer.h" />
     <ClInclude Include="Source\EngineAPI.h" />
+    <ClInclude Include="Source\Paths.h" />
+    <ClInclude Include="Source\Log.h" />
   </ItemGroup>
 </Project>

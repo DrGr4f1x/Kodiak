@@ -4,6 +4,7 @@
 
 #include "RenderingEngine.h"
 
+using namespace std;
 
 namespace Kodiak
 {
@@ -14,10 +15,21 @@ Application::Application(const std::shared_ptr<DeviceResources>& deviceResources
 
 
 Application::~Application()
+{
+    Shutdown();
+}
+
+
+void Application::Initialize()
 {}
 
 
 void Application::Run()
 {}
+
+
+void Application::Shutdown()
+{}
+
 
 } // namespace Kodiak

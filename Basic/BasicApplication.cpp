@@ -16,6 +16,8 @@ BasicApplication::~BasicApplication()
 
 void BasicApplication::Initialize()
 {
+    Application::Initialize();
+
     InitializeScene();
     InitializeRenderer();
 }
@@ -28,8 +30,8 @@ void BasicApplication::Update()
 void BasicApplication::InitializeScene()
 {
     auto effect = std::make_shared<Kodiak::Effect>();
-    effect->SetVertexShaderPath("Shaders\\BasicVS.hlsl");
-    effect->SetPixelShaderPath("Shaders\\BasicPS.hlsl");
+    effect->SetVertexShaderPath(L"Shaders\\BasicVS.hlsl");
+    effect->SetPixelShaderPath(L"Shaders\\BasicPS.hlsl");
 }
 
 

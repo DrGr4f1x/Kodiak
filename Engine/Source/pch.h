@@ -11,6 +11,10 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #endif
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 // Windows Header Files:
 #include <windows.h>
 #include <wrl.h>
@@ -26,6 +30,10 @@
 #include <agile.h>
 #include <concrt.h>
 #include <collection.h>
+#include <algorithm>
+#include <string>
+#include <sstream>
+#include <stdio.h>
 
 // Engine headers
 #include "EngineAPI.h"
