@@ -13,6 +13,7 @@ using namespace std;
 
 Renderer::Renderer()
 {
+	ZeroMemory(m_fenceValues, sizeof(m_fenceValues));
 	CreateDeviceIndependentResources();
 	CreateDeviceResources();
 }
@@ -48,7 +49,7 @@ void Renderer::SetWindowSize(uint32_t width, uint32_t height)
 
 void Renderer::Finalize()
 {
-	WaitForPreviousFrame();
+	WaitForGPU();
 
 	CloseHandle(m_fenceEvent);
 }
@@ -56,19 +57,43 @@ void Renderer::Finalize()
 
 shared_ptr<RenderTargetView> Renderer::GetBackBuffer()
 {
-	return m_backbuffer[m_frameIndex];
+	return m_backbuffers[m_currentFrame];
 }
 
 
 void Renderer::Present(bool bWaitForPreviousFrame)
 {
-	// Present the frame.
-	ThrowIfFailed(m_swapChain->Present(1, 0));
+	// The first argument instructs DXGI to block until VSync, putting the application
+	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
+	// frames that will never be displayed to the screen.
+	HRESULT hr = m_swapChain->Present(1, 0);
 
-	if (bWaitForPreviousFrame)
+	// If the device was removed either by a disconnection or a driver upgrade, we 
+	// must recreate all device resources.
+	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
 	{
-		WaitForPreviousFrame();
+		m_deviceRemoved = true;
 	}
+	else
+	{
+		ThrowIfFailed(hr);
+
+		MoveToNextFrame();
+	}
+}
+
+
+void Renderer::WaitForGPU()
+{
+	// Schedule a Signal command in the queue.
+	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_currentFrame]));
+
+	// Wait until the fence has been crossed.
+	ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_currentFrame], m_fenceEvent));
+	WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+
+	// Increment the fence value for the current frame.
+	m_fenceValues[m_currentFrame]++;
 }
 
 
@@ -77,14 +102,14 @@ shared_ptr<CommandList> Renderer::CreateCommandList()
 	auto commandList = make_shared<CommandList>();
 
 	// Create the command list.
-	ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList->m_commandList)));
+	ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_currentFrame].Get(), nullptr, IID_PPV_ARGS(&commandList->m_commandList)));
 
 	// Command lists are created in the recording state, but there is nothing
 	// to record yet. The main loop expects it to be closed, so close it now.
 	ThrowIfFailed(commandList->m_commandList->Close());
 
-	// Set the allocator
-	commandList->m_allocator = m_commandAllocator;
+	// Set the renderer pointer
+	commandList->m_renderer = this;
 
 	return commandList;
 }
@@ -94,6 +119,12 @@ void Renderer::ExecuteCommandList(const shared_ptr<CommandList>& commandList)
 {
 	ID3D12CommandList* ppCommandLists[] = { commandList->m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+}
+
+
+ComPtr<ID3D12CommandAllocator> Renderer::GetCommandAllocator()
+{
+	return m_commandAllocators[m_currentFrame];
 }
 
 
@@ -174,6 +205,11 @@ void Renderer::CreateDeviceResources()
 
 	ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
 
+	for (uint32_t n = 0; n < FrameCount; ++n)
+	{
+		ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocators[n])));
+	}
+
 	// Create an 11 device wrapped around the 12 device and share
 	// 12's command queue.
 	ComPtr<ID3D11Device> d3d11Device;
@@ -211,35 +247,33 @@ void Renderer::CreateDeviceResources()
 			)
 		);
 
-	// Create descriptor heaps.
-	{
-		// Describe and create a render target view (RTV) descriptor heap.
-		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-		rtvHeapDesc.NumDescriptors = FrameCount;
-		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		ThrowIfFailed(m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
-
-		m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	}
-
-	ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
-
 	// Create synchronization objects.
 	{
-		ThrowIfFailed(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-		m_fenceValue = 1;
+		ThrowIfFailed(m_device->CreateFence(m_fenceValues[m_currentFrame], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+		m_fenceValues[m_currentFrame]++;
+
+		m_fenceEvent = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
 	}
 }
 
 
 void Renderer::CreateWindowSizeDependentResources()
 {
+	// Wait until all previous GPU work is complete.
+	WaitForGPU();
+
+	// Clear the previous window size specific content.
+	for (UINT n = 0; n < FrameCount; n++)
+	{
+		m_backbuffers[n] = nullptr;
+	}
+	m_rtvHeap = nullptr;
+
 	if (m_swapChain != nullptr)
 	{
 		// If the swap chain already exists, resize it.
 		HRESULT hr = m_swapChain->ResizeBuffers(
-			2, // Double-buffered swap chain.
+			FrameCount,
 			m_width,
 			m_height,
 			DXGI_FORMAT_B8G8R8A8_UNORM,
@@ -285,45 +319,60 @@ void Renderer::CreateWindowSizeDependentResources()
 			));
 
 		ThrowIfFailed(swapChain.As(&m_swapChain));
-
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
-	// Create frame resources.
+	// Create a render target view of the swap chain back buffer.
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+		desc.NumDescriptors = FrameCount;
+		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		ThrowIfFailed(m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_rtvHeap)));
+		m_rtvHeap->SetName(L"Render Target View Descriptor Heap");
 
-		// Create a RTV for each frame.
+		// All pending GPU work was already finished. Update the tracked fence values
+		// to the last value signaled.
 		for (UINT n = 0; n < FrameCount; n++)
 		{
-			m_backbuffer[n] = make_shared<RenderTargetView>();
+			m_fenceValues[n] = m_fenceValues[m_currentFrame];
+		}
 
-			ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_backbuffer[n]->m_rtv)));
-			m_device->CreateRenderTargetView(m_backbuffer[n]->m_rtv.Get(), nullptr, rtvHandle);
-			m_backbuffer[n]->m_rtvHandle = rtvHandle;
-			rtvHandle.Offset(1, m_rtvDescriptorSize);
+		m_currentFrame = 0;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescriptor(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+		m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		for (UINT n = 0; n < FrameCount; n++)
+		{
+			m_backbuffers[n] = make_shared<RenderTargetView>();
+
+			ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_backbuffers[n]->m_rtv)));
+			m_device->CreateRenderTargetView(m_backbuffers[n]->m_rtv.Get(), nullptr, rtvDescriptor);
+			m_backbuffers[n]->m_rtvHandle = rtvDescriptor;
+			rtvDescriptor.Offset(m_rtvDescriptorSize);
+
+			WCHAR name[25];
+			swprintf_s(name, L"Render Target %d", n);
+			m_backbuffers[n]->m_rtv->SetName(name);
 		}
 	}
 }
 
 
-void Renderer::WaitForPreviousFrame()
+void Renderer::MoveToNextFrame()
 {
-	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-	// This is code implemented as such for simplicity. More advanced samples 
-	// illustrate how to use fences for efficient resource usage.
+	// Schedule a Signal command in the queue.
+	const uint64_t currentFenceValue = m_fenceValues[m_currentFrame];
+	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), currentFenceValue));
 
-	// Signal and increment the fence value.
-	const UINT64 fence = m_fenceValue;
-	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
-	m_fenceValue++;
+	// Advance the frame index.
+	m_currentFrame = (m_currentFrame + 1) % FrameCount;
 
-	// Wait until the previous frame is finished.
-	if (m_fence->GetCompletedValue() < fence)
+	// Check to see if the next frame is ready to start.
+	if (m_fence->GetCompletedValue() < m_fenceValues[m_currentFrame])
 	{
-		ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
-		WaitForSingleObject(m_fenceEvent, INFINITE);
+		ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_currentFrame], m_fenceEvent));
+		WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
 	}
 
-	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+	// Set the fence value for the next frame.
+	m_fenceValues[m_currentFrame] = currentFenceValue + 1;
 }

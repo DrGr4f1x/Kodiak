@@ -3,6 +3,8 @@
 namespace Kodiak
 {
 
+// Forward declarations
+class Renderer;
 class RenderTargetView;
 
 class CommandList
@@ -16,7 +18,7 @@ public:
 
 public:
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_allocator;
+	Renderer* m_renderer{ nullptr };
 };
 
 } // namespace Kodiak

@@ -2,7 +2,8 @@
 
 #include "CommandList12.h"
 
-#include "RenderTargetView.h"
+#include "Renderer12.h"
+#include "RenderTargetView12.h"
 #include "RenderUtils.h"
 
 using namespace Kodiak;
@@ -15,12 +16,12 @@ void CommandList::Begin()
 	// Command list allocators can only be reset when the associated 
 	// command lists have finished execution on the GPU; apps should use 
 	// fences to determine GPU execution progress.
-	ThrowIfFailed(m_allocator->Reset());
+	ThrowIfFailed(m_renderer->GetCommandAllocator()->Reset());
 
 	// However, when ExecuteCommandList() is called on a particular command 
 	// list, that command list can then be reset at any time and must be before 
 	// re-recording.
-	ThrowIfFailed(m_commandList->Reset(m_allocator.Get(), nullptr));
+	ThrowIfFailed(m_commandList->Reset(m_renderer->GetCommandAllocator().Get(), nullptr));
 }
 
 

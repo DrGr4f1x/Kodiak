@@ -18,16 +18,17 @@ public:
 
 	std::shared_ptr<RenderTargetView> GetBackBuffer();
 	void Present(bool bWaitForPreviousFrame);
+	void WaitForGPU();
 
 	std::shared_ptr<CommandList> CreateCommandList();
 	void ExecuteCommandList(const std::shared_ptr<CommandList>& commandList);
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> GetCommandAllocator();
 	
 private:
 	void CreateDeviceIndependentResources();
 	void CreateDeviceResources();
 	void CreateWindowSizeDependentResources();
-
-	void WaitForPreviousFrame();
+	void MoveToNextFrame();
 
 private:
 	static const uint32_t FrameCount = 2;
@@ -40,8 +41,8 @@ private:
 	
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue>		m_commandQueue;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>	m_rtvHeap;
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator>	m_commandAllocator;
-	std::shared_ptr<RenderTargetView>				m_backbuffer[FrameCount];
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator>	m_commandAllocators[FrameCount];
+	std::shared_ptr<RenderTargetView>				m_backbuffers[FrameCount];
 	uint32_t m_rtvDescriptorSize;
 
 	// Direct2D drawing components.
@@ -57,13 +58,14 @@ private:
 	// Synchronization objects.
 	HANDLE									m_fenceEvent;
 	Microsoft::WRL::ComPtr<ID3D12Fence>		m_fence;
-	uint64_t								m_fenceValue;
+	uint64_t								m_fenceValues[FrameCount];
 
 	// Cached device properties.
-	uint32_t								m_frameIndex{ 0 };
+	uint32_t								m_currentFrame{ 0 };
 	HWND									m_hwnd{ nullptr };
 	uint32_t								m_width{ 1 };
 	uint32_t								m_height{ 1 };
+	bool									m_deviceRemoved{ false };
 };
 
 } // namespace Kodiak
