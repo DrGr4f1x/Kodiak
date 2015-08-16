@@ -26,17 +26,11 @@
     <ClInclude Include="Source\RenderTargetView12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Renderer12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Source\CommandList12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\CommandList.h">
       <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Renderer11.h">
-      <Filter>Rendering\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderTargetView11.h">
       <Filter>Rendering\DX11</Filter>
@@ -63,17 +57,11 @@
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
     <ClCompile Include="Source\Application.cpp" />
-    <ClCompile Include="Source\Renderer12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderTargetView12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\CommandList12.cpp">
       <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Renderer11.cpp">
-      <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderTargetView11.cpp">
       <Filter>Rendering\DX11</Filter>
@@ -91,6 +79,9 @@
     </ClCompile>
     <ClCompile Include="Source\DeviceResources11.cpp">
       <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer.cpp">
+      <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
