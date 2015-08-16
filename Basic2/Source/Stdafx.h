@@ -4,8 +4,11 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers.
 #endif
 
+// Windows
 #include <windows.h>
 #include <wrl.h>
+#include <DirectXMath.h>
+#include <DirectXColors.h>
 
 // DirectX common
 #if defined(DX11) || defined(DX12)

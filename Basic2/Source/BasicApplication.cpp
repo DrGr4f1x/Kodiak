@@ -61,8 +61,7 @@ void BasicApplication::PopulateCommandList()
 
 	auto rtv = m_renderer->GetBackBuffer();
 
-	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-	m_commandList->ClearRenderTargetView(rtv, clearColor);
+	m_commandList->ClearRenderTargetView(rtv, DirectX::Colors::CornflowerBlue);
 
 	m_commandList->Present(rtv);
 
