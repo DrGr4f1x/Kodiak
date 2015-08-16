@@ -37,8 +37,7 @@ void BasicApplication::OnRender()
 	m_renderer->ExecuteCommandList(m_commandList);
 
 	// Present the frame
-	const bool bWaitForPreviousFrame = true;
-	m_renderer->Present(bWaitForPreviousFrame);
+	m_renderer->Present();
 }
 
 

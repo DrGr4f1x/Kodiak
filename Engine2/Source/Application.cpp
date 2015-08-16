@@ -2,6 +2,7 @@
 
 #include "Application.h"
 
+#include "DeviceResources.h"
 #include "Log.h"
 #include "Renderer.h"
 
@@ -53,8 +54,8 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 		L"WindowClass1",
 		m_title.c_str(),
 		WS_OVERLAPPEDWINDOW,
-		300,
-		300,
+		100,
+		100,
 		windowRect.right - windowRect.left,
 		windowRect.bottom - windowRect.top,
 		NULL,		// We have no parent window, NULL.

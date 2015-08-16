@@ -16,8 +16,7 @@ public:
 
 	void ClearRenderTargetView(const std::shared_ptr<RenderTargetView>& rtv, const float* color);
 
-private:
-	friend class Renderer;
+public:
 
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_deferredContext;
 	Microsoft::WRL::ComPtr<ID3D11CommandList>	m_commandList;

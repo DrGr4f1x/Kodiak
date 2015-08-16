@@ -4,7 +4,7 @@ namespace Kodiak
 {
 
 // Forward declarations
-class Renderer;
+class DeviceResources;
 class RenderTargetView;
 
 class CommandList
@@ -18,7 +18,7 @@ public:
 
 public:
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
-	Renderer* m_renderer{ nullptr };
+	DeviceResources* m_deviceResources{ nullptr };
 };
 
 } // namespace Kodiak

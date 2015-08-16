@@ -50,6 +50,15 @@
     </ClInclude>
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\Log.h" />
+    <ClInclude Include="Source\DeviceResources12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeviceResources.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeviceResources11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -77,5 +86,11 @@
     </ClCompile>
     <ClCompile Include="Source\Paths.cpp" />
     <ClCompile Include="Source\Log.cpp" />
+    <ClCompile Include="Source\DeviceResources12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DeviceResources11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
