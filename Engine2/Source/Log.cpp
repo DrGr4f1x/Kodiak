@@ -39,17 +39,19 @@ public:
 
 		m_haltLogging = false;
 
-		m_workerLoop = async([&] 
-		{
-			while (!m_haltLogging)
+		m_workerLoop = async(launch::async,
+			[&] 
 			{
-				LogMessage message;
-				if (m_messageQueue.try_pop(message))
+				while (!m_haltLogging)
 				{
-					m_file << message.message;
+					LogMessage message;
+					if (m_messageQueue.try_pop(message))
+					{
+						m_file << message.message;
+					}
 				}
 			}
-		});
+			);
 
 		m_initialized = true;
 	}
