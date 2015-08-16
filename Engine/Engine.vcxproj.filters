@@ -1,32 +1,96 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{9ec51a31-9395-48f3-b21a-d127309f451b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\DX11">
+      <UniqueIdentifier>{4f2dbb61-3630-4fb3-9cac-267e3b7fa764}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\DX12">
+      <UniqueIdentifier>{923144e8-eaf0-4a1a-8ffe-212ac2f50024}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Application.cpp" />
-    <ClCompile Include="Source\DeviceResources.cpp" />
-    <ClCompile Include="Source\Effect.cpp" />
-    <ClCompile Include="Source\Engine.cpp" />
-    <ClCompile Include="Source\pch.cpp" />
-    <ClCompile Include="Source\RenderingEngine.cpp" />
-    <ClCompile Include="Source\Paths.cpp" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\Application.h" />
-    <ClInclude Include="Source\DeviceResources.h" />
-    <ClInclude Include="Source\DirectXUtils.h" />
-    <ClInclude Include="Source\Effect.h" />
-    <ClInclude Include="Source\Engine.h" />
-    <ClInclude Include="Source\pch.h" />
-    <ClInclude Include="Source\RenderingEngine.h" />
-    <ClInclude Include="Source\targetver.h" />
-    <ClInclude Include="Source\Timer.h" />
-    <ClInclude Include="Source\EngineAPI.h" />
+    <ClInclude Include="Source\Renderer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderUtils.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderTargetView.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderTargetView12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommandList12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommandList.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Renderer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderTargetView11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DepthStencilView11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DepthStencilView.h" />
+    <ClInclude Include="Source\CommandList11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\Log.h" />
+    <ClInclude Include="Source\DeviceResources12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeviceResources.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeviceResources11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Stdafx.cpp" />
+    <ClCompile Include="Source\Application.cpp" />
+    <ClCompile Include="Source\Renderer12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderTargetView12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CommandList12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderTargetView11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DepthStencilView11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CommandList11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Paths.cpp" />
+    <ClCompile Include="Source\Log.cpp" />
+    <ClCompile Include="Source\DeviceResources12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DeviceResources11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

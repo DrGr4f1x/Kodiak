@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine2\Source\Application.h"
-#include "Engine2\Source\Renderer.h"
+#include "Engine\Source\Application.h"
+#include "Engine\Source\Renderer.h"
 
 namespace Kodiak
 {
