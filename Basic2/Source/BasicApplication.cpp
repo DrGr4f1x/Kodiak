@@ -61,12 +61,10 @@ void BasicApplication::PopulateCommandList()
 
 	auto rtv = m_renderer->GetBackBuffer();
 
-	m_commandList->SynchronizeRenderTargetViewForRendering(rtv);
-
 	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	m_commandList->ClearRenderTargetView(rtv, clearColor);
 
-	m_commandList->SynchronizeRenderTargetViewForPresent(rtv);
+	m_commandList->Present(rtv);
 
 	m_commandList->End();
 }

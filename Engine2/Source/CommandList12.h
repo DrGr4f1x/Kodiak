@@ -10,9 +10,7 @@ class CommandList
 public:
 	void Begin();
 	void End();
-
-	void SynchronizeRenderTargetViewForRendering(const std::shared_ptr<RenderTargetView>& rtv);
-	void SynchronizeRenderTargetViewForPresent(const std::shared_ptr<RenderTargetView>& rtv);
+	void Present(const std::shared_ptr<RenderTargetView>& rtv);
 
 	void ClearRenderTargetView(const std::shared_ptr<RenderTargetView>& rtv, const float* color);
 

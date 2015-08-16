@@ -30,21 +30,23 @@ void CommandList::End()
 }
 
 
-void CommandList::SynchronizeRenderTargetViewForRendering(const shared_ptr<RenderTargetView>& rtv)
+void CommandList::Present(const std::shared_ptr<RenderTargetView>& rtv)
 {
-	// Indicate that the back buffer will be used as a render target.
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(rtv->m_rtv.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-}
-
-
-void CommandList::SynchronizeRenderTargetViewForPresent(const shared_ptr<RenderTargetView>& rtv)
-{
-	// Indicate that the back buffer will now be used to present.
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(rtv->m_rtv.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	if (rtv->m_currentResourceState != D3D12_RESOURCE_STATE_PRESENT)
+	{
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(rtv->m_rtv.Get(), rtv->m_currentResourceState, D3D12_RESOURCE_STATE_PRESENT));
+		rtv->m_currentResourceState = D3D12_RESOURCE_STATE_PRESENT;
+	}
 }
 
 
 void CommandList::ClearRenderTargetView(const std::shared_ptr<RenderTargetView>& rtv, const float* color)
 {
+	if (rtv->m_currentResourceState != D3D12_RESOURCE_STATE_RENDER_TARGET)
+	{
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(rtv->m_rtv.Get(), rtv->m_currentResourceState, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		rtv->m_currentResourceState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	}
+
 	m_commandList->ClearRenderTargetView(rtv->m_rtvHandle, color, 0, nullptr);
 }

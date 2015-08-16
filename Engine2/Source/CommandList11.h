@@ -12,12 +12,9 @@ class CommandList
 public:
 	void Begin();
 	void End();
+	void Present(const std::shared_ptr<RenderTargetView>& rtv) {}
 
 	void ClearRenderTargetView(const std::shared_ptr<RenderTargetView>& rtv, const float* color);
-
-	// Unused in DX11
-	void SynchronizeRenderTargetViewForRendering(const std::shared_ptr<RenderTargetView>& rtv) {}
-	void SynchronizeRenderTargetViewForPresent(const std::shared_ptr<RenderTargetView>& rtv) {}
 
 private:
 	friend class Renderer;
