@@ -189,3 +189,9 @@ _Pvt_Extensions/
 ModelManifest.xml
 /Engine2/Temp/Win32
 /Kodiak2.tss
+*.xbf
+Basic/Bin64/AppX/microsoft.system.package.metadata/S-1-5-21-2056340387-2059770104-2116193527-1002.pckgdep
+*.iobj
+*.ipdb
+*.tlog
+*.exp

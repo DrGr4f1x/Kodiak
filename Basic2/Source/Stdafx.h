@@ -28,6 +28,8 @@
 #error No graphics API defined!
 #endif
 
+
 #include <memory>
+#include <sstream>
 #include <stdint.h>
 #include <string>

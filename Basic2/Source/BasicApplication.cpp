@@ -3,6 +3,7 @@
 #include "BasicApplication.h"
 
 #include "Engine2\Source\CommandList.h"
+#include "Engine2\Source\Log.h"
 #include "Engine2\Source\Renderer.h"
 
 
@@ -17,6 +18,7 @@ BasicApplication::BasicApplication(uint32_t width, uint32_t height, const std::w
 
 void BasicApplication::OnInit()
 {
+	LOG_INFO << "BasicApplication initialize";
 	m_renderer->SetWindow(m_width, m_height, m_hwnd);
 	m_commandList = m_renderer->CreateCommandList();
 }
@@ -43,6 +45,7 @@ void BasicApplication::OnRender()
 void BasicApplication::OnDestroy()
 {
 	m_renderer->Finalize();
+	LOG_INFO << "BasicApplication finalize";
 }
 
 

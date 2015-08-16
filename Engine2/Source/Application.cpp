@@ -1,6 +1,8 @@
 #include "Stdafx.h"
 
 #include "Application.h"
+
+#include "Log.h"
 #include "Renderer.h"
 
 #include <shellapi.h>
@@ -16,11 +18,20 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 	, m_hwnd(0)
 	, m_title(name)
 {
+	InitializeLogging();
+
 	m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
 	// Create renderer
 	m_renderer = make_unique<Renderer>();
 }
+
+
+Application::~Application()
+{
+	ShutdownLogging();
+}
+
 
 int Application::Run(HINSTANCE hInstance, int nCmdShow)
 {

@@ -297,6 +297,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\Log.h" />
+    <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\Renderer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">true</ExcludedFromBuild>
@@ -346,6 +348,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\Log.cpp" />
+    <ClCompile Include="Source\Paths.cpp" />
     <ClCompile Include="Source\Renderer11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
