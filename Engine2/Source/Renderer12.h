@@ -13,6 +13,7 @@ public:
 
 	void HandleDeviceLost();
 	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
+	void SetWindowSize(uint32_t width, uint32_t height);
 	void Finalize();
 
 	std::shared_ptr<RenderTargetView> GetBackBuffer();

@@ -6,19 +6,19 @@
 #include "Renderer.h"
 
 #include <shellapi.h>
+#include <WindowsX.h>
+
 
 using namespace Kodiak;
 using namespace std;
 
 Application::Application(uint32_t width, uint32_t height, const std::wstring& name)
-	: m_renderer(nullptr)
-	, m_width(width)
-	, m_height(height)
-	, m_aspectRatio(0.0f)
-	, m_hwnd(0)
-	, m_title(name)
 {
 	InitializeLogging();
+
+	m_width = width;
+	m_height = height;
+	m_title = name;
 
 	m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
@@ -93,6 +93,137 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 	// Return this part of the WM_QUIT message to Windows.
 	return static_cast<char>(msg.wParam);
 }
+
+
+// Message handler for the application
+bool Application::OnEvent(MSG msg)
+{
+	switch (msg.message)
+	{
+	// WM_ACTIVATE is sent when the window is activated or deactivated.  
+	// We pause the game when the window is deactivated and unpause it 
+	// when it becomes active.  
+	case WM_ACTIVATE:
+		if (LOWORD(msg.wParam) == WA_INACTIVE)
+		{
+			m_paused = true;
+		}
+		else
+		{
+			m_paused = false;
+		}
+		return true;
+		break;
+
+	// WM_SIZE is sent when the user resizes the window.  
+	case WM_SIZE:
+		// Save the new client area dimensions
+		m_width = LOWORD(msg.lParam);
+		m_height = HIWORD(msg.lParam);
+
+		if (msg.wParam == SIZE_MINIMIZED)
+		{
+			m_paused = true;
+			m_minimized = true;
+			m_maximized = false;
+		}
+		else if (msg.wParam == SIZE_MAXIMIZED)
+		{
+			m_paused = false;
+			m_minimized = false;
+			m_maximized = true;
+		}
+		else if (msg.wParam == SIZE_RESTORED)
+		{
+			// Restoring from minimized state?
+			if (m_minimized)
+			{
+				m_paused = false;
+				m_minimized = false;
+				OnResize();
+			}
+
+			// Restoring from maximized state?
+			else if (m_maximized)
+			{
+				m_paused = false;
+				m_maximized = false;
+				OnResize();
+			}
+			else if (m_resizing)
+			{
+				// If user is dragging the resize bars, we do not resize 
+				// the buffers here because as the user continuously 
+				// drags the resize bars, a stream of WM_SIZE messages are
+				// sent to the window, and it would be pointless (and slow)
+				// to resize for each WM_SIZE message received from dragging
+				// the resize bars.  So instead, we reset after the user is 
+				// done resizing the window and releases the resize bars, which 
+				// sends a WM_EXITSIZEMOVE message.
+			}
+			else // API call such as SetWindowPos or mSwapChain->SetFullscreenState.
+			{
+				OnResize();
+			}
+		}
+		return true;
+		break;
+
+	// WM_ENTERSIZEMOVE is sent when the user grabs the resize bars.
+	case WM_ENTERSIZEMOVE:
+		m_paused = true;
+		m_resizing = true;
+		return true;
+		break;
+
+	// WM_EXITSIZEMOVE is sent when the user releases the resize bars.
+	// Here we reset everything based on the new window dimensions.
+	case WM_EXITSIZEMOVE:
+		m_paused = false;
+		m_resizing = false;
+		OnResize();
+		return true;
+		break;
+
+	// Catch this message so to prevent the window from becoming too small.
+	case WM_GETMINMAXINFO:
+		((MINMAXINFO*)msg.lParam)->ptMinTrackSize.x = 200;
+		((MINMAXINFO*)msg.lParam)->ptMinTrackSize.y = 200;
+		return true;
+		break;
+
+	case WM_LBUTTONDOWN:
+	case WM_MBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+		OnMouseDown(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
+		return true;
+		break;
+
+	case WM_LBUTTONUP:
+	case WM_MBUTTONUP:
+	case WM_RBUTTONUP:
+		OnMouseUp(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
+		return true;
+		break;
+
+	case WM_MOUSEMOVE:
+		OnMouseMove(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
+		return true;
+		break;
+	}
+	return false;
+}
+
+
+// Handle window resize events
+void Application::OnResize()
+{
+	if (m_renderer)
+	{
+		m_renderer->SetWindowSize(m_width, m_height);
+	}
+}
+
 
 // Main message handler for the sample.
 LRESULT CALLBACK Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

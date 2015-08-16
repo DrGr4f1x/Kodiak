@@ -34,6 +34,18 @@ void Renderer::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
 }
 
 
+void Renderer::SetWindowSize(uint32_t width, uint32_t height)
+{
+	if (m_width != width || m_height != height)
+	{
+		m_width = width;
+		m_height = height;
+
+		CreateWindowSizeDependentResources();
+	}
+}
+
+
 void Renderer::Finalize()
 {
 	WaitForPreviousFrame();
