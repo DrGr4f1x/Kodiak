@@ -9,6 +9,8 @@
 #include <wrl.h>
 #include <DirectXMath.h>
 #include <DirectXColors.h>
+#include <ppl.h>
+#include <ppltasks.h>
 
 // DirectX common
 #if defined(DX11) || defined(DX12)
