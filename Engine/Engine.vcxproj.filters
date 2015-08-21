@@ -10,6 +10,9 @@
     <Filter Include="Rendering\DX12">
       <UniqueIdentifier>{923144e8-eaf0-4a1a-8ffe-212ac2f50024}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Rendering\Operations">
+      <UniqueIdentifier>{41482bc2-1884-4aef-9460-9ce54fcd54f7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -53,6 +56,18 @@
     <ClInclude Include="Source\DeviceResources11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
+    <ClInclude Include="Source\IRenderOperation.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ClearRenderTargetOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PresentRenderTargetOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -81,6 +96,18 @@
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\Renderer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ClearRenderTargetOp.cpp">
+      <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PresentRenderTargetOp.cpp">
+      <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CommandList.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>

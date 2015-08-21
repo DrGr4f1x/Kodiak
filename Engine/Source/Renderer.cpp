@@ -4,6 +4,7 @@
 
 #include "CommandList.h"
 #include "DeviceResources.h"
+#include "RenderPipeline.h"
 #include "RenderTargetView.h"
 #include "RenderUtils.h"
 
@@ -15,8 +16,17 @@ using namespace std;
 
 
 Renderer::Renderer()
+	: m_rootPipeline(make_shared<RootPipeline>())
 {
 	m_deviceResources = make_unique<DeviceResources>();
+
+	m_commandListManager = make_unique<CommandListManager>(m_deviceResources.get());
+
+	m_renderTaskEnvironment.deviceResources = m_deviceResources.get();
+	m_renderTaskEnvironment.rootPipeline = m_rootPipeline;
+
+	m_rootPipeline->SetName("Root Pipeline");
+	m_rootPipeline->SetCommandList(m_commandListManager->CreateCommandList());
 
 	StartRenderTask();
 }
@@ -48,24 +58,6 @@ shared_ptr<RenderTargetView> Renderer::GetBackBuffer()
 }
 
 
-void Renderer::Present()
-{
-	m_deviceResources->Present();
-}
-
-
-shared_ptr<CommandList> Renderer::CreateCommandList()
-{
-	return m_deviceResources->CreateCommandList();
-}
-
-
-void Renderer::ExecuteCommandList(const shared_ptr<CommandList>& commandList)
-{
-	m_deviceResources->ExecuteCommandList(commandList);
-}
-
-
 void Renderer::StartRenderTask()
 {
 	if (m_renderTaskStarted)
@@ -77,15 +69,24 @@ void Renderer::StartRenderTask()
 
 	m_renderTask = create_task([&]
 	{
-		// Loop until we get a command to stop the render task, or a command errors out
-		while (!m_renderTaskEnvironment.stopRenderTask)
+		bool endRenderLoop = false;
+
+		// Loop until we're signalled to stop
+		while (!endRenderLoop)
 		{
-			// Execute a render command, if one is available
-			AsyncRenderTask command;
-			if (m_renderTaskQueue.try_pop(command))
+			// Process tasks until we've signalled frame complete
+			while (!m_renderTaskEnvironment.frameCompleted)
 			{
-				command(m_renderTaskEnvironment);
+				// Execute a render command, if one is available
+				AsyncRenderTask command;
+				if (m_renderTaskQueue.try_pop(command))
+				{
+					command(m_renderTaskEnvironment);
+				}
 			}
+
+			// Only permit exit after completing the current frame
+			endRenderLoop = m_renderTaskEnvironment.stopRenderTask;
 		}
 	});
 
@@ -98,4 +99,52 @@ void Renderer::StopRenderTask()
 	m_renderTaskEnvironment.stopRenderTask = true;
 	m_renderTask.wait();
 	m_renderTaskStarted = false;
+}
+
+
+void Renderer::EnqueueTask(AsyncRenderTask& task)
+{
+	if (!m_renderTaskEnvironment.stopRenderTask)
+	{
+		m_renderTaskQueue.push(task);
+	}
+}
+
+
+void Renderer::Render()
+{
+	m_renderTaskEnvironment.frameCompleted = false;
+
+	// Do some pre-render setup
+	m_commandListManager->UpdateCommandLists();
+
+	// Kick off rendering of root pipeline
+	auto renderRootPipeline(
+		[](RenderTaskEnvironment& environment)
+		{
+			environment.rootPipeline->Execute(environment.deviceResources);
+			environment.rootPipeline->Submit(environment.deviceResources);
+		}
+	);
+	AsyncRenderTask renderRootPipelineTask(cref(renderRootPipeline));
+	EnqueueTask(renderRootPipelineTask);
+
+	// Signal end of frame
+	auto endOfFrame(
+		[](RenderTaskEnvironment& environment)
+		{
+			environment.deviceResources->EndFrame();
+			environment.deviceResources->Present();
+			environment.frameCompleted = true;
+		}
+	);
+	AsyncRenderTask endOfFrameTask(cref(endOfFrame));
+	EnqueueTask(endOfFrameTask);
+}
+
+
+void Renderer::WaitForPreviousFrame()
+{
+	// Spin while waiting for the previous frame to finish
+	while(!m_renderTaskEnvironment.frameCompleted) {}
 }

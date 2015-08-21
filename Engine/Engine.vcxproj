@@ -277,6 +277,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\Application.h" />
+    <ClInclude Include="Source\ClearRenderTargetOp.h" />
     <ClInclude Include="Source\CommandList.h" />
     <ClInclude Include="Source\CommandList11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">true</ExcludedFromBuild>
@@ -312,8 +313,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\IRenderOperation.h" />
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Paths.h" />
+    <ClInclude Include="Source\PresentRenderTargetOp.h" />
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\RenderTargetView.h" />
     <ClInclude Include="Source\RenderTargetView11.h">
@@ -329,10 +332,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\RenderUtils.h" />
+    <ClInclude Include="Source\RenderPipeline.h" />
     <ClInclude Include="Source\Stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
+    <ClCompile Include="Source\ClearRenderTargetOp.cpp" />
+    <ClCompile Include="Source\CommandList.cpp" />
     <ClCompile Include="Source\CommandList11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -367,6 +373,7 @@
     </ClCompile>
     <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\Paths.cpp" />
+    <ClCompile Include="Source\PresentRenderTargetOp.cpp" />
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\RenderTargetView11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">true</ExcludedFromBuild>
@@ -380,6 +387,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline.cpp" />
     <ClCompile Include="Source\Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">Create</PrecompiledHeader>

@@ -15,15 +15,8 @@ public:
 protected:
 	void OnInit() override;
 	void OnUpdate() override;
-	void OnRender() override;
 	void OnDestroy() override;
 	bool OnEvent(MSG msg) override;
-
-private:
-	void PopulateCommandList();
-
-private:
-	std::shared_ptr<CommandList> m_commandList;
 };
 
 } // namespace Kodiak

@@ -5,6 +5,7 @@
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Renderer.h"
+#include "Engine\Source\RenderPipeline.h"
 
 
 using namespace Kodiak;
@@ -20,25 +21,18 @@ void BasicApplication::OnInit()
 {
 	LOG_INFO << "BasicApplication initialize";
 	m_renderer->SetWindow(m_width, m_height, m_hwnd);
-	m_commandList = m_renderer->CreateCommandList();
+	
+	// Setup the root rendering pipeline
+	auto pipeline = m_renderer->GetRootPipeline();
+	auto rtv = m_renderer->GetBackBuffer();
+
+	pipeline->ClearRenderTargetView(rtv, DirectX::Colors::CornflowerBlue);
+	pipeline->Present(rtv);
 }
 
 
 void BasicApplication::OnUpdate()
 {}
-
-
-void BasicApplication::OnRender()
-{
-	// Record all the commands we need to render the scene into the command list.
-	PopulateCommandList();
-
-	// Execute the command list
-	m_renderer->ExecuteCommandList(m_commandList);
-
-	// Present the frame
-	m_renderer->Present();
-}
 
 
 void BasicApplication::OnDestroy()
@@ -51,18 +45,4 @@ void BasicApplication::OnDestroy()
 bool BasicApplication::OnEvent(MSG msg)
 {
 	return false;
-}
-
-
-void BasicApplication::PopulateCommandList()
-{
-	m_commandList->Begin();
-
-	auto rtv = m_renderer->GetBackBuffer();
-
-	m_commandList->ClearRenderTargetView(rtv, DirectX::Colors::CornflowerBlue);
-
-	m_commandList->Present(rtv);
-
-	m_commandList->End();
 }

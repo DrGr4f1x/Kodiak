@@ -2,6 +2,7 @@
 
 #include "Application.h"
 
+#include "CommandList.h"
 #include "DeviceResources.h"
 #include "Log.h"
 #include "Renderer.h"
@@ -93,6 +94,13 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 
 	// Return this part of the WM_QUIT message to Windows.
 	return static_cast<char>(msg.wParam);
+}
+
+
+void Application::OnRender()
+{
+	m_renderer->WaitForPreviousFrame();
+	m_renderer->Render();
 }
 
 

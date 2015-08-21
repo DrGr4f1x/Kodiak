@@ -17,11 +17,15 @@ public:
 	void SetWindowSize(uint32_t width, uint32_t height);
 	void Finalize() {}
 
+	std::shared_ptr<RenderTargetView> GetBackBuffer();
+	void Present();
+	void EndFrame() {}
+
 	std::shared_ptr<CommandList> CreateCommandList();
 	void ExecuteCommandList(const std::shared_ptr<CommandList>& commandList);
 
-	std::shared_ptr<RenderTargetView> GetBackBuffer();
-	void Present();
+	// State getters
+	uint32_t GetCurrentFrame() const { return 0; }
 
 private:
 	void CreateDeviceIndependentResources();

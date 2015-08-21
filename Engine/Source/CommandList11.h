@@ -16,6 +16,8 @@ public:
 
 	void ClearRenderTargetView(const std::shared_ptr<RenderTargetView>& rtv, const float* color);
 
+	void SetCurrentFrame(uint32_t currentFrame) {}
+
 public:
 
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_deferredContext;

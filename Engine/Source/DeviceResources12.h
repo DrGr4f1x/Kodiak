@@ -7,6 +7,8 @@ namespace Kodiak
 class CommandList;
 class RenderTargetView;
 
+const uint32_t FrameCount = 2;
+
 class DeviceResources
 {
 public:
@@ -18,21 +20,23 @@ public:
 
 	std::shared_ptr<RenderTargetView> GetBackBuffer();
 	void Present();
-	void WaitForGPU();
+	void EndFrame();
 
 	std::shared_ptr<CommandList> CreateCommandList();
 	void ExecuteCommandList(const std::shared_ptr<CommandList>& commandList);
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> GetCommandAllocator();
+
+	// State getters
+	uint32_t GetCurrentFrame() const { return m_currentFrame; }
 
 private:
 	void CreateDeviceIndependentResources();
 	void CreateDeviceResources();
 	void CreateWindowSizeDependentResources();
 	void MoveToNextFrame();
+	void WaitForGPU();
 
 private:
-	static const uint32_t FrameCount = 2;
-
 	// Direct3D objects.
 	Microsoft::WRL::ComPtr<ID3D12Device>			m_device;
 	Microsoft::WRL::ComPtr<ID3D11On12Device>		m_d3d11On12Device;

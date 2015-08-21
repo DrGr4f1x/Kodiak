@@ -78,33 +78,35 @@ void DeviceResources::Present()
 }
 
 
-void DeviceResources::WaitForGPU()
+void DeviceResources::EndFrame()
 {
-	// Schedule a Signal command in the queue.
-	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_currentFrame]));
-
-	// Wait until the fence has been crossed.
-	ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_currentFrame], m_fenceEvent));
-	WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
-
-	// Increment the fence value for the current frame.
-	m_fenceValues[m_currentFrame]++;
+	MoveToNextFrame();
 }
 
 
 shared_ptr<CommandList> DeviceResources::CreateCommandList()
 {
-	auto commandList = make_shared<CommandList>();
+	auto commandList = make_shared<CommandList>(FrameCount);
 
-	// Create the command list.
-	ThrowIfFailed(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[m_currentFrame].Get(), nullptr, IID_PPV_ARGS(&commandList->m_commandList)));
+	for (int32_t n = 0; n < FrameCount; ++n)
+	{
+		// Create command allocator
+		ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandList->m_commandAllocators[n])));
 
-	// Command lists are created in the recording state, but there is nothing
-	// to record yet. The main loop expects it to be closed, so close it now.
-	ThrowIfFailed(commandList->m_commandList->Close());
+		// Create command list
+		ThrowIfFailed(m_device->CreateCommandList(
+			0, 
+			D3D12_COMMAND_LIST_TYPE_DIRECT, 
+			commandList->m_commandAllocators[n].Get(), 
+			nullptr, 
+			IID_PPV_ARGS(&commandList->m_commandLists[n])));
 
-	// Set the device resources pointer
-	commandList->m_deviceResources = this;
+		// Command lists are created in the recording state, but there is nothing
+		// to record yet. The main loop expects it to be closed, so close it now.
+		ThrowIfFailed(commandList->m_commandLists[n]->Close());
+	}
+
+	commandList->m_currentFrame = GetCurrentFrame();
 
 	return commandList;
 }
@@ -112,7 +114,7 @@ shared_ptr<CommandList> DeviceResources::CreateCommandList()
 
 void DeviceResources::ExecuteCommandList(const shared_ptr<CommandList>& commandList)
 {
-	ID3D12CommandList* ppCommandLists[] = { commandList->m_commandList.Get() };
+	ID3D12CommandList* ppCommandLists[] = { commandList->m_commandLists[m_currentFrame].Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 }
 
@@ -370,4 +372,18 @@ void DeviceResources::MoveToNextFrame()
 
 	// Set the fence value for the next frame.
 	m_fenceValues[m_currentFrame] = currentFenceValue + 1;
+}
+
+
+void DeviceResources::WaitForGPU()
+{
+	// Schedule a Signal command in the queue.
+	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_currentFrame]));
+
+	// Wait until the fence has been crossed.
+	ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_currentFrame], m_fenceEvent));
+	WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+
+	// Increment the fence value for the current frame.
+	m_fenceValues[m_currentFrame]++;
 }
