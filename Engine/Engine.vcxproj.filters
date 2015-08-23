@@ -68,6 +68,45 @@
     <ClInclude Include="Source\PresentRenderTargetOp.h">
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="Source\IndexBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\IndexBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\IndexBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Model.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VertexBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VertexBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VertexBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VertexFormats.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\IAsyncRenderTask.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderEnums.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderEnums11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderEnums12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -109,6 +148,24 @@
     </ClCompile>
     <ClCompile Include="Source\CommandList.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\IndexBuffer12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\IndexBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Model.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VertexBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VertexBuffer12.cpp">
+      <Filter>Rendering\DX12</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

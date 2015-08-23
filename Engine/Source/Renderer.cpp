@@ -4,15 +4,30 @@
 
 #include "CommandList.h"
 #include "DeviceResources.h"
+#include "IAsyncRenderTask.h"
+#include "IndexBuffer.h"
 #include "RenderPipeline.h"
 #include "RenderTargetView.h"
 #include "RenderUtils.h"
+#include "VertexBuffer.h"
 
 
 using namespace Kodiak;
 using namespace Microsoft::WRL;
 using namespace Concurrency;
 using namespace std;
+
+
+class EndFrameTask : public IAsyncRenderTask
+{
+public:
+	void Execute(RenderTaskEnvironment& environment) override
+	{
+		environment.deviceResources->EndFrame();
+		environment.deviceResources->Present();
+		environment.frameCompleted = true;
+	}
+};
 
 
 Renderer::Renderer()
@@ -78,10 +93,10 @@ void Renderer::StartRenderTask()
 			while (!m_renderTaskEnvironment.frameCompleted)
 			{
 				// Execute a render command, if one is available
-				AsyncRenderTask command;
+				shared_ptr<IAsyncRenderTask> command;
 				if (m_renderTaskQueue.try_pop(command))
 				{
-					command(m_renderTaskEnvironment);
+					command->Execute(m_renderTaskEnvironment);
 				}
 			}
 
@@ -102,7 +117,7 @@ void Renderer::StopRenderTask()
 }
 
 
-void Renderer::EnqueueTask(AsyncRenderTask& task)
+void Renderer::EnqueueTask(shared_ptr<IAsyncRenderTask> task)
 {
 	if (!m_renderTaskEnvironment.stopRenderTask)
 	{
@@ -113,33 +128,19 @@ void Renderer::EnqueueTask(AsyncRenderTask& task)
 
 void Renderer::Render()
 {
-	m_renderTaskEnvironment.frameCompleted = false;
-
 	// Do some pre-render setup
 	m_commandListManager->UpdateCommandLists();
 
+	m_renderTaskEnvironment.frameCompleted = false;
+
 	// Kick off rendering of root pipeline
-	auto renderRootPipeline(
-		[](RenderTaskEnvironment& environment)
-		{
-			environment.rootPipeline->Execute(environment.deviceResources);
-			environment.rootPipeline->Submit(environment.deviceResources);
-		}
-	);
-	AsyncRenderTask renderRootPipelineTask(cref(renderRootPipeline));
-	EnqueueTask(renderRootPipelineTask);
+	auto renderRootPipeline = make_shared<RenderRootPipelineTask>(m_rootPipeline);
+	EnqueueTask(renderRootPipeline);
+
 
 	// Signal end of frame
-	auto endOfFrame(
-		[](RenderTaskEnvironment& environment)
-		{
-			environment.deviceResources->EndFrame();
-			environment.deviceResources->Present();
-			environment.frameCompleted = true;
-		}
-	);
-	AsyncRenderTask endOfFrameTask(cref(endOfFrame));
-	EnqueueTask(endOfFrameTask);
+	auto endFrame = make_shared<EndFrameTask>();
+	EnqueueTask(endFrame);
 }
 
 
@@ -147,4 +148,38 @@ void Renderer::WaitForPreviousFrame()
 {
 	// Spin while waiting for the previous frame to finish
 	while(!m_renderTaskEnvironment.frameCompleted) {}
+}
+
+
+shared_ptr<IndexBuffer> Renderer::CreateIndexBuffer(unique_ptr<IIndexBufferData> data, Usage usage, const string& debugName)
+{
+	auto ibuffer = make_shared<IndexBuffer>();
+
+#if DX12
+	auto commandList = m_commandListManager->CreateCommandList();
+	auto createIndexBuffer = make_shared<CreateIndexBufferTask>(commandList, ibuffer, move(data), usage, debugName);
+	create_task([this, createIndexBuffer]() { createIndexBuffer->Execute(m_deviceResources.get()); }).then([createIndexBuffer]() { createIndexBuffer->WaitForGpu(); });
+#elif DX11
+	auto createIndexBuffer = make_shared<CreateIndexBufferTask>(ibuffer, move(data), usage, debugName);
+	create_task([this, createIndexBuffer]() { createIndexBuffer->Execute(m_deviceResources.get()); });
+#endif
+	
+	return ibuffer;
+}
+
+
+shared_ptr<VertexBuffer> Renderer::CreateVertexBuffer(unique_ptr<IVertexBufferData> data, Usage usage, const string& debugName)
+{
+	auto vbuffer = make_shared<VertexBuffer>();
+
+#if DX12
+	auto commandList = m_commandListManager->CreateCommandList();
+	auto createVertexBuffer = make_shared<CreateVertexBufferTask>(commandList, vbuffer, move(data), usage, debugName);
+	create_task([this, createVertexBuffer]() { createVertexBuffer->Execute(m_deviceResources.get()); }).then([createVertexBuffer]() { createVertexBuffer->WaitForGpu(); });
+#elif DX11
+	auto createVertexBuffer = make_shared<CreateVertexBufferTask>(vbuffer, move(data), usage, debugName);
+	create_task([this, createVertexBuffer]() { createVertexBuffer->Execute(m_deviceResources.get()); });
+#endif
+	
+	return vbuffer;
 }

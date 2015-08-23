@@ -3,8 +3,14 @@
 #include "DeviceResources12.h"
 
 #include "CommandList.h"
+#include "IndexBuffer.h"
+#include "RenderEnums.h"
 #include "RenderTargetView.h"
 #include "RenderUtils.h"
+#include "VertexBuffer.h"
+
+#include <locale>
+#include <codecvt>
 
 
 using namespace Kodiak;
@@ -122,6 +128,164 @@ void DeviceResources::ExecuteCommandList(const shared_ptr<CommandList>& commandL
 ComPtr<ID3D12CommandAllocator> DeviceResources::GetCommandAllocator()
 {
 	return m_commandAllocators[m_currentFrame];
+}
+
+
+void DeviceResources::CreateIndexBuffer(
+	shared_ptr<CommandList> commandList,
+	shared_ptr<IndexBuffer> ibuffer,
+	IIndexBufferData* data,
+	Usage usage,
+	const std::string& debugName)
+{
+	// Create the index buffer resource in the GPU's default heap and copy index data into it using the upload heap.
+	// The upload resource must not be released until after the GPU has finished using it.
+	ComPtr<ID3D12Resource> indexBufferUpload;
+
+	CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
+
+	CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(data->GetSize());
+	ThrowIfFailed(m_device->CreateCommittedResource(
+		&defaultHeapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&indexBufferDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&ibuffer->buffer)));
+
+	CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+	ThrowIfFailed(m_device->CreateCommittedResource(
+		&uploadHeapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&indexBufferDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&indexBufferUpload)));
+
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(debugName);
+	ibuffer->buffer->SetName(wide.c_str());
+	indexBufferUpload->SetName(L"Index Buffer Upload Resource");
+
+	// Upload the index buffer to the GPU.
+	{
+		D3D12_SUBRESOURCE_DATA indexData = {};
+		indexData.pData = data->GetData();
+		indexData.RowPitch = data->GetSize();
+		indexData.SlicePitch = indexData.RowPitch;
+
+		commandList->Begin();
+		auto _commandList = commandList->GetCommandList();
+
+		UpdateSubresources(_commandList, ibuffer->buffer.Get(), indexBufferUpload.Get(), 0, 0, 1, &indexData);
+
+		CD3DX12_RESOURCE_BARRIER indexBufferResourceBarrier =
+			CD3DX12_RESOURCE_BARRIER::Transition(ibuffer->buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		_commandList->ResourceBarrier(1, &indexBufferResourceBarrier);
+
+		ThrowIfFailed(_commandList->Close());
+
+		{
+			lock_guard<mutex> guard(m_uploadMutex);
+
+			// Execute the upload command list
+			ID3D12CommandList* ppCommandLists[] = { _commandList };
+			m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+			// Schedule a Signal command in the queue.
+			ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_currentFrame]));
+
+			// Wait until the fence has been crossed.
+			ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_currentFrame], commandList->m_fenceEvent));
+			
+			// Increment the fence value for the current frame.
+			m_fenceValues[m_currentFrame]++;
+		}
+
+		// Create vertex buffer view.
+		ibuffer->indexBufferView.BufferLocation = ibuffer->buffer->GetGPUVirtualAddress();
+		ibuffer->indexBufferView.SizeInBytes = static_cast<UINT>(data->GetSize());
+		ibuffer->indexBufferView.Format = (DXGI_FORMAT)data->GetFormat();
+	}
+}
+
+
+void DeviceResources::CreateVertexBuffer(
+	std::shared_ptr<CommandList> commandList,
+	std::shared_ptr<VertexBuffer> vbuffer,
+	IVertexBufferData* data,
+	Usage usage,
+	const std::string& debugName)
+{
+	// Create the vertex buffer resource in the GPU's default heap and copy vertex data into it using the upload heap.
+	// The upload resource must not be released until after the GPU has finished using it.
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferUpload;
+
+	CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
+
+	CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(data->GetSize());
+	ThrowIfFailed(m_device->CreateCommittedResource(
+		&defaultHeapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&vertexBufferDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&vbuffer->buffer)));
+
+	CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+	ThrowIfFailed(m_device->CreateCommittedResource(
+		&uploadHeapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&vertexBufferDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vertexBufferUpload)));
+
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(debugName);
+	vbuffer->buffer->SetName(wide.c_str());
+	vertexBufferUpload->SetName(L"Vertex Buffer Upload Resource");
+
+	// Upload the vertex buffer to the GPU.
+	{
+		D3D12_SUBRESOURCE_DATA vertexData = {};
+		vertexData.pData = data->GetData();
+		vertexData.RowPitch = data->GetSize();
+		vertexData.SlicePitch = vertexData.RowPitch;
+
+		commandList->Begin();
+		auto _commandList = commandList->GetCommandList();
+
+		UpdateSubresources(_commandList, vbuffer->buffer.Get(), vertexBufferUpload.Get(), 0, 0, 1, &vertexData);
+
+		CD3DX12_RESOURCE_BARRIER vertexBufferResourceBarrier =
+			CD3DX12_RESOURCE_BARRIER::Transition(vbuffer->buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+		_commandList->ResourceBarrier(1, &vertexBufferResourceBarrier);
+
+		ThrowIfFailed(_commandList->Close());
+
+		{
+			lock_guard<mutex> guard(m_uploadMutex);
+
+			// Execute the upload command list
+			ID3D12CommandList* ppCommandLists[] = { _commandList };
+			m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+			// Schedule a Signal command in the queue.
+			ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_currentFrame]));
+
+			// Wait until the fence has been crossed.
+			ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_currentFrame], commandList->m_fenceEvent));
+
+			// Increment the fence value for the current frame.
+			m_fenceValues[m_currentFrame]++;
+		}
+
+		// Create vertex buffer view.
+		vbuffer->vertexBufferView.BufferLocation = vbuffer->buffer->GetGPUVirtualAddress();
+		vbuffer->vertexBufferView.StrideInBytes = static_cast<UINT>(data->GetStride());
+		vbuffer->vertexBufferView.SizeInBytes = static_cast<UINT>(data->GetSize());
+	}
 }
 
 

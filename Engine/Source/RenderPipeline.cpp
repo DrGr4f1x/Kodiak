@@ -6,6 +6,7 @@
 #include "CommandList.h"
 #include "DeviceResources.h"
 #include "PresentRenderTargetOp.h"
+#include "Renderer.h"
 #include "RenderTargetView.h"
 
 
@@ -77,4 +78,16 @@ void RootPipeline::Present(const std::shared_ptr<RenderTargetView>& rtv)
 {
 	auto operation = new PresentRenderTargetOperation(rtv);
 	m_renderOperations.push_back(operation);
+}
+
+
+RenderRootPipelineTask::RenderRootPipelineTask(shared_ptr<RootPipeline> pipeline)
+	: m_pipeline(pipeline)
+{}
+
+
+void RenderRootPipelineTask::Execute(RenderTaskEnvironment& environment)
+{
+	m_pipeline->Execute(environment.deviceResources);
+	m_pipeline->Submit(environment.deviceResources);
 }

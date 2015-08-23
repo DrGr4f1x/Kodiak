@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IAsyncRenderTask.h"
+
 namespace Kodiak
 {
 
@@ -36,6 +38,17 @@ class RootPipeline : public Pipeline
 {
 public:
 	void Present(const std::shared_ptr<RenderTargetView>& rtv);
+};
+
+class RenderRootPipelineTask : public IAsyncRenderTask
+{
+public:
+	RenderRootPipelineTask(std::shared_ptr<RootPipeline> pipeline);
+
+	void Execute(RenderTaskEnvironment& environment) override;
+
+private:
+	std::shared_ptr<RootPipeline> m_pipeline;
 };
 
 } // namespace Kodiak

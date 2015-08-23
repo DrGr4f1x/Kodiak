@@ -4,8 +4,11 @@
 
 #include "CommandList.h"
 #include "DepthStencilView.h"
+#include "IndexBuffer.h"
+#include "RenderEnums.h"
 #include "RenderTargetView.h"
 #include "RenderUtils.h"
+#include "VertexBuffer.h"
 
 
 using namespace Kodiak;
@@ -47,19 +50,25 @@ DeviceResources::DeviceResources()
 }
 
 
-shared_ptr<CommandList> DeviceResources::CreateCommandList()
+void DeviceResources::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
 {
-	auto commandList = make_shared<CommandList>();
+	m_hwnd = hwnd;
+	m_width = width;
+	m_height = height;
 
-	m_d3dDevice->CreateDeferredContext(0, &commandList->m_deferredContext);
-
-	return commandList;
+	CreateWindowSizeDependentResources();
 }
 
 
-void DeviceResources::ExecuteCommandList(const shared_ptr<CommandList>& commandList)
+void DeviceResources::SetWindowSize(uint32_t width, uint32_t height)
 {
-	m_d3dContext->ExecuteCommandList(commandList->m_commandList.Get(), TRUE);
+	if (m_width != width || m_height != height)
+	{
+		m_width = width;
+		m_height = height;
+
+		CreateWindowSizeDependentResources();
+	}
 }
 
 
@@ -99,6 +108,80 @@ void DeviceResources::Present()
 	}
 }
 
+
+shared_ptr<CommandList> DeviceResources::CreateCommandList()
+{
+	auto commandList = make_shared<CommandList>();
+
+	m_d3dDevice->CreateDeferredContext(0, &commandList->m_deferredContext);
+
+	return commandList;
+}
+
+
+void DeviceResources::ExecuteCommandList(const shared_ptr<CommandList>& commandList)
+{
+	m_d3dContext->ExecuteCommandList(commandList->m_commandList.Get(), TRUE);
+}
+
+
+void DeviceResources::CreateIndexBuffer(std::shared_ptr<IndexBuffer> ibuffer, IIndexBufferData* data, Usage usage, const std::string& debugName)
+{
+	// Fill in a buffer description
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+	desc.ByteWidth = static_cast<UINT>(data->GetSize());
+	desc.Usage = (D3D11_USAGE)usage;
+	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+
+	// Fill in the subresource data
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = data->GetData();
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	// Create the buffer
+	ComPtr<ID3D11Buffer> buffer;
+	ThrowIfFailed(m_d3dDevice->CreateBuffer(&desc, (data->GetData() ? &initData : nullptr), &buffer));
+
+	buffer->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(debugName.size()), debugName.c_str());
+
+	ibuffer->buffer = buffer;
+	ibuffer->format = data->GetFormat();
+	ibuffer->isReady = true;
+}
+
+
+void DeviceResources::CreateVertexBuffer(shared_ptr<VertexBuffer> vbuffer, IVertexBufferData* data, Usage usage, const string& debugName)
+{
+	// Fill in a buffer description
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+	desc.ByteWidth = static_cast<UINT>(data->GetSize());
+	desc.Usage = (D3D11_USAGE)usage;
+	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	desc.CPUAccessFlags = (usage == Usage::Dynamic) ? D3D11_CPU_ACCESS_WRITE : 0;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+
+	// Fill in the subresource data
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = data->GetData();
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	// Create the buffer
+	ComPtr<ID3D11Buffer> buffer;
+	ThrowIfFailed(m_d3dDevice->CreateBuffer(&desc, (data->GetData() ? &initData : nullptr), &buffer));
+
+	buffer->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(debugName.size()), debugName.c_str());
+
+	vbuffer->buffer = buffer;
+	vbuffer->isReady = true;
+}
 
 // Configures resources that don't depend on the Direct3D device.
 void DeviceResources::CreateDeviceIndependentResources()
@@ -401,26 +484,4 @@ void DeviceResources::CreateWindowSizeDependentResources()
 
 	// Grayscale text anti-aliasing is recommended for all Windows Store apps.
 	m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
-}
-
-
-void DeviceResources::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
-{
-	m_hwnd = hwnd;
-	m_width = width;
-	m_height = height;
-
-	CreateWindowSizeDependentResources();
-}
-
-
-void DeviceResources::SetWindowSize(uint32_t width, uint32_t height)
-{
-	if (m_width != width || m_height != height)
-	{
-		m_width = width;
-		m_height = height;
-
-		CreateWindowSizeDependentResources();
-	}
 }

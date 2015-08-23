@@ -5,9 +5,15 @@ namespace Kodiak
 
 // Forward declarations
 class CommandList;
+class IIndexBufferData;
+class IVertexBufferData;
+class IndexBuffer;
 class RenderTargetView;
+class VertexBuffer;
+enum class Usage;
 
 const uint32_t FrameCount = 2;
+
 
 class DeviceResources
 {
@@ -28,6 +34,21 @@ public:
 
 	// State getters
 	uint32_t GetCurrentFrame() const { return m_currentFrame; }
+
+	// Factory methods
+	void CreateIndexBuffer(
+		std::shared_ptr<CommandList> commandList,
+		std::shared_ptr<IndexBuffer> ibuffer, 
+		IIndexBufferData* data, 
+		Usage usage, 
+		const std::string& debugName);
+
+	void CreateVertexBuffer(
+		std::shared_ptr<CommandList> commandList,
+		std::shared_ptr<VertexBuffer> vbuffer,
+		IVertexBufferData* data,
+		Usage usage,
+		const std::string& debugName);
 
 private:
 	void CreateDeviceIndependentResources();
@@ -63,6 +84,7 @@ private:
 	HANDLE									m_fenceEvent;
 	Microsoft::WRL::ComPtr<ID3D12Fence>		m_fence;
 	uint64_t								m_fenceValues[FrameCount];
+	std::mutex								m_uploadMutex;
 
 	// Cached device properties.
 	uint32_t								m_currentFrame{ 0 };

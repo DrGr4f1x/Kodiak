@@ -5,8 +5,14 @@ namespace Kodiak
 
 // Forward declarations
 class CommandList;
-class RenderTargetView;
 class DepthStencilView;
+class IndexBuffer;
+class IIndexBufferData;
+class IVertexBufferData;
+class RenderTargetView;
+class VertexBuffer;
+
+enum class Usage;
 
 class DeviceResources
 {
@@ -26,6 +32,10 @@ public:
 
 	// State getters
 	uint32_t GetCurrentFrame() const { return 0; }
+
+	// Factory methods
+	void CreateIndexBuffer(std::shared_ptr<IndexBuffer> ibuffer, IIndexBufferData* data, Usage usage, const std::string& debugName);
+	void CreateVertexBuffer(std::shared_ptr<VertexBuffer> vbuffer, IVertexBufferData* data, Usage usage, const std::string& debugName);
 
 private:
 	void CreateDeviceIndependentResources();

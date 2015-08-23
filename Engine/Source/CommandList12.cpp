@@ -14,7 +14,15 @@ using namespace std;
 CommandList::CommandList(uint32_t frameCount)
 	: m_commandLists(frameCount)
 	, m_commandAllocators(frameCount)
-{}
+{
+	m_fenceEvent = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
+}
+
+
+CommandList::~CommandList()
+{
+	CloseHandle(m_fenceEvent);
+}
 
 
 void CommandList::Begin()
@@ -64,4 +72,16 @@ void CommandList::ClearRenderTargetView(const std::shared_ptr<RenderTargetView>&
 void CommandList::SetCurrentFrame(uint32_t currentFrame)
 {
 	m_currentFrame = currentFrame;
+}
+
+
+ID3D12GraphicsCommandList* CommandList::GetCommandList()
+{
+	return m_commandLists[m_currentFrame].Get();
+}
+
+
+void CommandList::WaitForGpu()
+{
+	WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
 }

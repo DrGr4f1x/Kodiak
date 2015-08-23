@@ -5,7 +5,10 @@
 
 namespace Kodiak
 {
+
+// Forward declarations
 class CommandList;
+class Model;
 
 class BasicApplication : public Application
 {
@@ -17,6 +20,9 @@ protected:
 	void OnUpdate() override;
 	void OnDestroy() override;
 	bool OnEvent(MSG msg) override;
+
+private:
+	std::shared_ptr<Model> m_boxModel;
 };
 
 } // namespace Kodiak
