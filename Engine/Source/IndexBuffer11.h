@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IAsyncRenderTask.h"
+
 namespace Kodiak
 {
 
@@ -20,12 +22,12 @@ class IndexBuffer
 };
 
 
-class CreateIndexBufferTask
+class CreateIndexBufferTask : public IAsyncRenderTask
 {
 public:
 	CreateIndexBufferTask(std::shared_ptr<IndexBuffer> buffer, std::unique_ptr<IIndexBufferData> data, Usage usage, const std::string& debugName);
 
-	void Execute(DeviceResources* deviceResources);
+	void Execute(RenderTaskEnvironment& environment);
 
 private:
 	std::shared_ptr<IndexBuffer>		m_indexBuffer;

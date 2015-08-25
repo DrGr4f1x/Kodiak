@@ -25,6 +25,7 @@ public:
 
 	std::shared_ptr<RenderTargetView> GetBackBuffer();
 	void Present();
+	void BeginFrame();
 	void EndFrame() {}
 
 	std::shared_ptr<CommandList> CreateCommandList();

@@ -78,13 +78,8 @@ shared_ptr<RenderTargetView> DeviceResources::GetBackBuffer()
 }
 
 
-void DeviceResources::Present()
+void DeviceResources::BeginFrame()
 {
-	// The first argument instructs DXGI to block until VSync, putting the application
-	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
-	// frames that will never be displayed to the screen.
-	HRESULT hr = m_swapChain->Present(1, 0);
-
 	if (m_d3dContext1)
 	{
 		// Discard the contents of the render target.
@@ -95,6 +90,15 @@ void DeviceResources::Present()
 		// Discard the contents of the depth stencil.
 		m_d3dContext1->DiscardView(m_d3dDepthStencilView->m_dsv.Get());
 	}
+}
+
+
+void DeviceResources::Present()
+{
+	// The first argument instructs DXGI to block until VSync, putting the application
+	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
+	// frames that will never be displayed to the screen.
+	HRESULT hr = m_swapChain->Present(1, 0);
 
 	// If the device was removed either by a disconnection or a driver upgrade, we 
 	// must recreate all device resources.

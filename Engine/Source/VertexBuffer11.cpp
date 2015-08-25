@@ -19,7 +19,7 @@ CreateVertexBufferTask::CreateVertexBufferTask(shared_ptr<VertexBuffer> buffer, 
 {}
 
 
-void CreateVertexBufferTask::Execute(DeviceResources* deviceResources)
+void CreateVertexBufferTask::Execute(RenderTaskEnvironment& environment)
 {
-	deviceResources->CreateVertexBuffer(m_vertexBuffer, m_data.get(), m_usage, m_debugName);
+	environment.deviceResources->CreateVertexBuffer(m_vertexBuffer, m_data.get(), m_usage, m_debugName);
 }

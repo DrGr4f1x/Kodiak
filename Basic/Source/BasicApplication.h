@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine\Source\Application.h"
-#include "Engine\Source\Renderer.h"
+
 
 namespace Kodiak
 {
@@ -17,7 +17,7 @@ public:
 
 protected:
 	void OnInit() override;
-	void OnUpdate() override;
+	void OnUpdate(StepTimer* timer) override;
 	void OnDestroy() override;
 	bool OnEvent(MSG msg) override;
 

@@ -18,6 +18,15 @@ using namespace Concurrency;
 using namespace std;
 
 
+class BeginFrameTask : public IAsyncRenderTask
+{
+public:
+	void Execute(RenderTaskEnvironment& environment) override
+	{
+		environment.deviceResources->BeginFrame();
+	}
+};
+
 class EndFrameTask : public IAsyncRenderTask
 {
 public:
@@ -25,6 +34,7 @@ public:
 	{
 		environment.deviceResources->EndFrame();
 		environment.deviceResources->Present();
+		environment.currentFrame += 1;
 		environment.frameCompleted = true;
 	}
 };
@@ -126,28 +136,29 @@ void Renderer::EnqueueTask(shared_ptr<IAsyncRenderTask> task)
 }
 
 
-void Renderer::Render()
+bool Renderer::Render()
 {
+	// Wait on the previous frame
+	while (!m_renderTaskEnvironment.frameCompleted) {}
+
 	// Do some pre-render setup
 	m_commandListManager->UpdateCommandLists();
 
 	m_renderTaskEnvironment.frameCompleted = false;
 
+	// Start new frame
+	auto beginFrame = make_shared<BeginFrameTask>();
+	EnqueueTask(beginFrame);
+
 	// Kick off rendering of root pipeline
 	auto renderRootPipeline = make_shared<RenderRootPipelineTask>(m_rootPipeline);
 	EnqueueTask(renderRootPipeline);
-
-
+	
 	// Signal end of frame
 	auto endFrame = make_shared<EndFrameTask>();
 	EnqueueTask(endFrame);
-}
 
-
-void Renderer::WaitForPreviousFrame()
-{
-	// Spin while waiting for the previous frame to finish
-	while(!m_renderTaskEnvironment.frameCompleted) {}
+	return true;
 }
 
 
@@ -161,7 +172,7 @@ shared_ptr<IndexBuffer> Renderer::CreateIndexBuffer(unique_ptr<IIndexBufferData>
 	create_task([this, createIndexBuffer]() { createIndexBuffer->Execute(m_deviceResources.get()); }).then([createIndexBuffer]() { createIndexBuffer->WaitForGpu(); });
 #elif DX11
 	auto createIndexBuffer = make_shared<CreateIndexBufferTask>(ibuffer, move(data), usage, debugName);
-	create_task([this, createIndexBuffer]() { createIndexBuffer->Execute(m_deviceResources.get()); });
+	EnqueueTask(createIndexBuffer);
 #endif
 	
 	return ibuffer;
@@ -178,7 +189,7 @@ shared_ptr<VertexBuffer> Renderer::CreateVertexBuffer(unique_ptr<IVertexBufferDa
 	create_task([this, createVertexBuffer]() { createVertexBuffer->Execute(m_deviceResources.get()); }).then([createVertexBuffer]() { createVertexBuffer->WaitForGpu(); });
 #elif DX11
 	auto createVertexBuffer = make_shared<CreateVertexBufferTask>(vbuffer, move(data), usage, debugName);
-	create_task([this, createVertexBuffer]() { createVertexBuffer->Execute(m_deviceResources.get()); });
+	EnqueueTask(createVertexBuffer);
 #endif
 	
 	return vbuffer;

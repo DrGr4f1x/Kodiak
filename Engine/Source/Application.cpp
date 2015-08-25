@@ -6,6 +6,7 @@
 #include "DeviceResources.h"
 #include "Log.h"
 #include "Renderer.h"
+#include "StepTimer.h"
 
 #include <shellapi.h>
 #include <WindowsX.h>
@@ -26,6 +27,9 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 
 	// Create renderer
 	m_renderer = make_unique<Renderer>();
+
+	// Create step timer
+	m_timer = make_unique<StepTimer>();
 }
 
 
@@ -86,21 +90,14 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 			OnEvent(msg);
 		}
 
-		OnUpdate();
-		OnRender();
+		Update();
+		Render();
 	}
 
 	OnDestroy();
 
 	// Return this part of the WM_QUIT message to Windows.
 	return static_cast<char>(msg.wParam);
-}
-
-
-void Application::OnRender()
-{
-	m_renderer->WaitForPreviousFrame();
-	m_renderer->Render();
 }
 
 
@@ -249,6 +246,7 @@ LRESULT CALLBACK Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam,
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+
 // Helper function for parsing any supplied command line args.
 void Application::ParseCommandLineArgs()
 {
@@ -259,4 +257,27 @@ void Application::ParseCommandLineArgs()
 		OnCommandlineArgument(argv[i], wcslen(argv[i]));
 	}
 	LocalFree(argv);
+}
+
+
+void Application::Update()
+{
+	// Update scene objects
+	m_timer->Tick([this]()
+	{
+		// Subclasses implement OnUpdate to supply their own scene update logic
+		OnUpdate(m_timer.get());
+	});
+}
+
+
+bool Application::Render()
+{
+	// Don't try to render until we've run one Update tick
+	if (m_timer->GetFrameCount() == 0)
+	{
+		return false;
+	}
+
+	return m_renderer->Render();
 }

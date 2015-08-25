@@ -4,6 +4,7 @@
 #include "IndexBuffer11.h"
 
 #include "DeviceResources.h"
+#include "Renderer.h"
 #include "RenderEnums.h"
 
 
@@ -19,7 +20,7 @@ CreateIndexBufferTask::CreateIndexBufferTask(shared_ptr<IndexBuffer> buffer, uni
 {}
 
 
-void CreateIndexBufferTask::Execute(DeviceResources* deviceResources)
+void CreateIndexBufferTask::Execute(RenderTaskEnvironment& environment)
 {
-	deviceResources->CreateIndexBuffer(m_indexBuffer, m_data.get(), m_usage, m_debugName);
+	environment.deviceResources->CreateIndexBuffer(m_indexBuffer, m_data.get(), m_usage, m_debugName);
 }

@@ -25,9 +25,12 @@
 #if defined(DX12)
 #include <d3d12.h>
 #include <d3d11on12.h>
+#include <pix.h>
 #include "d3dx12.h"
 #elif defined(DX11)
+#include <d3d11_1.h>
 #include <d3d11_3.h>
+#include <pix.h>
 #elif defined(VK)
 #else
 #error No graphics API defined!

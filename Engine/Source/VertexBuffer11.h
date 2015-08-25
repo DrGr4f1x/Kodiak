@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IAsyncRenderTask.h"
+
 namespace Kodiak
 {
 
@@ -18,12 +20,12 @@ class VertexBuffer
 };
 
 
-class CreateVertexBufferTask
+class CreateVertexBufferTask : public IAsyncRenderTask
 {
 public:
 	CreateVertexBufferTask(std::shared_ptr<VertexBuffer> buffer, std::unique_ptr<IVertexBufferData> data, Usage usage, const std::string& debugName);
 
-	void Execute(DeviceResources* deviceResources);
+	void Execute(RenderTaskEnvironment& environment);
 
 private:
 	std::shared_ptr<VertexBuffer>		m_vertexBuffer;

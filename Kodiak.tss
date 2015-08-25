@@ -1,2 +1,36 @@
 <?xml version="1.0"?>
-<ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+<ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ArrayOfArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceResources11.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceResources11.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\um\pix_win.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\um\pix.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\um\d3d12.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Stdafx.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceResources12.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceResources12.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Renderer.cpp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Application.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Application.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.h</string>
+    </ArrayOfString>
+  </ArrayOfArrayOfString>
+</ArrayOfArrayOfArrayOfString>

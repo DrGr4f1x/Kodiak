@@ -107,6 +107,9 @@
     <ClInclude Include="Source\RenderEnums12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GpuHeap12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -128,9 +131,6 @@
     </ClCompile>
     <ClCompile Include="Source\Paths.cpp" />
     <ClCompile Include="Source\Log.cpp" />
-    <ClCompile Include="Source\DeviceResources12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Source\DeviceResources11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
@@ -165,6 +165,12 @@
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\VertexBuffer12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DeviceResources12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GpuHeap12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
   </ItemGroup>

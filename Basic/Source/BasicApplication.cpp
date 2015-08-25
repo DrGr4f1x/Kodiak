@@ -7,6 +7,7 @@
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPipeline.h"
+#include "Engine\Source\StepTimer.h"
 
 
 using namespace Kodiak;
@@ -46,7 +47,7 @@ void BasicApplication::OnInit()
 }
 
 
-void BasicApplication::OnUpdate()
+void BasicApplication::OnUpdate(StepTimer* timer)
 {}
 
 

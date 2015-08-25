@@ -1,7 +1,12 @@
 #pragma once
 
+#include "StepTimer.h"
+
 namespace Kodiak
 {
+
+// Forward declarations
+class StepTimer;
 
 class Application
 {
@@ -14,8 +19,7 @@ public:
 protected:
 	// Application event handlers
 	virtual void OnInit() = 0;
-	virtual void OnUpdate() = 0;
-	virtual void OnRender();
+	virtual void OnUpdate(StepTimer* timer) = 0;
 	virtual void OnDestroy() = 0;
 	virtual void OnCommandlineArgument(const wchar_t* argv, size_t length) {}
 
@@ -52,7 +56,13 @@ protected:
 	bool m_resizing{ false };
 
 private:
-	void ParseCommandLineArgs();		
+	void ParseCommandLineArgs();
+	void Update();
+	bool Render();
+
+private:
+	// Rendering loop timer
+	std::unique_ptr<StepTimer> m_timer;
 };
 
 } // namespace Application

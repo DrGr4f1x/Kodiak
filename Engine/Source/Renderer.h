@@ -23,6 +23,7 @@ struct RenderTaskEnvironment
 {
 	DeviceResources* deviceResources;
 	std::shared_ptr<RootPipeline> rootPipeline;
+	std::atomic<uint64_t> currentFrame{ 0 };
 	std::atomic<bool> stopRenderTask{ false };
 	std::atomic<bool> frameCompleted{ true };
 };
@@ -41,8 +42,7 @@ public:
 
 	std::shared_ptr<RenderTargetView> GetBackBuffer();
 
-	void Render();
-	void WaitForPreviousFrame();
+	bool Render();
 
 	// Factory methods
 	std::shared_ptr<IndexBuffer> CreateIndexBuffer(std::unique_ptr<IIndexBufferData> data, Usage usage, const std::string& debugName);
