@@ -300,7 +300,7 @@
       <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;dxgi.lib;Engine12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cp $(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.* $(ProjectDir)Shaders\Engine\SM5.1</Command>
+      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)Shaders\Engine\SM5.1"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

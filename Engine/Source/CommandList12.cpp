@@ -15,7 +15,6 @@
 #include "ColorBuffer12.h"
 #include "CommandListManager12.h"
 #include "DepthBuffer12.h"
-#include "DeviceResources12.h"
 #include "GpuResource12.h"
 #include "PipelineState12.h"
 #include "Rectangle.h"
