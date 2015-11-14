@@ -204,6 +204,9 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\Engine\Lib64</AdditionalLibraryDirectories>
       <AdditionalDependencies>d2d1.lib;d3d11.lib;dxgi.lib;windowscodecs.lib;dwrite.lib;Engine11_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5\*.*" "$(ProjectDir)Shaders\Engine\SM5"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">
     <ClCompile>
@@ -218,6 +221,9 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\Engine\Lib64</AdditionalLibraryDirectories>
       <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;dxgi.lib;Engine12_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)Shaders\Engine\SM5.1"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">
     <ClCompile>
@@ -272,6 +278,9 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\Engine\Lib64</AdditionalLibraryDirectories>
       <AdditionalDependencies>d2d1.lib;d3d11.lib;dxgi.lib;windowscodecs.lib;dwrite.lib;Engine11.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5\*.*" "$(ProjectDir)Shaders\Engine\SM5"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">
     <ClCompile>
@@ -290,6 +299,9 @@
       <AdditionalLibraryDirectories>$(ProjectDir)..\Engine\Lib64</AdditionalLibraryDirectories>
       <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;dxgi.lib;Engine12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>cp $(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.* $(ProjectDir)Shaders\Engine\SM5.1</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\BasicApplication.h" />

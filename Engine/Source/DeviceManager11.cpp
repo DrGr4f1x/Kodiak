@@ -1,20 +1,36 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #include "Stdafx.h"
 
-#include "DeviceResources11.h"
+#include "DeviceManager11.h"
 
-#include "CommandList.h"
-#include "DepthStencilView.h"
-#include "IndexBuffer.h"
-#include "RenderEnums.h"
-#include "RenderTargetView.h"
+#include "ColorBuffer11.h"
+#include "CommandList11.h"
+#include "CommandListManager11.h"
+#include "DepthBuffer11.h"
+#include "Format.h"
+#include "RenderEnums11.h"
 #include "RenderUtils.h"
-#include "VertexBuffer.h"
+#include "Shader11.h"
+#include "ShaderManager11.h"
 
 
 using namespace Kodiak;
 using namespace Microsoft::WRL;
 using namespace std;
 
+
+namespace Kodiak
+{
+ID3D11Device* g_device = nullptr;
+}
 
 namespace
 {
@@ -43,14 +59,14 @@ namespace
 } // anonymous namespace
 
 
-DeviceResources::DeviceResources()
+DeviceManager::DeviceManager()
 {
 	CreateDeviceIndependentResources();
 	CreateDeviceResources();
 }
 
 
-void DeviceResources::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
+void DeviceManager::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
 {
 	m_hwnd = hwnd;
 	m_width = width;
@@ -60,7 +76,7 @@ void DeviceResources::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
 }
 
 
-void DeviceResources::SetWindowSize(uint32_t width, uint32_t height)
+void DeviceManager::SetWindowSize(uint32_t width, uint32_t height)
 {
 	if (m_width != width || m_height != height)
 	{
@@ -72,29 +88,26 @@ void DeviceResources::SetWindowSize(uint32_t width, uint32_t height)
 }
 
 
-shared_ptr<RenderTargetView> DeviceResources::GetBackBuffer()
-{
-	return m_d3dRenderTargetView;
-}
-
-
-void DeviceResources::BeginFrame()
+void DeviceManager::BeginFrame()
 {
 	if (m_d3dContext1)
 	{
 		// Discard the contents of the render target.
 		// This is a valid operation only when the existing contents will be entirely
 		// overwritten. If dirty or scroll rects are used, this call should be removed.
-		m_d3dContext1->DiscardView(m_d3dRenderTargetView->m_rtv.Get());
-
-		// Discard the contents of the depth stencil.
-		m_d3dContext1->DiscardView(m_d3dDepthStencilView->m_dsv.Get());
+		m_d3dContext1->DiscardView(m_backBuffer->GetRTV());
 	}
 }
 
 
-void DeviceResources::Present()
+void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 {
+	auto& commandList = GraphicsCommandList::Begin();
+
+	PreparePresent(commandList, presentSource);
+
+	commandList.CloseAndExecute();
+
 	// The first argument instructs DXGI to block until VSync, putting the application
 	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
 	// frames that will never be displayed to the screen.
@@ -113,82 +126,8 @@ void DeviceResources::Present()
 }
 
 
-shared_ptr<CommandList> DeviceResources::CreateCommandList()
-{
-	auto commandList = make_shared<CommandList>();
-
-	m_d3dDevice->CreateDeferredContext(0, &commandList->m_deferredContext);
-
-	return commandList;
-}
-
-
-void DeviceResources::ExecuteCommandList(const shared_ptr<CommandList>& commandList)
-{
-	m_d3dContext->ExecuteCommandList(commandList->m_commandList.Get(), TRUE);
-}
-
-
-void DeviceResources::CreateIndexBuffer(std::shared_ptr<IndexBuffer> ibuffer, IIndexBufferData* data, Usage usage, const std::string& debugName)
-{
-	// Fill in a buffer description
-	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-	desc.ByteWidth = static_cast<UINT>(data->GetSize());
-	desc.Usage = (D3D11_USAGE)usage;
-	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	desc.CPUAccessFlags = 0;
-	desc.MiscFlags = 0;
-	desc.StructureByteStride = 0;
-
-	// Fill in the subresource data
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = data->GetData();
-	initData.SysMemPitch = 0;
-	initData.SysMemSlicePitch = 0;
-
-	// Create the buffer
-	ComPtr<ID3D11Buffer> buffer;
-	ThrowIfFailed(m_d3dDevice->CreateBuffer(&desc, (data->GetData() ? &initData : nullptr), &buffer));
-
-	buffer->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(debugName.size()), debugName.c_str());
-
-	ibuffer->buffer = buffer;
-	ibuffer->format = data->GetFormat();
-	ibuffer->isReady = true;
-}
-
-
-void DeviceResources::CreateVertexBuffer(shared_ptr<VertexBuffer> vbuffer, IVertexBufferData* data, Usage usage, const string& debugName)
-{
-	// Fill in a buffer description
-	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-	desc.ByteWidth = static_cast<UINT>(data->GetSize());
-	desc.Usage = (D3D11_USAGE)usage;
-	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	desc.CPUAccessFlags = (usage == Usage::Dynamic) ? D3D11_CPU_ACCESS_WRITE : 0;
-	desc.MiscFlags = 0;
-	desc.StructureByteStride = 0;
-
-	// Fill in the subresource data
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = data->GetData();
-	initData.SysMemPitch = 0;
-	initData.SysMemSlicePitch = 0;
-
-	// Create the buffer
-	ComPtr<ID3D11Buffer> buffer;
-	ThrowIfFailed(m_d3dDevice->CreateBuffer(&desc, (data->GetData() ? &initData : nullptr), &buffer));
-
-	buffer->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(debugName.size()), debugName.c_str());
-
-	vbuffer->buffer = buffer;
-	vbuffer->isReady = true;
-}
-
 // Configures resources that don't depend on the Direct3D device.
-void DeviceResources::CreateDeviceIndependentResources()
+void DeviceManager::CreateDeviceIndependentResources()
 {
 	// Initialize Direct2D resources.
 	D2D1_FACTORY_OPTIONS options;
@@ -230,7 +169,7 @@ void DeviceResources::CreateDeviceIndependentResources()
 }
 
 
-void DeviceResources::CreateDeviceResources()
+void DeviceManager::CreateDeviceResources()
 {
 	// This flag adds support for surfaces with a different color channel ordering
 	// than the API default. It is required for compatibility with Direct2D.
@@ -295,6 +234,11 @@ void DeviceResources::CreateDeviceResources()
 			);
 	}
 
+	g_device = m_d3dDevice.Get();
+
+	// Initialize the command list manager
+	CommandListManager::GetInstance().Create(m_d3dDevice.Get());
+
 	// Cast pointers to DX11.1, 11.2, 11.3
 	m_d3dDevice.As(&m_d3dDevice1);
 	m_d3dContext.As(&m_d3dContext1);
@@ -302,6 +246,9 @@ void DeviceResources::CreateDeviceResources()
 	m_d3dContext.As(&m_d3dContext2);
 	m_d3dDevice.As(&m_d3dDevice3);
 	m_d3dContext.As(&m_d3dContext3);
+
+	// Create state for present
+	CreatePresentState();
 
 	// Create the Direct2D device object and a corresponding context.
 	ComPtr<IDXGIDevice3> dxgiDevice;
@@ -322,15 +269,14 @@ void DeviceResources::CreateDeviceResources()
 }
 
 
-void DeviceResources::CreateWindowSizeDependentResources()
+void DeviceManager::CreateWindowSizeDependentResources()
 {
 	// Clear the previous window size specific context.
 	ID3D11RenderTargetView* nullViews[] = { nullptr };
 	m_d3dContext->OMSetRenderTargets(ARRAYSIZE(nullViews), nullViews, nullptr);
-	m_d3dRenderTargetView = nullptr;
+	m_backBuffer = nullptr;
 	m_d2dContext->SetTarget(nullptr);
 	m_d2dTargetBitmap = nullptr;
-	m_d3dDepthStencilView = nullptr;
 	m_d3dContext->Flush();
 
 	if (m_swapChain != nullptr)
@@ -413,53 +359,8 @@ void DeviceResources::CreateWindowSizeDependentResources()
 		m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer))
 		);
 
-	m_d3dRenderTargetView = make_shared<RenderTargetView>();
-	ThrowIfFailed(
-		m_d3dDevice->CreateRenderTargetView(
-			backBuffer.Get(),
-			nullptr,
-			&m_d3dRenderTargetView->m_rtv
-			)
-		);
-
-	// Create a depth stencil view for use with 3D rendering if needed.
-	CD3D11_TEXTURE2D_DESC depthStencilDesc(
-		DXGI_FORMAT_D24_UNORM_S8_UINT,
-		m_width,
-		m_height,
-		1, // This depth stencil view has only one texture.
-		1, // Use a single mipmap level.
-		D3D11_BIND_DEPTH_STENCIL
-		);
-
-	ComPtr<ID3D11Texture2D> depthStencil;
-	ThrowIfFailed(
-		m_d3dDevice->CreateTexture2D(
-			&depthStencilDesc,
-			nullptr,
-			&depthStencil
-			)
-		);
-
-	m_d3dDepthStencilView = make_shared<DepthStencilView>();
-	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
-	ThrowIfFailed(
-		m_d3dDevice->CreateDepthStencilView(
-			depthStencil.Get(),
-			&depthStencilViewDesc,
-			&m_d3dDepthStencilView->m_dsv
-			)
-		);
-
-	// Set the 3D rendering viewport to target the entire window.
-	m_screenViewport = CD3D11_VIEWPORT(
-		0.0f,
-		0.0f,
-		static_cast<float>(m_width),
-		static_cast<float>(m_height)
-		);
-
-	m_d3dContext->RSSetViewports(1, &m_screenViewport);
+	m_backBuffer = make_shared<ColorBuffer>();
+	m_backBuffer->CreateFromSwapChain(this, "BackBuffer", backBuffer.Get());
 
 	// Create a Direct2D target bitmap associated with the
 	// swap chain back buffer and set it as the current target.
@@ -488,4 +389,48 @@ void DeviceResources::CreateWindowSizeDependentResources()
 
 	// Grayscale text anti-aliasing is recommended for all Windows Store apps.
 	m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+}
+
+
+void DeviceManager::CreatePresentState()
+{
+	// Default blend state - no blend
+	BlendStateDesc defaultBlendState;
+
+	// Depth-stencil state - no depth test, no depth write
+	DepthStencilStateDesc depthStencilState(false, false);
+
+	// Rasterizer state - two-sided
+	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
+
+	// Load shaders
+	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine\\SM5\\ScreenQuadVS.cso");
+	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine\\SM5\\BufferCopyPS.cso");
+	(vs->loadTask && ps->loadTask).wait();
+	
+	// Configure PSO
+	m_convertLDRToDisplayPSO.SetBlendState(defaultBlendState);
+	m_convertLDRToDisplayPSO.SetRasterizerState(rasterizerState);
+	m_convertLDRToDisplayPSO.SetDepthStencilState(depthStencilState);
+	m_convertLDRToDisplayPSO.SetVertexShader(vs.get());
+	m_convertLDRToDisplayPSO.SetPixelShader(ps.get());
+
+	m_convertLDRToDisplayPSO.Finalize();
+}
+
+
+void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
+{
+	commandList.UnbindRenderTargets();
+
+	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList.SetPipelineState(m_convertLDRToDisplayPSO);
+
+	// Copy and convert the LDR present source to the current back buffer
+	commandList.SetRenderTarget(*m_backBuffer);
+	commandList.SetPixelShaderResource(0, presentSource->GetSRV());
+
+	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
+
+	commandList.Draw(3);
 }

@@ -1,15 +1,24 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #include "Stdafx.h"
 
 #include "Renderer.h"
 
+#include "ColorBuffer.h"
 #include "CommandList.h"
-#include "DeviceResources.h"
+#include "CommandListManager.h"
+#include "DeviceManager.h"
+#include "Format.h"
 #include "IAsyncRenderTask.h"
-#include "IndexBuffer.h"
 #include "RenderPipeline.h"
-#include "RenderTargetView.h"
 #include "RenderUtils.h"
-#include "VertexBuffer.h"
 
 
 using namespace Kodiak;
@@ -23,49 +32,52 @@ class BeginFrameTask : public IAsyncRenderTask
 public:
 	void Execute(RenderTaskEnvironment& environment) override
 	{
-		environment.deviceResources->BeginFrame();
+		environment.deviceManager->BeginFrame();
 	}
 };
 
 class EndFrameTask : public IAsyncRenderTask
 {
 public:
+	EndFrameTask(shared_ptr<ColorBuffer> presentSource)
+		: m_presentSource(presentSource)
+	{}
+
 	void Execute(RenderTaskEnvironment& environment) override
 	{
-		environment.deviceResources->EndFrame();
-		environment.deviceResources->Present();
+		environment.deviceManager->Present(m_presentSource);
 		environment.currentFrame += 1;
 		environment.frameCompleted = true;
 	}
+
+private:
+	shared_ptr<ColorBuffer> m_presentSource;
 };
 
 
 Renderer::Renderer()
-	: m_rootPipeline(make_shared<RootPipeline>())
+	: m_rootPipeline(make_shared<Pipeline>())
 {
-	m_deviceResources = make_unique<DeviceResources>();
+	m_deviceManager = make_unique<DeviceManager>();
 
-	m_commandListManager = make_unique<CommandListManager>(m_deviceResources.get());
-
-	m_renderTaskEnvironment.deviceResources = m_deviceResources.get();
+	m_renderTaskEnvironment.deviceManager = m_deviceManager.get();
 	m_renderTaskEnvironment.rootPipeline = m_rootPipeline;
 
 	m_rootPipeline->SetName("Root Pipeline");
-	m_rootPipeline->SetCommandList(m_commandListManager->CreateCommandList());
-
+	
 	StartRenderTask();
 }
 
 
 void Renderer::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
 {
-	m_deviceResources->SetWindow(width, height, hwnd);
+	m_deviceManager->SetWindow(width, height, hwnd);
 }
 
 
 void Renderer::SetWindowSize(uint32_t width, uint32_t height)
 {
-	m_deviceResources->SetWindowSize(width, height);
+	m_deviceManager->SetWindowSize(width, height);
 }
 
 
@@ -73,13 +85,7 @@ void Renderer::Finalize()
 {
 	StopRenderTask();
 
-	m_deviceResources->Finalize();
-}
-
-
-shared_ptr<RenderTargetView> Renderer::GetBackBuffer()
-{
-	return m_deviceResources->GetBackBuffer();
+	m_deviceManager->Finalize();
 }
 
 
@@ -141,9 +147,6 @@ bool Renderer::Render()
 	// Wait on the previous frame
 	while (!m_renderTaskEnvironment.frameCompleted) {}
 
-	// Do some pre-render setup
-	m_commandListManager->UpdateCommandLists();
-
 	m_renderTaskEnvironment.frameCompleted = false;
 
 	// Start new frame
@@ -151,46 +154,23 @@ bool Renderer::Render()
 	EnqueueTask(beginFrame);
 
 	// Kick off rendering of root pipeline
-	auto renderRootPipeline = make_shared<RenderRootPipelineTask>(m_rootPipeline);
+	auto renderRootPipeline = make_shared<RenderPipelineTask>(m_rootPipeline);
 	EnqueueTask(renderRootPipeline);
 	
 	// Signal end of frame
-	auto endFrame = make_shared<EndFrameTask>();
+	auto endFrame = make_shared<EndFrameTask>(m_rootPipeline->GetPresentSource());
 	EnqueueTask(endFrame);
 
 	return true;
 }
 
 
-shared_ptr<IndexBuffer> Renderer::CreateIndexBuffer(unique_ptr<IIndexBufferData> data, Usage usage, const string& debugName)
+shared_ptr<ColorBuffer> Renderer::CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
+	const DirectX::XMVECTORF32& clearColor)
 {
-	auto ibuffer = make_shared<IndexBuffer>();
+	auto colorBuffer = make_shared<ColorBuffer>(clearColor);
 
-#if DX12
-	auto commandList = m_commandListManager->CreateCommandList();
-	auto createIndexBuffer = make_shared<CreateIndexBufferTask>(commandList, ibuffer, move(data), usage, debugName);
-	create_task([this, createIndexBuffer]() { createIndexBuffer->Execute(m_deviceResources.get()); }).then([createIndexBuffer]() { createIndexBuffer->WaitForGpu(); });
-#elif DX11
-	auto createIndexBuffer = make_shared<CreateIndexBufferTask>(ibuffer, move(data), usage, debugName);
-	EnqueueTask(createIndexBuffer);
-#endif
-	
-	return ibuffer;
-}
+	colorBuffer->Create(m_deviceManager.get(), name, width, height, arraySize, format);
 
-
-shared_ptr<VertexBuffer> Renderer::CreateVertexBuffer(unique_ptr<IVertexBufferData> data, Usage usage, const string& debugName)
-{
-	auto vbuffer = make_shared<VertexBuffer>();
-
-#if DX12
-	auto commandList = m_commandListManager->CreateCommandList();
-	auto createVertexBuffer = make_shared<CreateVertexBufferTask>(commandList, vbuffer, move(data), usage, debugName);
-	create_task([this, createVertexBuffer]() { createVertexBuffer->Execute(m_deviceResources.get()); }).then([createVertexBuffer]() { createVertexBuffer->WaitForGpu(); });
-#elif DX11
-	auto createVertexBuffer = make_shared<CreateVertexBufferTask>(vbuffer, move(data), usage, debugName);
-	EnqueueTask(createVertexBuffer);
-#endif
-	
-	return vbuffer;
+	return colorBuffer;
 }

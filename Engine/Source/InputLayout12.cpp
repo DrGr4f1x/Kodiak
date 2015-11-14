@@ -7,20 +7,20 @@
 // Author: David Elder
 //
 
-#pragma once
+#include "Stdafx.h"
+
+#include "InputLayout12.h"
+
+#include "Format.h"
+#include "RenderEnums.h"
+
+using namespace Kodiak;
+using namespace std;
+
 
 namespace Kodiak
 {
-
-// Forward declarations
-class GraphicsCommandList;
-
-class IRenderOperation
-{
-public:
-	virtual ~IRenderOperation() = default;
-
-	virtual void PopulateCommandList(GraphicsCommandList& commandList) = 0;
-};
-
+	const uint32_t kAppendAlignedElement = D3D12_APPEND_ALIGNED_ELEMENT;
 } // namespace Kodiak
+
+

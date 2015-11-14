@@ -12,15 +12,20 @@
 namespace Kodiak
 {
 
-// Forward declarations
-class GraphicsCommandList;
-
-class IRenderOperation
+struct Rectangle
 {
-public:
-	virtual ~IRenderOperation() = default;
+	Rectangle() = default;
+	Rectangle(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+		: left(left)
+		, top(top)
+		, right(right)
+		, bottom(bottom)
+	{}
 
-	virtual void PopulateCommandList(GraphicsCommandList& commandList) = 0;
+	uint32_t left{ 0 };
+	uint32_t top{ 0 };
+	uint32_t right{ 1 };
+	uint32_t bottom{ 1 };
 };
 
 } // namespace Kodiak

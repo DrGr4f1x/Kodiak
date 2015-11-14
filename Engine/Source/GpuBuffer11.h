@@ -12,15 +12,9 @@
 namespace Kodiak
 {
 
-// Forward declarations
-class GraphicsCommandList;
-
-class IRenderOperation
+class GpuBuffer
 {
-public:
-	virtual ~IRenderOperation() = default;
 
-	virtual void PopulateCommandList(GraphicsCommandList& commandList) = 0;
 };
 
 } // namespace Kodiak

@@ -1,3 +1,12 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #pragma once
 
 namespace Kodiak
@@ -10,5 +19,134 @@ enum class Usage
 	Staging,
 	Default
 };
+
+
+enum class Blend
+{
+	Zero =				D3D12_BLEND_ZERO,
+	One =				D3D12_BLEND_ONE,
+	SrcColor =			D3D12_BLEND_SRC_COLOR,
+	InvSrcColor =		D3D12_BLEND_INV_SRC_COLOR,
+	SrcAlpha =			D3D12_BLEND_SRC_ALPHA,
+	InvSrcAlpha =		D3D12_BLEND_INV_SRC_ALPHA,
+	DstAlpha =			D3D12_BLEND_DEST_ALPHA,
+	InvDstAlpha =		D3D12_BLEND_INV_DEST_ALPHA,
+	DstColor =			D3D12_BLEND_DEST_COLOR,
+	InvDstColor =		D3D12_BLEND_INV_DEST_COLOR,
+	SrcAlphaSat =		D3D12_BLEND_SRC_ALPHA_SAT,
+	BlendFactor =		D3D12_BLEND_BLEND_FACTOR,
+	InvBlendFactor =	D3D12_BLEND_INV_BLEND_FACTOR,
+	Src1Color =			D3D12_BLEND_SRC1_COLOR,
+	InvSrc1Color =		D3D12_BLEND_INV_SRC1_COLOR,
+	Src1Alpha =			D3D12_BLEND_SRC1_ALPHA,
+	InvSrc1Alpha =		D3D12_BLEND_INV_SRC1_ALPHA
+};
+
+
+enum class BlendOp
+{
+	Add =			D3D12_BLEND_OP_ADD,
+	Subtract =		D3D12_BLEND_OP_SUBTRACT,
+	RevSubtract =	D3D12_BLEND_OP_REV_SUBTRACT,
+	Min =			D3D12_BLEND_OP_MIN,
+	Max =			D3D12_BLEND_OP_MAX
+};
+
+
+enum class LogicOp
+{
+	Clear =			D3D12_LOGIC_OP_CLEAR,
+	Set =			D3D12_LOGIC_OP_SET,
+	Copy =			D3D12_LOGIC_OP_COPY,
+	CopyInverted =	D3D12_LOGIC_OP_COPY_INVERTED,
+	Noop =			D3D12_LOGIC_OP_NOOP,
+	Invert =		D3D12_LOGIC_OP_INVERT,
+	And =			D3D12_LOGIC_OP_AND,
+	Nand =			D3D12_LOGIC_OP_NAND,
+	Or =			D3D12_LOGIC_OP_OR,
+	Nor =			D3D12_LOGIC_OP_NOR,
+	Xor =			D3D12_LOGIC_OP_XOR,
+	Equiv =			D3D12_LOGIC_OP_EQUIV,
+	AndReverse =	D3D12_LOGIC_OP_AND_REVERSE,
+	OrReverse =		D3D12_LOGIC_OP_OR_REVERSE,
+	OrInverted =	D3D12_LOGIC_OP_OR_INVERTED
+};
+
+
+enum class ColorWrite
+{
+	Red = 1,
+	Green = 2,
+	Blue = 4,
+	Alpha = 8,
+	All = Red | Green | Blue | Alpha
+};
+
+
+enum class CullMode
+{
+	None =	D3D12_CULL_MODE_NONE,
+	Front = D3D12_CULL_MODE_FRONT,
+	Back =	D3D12_CULL_MODE_BACK
+};
+
+
+enum class FillMode
+{
+	Wireframe = D3D12_FILL_MODE_WIREFRAME,
+	Solid =		D3D12_FILL_MODE_SOLID
+};
+
+
+enum class DepthWrite
+{
+	Zero =	D3D12_DEPTH_WRITE_MASK_ZERO,
+	All =	D3D12_DEPTH_WRITE_MASK_ALL
+};
+
+
+enum class ComparisonFunc
+{
+	Never =			D3D12_COMPARISON_FUNC_NEVER,
+	Less =			D3D12_COMPARISON_FUNC_LESS,
+	Equal =			D3D12_COMPARISON_FUNC_EQUAL,
+	LessEqual =		D3D12_COMPARISON_FUNC_LESS_EQUAL,
+	Greater =		D3D12_COMPARISON_FUNC_GREATER,
+	NotEqual =		D3D12_COMPARISON_FUNC_NOT_EQUAL,
+	GreaterEqual =	D3D12_COMPARISON_FUNC_GREATER_EQUAL,
+	Always =		D3D12_COMPARISON_FUNC_ALWAYS
+};
+
+
+enum class StencilOp
+{
+	Keep =		D3D12_STENCIL_OP_KEEP,
+	Zero =		D3D12_STENCIL_OP_ZERO,
+	Replace =	D3D12_STENCIL_OP_REPLACE,
+	IncrSat =	D3D12_STENCIL_OP_INCR_SAT,
+	DecrSat =	D3D12_STENCIL_OP_DECR_SAT,
+	Invert =	D3D12_STENCIL_OP_INVERT,
+	Incr =		D3D12_STENCIL_OP_INCR,
+	Decr =		D3D12_STENCIL_OP_DECR
+};
+
+
+enum class IndexBufferStripCutValue
+{
+	Disabled =			D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
+	Value_0xFFFF =		D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF,
+	Value_0xFFFFFFFF =	D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF
+};
+
+
+enum class PrimitiveTopologyType
+{
+	Undefined = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED,
+	Point =		D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT,
+	Line =		D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE,
+	Triangle =	D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+	Patch =		D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH
+};
+
 
 } // namespace Kodiak

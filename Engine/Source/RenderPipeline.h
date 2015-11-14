@@ -1,3 +1,12 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #pragma once
 
 #include "IAsyncRenderTask.h"
@@ -5,11 +14,13 @@
 namespace Kodiak
 {
 
+
 // Forward declarations
+class ColorBuffer;
 class CommandList;
 class DeviceResources;
 class IRenderOperation;
-class RenderTargetView;
+
 
 class Pipeline
 {
@@ -17,38 +28,32 @@ public:
 	virtual ~Pipeline();
 
 	void SetName(const std::string& name);
-	void SetCommandList(const std::shared_ptr<CommandList>& commandList);
+	
+	void ClearColor(std::shared_ptr<ColorBuffer> colorBuffer);
+	void ClearColor(std::shared_ptr<ColorBuffer> colorBuffer, const DirectX::XMVECTORF32& color);
 
-	void Begin();
-	void End();
+	void Present(std::shared_ptr<ColorBuffer> colorBuffer);
+	std::shared_ptr<ColorBuffer> GetPresentSource();
 
-	void ClearRenderTargetView(const std::shared_ptr<RenderTargetView>& rtv, const DirectX::XMVECTORF32& color);
-
-	void Execute(DeviceResources* deviceResources);
-	void Submit(DeviceResources* deviceResources);
+	void Execute();
 
 protected:
 	std::string m_name;
-	std::shared_ptr<CommandList> m_commandList;
-	std::vector<IRenderOperation*> m_renderOperations;
+	std::vector<IRenderOperation*>	m_renderOperations;
+
+	std::shared_ptr<ColorBuffer>	m_presentSource;
 };
 
 
-class RootPipeline : public Pipeline
+class RenderPipelineTask : public IAsyncRenderTask
 {
 public:
-	void Present(const std::shared_ptr<RenderTargetView>& rtv);
-};
-
-class RenderRootPipelineTask : public IAsyncRenderTask
-{
-public:
-	RenderRootPipelineTask(std::shared_ptr<RootPipeline> pipeline);
+	RenderPipelineTask(std::shared_ptr<Pipeline> pipeline);
 
 	void Execute(RenderTaskEnvironment& environment) override;
 
 private:
-	std::shared_ptr<RootPipeline> m_pipeline;
+	std::shared_ptr<Pipeline> m_pipeline;
 };
 
 } // namespace Kodiak

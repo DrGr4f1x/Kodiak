@@ -1,3 +1,12 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #pragma once
 
 #include <concurrent_queue.h>
@@ -6,23 +15,20 @@ namespace Kodiak
 {
 
 // Forward declarations
+class ColorBuffer;
 class CommandList;
-class CommandListManager;
-class DeviceResources;
+class DeviceManager;
 class IAsyncRenderTask;
-class IIndexBufferData;
-class IVertexBufferData;
-class IndexBuffer;
+class Pipeline;
 class RenderTargetView;
-class RootPipeline;
-class VertexBuffer;
 
+enum class ColorFormat;
 enum class Usage;
 
 struct RenderTaskEnvironment 
 {
-	DeviceResources* deviceResources;
-	std::shared_ptr<RootPipeline> rootPipeline;
+	DeviceManager* deviceManager;
+	std::shared_ptr<Pipeline> rootPipeline;
 	std::atomic<uint64_t> currentFrame{ 0 };
 	std::atomic<bool> stopRenderTask{ false };
 	std::atomic<bool> frameCompleted{ true };
@@ -38,15 +44,13 @@ public:
 	void SetWindowSize(uint32_t width, uint32_t height);
 	void Finalize();
 
-	std::shared_ptr<RootPipeline> GetRootPipeline() { return m_rootPipeline; }
-
-	std::shared_ptr<RenderTargetView> GetBackBuffer();
+	std::shared_ptr<Pipeline> GetRootPipeline() { return m_rootPipeline; }
 
 	bool Render();
 
 	// Factory methods
-	std::shared_ptr<IndexBuffer> CreateIndexBuffer(std::unique_ptr<IIndexBufferData> data, Usage usage, const std::string& debugName);
-	std::shared_ptr<VertexBuffer> CreateVertexBuffer(std::unique_ptr<IVertexBufferData> data, Usage usage, const std::string& debugName);
+	std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
+		const DirectX::XMVECTORF32& clearColor);
 
 private:
 	void StartRenderTask();
@@ -56,10 +60,7 @@ private:
 
 private:
 	// Graphics API specific resources
-	std::unique_ptr<DeviceResources>				m_deviceResources{ nullptr };
-
-	// Resource managers
-	std::unique_ptr<CommandListManager>				m_commandListManager{ nullptr };
+	std::unique_ptr<DeviceManager>				m_deviceManager{ nullptr };
 
 	// Async render task and task queue
 	RenderTaskEnvironment												m_renderTaskEnvironment;
@@ -68,7 +69,7 @@ private:
 	bool																m_renderTaskStarted{ false };
 
 	// Root render pipeline - the start of the 3D scene render
-	std::shared_ptr<RootPipeline>					m_rootPipeline;
+	std::shared_ptr<Pipeline>					m_rootPipeline;
 };
 
 } // namespace Kodiak

@@ -1,3 +1,12 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #pragma once
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -45,6 +54,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <sstream>
 #include <stdint.h>
 #include <string>

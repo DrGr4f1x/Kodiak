@@ -1,13 +1,21 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #include "Stdafx.h"
 
 #include "RenderPipeline.h"
 
-#include "ClearRenderTargetOp.h"
+#include "ClearColorBufferOp.h"
+#include "ColorBuffer.h"
 #include "CommandList.h"
-#include "DeviceResources.h"
-#include "PresentRenderTargetOp.h"
+#include "DeviceManager.h"
 #include "Renderer.h"
-#include "RenderTargetView.h"
 
 
 using namespace Kodiak;
@@ -30,64 +38,51 @@ void Pipeline::SetName(const string& name)
 }
 
 
-void Pipeline::SetCommandList(const shared_ptr<CommandList>& commandList)
+void Pipeline::ClearColor(shared_ptr<ColorBuffer> colorBuffer)
 {
-	m_commandList = commandList;
-}
-
-
-void Pipeline::Begin()
-{
-	m_commandList->Begin();
-}
-
-
-void Pipeline::End()
-{
-	m_commandList->End();
-}
-
-
-void Pipeline::ClearRenderTargetView(const shared_ptr<RenderTargetView>& rtv, const XMVECTORF32& color)
-{
-	auto operation = new ClearRenderTargetOperation(rtv, color);
+	auto operation = new ClearColorBufferOperation(colorBuffer, colorBuffer->GetClearColor());
 	m_renderOperations.push_back(operation);
 }
 
 
-void Pipeline::Execute(DeviceResources* deviceResources)
+void Pipeline::ClearColor(shared_ptr<ColorBuffer> colorBuffer, const XMVECTORF32& color)
 {
-	m_commandList->Begin();
+	auto operation = new ClearColorBufferOperation(colorBuffer, color);
+	m_renderOperations.push_back(operation);
+}
+
+
+void Pipeline::Present(shared_ptr<ColorBuffer> colorBuffer)
+{
+	m_presentSource = colorBuffer;
+}
+
+
+shared_ptr<ColorBuffer> Pipeline::GetPresentSource()
+{
+	return m_presentSource;
+}
+
+
+void Pipeline::Execute()
+{
+	auto& commandList = GraphicsCommandList::Begin();
 
 	for (auto operation : m_renderOperations)
 	{
-		operation->PopulateCommandList(m_commandList);
+		operation->PopulateCommandList(commandList);
 	}
 
-	m_commandList->End();
+	commandList.CloseAndExecute();
 }
 
 
-void Pipeline::Submit(DeviceResources* deviceResources)
-{
-	deviceResources->ExecuteCommandList(m_commandList);
-}
-
-
-void RootPipeline::Present(const std::shared_ptr<RenderTargetView>& rtv)
-{
-	auto operation = new PresentRenderTargetOperation(rtv);
-	m_renderOperations.push_back(operation);
-}
-
-
-RenderRootPipelineTask::RenderRootPipelineTask(shared_ptr<RootPipeline> pipeline)
+RenderPipelineTask::RenderPipelineTask(shared_ptr<Pipeline> pipeline)
 	: m_pipeline(pipeline)
 {}
 
 
-void RenderRootPipelineTask::Execute(RenderTaskEnvironment& environment)
+void RenderPipelineTask::Execute(RenderTaskEnvironment& environment)
 {
-	m_pipeline->Execute(environment.deviceResources);
-	m_pipeline->Submit(environment.deviceResources);
+	m_pipeline->Execute();
 }

@@ -13,6 +13,21 @@
     <Filter Include="Rendering\Operations">
       <UniqueIdentifier>{41482bc2-1884-4aef-9460-9ce54fcd54f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Rendering\DXCommon">
+      <UniqueIdentifier>{450e1881-4871-48f4-9546-69626d6341ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{d3bd8941-93e8-4260-8ed0-912947713a31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\SM5">
+      <UniqueIdentifier>{9e3bfaf3-0d32-4232-b43d-1ab384d48715}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\SM5.1">
+      <UniqueIdentifier>{ad86dbc2-b4f5-4607-a6ea-da2f4d68d0b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Common">
+      <UniqueIdentifier>{e1ebbbc6-7fe8-4200-a1c9-9b71b0aeac9c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -23,74 +38,28 @@
     <ClInclude Include="Source\RenderUtils.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderTargetView.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderTargetView12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Source\CommandList12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\CommandList.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderTargetView11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DepthStencilView11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DepthStencilView.h" />
     <ClInclude Include="Source\CommandList11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\Log.h" />
-    <ClInclude Include="Source\DeviceResources12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DeviceResources.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DeviceResources11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\IRenderOperation.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ClearRenderTargetOp.h">
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline.h">
       <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PresentRenderTargetOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\IndexBuffer.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\IndexBuffer12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\IndexBuffer11.h">
-      <Filter>Rendering\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Source\Model.h">
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene.h">
       <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\VertexBuffer.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\VertexBuffer11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\VertexBuffer12.h">
-      <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\VertexFormats.h">
       <Filter>Rendering</Filter>
@@ -107,53 +76,145 @@
     <ClInclude Include="Source\RenderEnums12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GpuHeap12.h">
+    <ClInclude Include="Source\CommandListManager12.h">
       <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommandListManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommandListManager11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ColorBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ColorBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ColorBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeviceManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeviceManager11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PixelBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PixelBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GpuBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GpuBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GpuResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GpuResource11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ClearColorBufferOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GpuResource12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GpuBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PixelBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DeviceManager12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DescriptorHeap12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Format.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DepthBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RootSignature12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DynamicDescriptorHeap12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DepthBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DXGIUtility.h">
+      <Filter>Rendering\DXCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Viewport.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rectangle.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PipelineState.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PipelineState11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shader.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shader11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DepthBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shaders\Common\ShaderManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BinaryReader.h" />
+    <ClInclude Include="Source\Utility.h" />
+    <ClInclude Include="Source\PipelineState12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shader12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InputLayout.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InputLayout12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderManager12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderManager11.h">
+      <Filter>Rendering\DX11</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
     <ClCompile Include="Source\Application.cpp" />
-    <ClCompile Include="Source\RenderTargetView12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Source\CommandList12.cpp">
       <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderTargetView11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\DepthStencilView11.cpp">
-      <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\CommandList11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\Paths.cpp" />
     <ClCompile Include="Source\Log.cpp" />
-    <ClCompile Include="Source\DeviceResources11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Renderer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ClearRenderTargetOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline.cpp">
       <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\PresentRenderTargetOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\CommandList.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\IndexBuffer12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\IndexBuffer11.cpp">
-      <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\Model.cpp">
       <Filter>Rendering</Filter>
@@ -161,17 +222,86 @@
     <ClCompile Include="Source\Scene.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Source\VertexBuffer11.cpp">
+    <ClCompile Include="Source\CommandListManager12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CommandListManager11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
-    <ClCompile Include="Source\VertexBuffer12.cpp">
+    <ClCompile Include="Source\ColorBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ColorBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\DeviceResources12.cpp">
+    <ClCompile Include="Source\DeviceManager11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PixelBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GpuBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ClearColorBufferOp.cpp">
+      <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GpuBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\GpuHeap12.cpp">
+    <ClCompile Include="Source\PixelBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\DeviceManager12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DescriptorHeap12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DepthBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RootSignature12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DynamicDescriptorHeap12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DepthBuffer12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PipelineState11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shader11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DXGIUtility.cpp">
+      <Filter>Rendering\DXCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderManager11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BinaryReader.cpp" />
+    <ClCompile Include="Source\PipelineState12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shader12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\InputLayout12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderManager12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BufferCopyPS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

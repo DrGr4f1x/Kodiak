@@ -1,3 +1,12 @@
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author: David Elder
+//
+
 #include "Stdafx.h"
 
 #include "Paths.h"
@@ -17,6 +26,7 @@ Paths::Paths()
 	: m_baseDir()
 	, m_binaryDir()
 	, m_assetDir()
+	, m_shaderDir()
 	, m_logDir()
 {
 	Initialize();
@@ -38,6 +48,12 @@ const string& Paths::BinaryDir() const
 const string& Paths::AssetDir() const
 {
 	return m_assetDir;
+}
+
+
+const string& Paths::ShaderDir() const
+{
+	return m_shaderDir;
 }
 
 
@@ -78,5 +94,6 @@ void Paths::Initialize()
 	}
 
 	m_assetDir = m_baseDir + string("Assets\\");
+	m_shaderDir = m_baseDir + string("Shaders\\");
 	m_logDir = m_baseDir + string("Log\\");
 }

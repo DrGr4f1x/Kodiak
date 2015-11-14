@@ -4,23 +4,13 @@
 // IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
-// Author: David Elder
+// Adapted from BufferCopyPS.hlsl in Microsoft's Miniengine sample
+// https://github.com/Microsoft/DirectX-Graphics-Samples
 //
 
-#pragma once
+Texture2D	ColorTex	: register(t0);
 
-namespace Kodiak
+float4 main(float4 position : SV_Position) : SV_Target0
 {
-
-// Forward declarations
-
-class Scene
-{
-public:
-	Scene();
-
-
-};
-
-
-} // namespace Kodiak
+	return ColorTex[(int2)position.xy];
+}
