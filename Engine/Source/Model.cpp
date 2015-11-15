@@ -11,7 +11,6 @@
 
 #include "Model.h"
 
-#if 0
 
 #include "IndexBuffer.h"
 #include "Renderer.h"
@@ -37,19 +36,34 @@ MeshPart::MeshPart(std::shared_ptr<VertexBuffer> vbuffer,
 	, m_indexCount(indexCount)
 	, m_startIndex(startIndex)
 	, m_baseVertexOffset(baseVertex)
-{}
-
-
-void Mesh::SetMeshParts(vector<MeshPart> meshParts)
 {
-	m_meshParts = meshParts;
+	m_loadTask = (vbuffer->loadTask && ibuffer->loadTask);
 }
 
 
-void Model::SetSingleMesh(Mesh mesh)
+void Mesh::SetMeshParts(vector<MeshPart>& meshParts)
+{
+	m_meshParts = meshParts;
+	for (auto part : m_meshParts)
+	{
+		part.m_parent = this;
+		m_loadTask = (m_loadTask && part.m_loadTask);
+	}
+
+	if (m_parent)
+	{
+		m_parent->loadTask = (m_parent->loadTask && m_loadTask);
+	}
+}
+
+
+void Model::SetSingleMesh(Mesh& mesh)
 {
 	m_meshes.clear();
 	m_meshes.push_back(mesh);
+
+	mesh.m_parent = this;
+	loadTask = (loadTask && mesh.m_loadTask);
 }
 
 
@@ -61,11 +75,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 	auto model = make_shared<Model>();
 
 	shared_ptr<VertexBuffer> vbuffer;
-	unique_ptr<IVertexBufferData> vdata;
+	shared_ptr<BaseVertexBufferData> vdata;
 
 	if (desc.genNormals && desc.genColors)
 	{
-		vdata.reset(new TVertexBufferData<VertexPositionNormalColor>(
+		vdata.reset(new VertexBufferData<VertexPositionNormalColor>(
 		{
 			// -X face
 			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[1]) },
@@ -101,11 +115,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer = renderer->CreateVertexBuffer(move(vdata), Usage::Immutable, "Box vertex buffer with normals and colors");
+		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with normals and colors");
 	}
 	else if (desc.genNormals)
 	{
-		vdata.reset(new TVertexBufferData<VertexPositionNormal>(
+		vdata.reset(new VertexBufferData<VertexPositionNormal>(
 		{
 			// -X face
 			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
@@ -141,11 +155,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer = renderer->CreateVertexBuffer(move(vdata), Usage::Immutable, "Box vertex buffer with normals");
+		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with normals");
 	}
 	else if (desc.genColors)
 	{
-		vdata.reset(new TVertexBufferData<VertexPositionColor>(
+		vdata.reset(new VertexBufferData<VertexPositionColor>(
 		{
 			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[0]) },
 			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[1]) },
@@ -158,11 +172,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer = renderer->CreateVertexBuffer(move(vdata), Usage::Immutable, "Box vertex buffer with colors");
+		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with colors");
 	}
 	else
 	{
-		vdata.reset(new TVertexBufferData<VertexPosition>(
+		vdata.reset(new VertexBufferData<VertexPosition>(
 		{
 			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
 			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
@@ -175,7 +189,7 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer = renderer->CreateVertexBuffer(move(vdata), Usage::Immutable, "Box vertex buffer");
+		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer");
 	}
 
 	// Create the mesh and mesh parts
@@ -189,10 +203,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// -X face
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "-X face");
+			ibuffer->Create(idata, Usage::Immutable, "-X face");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -200,10 +215,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// +X face
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 4, 5, 6, 7 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "+X face");
+			ibuffer->Create(idata, Usage::Immutable, "+X face");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -211,10 +227,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// -Y face
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 8, 9, 10, 11 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "-Y face");
+			ibuffer->Create(idata, Usage::Immutable, "-Y face");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -222,10 +239,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// +Y face
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 12, 13, 14, 15 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "+Y face");
+			ibuffer->Create(idata, Usage::Immutable, "+Y face");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -233,10 +251,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// -Z face
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 16, 17, 18, 19 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "-Z face");
+			ibuffer->Create(idata, Usage::Immutable, "-Z face");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -244,10 +263,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// +Z face
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 20, 21, 22, 23 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "+Z face");
+			ibuffer->Create(idata, Usage::Immutable, "+Z face");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -259,10 +279,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// Body
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "Body");
+			ibuffer->Create(idata, Usage::Immutable, "Body");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 10, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -270,10 +291,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// Top
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 6, 0, 4, 2 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "Top");
+			ibuffer->Create(idata, Usage::Immutable, "Top");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -281,10 +303,11 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 
 		// Bottom
 		{
-			unique_ptr<IIndexBufferData> idata;
+			auto ibuffer = make_shared<IndexBuffer>();
+			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 5, 3, 7, 1 }));
 
-			auto ibuffer = renderer->CreateIndexBuffer(move(idata), Usage::Immutable, "Bottom");
+			ibuffer->Create(idata, Usage::Immutable, "Bottom");
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -298,5 +321,3 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 }
 
 } // namespace Kodiak
-
-#endif

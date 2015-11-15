@@ -9,10 +9,11 @@
 
 #pragma once
 
+#include <ppltasks.h>
+
 namespace Kodiak
 {
 
-#if 0
 // Forward declarations
 class IndexBuffer;
 class Renderer;
@@ -20,8 +21,11 @@ class VertexBuffer;
 
 enum class PrimitiveTopology;
 
+
 class MeshPart
 {
+	friend class Mesh;
+
 public:
 	MeshPart(
 		std::shared_ptr<VertexBuffer> vbuffer,
@@ -38,26 +42,37 @@ private:
 	uint32_t						m_indexCount;
 	uint32_t						m_startIndex;
 	int32_t							m_baseVertexOffset;
+	class Mesh*						m_parent{ nullptr };
+	concurrency::task<void>			m_loadTask;
 };
+
 
 class Mesh
 {
+	friend class Model;
+
 public:
 	
-	void SetMeshParts(std::vector<MeshPart> meshParts);
+	void SetMeshParts(std::vector<MeshPart>& meshParts);
 
 private:
-	std::vector<MeshPart> m_meshParts;
+	std::vector<MeshPart>		m_meshParts;
+	class Model*				m_parent{ nullptr };
+	concurrency::task<void>		m_loadTask;
 };
+
 
 class Model
 {
 public:
-	void SetSingleMesh(Mesh mesh);
+	void SetSingleMesh(Mesh& mesh);
+
+	concurrency::task<void>	loadTask;
 
 private:
 	std::vector<Mesh> m_meshes;
 };
+
 
 struct BoxModelDesc
 {
@@ -71,6 +86,5 @@ struct BoxModelDesc
 };
 
 std::shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc);
-#endif
 
 } // namespace Kodiak

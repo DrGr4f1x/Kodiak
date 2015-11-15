@@ -369,6 +369,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\IAsyncRenderTask.h" />
+    <ClInclude Include="Source\IndexBuffer.h" />
+    <ClInclude Include="Source\IndexBuffer11.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Source\IndexBuffer12.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Source\InputLayout.h" />
     <ClInclude Include="Source\InputLayout12.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
@@ -376,6 +385,7 @@
     </ClInclude>
     <ClInclude Include="Source\IRenderOperation.h" />
     <ClInclude Include="Source\Log.h" />
+    <ClInclude Include="Source\MathUtil.h" />
     <ClInclude Include="Source\Model.h" />
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\PipelineState.h" />
@@ -436,6 +446,15 @@
     <ClInclude Include="Source\Shaders\Common\ShaderManager.h" />
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\Utility.h" />
+    <ClInclude Include="Source\VertexBuffer.h" />
+    <ClInclude Include="Source\VertexBuffer11.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Source\VertexBuffer12.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Source\VertexFormats.h" />
     <ClInclude Include="Source\Viewport.h" />
   </ItemGroup>
@@ -512,6 +531,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\IndexBuffer11.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source\IndexBuffer12.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Source\InputLayout12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
@@ -567,6 +594,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Source\Utility.cpp" />
+    <ClCompile Include="Source\VertexBuffer11.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source\VertexBuffer12.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

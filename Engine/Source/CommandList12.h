@@ -53,6 +53,8 @@ public:
 		return reinterpret_cast<ComputeCommandList&>(*this);
 	}
 
+	static void InitializeBuffer(GpuResource& dest, const void* data, size_t numBytes);
+
 	void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
 	void BeginResourceTransition(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
 	void InsertUAVBarrier(GpuResource& Resource, bool FlushImmediate = false);

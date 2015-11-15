@@ -17,6 +17,7 @@
 #include "DeviceManager.h"
 #include "Format.h"
 #include "IAsyncRenderTask.h"
+#include "IndexBuffer.h"
 #include "RenderPipeline.h"
 #include "RenderUtils.h"
 
@@ -173,4 +174,14 @@ shared_ptr<ColorBuffer> Renderer::CreateColorBuffer(const std::string& name, uin
 	colorBuffer->Create(m_deviceManager.get(), name, width, height, arraySize, format);
 
 	return colorBuffer;
+}
+
+
+shared_ptr<IndexBuffer> Renderer::CreateIndexBuffer(shared_ptr<BaseIndexBufferData> data, Usage usage, const string& debugName)
+{
+	auto indexBuffer = make_shared<IndexBuffer>();
+
+	indexBuffer->Create(data, usage, debugName);
+
+	return indexBuffer;
 }

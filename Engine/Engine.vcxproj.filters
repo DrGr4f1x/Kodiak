@@ -198,6 +198,25 @@
     <ClInclude Include="Source\ShaderManager11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
+    <ClInclude Include="Source\IndexBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\IndexBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VertexBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\IndexBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MathUtil.h" />
+    <ClInclude Include="Source\VertexBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VertexBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -293,6 +312,21 @@
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\ShaderManager12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\IndexBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VertexBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\IndexBuffer12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utility.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VertexBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
   </ItemGroup>

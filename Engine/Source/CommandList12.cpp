@@ -15,11 +15,14 @@
 #include "ColorBuffer12.h"
 #include "CommandListManager12.h"
 #include "DepthBuffer12.h"
+#include "DeviceManager12.h"
 #include "GpuResource12.h"
+#include "MathUtil.h"
 #include "PipelineState12.h"
 #include "Rectangle.h"
 #include "RenderUtils.h"
 #include "RootSignature12.h"
+#include "Utility.h"
 #include "Viewport.h"
 
 
@@ -75,6 +78,57 @@ void CommandList::Initialize(CommandListManager& manager)
 {
 	m_owner = &manager;
 	m_owner->CreateNewCommandList(&m_commandList, &m_currentAllocator);
+}
+
+
+void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, size_t numBytes)
+{
+	ID3D12Resource* uploadBuffer = nullptr;
+
+	auto& initContext = CommandList::Begin();
+
+	D3D12_HEAP_PROPERTIES heapProps;
+	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heapProps.CreationNodeMask = 1;
+	heapProps.VisibleNodeMask = 1;
+
+	D3D12_RESOURCE_DESC bufferDesc;
+	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	bufferDesc.Alignment = 0;
+	bufferDesc.Width = numBytes;
+	bufferDesc.Height = 1;
+	bufferDesc.DepthOrArraySize = 1;
+	bufferDesc.MipLevels = 1;
+	bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+	bufferDesc.SampleDesc.Count = 1;
+	bufferDesc.SampleDesc.Quality = 0;
+	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	ThrowIfFailed(g_device->CreateCommittedResource(
+		&heapProps, 
+		D3D12_HEAP_FLAG_NONE,
+		&bufferDesc, 
+		D3D12_RESOURCE_STATE_GENERIC_READ, 
+		nullptr, 
+		IID_PPV_ARGS(&uploadBuffer)));
+
+	void* destAddress = nullptr;
+	uploadBuffer->Map(0, nullptr, &destAddress);
+	SIMDMemCopy(destAddress, bufferData, Math::DivideByMultiple(numBytes, 16));
+	uploadBuffer->Unmap(0, nullptr);
+
+	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
+	initContext.TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+	initContext.m_commandList->CopyResource(dest.GetResource(), uploadBuffer);
+	initContext.TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+
+	// Execute the command list and wait for it to finish so we can release the upload buffer
+	initContext.CloseAndExecute(true);
+
+	uploadBuffer->Release();
 }
 
 

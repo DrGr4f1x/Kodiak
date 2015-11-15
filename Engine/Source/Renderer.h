@@ -15,10 +15,12 @@ namespace Kodiak
 {
 
 // Forward declarations
+class BaseIndexBufferData;
 class ColorBuffer;
 class CommandList;
 class DeviceManager;
 class IAsyncRenderTask;
+class IndexBuffer;
 class Pipeline;
 class RenderTargetView;
 
@@ -51,6 +53,7 @@ public:
 	// Factory methods
 	std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
 		const DirectX::XMVECTORF32& clearColor);
+	std::shared_ptr<IndexBuffer> CreateIndexBuffer(std::shared_ptr<BaseIndexBufferData> data, Usage usage, const std::string& debugName);
 
 private:
 	void StartRenderTask();
