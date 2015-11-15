@@ -44,10 +44,19 @@ MeshPart::MeshPart(std::shared_ptr<VertexBuffer> vbuffer,
 void Mesh::SetMeshParts(vector<MeshPart>& meshParts)
 {
 	m_meshParts = meshParts;
-	for (auto part : m_meshParts)
+
+	if (!meshParts.empty())
 	{
-		part.m_parent = this;
-		m_loadTask = (m_loadTask && part.m_loadTask);
+		m_loadTask = meshParts[0].m_loadTask;
+	}
+
+	for (size_t i = 0; i < m_meshParts.size(); ++i)
+	{
+		m_meshParts[i].m_parent = this;
+		if (i > 1)
+		{
+			m_loadTask = (m_loadTask && m_meshParts[i].m_loadTask);
+		}
 	}
 
 	if (m_parent)
@@ -63,7 +72,7 @@ void Model::SetSingleMesh(Mesh& mesh)
 	m_meshes.push_back(mesh);
 
 	mesh.m_parent = this;
-	loadTask = (loadTask && mesh.m_loadTask);
+	loadTask = mesh.m_loadTask;
 }
 
 
@@ -74,7 +83,7 @@ shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
 {
 	auto model = make_shared<Model>();
 
-	shared_ptr<VertexBuffer> vbuffer;
+	auto vbuffer = make_shared<VertexBuffer>();
 	shared_ptr<BaseVertexBufferData> vdata;
 
 	if (desc.genNormals && desc.genColors)

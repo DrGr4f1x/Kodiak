@@ -15,7 +15,7 @@
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\Format.h"
 #include "Engine\Source\Log.h"
-//#include "Engine\Source\Model.h"
+#include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPipeline.h"
 #include "Engine\Source\StepTimer.h"
@@ -46,7 +46,7 @@ void BasicApplication::OnInit()
 	pipeline->ClearColor(m_colorTarget);
 	
 	// Create the box model
-	/*BoxModelDesc desc;
+	BoxModelDesc desc;
 	desc.colors[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	desc.colors[1] = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	desc.colors[2] = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -56,7 +56,7 @@ void BasicApplication::OnInit()
 	desc.colors[6] = XMFLOAT3(1.0f, 1.0f, 0.0f);
 	desc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	desc.genColors = true;
-	m_boxModel = MakeBoxModel(m_renderer.get(), desc);*/
+	m_boxModel = MakeBoxModel(m_renderer.get(), desc);
 
 	pipeline->Present(m_colorTarget);
 }
