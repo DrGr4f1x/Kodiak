@@ -9,18 +9,8 @@
 
 #include "Stdafx.h"
 
-#include "InputLayout12.h"
+#include "GpuBuffer11.h"
 
-#include "Format.h"
-#include "RenderEnums.h"
 
 using namespace Kodiak;
 using namespace std;
-
-
-namespace Kodiak
-{
-	const uint32_t kAppendAlignedElement = D3D12_APPEND_ALIGNED_ELEMENT;
-} // namespace Kodiak
-
-

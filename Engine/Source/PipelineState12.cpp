@@ -270,13 +270,12 @@ void GraphicsPSO::SetRenderTargetFormats(uint32_t numRTVs, const ColorFormat* co
 
 void GraphicsPSO::SetInputLayout(const InputLayout& inputLayout)
 {
-	const auto& elements = inputLayout.GetElements();
-	const auto numElements = elements.size();
+	const auto numElements = inputLayout.elements.size();
 	
 	if (numElements > 0)
 	{
 		D3D12_INPUT_ELEMENT_DESC* newElements = (D3D12_INPUT_ELEMENT_DESC*)malloc(sizeof(D3D12_INPUT_ELEMENT_DESC) * numElements);
-		memcpy(newElements, &elements[0], numElements * sizeof(D3D12_INPUT_ELEMENT_DESC));
+		memcpy(newElements, &inputLayout.elements[0], numElements * sizeof(D3D12_INPUT_ELEMENT_DESC));
 		m_inputLayouts.reset((const D3D12_INPUT_ELEMENT_DESC*)newElements);
 	}
 	else

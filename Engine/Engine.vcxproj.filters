@@ -217,6 +217,9 @@
     <ClInclude Include="Source\VertexBuffer12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="Source\InputLayout11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -306,9 +309,6 @@
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\Shader12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\InputLayout12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\ShaderManager12.cpp">
