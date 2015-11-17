@@ -25,6 +25,7 @@ enum class PrimitiveTopology;
 class MeshPart
 {
 	friend class Mesh;
+	friend class Scene;
 
 public:
 	MeshPart(
@@ -50,11 +51,11 @@ private:
 class Mesh
 {
 	friend class Model;
+	friend class Scene;
 
 public:
-	
 	void SetMeshParts(std::vector<MeshPart>& meshParts);
-
+	
 private:
 	std::vector<MeshPart>		m_meshParts;
 	class Model*				m_parent{ nullptr };
@@ -64,6 +65,7 @@ private:
 
 class Model
 {
+	friend class Scene;
 public:
 	void SetSingleMesh(Mesh& mesh);
 

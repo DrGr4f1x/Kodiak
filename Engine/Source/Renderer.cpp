@@ -18,8 +18,10 @@
 #include "Format.h"
 #include "IAsyncRenderTask.h"
 #include "IndexBuffer.h"
+#include "Model.h"
 #include "RenderPipeline.h"
 #include "RenderUtils.h"
+#include "Scene.h"
 
 
 using namespace Kodiak;
@@ -53,6 +55,25 @@ public:
 
 private:
 	shared_ptr<ColorBuffer> m_presentSource;
+};
+
+
+class AddModelTask : public IAsyncRenderTask
+{
+public:
+	AddModelTask(shared_ptr<Scene> scene, shared_ptr<Model> model)
+		: m_scene(scene)
+		, m_model(model)
+	{}
+
+	void Execute(RenderTaskEnvironment& environment) override
+	{
+		m_scene->AddModel(m_model);
+	}
+
+private:
+	shared_ptr<Scene> m_scene;
+	shared_ptr<Model> m_model;
 };
 
 
@@ -146,7 +167,10 @@ void Renderer::EnqueueTask(shared_ptr<IAsyncRenderTask> task)
 bool Renderer::Render()
 {
 	// Wait on the previous frame
-	while (!m_renderTaskEnvironment.frameCompleted) {}
+	while (!m_renderTaskEnvironment.frameCompleted)
+	{
+		this_thread::yield();
+	}
 
 	m_renderTaskEnvironment.frameCompleted = false;
 
@@ -166,6 +190,13 @@ bool Renderer::Render()
 }
 
 
+void Renderer::AddModel(shared_ptr<Scene> scene, shared_ptr<Model> model)
+{
+	auto addModelTask = make_shared<AddModelTask>(scene, model);
+	EnqueueTask(addModelTask);
+}
+
+
 shared_ptr<ColorBuffer> Renderer::CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
 	const DirectX::XMVECTORF32& clearColor)
 {
@@ -174,14 +205,4 @@ shared_ptr<ColorBuffer> Renderer::CreateColorBuffer(const std::string& name, uin
 	colorBuffer->Create(m_deviceManager.get(), name, width, height, arraySize, format);
 
 	return colorBuffer;
-}
-
-
-shared_ptr<IndexBuffer> Renderer::CreateIndexBuffer(shared_ptr<BaseIndexBufferData> data, Usage usage, const string& debugName)
-{
-	auto indexBuffer = make_shared<IndexBuffer>();
-
-	indexBuffer->Create(data, usage, debugName);
-
-	return indexBuffer;
 }

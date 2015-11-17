@@ -316,6 +316,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\ConstantBuffer.h" />
+    <ClInclude Include="Source\ConstantBuffer11.h" />
     <ClInclude Include="Source\DepthBuffer.h" />
     <ClInclude Include="Source\DepthBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -420,6 +422,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\Renderer.h" />
+    <ClInclude Include="Source\RenderSceneOp.h" />
     <ClInclude Include="Source\RenderUtils.h" />
     <ClInclude Include="Source\RenderPipeline.h" />
     <ClInclude Include="Source\RootSignature12.h">
@@ -436,6 +439,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\ShaderManager.h" />
     <ClInclude Include="Source\ShaderManager11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -444,7 +448,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Source\Shaders\Common\ShaderManager.h" />
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\VertexBuffer.h" />
@@ -497,6 +500,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\ConstantBuffer11.cpp" />
     <ClCompile Include="Source\DepthBuffer11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -561,6 +565,7 @@
     </ClCompile>
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\RenderPipeline.cpp" />
+    <ClCompile Include="Source\RenderSceneOp.cpp" />
     <ClCompile Include="Source\RootSignature12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
@@ -634,6 +639,42 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\SimplePixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\SimpleVertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

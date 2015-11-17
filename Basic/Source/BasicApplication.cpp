@@ -18,6 +18,7 @@
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPipeline.h"
+#include "Engine\Source\Scene.h"
 #include "Engine\Source\StepTimer.h"
 
 
@@ -57,6 +58,12 @@ void BasicApplication::OnInit()
 	desc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	desc.genColors = true;
 	m_boxModel = MakeBoxModel(m_renderer.get(), desc);
+	m_boxModel->loadTask.wait();
+
+	// Add model to scene and render (HACK)
+	m_mainScene = make_shared<Scene>(m_width, m_height);
+	m_renderer->AddModel(m_mainScene, m_boxModel);
+	pipeline->RenderScene(m_mainScene);
 
 	pipeline->Present(m_colorTarget);
 }

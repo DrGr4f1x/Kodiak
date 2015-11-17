@@ -54,7 +54,7 @@ void ShaderManager::DestroyAll()
 }
 
 
-shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderPath, bool asyncLoad) const
+shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(shaderPath);
@@ -75,12 +75,12 @@ shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderP
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(computeShader, shaderPath);
+				LoadShaderAsync(computeShader, shaderPath, shaderFile);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(computeShader, shaderPath);
+				LoadShaderSerial(computeShader, shaderPath, shaderFile);
 			}
 		}
 		else
@@ -93,7 +93,7 @@ shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderP
 }
 
 
-shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPath, bool asyncLoad) const
+shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(shaderPath);
@@ -114,12 +114,12 @@ shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPat
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(domainShader, shaderPath);
+				LoadShaderAsync(domainShader, shaderPath, shaderFile);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(domainShader, shaderPath);
+				LoadShaderSerial(domainShader, shaderPath, shaderFile);
 			}
 		}
 		else
@@ -132,7 +132,7 @@ shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPat
 }
 
 
-shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shaderPath, bool asyncLoad) const
+shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(shaderPath);
@@ -153,12 +153,12 @@ shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shade
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(geometryShader, shaderPath);
+				LoadShaderAsync(geometryShader, shaderPath, shaderFile);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(geometryShader, shaderPath);
+				LoadShaderSerial(geometryShader, shaderPath, shaderFile);
 			}
 		}
 		else
@@ -171,7 +171,7 @@ shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shade
 }
 
 
-shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, bool asyncLoad) const
+shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(shaderPath);
@@ -192,12 +192,12 @@ shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, b
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(hullShader, shaderPath);
+				LoadShaderAsync(hullShader, shaderPath, shaderFile);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(hullShader, shaderPath);
+				LoadShaderSerial(hullShader, shaderPath, shaderFile);
 			}
 		}
 		else
@@ -210,7 +210,7 @@ shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, b
 }
 
 
-shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath, bool asyncLoad) const
+shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(shaderPath);
@@ -231,12 +231,12 @@ shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath,
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(pixelShader, shaderPath);
+				LoadShaderAsync(pixelShader, shaderPath, shaderFile);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(pixelShader, shaderPath);
+				LoadShaderSerial(pixelShader, shaderPath, shaderFile);
 			}
 		}
 		else
@@ -249,7 +249,7 @@ shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath,
 }
 
 
-shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const string& shaderPath, bool asyncLoad) const
+shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(shaderPath);
@@ -270,12 +270,12 @@ shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const string& shaderPat
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(vertexShader, shaderPath);
+				LoadShaderAsync(vertexShader, shaderPath, shaderFile);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(vertexShader, shaderPath);
+				LoadShaderSerial(vertexShader, shaderPath, shaderFile);
 			}
 		}
 		else

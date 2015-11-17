@@ -19,6 +19,7 @@ namespace Kodiak
 class ColorBuffer;
 class CommandList;
 class Model;
+class Scene;
 
 
 class BasicApplication : public Application
@@ -35,6 +36,7 @@ protected:
 private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
 	std::shared_ptr<Model>			m_boxModel;
+	std::shared_ptr<Scene>			m_mainScene;
 };
 
 } // namespace Kodiak

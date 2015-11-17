@@ -16,6 +16,8 @@
 #include "CommandList.h"
 #include "DeviceManager.h"
 #include "Renderer.h"
+#include "RenderSceneOp.h"
+#include "Scene.h"
 
 
 using namespace Kodiak;
@@ -48,6 +50,13 @@ void Pipeline::ClearColor(shared_ptr<ColorBuffer> colorBuffer)
 void Pipeline::ClearColor(shared_ptr<ColorBuffer> colorBuffer, const XMVECTORF32& color)
 {
 	auto operation = new ClearColorBufferOperation(colorBuffer, color);
+	m_renderOperations.push_back(operation);
+}
+
+
+void Pipeline::RenderScene(shared_ptr<Scene> scene)
+{
+	auto operation = new RenderSceneOperation(scene);
 	m_renderOperations.push_back(operation);
 }
 

@@ -12,6 +12,7 @@
 #include "PipelineState11.h"
 
 #include "DeviceManager11.h"
+#include "InputLayout11.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
 #include "Shader11.h"
@@ -189,6 +190,14 @@ void GraphicsPSO::SetDepthStencilState(const DepthStencilStateDesc& depthStencil
 	m_desc.depthStencilDesc.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>(depthStencilDesc.backFace.stencilDepthFailOp);
 	m_desc.depthStencilDesc.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>(depthStencilDesc.backFace.stencilPassOp);
 	m_desc.depthStencilDesc.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>(depthStencilDesc.backFace.stencilFunc);
+}
+
+
+void GraphicsPSO::SetInputLayout(const InputLayout& inputLayout)
+{
+	auto d3dIL = inputLayout.inputLayout;
+	m_desc.inputLayout = d3dIL.Get();
+	m_inputLayout = d3dIL;
 }
 
 

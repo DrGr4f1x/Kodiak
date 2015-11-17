@@ -404,8 +404,8 @@ void DeviceManager::CreatePresentState()
 	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine\\SM5\\ScreenQuadVS.cso");
-	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine\\SM5\\BufferCopyPS.cso");
+	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine", "ScreenQuadVS.cso");
+	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine", "BufferCopyPS.cso");
 	(vs->loadTask && ps->loadTask).wait();
 	
 	// Configure PSO

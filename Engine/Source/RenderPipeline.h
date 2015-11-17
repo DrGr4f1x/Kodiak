@@ -20,6 +20,7 @@ class ColorBuffer;
 class CommandList;
 class DeviceResources;
 class IRenderOperation;
+class Scene;
 
 
 class Pipeline
@@ -31,6 +32,8 @@ public:
 	
 	void ClearColor(std::shared_ptr<ColorBuffer> colorBuffer);
 	void ClearColor(std::shared_ptr<ColorBuffer> colorBuffer, const DirectX::XMVECTORF32& color);
+
+	void RenderScene(std::shared_ptr<Scene> scene);
 
 	void Present(std::shared_ptr<ColorBuffer> colorBuffer);
 	std::shared_ptr<ColorBuffer> GetPresentSource();

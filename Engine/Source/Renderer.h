@@ -21,8 +21,10 @@ class CommandList;
 class DeviceManager;
 class IAsyncRenderTask;
 class IndexBuffer;
+class Model;
 class Pipeline;
 class RenderTargetView;
+class Scene;
 
 enum class ColorFormat;
 enum class Usage;
@@ -31,6 +33,7 @@ struct RenderTaskEnvironment
 {
 	DeviceManager* deviceManager;
 	std::shared_ptr<Pipeline> rootPipeline;
+	std::shared_ptr<Scene> scene;
 	std::atomic<uint64_t> currentFrame{ 0 };
 	std::atomic<bool> stopRenderTask{ false };
 	std::atomic<bool> frameCompleted{ true };
@@ -50,11 +53,13 @@ public:
 
 	bool Render();
 
+	// Object handling
+	void AddModel(std::shared_ptr<Scene> scene, std::shared_ptr<Model> model);
+
 	// Factory methods
 	std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
 		const DirectX::XMVECTORF32& clearColor);
-	std::shared_ptr<IndexBuffer> CreateIndexBuffer(std::shared_ptr<BaseIndexBufferData> data, Usage usage, const std::string& debugName);
-
+	
 private:
 	void StartRenderTask();
 	void StopRenderTask();

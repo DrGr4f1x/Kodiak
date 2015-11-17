@@ -16,6 +16,7 @@ namespace Kodiak
 class ColorBuffer;
 class CommandListManager;
 class ComputeCommandList;
+class ConstantBuffer;
 class DepthBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
@@ -109,6 +110,9 @@ public:
 	void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 
 	void SetPipelineState(GraphicsPSO& PSO);
+
+	byte* MapConstants(ConstantBuffer& cbuffer);
+	void UnmapConstants(ConstantBuffer& cbuffer);
 
 	void Draw(uint32_t vertexCount, uint32_t vertexStartOffset = 0);
 	void DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation = 0, int32_t BaseVertexLocation = 0);

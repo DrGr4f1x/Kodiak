@@ -13,9 +13,11 @@
 
 #include "ColorBuffer11.h"
 #include "CommandListManager11.h"
+#include "ConstantBuffer11.h"
 #include "DepthBuffer11.h"
 #include "PipelineState11.h"
 #include "Rectangle.h"
+#include "RenderUtils.h"
 #include "Viewport.h"
 
 
@@ -332,4 +334,19 @@ void GraphicsCommandList::SetPipelineState(GraphicsPSO& PSO)
 		m_context->GSSetShader(PSO.m_geometryShader.Get(), nullptr, 0);
 		m_context->PSSetShader(PSO.m_pixelShader.Get(), nullptr, 0);
 	}
+}
+
+
+byte* GraphicsCommandList::MapConstants(ConstantBuffer& cbuffer)
+{
+	D3D11_MAPPED_SUBRESOURCE subresource;
+	ThrowIfFailed(m_context->Map(cbuffer.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subresource));
+
+	return reinterpret_cast<byte*>(subresource.pData);
+}
+
+
+void GraphicsCommandList::UnmapConstants(ConstantBuffer& cbuffer)
+{
+	m_context->Unmap(cbuffer.buffer.Get(), 0);
 }

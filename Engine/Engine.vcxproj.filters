@@ -175,9 +175,6 @@
     <ClInclude Include="Source\DepthBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Shaders\Common\ShaderManager.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\BinaryReader.h" />
     <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\PipelineState12.h">
@@ -219,6 +216,18 @@
     </ClInclude>
     <ClInclude Include="Source\InputLayout11.h">
       <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderSceneOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ConstantBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ConstantBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderManager.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -329,12 +338,24 @@
     <ClCompile Include="Source\VertexBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderSceneOp.cpp">
+      <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ConstantBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\BufferCopyPS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\SimpleVertexShader.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\SimplePixelShader.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
   </ItemGroup>
