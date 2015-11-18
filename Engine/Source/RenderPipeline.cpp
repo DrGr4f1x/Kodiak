@@ -12,12 +12,16 @@
 #include "RenderPipeline.h"
 
 #include "ClearColorBufferOp.h"
+#include "ClearDepthBufferOp.h"
 #include "ColorBuffer.h"
 #include "CommandList.h"
+#include "DepthBuffer.h"
 #include "DeviceManager.h"
 #include "Renderer.h"
 #include "RenderSceneOp.h"
 #include "Scene.h"
+#include "SetRenderTargetOp.h"
+#include "SetViewportOp.h"
 
 
 using namespace Kodiak;
@@ -50,6 +54,27 @@ void Pipeline::ClearColor(shared_ptr<ColorBuffer> colorBuffer)
 void Pipeline::ClearColor(shared_ptr<ColorBuffer> colorBuffer, const XMVECTORF32& color)
 {
 	auto operation = new ClearColorBufferOperation(colorBuffer, color);
+	m_renderOperations.push_back(operation);
+}
+
+
+void Pipeline::ClearDepth(shared_ptr<DepthBuffer> depthBuffer)
+{
+	auto operation = new ClearDepthBufferOperation(depthBuffer, depthBuffer->GetClearDepth());
+	m_renderOperations.push_back(operation);
+}
+
+
+void Pipeline::SetRenderTarget(std::shared_ptr<ColorBuffer> colorBuffer, std::shared_ptr<DepthBuffer> depthBuffer)
+{
+	auto operation = new SetRenderTargetOperation(colorBuffer, depthBuffer);
+	m_renderOperations.push_back(operation);
+}
+
+
+void Pipeline::SetViewport(float topLeftX, float topLeftY, float width, float height, float minDepth, float maxDepth)
+{
+	auto operation = new SetViewportOperation(topLeftX, topLeftY, width, height, minDepth, maxDepth);
 	m_renderOperations.push_back(operation);
 }
 

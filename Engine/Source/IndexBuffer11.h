@@ -23,8 +23,7 @@ class IndexBuffer
 public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 	DXGI_FORMAT format;
-	uint32_t offset{ 0 };
-
+	
 	concurrency::task<void> loadTask;
 
 	void Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage, const std::string& debugName);

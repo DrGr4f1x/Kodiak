@@ -9,18 +9,24 @@
 
 #pragma once
 
+#include "IRenderOperation.h"
+
 namespace Kodiak
 {
 
 // Forward declarations
-enum class Usage;
+class DepthBuffer;
 
-class ConstantBuffer
+class ClearDepthBufferOperation : public IRenderOperation
 {
 public:
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
-		
-	void Create(size_t size, Usage usage);
+	ClearDepthBufferOperation(const std::shared_ptr<DepthBuffer>& colorBuffer, float depth);
+
+	void PopulateCommandList(GraphicsCommandList& commandList) override;
+
+private:
+	const std::shared_ptr<DepthBuffer>		m_depthBuffer;
+	float									m_depth;
 };
 
 } // namespace Kodiak

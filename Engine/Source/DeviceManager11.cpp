@@ -433,4 +433,6 @@ void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<
 	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
 
 	commandList.Draw(3);
+
+	commandList.SetPixelShaderResource(0, nullptr);
 }

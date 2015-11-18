@@ -48,5 +48,6 @@ void VertexBuffer::Create(std::shared_ptr<BaseVertexBufferData> data, Usage usag
 
 		// Setup our data
 		vertexBuffer = buffer;
+		stride = static_cast<uint32_t>(data->GetStride());
 	});
 }

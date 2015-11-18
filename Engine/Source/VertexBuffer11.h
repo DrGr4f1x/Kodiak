@@ -20,6 +20,7 @@ class VertexBuffer
 {
 public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
+	uint32_t stride{ 0 };
 
 	concurrency::task<void> loadTask;
 

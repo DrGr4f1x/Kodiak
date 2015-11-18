@@ -18,6 +18,7 @@ namespace Kodiak
 // Forward declarations
 class ColorBuffer;
 class CommandList;
+class DepthBuffer;
 class Model;
 class Scene;
 
@@ -35,6 +36,7 @@ protected:
 
 private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
+	std::shared_ptr<DepthBuffer>	m_depthBuffer;
 	std::shared_ptr<Model>			m_boxModel;
 	std::shared_ptr<Scene>			m_mainScene;
 };

@@ -15,9 +15,11 @@
 #include "CommandListManager11.h"
 #include "ConstantBuffer11.h"
 #include "DepthBuffer11.h"
+#include "IndexBuffer11.h"
 #include "PipelineState11.h"
 #include "Rectangle.h"
 #include "RenderUtils.h"
+#include "VertexBuffer11.h"
 #include "Viewport.h"
 
 
@@ -328,6 +330,8 @@ void GraphicsCommandList::SetPipelineState(GraphicsPSO& PSO)
 		m_context->OMSetDepthStencilState(m_currentDepthStencilState.Get(), m_currentStencilRef);
 		m_context->RSSetState(PSO.m_rasterizerState);
 
+		m_context->IASetInputLayout(PSO.m_inputLayout.Get());
+
 		m_context->VSSetShader(PSO.m_vertexShader.Get(), nullptr, 0);
 		m_context->HSSetShader(PSO.m_hullShader.Get(), nullptr, 0);
 		m_context->DSSetShader(PSO.m_domainShader.Get(), nullptr, 0);
@@ -337,16 +341,46 @@ void GraphicsCommandList::SetPipelineState(GraphicsPSO& PSO)
 }
 
 
-byte* GraphicsCommandList::MapConstants(ConstantBuffer& cbuffer)
+byte* GraphicsCommandList::MapConstants(const ConstantBuffer& cbuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE subresource;
-	ThrowIfFailed(m_context->Map(cbuffer.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subresource));
+	ThrowIfFailed(m_context->Map(cbuffer.constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subresource));
 
 	return reinterpret_cast<byte*>(subresource.pData);
 }
 
 
-void GraphicsCommandList::UnmapConstants(ConstantBuffer& cbuffer)
+void GraphicsCommandList::UnmapConstants(const ConstantBuffer& cbuffer)
 {
-	m_context->Unmap(cbuffer.buffer.Get(), 0);
+	m_context->Unmap(cbuffer.constantBuffer.Get(), 0);
+}
+
+
+void GraphicsCommandList::SetIndexBuffer(const IndexBuffer& ibuffer, uint32_t offset)
+{
+	m_context->IASetIndexBuffer(ibuffer.indexBuffer.Get(), ibuffer.format, offset);
+}
+
+
+void GraphicsCommandList::SetVertexBuffers(uint32_t numVBs, uint32_t startSlot, const VertexBuffer* vertexBuffers, uint32_t* offsets)
+{
+	ID3D11Buffer* d3dBuffers[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+	UINT strides[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+	UINT _offsets[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT];
+
+	for (uint32_t i = 0; i < numVBs; ++i)
+	{
+		d3dBuffers[i] = vertexBuffers[i].vertexBuffer.Get();
+		strides[i] = vertexBuffers[i].stride;
+		_offsets[i] = offsets != nullptr ? offsets[i] : 0;
+	}
+
+	m_context->IASetVertexBuffers(startSlot, numVBs, d3dBuffers, strides, _offsets);
+}
+
+
+void GraphicsCommandList::SetVertexShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->VSSetConstantBuffers(slot, 1, &d3dBuffer);
 }

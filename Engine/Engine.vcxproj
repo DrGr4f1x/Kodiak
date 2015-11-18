@@ -279,6 +279,7 @@
     <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\BinaryReader.h" />
     <ClInclude Include="Source\ClearColorBufferOp.h" />
+    <ClInclude Include="Source\ClearDepthBufferOp.h" />
     <ClInclude Include="Source\ColorBuffer.h" />
     <ClInclude Include="Source\ColorBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -430,6 +431,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\Scene.h" />
+    <ClInclude Include="Source\SetRenderTargetOp.h" />
+    <ClCompile Include="Source\SetViewportOp.cpp">
+      <FileType>CppHeader</FileType>
+    </ClCompile>
+    <ClInclude Include="Source\SetViewportOp.h" />
     <ClInclude Include="Source\Shader.h" />
     <ClInclude Include="Source\Shader11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -466,6 +472,7 @@
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\BinaryReader.cpp" />
     <ClCompile Include="Source\ClearColorBufferOp.cpp" />
+    <ClCompile Include="Source\ClearDepthBufferOp.cpp" />
     <ClCompile Include="Source\ColorBuffer11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -571,6 +578,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\Scene.cpp" />
+    <ClCompile Include="Source\SetRenderTargetOp.cpp" />
     <ClCompile Include="Source\Shader11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>

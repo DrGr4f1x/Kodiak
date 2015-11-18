@@ -13,6 +13,7 @@
 
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
+#include "Engine\Source\DepthBuffer.h"
 #include "Engine\Source\Format.h"
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Model.h"
@@ -41,10 +42,16 @@ void BasicApplication::OnInit()
 	m_colorTarget = m_renderer->CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float, 
 		DirectX::Colors::CornflowerBlue);
 
+	m_depthBuffer = make_shared<DepthBuffer>(1.0f);
+	m_depthBuffer->Create("Main depth buffer", m_width, m_height, DepthFormat::D32);
+
 	// Setup the root rendering pipeline
 	auto pipeline = m_renderer->GetRootPipeline();
 	
+	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
+	pipeline->SetViewport(0, 0, m_width, m_height, 0.0f, 1.0f);
 	pipeline->ClearColor(m_colorTarget);
+	pipeline->ClearDepth(m_depthBuffer);
 	
 	// Create the box model
 	BoxModelDesc desc;

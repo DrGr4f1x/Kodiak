@@ -20,7 +20,9 @@ class ConstantBuffer;
 class DepthBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
+class IndexBuffer;
 class RenderTargetView;
+class VertexBuffer;
 struct Rectangle;
 struct Viewport;
 
@@ -111,8 +113,15 @@ public:
 
 	void SetPipelineState(GraphicsPSO& PSO);
 
-	byte* MapConstants(ConstantBuffer& cbuffer);
-	void UnmapConstants(ConstantBuffer& cbuffer);
+	byte* MapConstants(const ConstantBuffer& cbuffer);
+	void UnmapConstants(const ConstantBuffer& cbuffer);
+
+	void SetIndexBuffer(const IndexBuffer& indexBuffer, uint32_t offset = 0);
+	void SetVertexBuffer(uint32_t slot, const VertexBuffer& vertexBuffer, uint32_t offset = 0)
+	{
+		SetVertexBuffers(1, slot, &vertexBuffer, &offset);
+	}
+	void SetVertexBuffers(uint32_t numVBs, uint32_t startSlot, const VertexBuffer* vertexBuffers, uint32_t* offsets);
 
 	void Draw(uint32_t vertexCount, uint32_t vertexStartOffset = 0);
 	void DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation = 0, int32_t BaseVertexLocation = 0);
@@ -123,6 +132,7 @@ public:
 	//void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 
 	void SetVertexShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetVertexShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetDomainShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
 	void SetHullShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
 	void SetGeometryShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);

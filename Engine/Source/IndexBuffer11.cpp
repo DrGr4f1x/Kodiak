@@ -48,7 +48,6 @@ void IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data, Usage usage, cons
 
 		// Setup our data
 		indexBuffer = buffer;
-		offset = 0;
 		format = data->GetFormat();
 	});
 }

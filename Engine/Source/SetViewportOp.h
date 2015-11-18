@@ -9,18 +9,22 @@
 
 #pragma once
 
+#include "IRenderOperation.h"
+
+#include "Viewport.h"
+
 namespace Kodiak
 {
 
-// Forward declarations
-enum class Usage;
-
-class ConstantBuffer
+class SetViewportOperation : public IRenderOperation
 {
 public:
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
-		
-	void Create(size_t size, Usage usage);
+	SetViewportOperation(float topLeftX, float topLeftY, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
+
+	void PopulateCommandList(GraphicsCommandList& commandList) override;
+
+private:
+	Viewport m_viewport;
 };
 
 } // namespace Kodiak

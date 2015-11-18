@@ -229,6 +229,18 @@
     <ClInclude Include="Source\ShaderManager.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ClearDepthBufferOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SetRenderTargetOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SetViewportOp.cpp">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SetViewportOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -343,6 +355,12 @@
     </ClCompile>
     <ClCompile Include="Source\ConstantBuffer11.cpp">
       <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ClearDepthBufferOp.cpp">
+      <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SetRenderTargetOp.cpp">
+      <Filter>Rendering\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

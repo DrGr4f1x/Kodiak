@@ -32,5 +32,5 @@ void ConstantBuffer::Create(size_t size, Usage usage)
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
 
-	ThrowIfFailed(g_device->CreateBuffer(&desc, nullptr, &m_buffer));
+	ThrowIfFailed(g_device->CreateBuffer(&desc, nullptr, &constantBuffer));
 }

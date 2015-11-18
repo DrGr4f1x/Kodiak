@@ -18,6 +18,7 @@ namespace Kodiak
 // Forward declarations
 class ColorBuffer;
 class CommandList;
+class DepthBuffer;
 class DeviceResources;
 class IRenderOperation;
 class Scene;
@@ -32,6 +33,10 @@ public:
 	
 	void ClearColor(std::shared_ptr<ColorBuffer> colorBuffer);
 	void ClearColor(std::shared_ptr<ColorBuffer> colorBuffer, const DirectX::XMVECTORF32& color);
+	void ClearDepth(std::shared_ptr<DepthBuffer> depthBuffer);
+
+	void SetRenderTarget(std::shared_ptr<ColorBuffer> colorBuffer, std::shared_ptr<DepthBuffer> depthBuffer);
+	void SetViewport(float topLeftX, float topLeftY, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
 
 	void RenderScene(std::shared_ptr<Scene> scene);
 

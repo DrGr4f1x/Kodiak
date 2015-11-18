@@ -57,11 +57,14 @@ void Scene::Render(GraphicsCommandList& commandList)
 			for (auto meshPart : mesh.m_meshParts)
 			{
 				commandList.SetPipelineState(*m_pso);
-				commandList.SetVertexShaderConstants(0, m_perViewConstantBuffer.get());
-				commandList.SetVertexShaderConstants(1, m_perObjectConstantBuffer.get());
+				commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
+				commandList.SetVertexShaderConstants(1, *m_perObjectConstantBuffer);
 
-				commandList.SetVertexBuffer(0, meshPart.m_vertexBuffer);
-				commandList.SetIndexBuffer(meshPart.m_indexBuffer);
+				commandList.SetVertexBuffer(0, *meshPart.m_vertexBuffer);
+				commandList.SetIndexBuffer(*meshPart.m_indexBuffer);
+				commandList.SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+				commandList.DrawIndexed(meshPart.m_indexCount, meshPart.m_startIndex, meshPart.m_baseVertexOffset);
 			}
 		}
 	}
