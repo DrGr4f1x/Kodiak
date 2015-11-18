@@ -11,6 +11,7 @@
 #pragma once
 
 #include "DynamicDescriptorHeap12.h"
+#include "LinearAllocator12.h"
 #include "RootSignature12.h"
 
 namespace Kodiak
@@ -29,6 +30,25 @@ class RenderTargetView;
 class RootSignature;
 struct Rectangle;
 struct Viewport;
+
+
+struct DWParam
+{
+	DWParam(FLOAT f) : Float(f) {}
+	DWParam(UINT u) : Uint(u) {}
+	DWParam(INT i) : Int(i) {}
+
+	void operator= (FLOAT f) { Float = f; }
+	void operator= (UINT u) { Uint = u; }
+	void operator= (INT i) { Int = i; }
+
+	union
+	{
+		FLOAT	Float;
+		UINT	Uint;
+		INT		Int;
+	};
+};
 
 
 class CommandList
@@ -53,7 +73,13 @@ public:
 		return reinterpret_cast<ComputeCommandList&>(*this);
 	}
 
+	void CopyBuffer(GpuResource& dest, GpuResource& src);
+	void CopyBufferRegion(GpuResource& dest, size_t destOffset, GpuResource& src, size_t srcOffset, size_t numBytes);
+
 	static void InitializeBuffer(GpuResource& dest, const void* data, size_t numBytes);
+
+	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
+	void FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes);
 
 	void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
 	void BeginResourceTransition(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
@@ -85,6 +111,9 @@ protected:
 	uint32_t					m_numBarriersToFlush{ 0 };
 
 	ID3D12DescriptorHeap*		m_currentDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+
+	LinearAllocator				m_cpuLinearAllocator;
+	LinearAllocator				m_gpuLinearAllocator;
 
 private:
 	static CommandList* AllocateCommandList();
@@ -162,6 +191,24 @@ public:
 		return CommandList::Begin().GetComputeCommandList();
 	}
 };
+
+
+inline void CommandList::CopyBuffer(GpuResource& dest, GpuResource& src)
+{
+	TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST);
+	TransitionResource(src, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	FlushResourceBarriers();
+	m_commandList->CopyResource(dest.GetResource(), src.GetResource());
+}
+
+
+inline void CommandList::CopyBufferRegion(GpuResource& dest, size_t destOffset, GpuResource& src, size_t srcOffset, size_t numBytes)
+{
+	TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST);
+	TransitionResource(src, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	FlushResourceBarriers();
+	m_commandList->CopyBufferRegion(dest.GetResource(), destOffset, src.GetResource(), srcOffset, numBytes);
+}
 
 
 inline void CommandList::SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, ID3D12DescriptorHeap* heapPtr)

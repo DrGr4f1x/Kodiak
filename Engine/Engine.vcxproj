@@ -322,6 +322,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\ConstantBuffer12.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Source\DepthBuffer.h" />
     <ClInclude Include="Source\DepthBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -391,6 +395,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\IRenderOperation.h" />
+    <ClInclude Include="Source\LinearAllocator12.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\MathUtil.h" />
     <ClInclude Include="Source\Model.h" />
@@ -435,6 +443,14 @@
     </ClInclude>
     <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="Source\SetRenderTargetOp.h" />
+    <ClCompile Include="Source\ConstantBuffer12.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source\LinearAllocator12.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Source\SetViewportOp.cpp">
       <FileType>CppHeader</FileType>
     </ClCompile>

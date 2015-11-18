@@ -132,6 +132,24 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 }
 
 
+void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* bufferData, size_t numBytes)
+{
+	assert(bufferData != nullptr && Math::IsAligned(bufferData, 16));
+	DynAlloc tempSpace = m_cpuLinearAllocator.Allocate(numBytes, 512);
+	SIMDMemCopy(tempSpace.dataPtr, bufferData, Math::DivideByMultiple(numBytes, 16));
+	CopyBufferRegion(dest, destOffset, tempSpace.buffer, tempSpace.offset, numBytes);
+}
+
+
+void CommandList::FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes)
+{
+	DynAlloc tempSpace = m_cpuLinearAllocator.Allocate(numBytes, 512);
+	__m128 vectorValue = _mm_set1_ps(value.Float);
+	SIMDMemFill(tempSpace.dataPtr, vectorValue, Math::DivideByMultiple(numBytes, 16));
+	CopyBufferRegion(dest, destOffset, tempSpace.buffer, tempSpace.offset, numBytes);
+}
+
+
 void CommandList::TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
 {
 	D3D12_RESOURCE_STATES oldState = resource.m_usageState;
@@ -265,6 +283,8 @@ uint64_t CommandList::Finish(bool wait)
 	m_owner->DiscardAllocator(fenceValue, m_currentAllocator);
 	m_currentAllocator = nullptr;
 
+	m_cpuLinearAllocator.CleanupUnusedPages(fenceValue);
+	m_gpuLinearAllocator.CleanupUnusedPages(fenceValue);
 	m_dynamicDescriptorHeap.CleanupUsedHeaps(fenceValue);
 
 	if (wait)

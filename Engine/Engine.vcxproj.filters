@@ -241,6 +241,12 @@
     <ClInclude Include="Source\SetViewportOp.h">
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ConstantBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LinearAllocator12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -361,6 +367,12 @@
     </ClCompile>
     <ClCompile Include="Source\SetRenderTargetOp.cpp">
       <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ConstantBuffer12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\LinearAllocator12.cpp">
+      <Filter>Rendering\DX12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
