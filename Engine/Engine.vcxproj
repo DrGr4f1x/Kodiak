@@ -318,7 +318,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\ConstantBuffer.h" />
-    <ClInclude Include="Source\ConstantBuffer11.h" />
+    <ClInclude Include="Source\ConstantBuffer11.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Source\DepthBuffer.h" />
     <ClInclude Include="Source\DepthBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -507,7 +510,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source\ConstantBuffer11.cpp" />
+    <ClCompile Include="Source\ConstantBuffer11.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Source\DepthBuffer11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>

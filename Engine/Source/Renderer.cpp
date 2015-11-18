@@ -14,6 +14,7 @@
 #include "ColorBuffer.h"
 #include "CommandList.h"
 #include "CommandListManager.h"
+#include "DepthBuffer.h"
 #include "DeviceManager.h"
 #include "Format.h"
 #include "IAsyncRenderTask.h"
@@ -205,4 +206,15 @@ shared_ptr<ColorBuffer> Renderer::CreateColorBuffer(const std::string& name, uin
 	colorBuffer->Create(m_deviceManager.get(), name, width, height, arraySize, format);
 
 	return colorBuffer;
+}
+
+
+shared_ptr<DepthBuffer> Renderer::CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth,
+	uint32_t clearStencil)
+{
+	auto depthBuffer = make_shared<DepthBuffer>(clearDepth, clearStencil);
+
+	depthBuffer->Create(m_deviceManager.get(), name, width, height, format);
+
+	return depthBuffer;
 }

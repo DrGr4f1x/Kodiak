@@ -42,8 +42,7 @@ void BasicApplication::OnInit()
 	m_colorTarget = m_renderer->CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float, 
 		DirectX::Colors::CornflowerBlue);
 
-	m_depthBuffer = make_shared<DepthBuffer>(1.0f);
-	m_depthBuffer->Create("Main depth buffer", m_width, m_height, DepthFormat::D32);
+	m_depthBuffer = m_renderer->CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
 
 	// Setup the root rendering pipeline
 	auto pipeline = m_renderer->GetRootPipeline();

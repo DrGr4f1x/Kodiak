@@ -18,6 +18,7 @@ namespace Kodiak
 class BaseIndexBufferData;
 class ColorBuffer;
 class CommandList;
+class DepthBuffer;
 class DeviceManager;
 class IAsyncRenderTask;
 class IndexBuffer;
@@ -27,6 +28,7 @@ class RenderTargetView;
 class Scene;
 
 enum class ColorFormat;
+enum class DepthFormat;
 enum class Usage;
 
 struct RenderTaskEnvironment 
@@ -59,7 +61,8 @@ public:
 	// Factory methods
 	std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
 		const DirectX::XMVECTORF32& clearColor);
-	
+	std::shared_ptr<DepthBuffer> CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth = 1.0f, uint32_t clearStencil = 0);
+
 private:
 	void StartRenderTask();
 	void StopRenderTask();
