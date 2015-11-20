@@ -7,17 +7,23 @@
 // Author: David Elder
 //
 
+
 #include "Stdafx.h"
 
-#include "ConstantBuffer12.h"
+#include "SetScissorOp.h"
 
-#include "RenderEnums.h"
+#include "CommandList.h"
 
 using namespace Kodiak;
 using namespace std;
 
 
-void ConstantBuffer::Create(size_t size, Usage usage)
+SetScissorOperation::SetScissorOperation(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height)
+	: m_rect(topLeftX, topLeftY, topLeftX + width, topLeftY + height)
+{}
+
+
+void SetScissorOperation::PopulateCommandList(GraphicsCommandList& commandList)
 {
-	this->size = size;
+	commandList.SetScissor(m_rect);
 }

@@ -49,6 +49,7 @@ void BasicApplication::OnInit()
 	
 	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
 	pipeline->SetViewport(0, 0, m_width, m_height, 0.0f, 1.0f);
+	pipeline->SetScissor(0, 0, m_width, m_height);
 	pipeline->ClearColor(m_colorTarget);
 	pipeline->ClearDepth(m_depthBuffer);
 	

@@ -451,9 +451,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\SetScissorOp.cpp" />
     <ClCompile Include="Source\SetViewportOp.cpp">
       <FileType>CppHeader</FileType>
     </ClCompile>
+    <ClInclude Include="Source\SetScissorOp.h" />
     <ClInclude Include="Source\SetViewportOp.h" />
     <ClInclude Include="Source\Shader.h" />
     <ClInclude Include="Source\Shader11.h">

@@ -22,12 +22,15 @@ class ColorBuffer;
 class CommandListManager;
 class ComputeCommandList;
 class ComputePSO;
+class ConstantBuffer;
 class DepthBuffer;
 class GpuResource;
 class GraphicsCommandList;
 class GraphicsPSO;
+class IndexBuffer;
 class RenderTargetView;
 class RootSignature;
+class VertexBuffer;
 struct Rectangle;
 struct Viewport;
 
@@ -168,6 +171,17 @@ public:
 	void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 
 	void SetPipelineState(const GraphicsPSO& PSO);
+	void SetConstantBuffer(uint32_t rootIndex, const ConstantBuffer& cbuffer);
+
+	byte* MapConstants(ConstantBuffer& cbuffer);
+	void UnmapConstants(const ConstantBuffer& cbuffer) {}
+
+	void SetIndexBuffer(const IndexBuffer& indexBuffer, uint32_t offset = 0);
+	void SetVertexBuffer(uint32_t slot, const VertexBuffer& vertexBuffer, uint32_t offset = 0)
+	{
+		SetVertexBuffers(1, slot, &vertexBuffer, &offset);
+	}
+	void SetVertexBuffers(uint32_t numVBs, uint32_t startSlot, const VertexBuffer* vertexBuffers, uint32_t* offsets);
 
 	void SetDynamicDescriptor(uint32_t rootIndex, uint32_t offset, D3D12_CPU_DESCRIPTOR_HANDLE handle);
 	void SetDynamicDescriptors(uint32_t rootIndex, uint32_t offset, uint32_t count, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);

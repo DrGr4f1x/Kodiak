@@ -13,11 +13,16 @@
 
 #include "CommandList.h"
 #include "ConstantBuffer.h"
+#include "Format.h"
 #include "PipelineState.h"
 #include "Model.h"
 #include "RenderEnums.h"
+#include "Shader.h"
 #include "ShaderManager.h"
 
+#if defined(DX12)
+#include "RootSignature12.h"
+#endif
 
 using namespace Kodiak;
 using namespace std;
@@ -57,8 +62,14 @@ void Scene::Render(GraphicsCommandList& commandList)
 			for (auto meshPart : mesh.m_meshParts)
 			{
 				commandList.SetPipelineState(*m_pso);
+#if defined(DX12)
+				commandList.SetRootSignature(*m_rootSignature);
+				commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
+				commandList.SetConstantBuffer(1, *m_perObjectConstantBuffer);
+#elif defined(DX11)
 				commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
 				commandList.SetVertexShaderConstants(1, *m_perObjectConstantBuffer);
+#endif
 
 				commandList.SetVertexBuffer(0, *meshPart.m_vertexBuffer);
 				commandList.SetIndexBuffer(*meshPart.m_indexBuffer);
@@ -109,12 +120,31 @@ void Scene::Initialize()
 	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine", "SimplePixelShader.cso");
 	(vs->loadTask && ps->loadTask).wait();
 
+#if defined(DX12)
+	// Configure root signature
+	m_rootSignature = make_shared<RootSignature>(2);
+	(*m_rootSignature)[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_VERTEX);
+	(*m_rootSignature)[1].InitAsConstantBuffer(1, D3D12_SHADER_VISIBILITY_VERTEX);
+	m_rootSignature->Finalize(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // Only the input assembler stage needs access to the constant buffer.
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS);
+#endif
+
 	// Configure PSO
 	m_pso = make_shared<GraphicsPSO>();
+#if defined(DX12)
+	m_pso->SetRootSignature(*m_rootSignature);
+#endif
 	m_pso->SetBlendState(defaultBlendState);
 	m_pso->SetRasterizerState(rasterizerState);
 	m_pso->SetDepthStencilState(depthStencilState);
 	m_pso->SetInputLayout(*vs->GetInputLayout());
+#if defined(DX12)
+	m_pso->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
+	m_pso->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
+#endif
 	m_pso->SetVertexShader(vs.get());
 	m_pso->SetPixelShader(ps.get());
 

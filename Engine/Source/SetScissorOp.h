@@ -9,19 +9,22 @@
 
 #pragma once
 
+#include "IRenderOperation.h"
+
+#include "Rectangle.h"
+
 namespace Kodiak
 {
 
-// Forward declarations
-enum class Usage;
-
-class ConstantBuffer
+class SetScissorOperation : public IRenderOperation
 {
 public:
-	D3D12_GPU_VIRTUAL_ADDRESS gpuAddress;
-	size_t size;
+	SetScissorOperation(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height);
 
-	void Create(size_t size, Usage usage);
+	void PopulateCommandList(GraphicsCommandList& commandList) override;
+
+private:
+	Kodiak::Rectangle m_rect;
 };
 
 } // namespace Kodiak

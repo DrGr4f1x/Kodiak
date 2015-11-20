@@ -17,7 +17,9 @@ class ConstantBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
 class Model;
-
+#if defined(DX12)
+class RootSignature;
+#endif
 
 class Scene
 {
@@ -36,6 +38,10 @@ private:
 	std::shared_ptr<ConstantBuffer>		m_perViewConstantBuffer;
 	std::shared_ptr<ConstantBuffer>		m_perObjectConstantBuffer;
 	std::shared_ptr<GraphicsPSO>		m_pso;
+
+#if defined(DX12)
+	std::shared_ptr<RootSignature>		m_rootSignature;
+#endif
 
 	struct PerViewConstants
 	{

@@ -219,7 +219,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\Engine\Lib64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;dxgi.lib;Engine12_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;d3dcompiler.lib;dxguid.lib;dxgi.lib;Engine12_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)Shaders\Engine\SM5.1"</Command>
@@ -297,7 +297,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(ProjectDir)..\Engine\Lib64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;dxgi.lib;Engine12.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;d3dcompiler.lib;dxguid.lib;dxgi.lib;Engine12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)Shaders\Engine\SM5.1"</Command>

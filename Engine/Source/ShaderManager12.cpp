@@ -26,12 +26,12 @@ using namespace std;
 namespace
 {
 
-	map<size_t, shared_ptr<ComputeShader>> s_computeShaderHashMap;
-	map<size_t, shared_ptr<DomainShader>> s_domainShaderHashMap;
-	map<size_t, shared_ptr<GeometryShader>> s_geometryShaderHashMap;
-	map<size_t, shared_ptr<HullShader>> s_hullShaderHashMap;
-	map<size_t, shared_ptr<PixelShader>> s_pixelShaderHashMap;
-	map<size_t, shared_ptr<VertexShader>> s_vertexShaderHashMap;
+	map<size_t, shared_ptr<ComputeShader>>		s_computeShaderHashMap;
+	map<size_t, shared_ptr<DomainShader>>		s_domainShaderHashMap;
+	map<size_t, shared_ptr<GeometryShader>>		s_geometryShaderHashMap;
+	map<size_t, shared_ptr<HullShader>>			s_hullShaderHashMap;
+	map<size_t, shared_ptr<PixelShader>>		s_pixelShaderHashMap;
+	map<size_t, shared_ptr<VertexShader>>		s_vertexShaderHashMap;
 
 } // anonymous namespace
 
@@ -56,8 +56,11 @@ void ShaderManager::DestroyAll()
 
 shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
+	// Build full path to compiled shader object
+	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(shaderPath);
+	size_t hashCode = hashFunc(fullPath);
 
 	shared_ptr<ComputeShader> computeShader;
 
@@ -75,12 +78,12 @@ shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderP
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(computeShader, shaderPath, shaderFile);
+				LoadShaderAsync(computeShader, fullPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(computeShader, shaderPath, shaderFile);
+				LoadShaderSerial(computeShader, fullPath);
 			}
 		}
 		else
@@ -95,8 +98,11 @@ shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderP
 
 shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
+	// Build full path to compiled shader object
+	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(shaderPath);
+	size_t hashCode = hashFunc(fullPath);
 
 	shared_ptr<DomainShader> domainShader;
 
@@ -114,12 +120,12 @@ shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPat
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(domainShader, shaderPath, shaderFile);
+				LoadShaderAsync(domainShader, fullPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(domainShader, shaderPath, shaderFile);
+				LoadShaderSerial(domainShader, fullPath);
 			}
 		}
 		else
@@ -134,8 +140,11 @@ shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPat
 
 shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
+	// Build full path to compiled shader object
+	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(shaderPath);
+	size_t hashCode = hashFunc(fullPath);
 
 	shared_ptr<GeometryShader> geometryShader;
 
@@ -153,12 +162,12 @@ shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shade
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(geometryShader, shaderPath, shaderFile);
+				LoadShaderAsync(geometryShader, fullPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(geometryShader, shaderPath, shaderFile);
+				LoadShaderSerial(geometryShader, fullPath);
 			}
 		}
 		else
@@ -173,8 +182,11 @@ shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shade
 
 shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
+	// Build full path to compiled shader object
+	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(shaderPath);
+	size_t hashCode = hashFunc(fullPath);
 
 	shared_ptr<HullShader> hullShader;
 
@@ -192,12 +204,12 @@ shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, c
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(hullShader, shaderPath, shaderFile);
+				LoadShaderAsync(hullShader, fullPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(hullShader, shaderPath, shaderFile);
+				LoadShaderSerial(hullShader, fullPath);
 			}
 		}
 		else
@@ -212,8 +224,11 @@ shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, c
 
 shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
+	// Build full path to compiled shader object
+	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(shaderPath);
+	size_t hashCode = hashFunc(fullPath);
 
 	shared_ptr<PixelShader> pixelShader;
 
@@ -231,12 +246,12 @@ shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath,
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(pixelShader, shaderPath, shaderFile);
+				LoadShaderAsync(pixelShader, fullPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(pixelShader, shaderPath, shaderFile);
+				LoadShaderSerial(pixelShader, fullPath);
 			}
 		}
 		else
@@ -251,8 +266,11 @@ shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath,
 
 shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
 {
+	// Build full path to compiled shader object
+	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(shaderPath);
+	size_t hashCode = hashFunc(fullPath);
 
 	shared_ptr<VertexShader> vertexShader;
 
@@ -270,12 +288,12 @@ shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const string& shaderPat
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(vertexShader, shaderPath, shaderFile);
+				LoadShaderAsync(vertexShader, fullPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(vertexShader, shaderPath, shaderFile);
+				LoadShaderSerial(vertexShader, fullPath);
 			}
 		}
 		else

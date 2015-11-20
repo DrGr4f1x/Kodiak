@@ -37,6 +37,7 @@ public:
 
 	void SetRenderTarget(std::shared_ptr<ColorBuffer> colorBuffer, std::shared_ptr<DepthBuffer> depthBuffer);
 	void SetViewport(float topLeftX, float topLeftY, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
+	void SetScissor(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height);
 
 	void RenderScene(std::shared_ptr<Scene> scene);
 

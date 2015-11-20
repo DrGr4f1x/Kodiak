@@ -14,15 +14,18 @@
 
 #include "ColorBuffer12.h"
 #include "CommandListManager12.h"
+#include "ConstantBuffer12.h"
 #include "DepthBuffer12.h"
 #include "DeviceManager12.h"
 #include "GpuResource12.h"
+#include "IndexBuffer12.h"
 #include "MathUtil.h"
 #include "PipelineState12.h"
 #include "Rectangle.h"
 #include "RenderUtils.h"
 #include "RootSignature12.h"
 #include "Utility.h"
+#include "VertexBuffer12.h"
 #include "Viewport.h"
 
 
@@ -39,6 +42,8 @@ mutex CommandList::s_commandListAllocationMutex;
 
 CommandList::CommandList()
 	: m_dynamicDescriptorHeap(*this)
+	, m_cpuLinearAllocator(LinearAllocatorType::CpuWritable)
+	, m_gpuLinearAllocator(LinearAllocatorType::GpuExclusive)
 {
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
 }
@@ -283,8 +288,8 @@ uint64_t CommandList::Finish(bool wait)
 	m_owner->DiscardAllocator(fenceValue, m_currentAllocator);
 	m_currentAllocator = nullptr;
 
-	m_cpuLinearAllocator.CleanupUnusedPages(fenceValue);
-	m_gpuLinearAllocator.CleanupUnusedPages(fenceValue);
+	m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
+	m_gpuLinearAllocator.CleanupUsedPages(fenceValue);
 	m_dynamicDescriptorHeap.CleanupUsedHeaps(fenceValue);
 
 	if (wait)
@@ -605,4 +610,35 @@ void GraphicsCommandList::SetPipelineState(const GraphicsPSO& PSO)
 
 	m_commandList->SetPipelineState(pipelineState);
 	m_currentGraphicsPSO = pipelineState;
+}
+
+
+void GraphicsCommandList::SetConstantBuffer(uint32_t rootIndex, const ConstantBuffer& cbuffer)
+{
+	m_commandList->SetGraphicsRootConstantBufferView(rootIndex, cbuffer.gpuAddress);
+}
+
+
+byte* GraphicsCommandList::MapConstants(ConstantBuffer& cbuffer)
+{
+	DynAlloc cb = m_cpuLinearAllocator.Allocate(cbuffer.size);
+	cbuffer.gpuAddress = cb.gpuAddress;
+	return reinterpret_cast<byte*>(cb.dataPtr);
+}
+
+
+void GraphicsCommandList::SetIndexBuffer(const IndexBuffer& ibuffer, uint32_t offset)
+{
+	m_commandList->IASetIndexBuffer(&ibuffer.GetIBV());
+}
+
+
+void GraphicsCommandList::SetVertexBuffers(uint32_t numVBs, uint32_t startSlot, const VertexBuffer* vertexBuffers, uint32_t* offsets)
+{
+	D3D12_VERTEX_BUFFER_VIEW d3dVBVs[16];
+	for (uint32_t i = 0; i < numVBs; ++i)
+	{
+		d3dVBVs[i] = vertexBuffers[i].GetVBV();
+	}
+	m_commandList->IASetVertexBuffers(startSlot, numVBs, d3dVBVs);
 }

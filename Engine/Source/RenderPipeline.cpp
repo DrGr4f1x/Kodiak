@@ -20,6 +20,7 @@
 #include "Renderer.h"
 #include "RenderSceneOp.h"
 #include "Scene.h"
+#include "SetScissorOp.h"
 #include "SetRenderTargetOp.h"
 #include "SetViewportOp.h"
 
@@ -75,6 +76,13 @@ void Pipeline::SetRenderTarget(std::shared_ptr<ColorBuffer> colorBuffer, std::sh
 void Pipeline::SetViewport(float topLeftX, float topLeftY, float width, float height, float minDepth, float maxDepth)
 {
 	auto operation = new SetViewportOperation(topLeftX, topLeftY, width, height, minDepth, maxDepth);
+	m_renderOperations.push_back(operation);
+}
+
+
+void Pipeline::SetScissor(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height)
+{
+	auto operation = new SetScissorOperation(topLeftX, topLeftY, width, height);
 	m_renderOperations.push_back(operation);
 }
 
