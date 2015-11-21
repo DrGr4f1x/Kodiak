@@ -83,4 +83,12 @@ private:
 	std::shared_ptr<Pipeline>					m_rootPipeline;
 };
 
+
+namespace Renderer2
+{
+
+void SetWindow(uint32_t width, uint32_t height, HWND);
+
+} // namespace Renderer2
+
 } // namespace Kodiak

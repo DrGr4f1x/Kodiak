@@ -476,6 +476,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\Stdafx.h" />
+    <ClInclude Include="Source\StepTimer.h" />
     <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\VertexBuffer.h" />
     <ClInclude Include="Source\VertexBuffer11.h">

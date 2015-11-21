@@ -250,6 +250,7 @@
     <ClInclude Include="Source\SetScissorOp.h">
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="Source\StepTimer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />

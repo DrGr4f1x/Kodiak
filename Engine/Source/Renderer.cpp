@@ -218,3 +218,14 @@ shared_ptr<DepthBuffer> Renderer::CreateDepthBuffer(const std::string& name, uin
 
 	return depthBuffer;
 }
+
+
+namespace Kodiak
+{
+
+namespace Renderer2
+{
+
+} // namespace Renderer2
+
+} // namespace Kodiak
