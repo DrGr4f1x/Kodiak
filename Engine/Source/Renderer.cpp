@@ -24,6 +24,8 @@
 #include "RenderUtils.h"
 #include "Scene.h"
 
+#include <concurrent_queue.h>
+
 
 using namespace Kodiak;
 using namespace Microsoft::WRL;
@@ -78,50 +80,85 @@ private:
 };
 
 
-Renderer::Renderer()
-	: m_rootPipeline(make_shared<Pipeline>())
+class UpdateModelTransformTask : public IAsyncRenderTask
 {
-	m_deviceManager = make_unique<DeviceManager>();
+public:
+	UpdateModelTransformTask(shared_ptr<Model> model, const DirectX::XMFLOAT4X4& matrix)
+		: m_model(model)
+		, m_matrix(matrix)
+	{}
 
-	m_renderTaskEnvironment.deviceManager = m_deviceManager.get();
-	m_renderTaskEnvironment.rootPipeline = m_rootPipeline;
+	void Execute(RenderTaskEnvironment& environment) override
+	{
+		m_model->SetTransform(m_matrix);
+	}
 
-	m_rootPipeline->SetName("Root Pipeline");
-	
+private:
+	shared_ptr<Model>		m_model;
+	DirectX::XMFLOAT4X4		m_matrix;
+};
+
+
+namespace Renderer
+{
+
+std::shared_ptr<Pipeline>			g_rootPipeline{ nullptr };
+std::unique_ptr<DeviceManager>		g_deviceManager{ nullptr };
+RenderTaskEnvironment				g_renderTaskEnvironment;
+bool								g_renderTaskStarted{ false };
+Concurrency::task<void>				g_renderTask;
+Concurrency::concurrent_queue<std::shared_ptr<IAsyncRenderTask>>	g_renderTaskQueue;
+
+
+void StartRenderTask();
+void StopRenderTask();
+void EnqueueTask(std::shared_ptr<IAsyncRenderTask> task);
+
+
+void Initialize()
+{
+	g_rootPipeline = make_shared<Pipeline>();
+	g_deviceManager = make_unique<DeviceManager>();
+
+	g_renderTaskEnvironment.deviceManager = g_deviceManager.get();
+	g_renderTaskEnvironment.rootPipeline = g_rootPipeline;
+
+	g_rootPipeline->SetName("Root Pipeline");
+
 	StartRenderTask();
 }
 
 
-void Renderer::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
-{
-	m_deviceManager->SetWindow(width, height, hwnd);
-}
-
-
-void Renderer::SetWindowSize(uint32_t width, uint32_t height)
-{
-	m_deviceManager->SetWindowSize(width, height);
-}
-
-
-void Renderer::Finalize()
+void Finalize()
 {
 	StopRenderTask();
 
-	m_deviceManager->Finalize();
+	g_deviceManager->Finalize();
 }
 
 
-void Renderer::StartRenderTask()
+void SetWindow(uint32_t width, uint32_t height, HWND hwnd)
 {
-	if (m_renderTaskStarted)
+	g_deviceManager->SetWindow(width, height, hwnd);
+}
+
+
+void SetWindowSize(uint32_t width, uint32_t height)
+{
+	g_deviceManager->SetWindowSize(width, height);
+}
+
+
+void StartRenderTask()
+{
+	if (g_renderTaskStarted)
 	{
 		StopRenderTask();
 	}
 
-	m_renderTaskEnvironment.stopRenderTask = false;
+	g_renderTaskEnvironment.stopRenderTask = false;
 
-	m_renderTask = create_task([&]
+	g_renderTask = create_task([&]
 	{
 		bool endRenderLoop = false;
 
@@ -129,103 +166,110 @@ void Renderer::StartRenderTask()
 		while (!endRenderLoop)
 		{
 			// Process tasks until we've signalled frame complete
-			while (!m_renderTaskEnvironment.frameCompleted)
+			while (!g_renderTaskEnvironment.frameCompleted)
 			{
 				// Execute a render command, if one is available
 				shared_ptr<IAsyncRenderTask> command;
-				if (m_renderTaskQueue.try_pop(command))
+				if (g_renderTaskQueue.try_pop(command))
 				{
-					command->Execute(m_renderTaskEnvironment);
+					command->Execute(g_renderTaskEnvironment);
 				}
 			}
 
 			// Only permit exit after completing the current frame
-			endRenderLoop = m_renderTaskEnvironment.stopRenderTask;
+			endRenderLoop = g_renderTaskEnvironment.stopRenderTask;
 		}
 	});
 
-	m_renderTaskStarted = true;
+	g_renderTaskStarted = true;
 }
 
 
-void Renderer::StopRenderTask()
+void StopRenderTask()
 {
-	m_renderTaskEnvironment.stopRenderTask = true;
-	m_renderTask.wait();
-	m_renderTaskStarted = false;
+	g_renderTaskEnvironment.stopRenderTask = true;
+	g_renderTask.wait();
+	g_renderTaskStarted = false;
 }
 
 
-void Renderer::EnqueueTask(shared_ptr<IAsyncRenderTask> task)
-{
-	if (!m_renderTaskEnvironment.stopRenderTask)
-	{
-		m_renderTaskQueue.push(task);
-	}
-}
-
-
-bool Renderer::Render()
+void Render()
 {
 	// Wait on the previous frame
-	while (!m_renderTaskEnvironment.frameCompleted)
+	while (!g_renderTaskEnvironment.frameCompleted)
 	{
 		this_thread::yield();
 	}
 
-	m_renderTaskEnvironment.frameCompleted = false;
+	g_renderTaskEnvironment.frameCompleted = false;
 
 	// Start new frame
 	auto beginFrame = make_shared<BeginFrameTask>();
 	EnqueueTask(beginFrame);
 
 	// Kick off rendering of root pipeline
-	auto renderRootPipeline = make_shared<RenderPipelineTask>(m_rootPipeline);
+	auto renderRootPipeline = make_shared<RenderPipelineTask>(g_rootPipeline);
 	EnqueueTask(renderRootPipeline);
-	
-	// Signal end of frame
-	auto endFrame = make_shared<EndFrameTask>(m_rootPipeline->GetPresentSource());
-	EnqueueTask(endFrame);
 
-	return true;
+	// Signal end of frame
+	auto endFrame = make_shared<EndFrameTask>(g_rootPipeline->GetPresentSource());
+	EnqueueTask(endFrame);
 }
 
 
-void Renderer::AddModel(shared_ptr<Scene> scene, shared_ptr<Model> model)
+shared_ptr<Pipeline> GetRootPipeline()
+{
+	return g_rootPipeline;
+}
+
+
+void EnqueueTask(shared_ptr<IAsyncRenderTask> task)
+{
+	if (!g_renderTaskEnvironment.stopRenderTask)
+	{
+		g_renderTaskQueue.push(task);
+	}
+}
+
+
+void AddModel(shared_ptr<Scene> scene, shared_ptr<Model> model)
 {
 	auto addModelTask = make_shared<AddModelTask>(scene, model);
 	EnqueueTask(addModelTask);
 }
 
 
-shared_ptr<ColorBuffer> Renderer::CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
-	const DirectX::XMVECTORF32& clearColor)
+void UpdateModelTransform(shared_ptr<Model> model, const DirectX::XMFLOAT4X4& matrix)
 {
-	auto colorBuffer = make_shared<ColorBuffer>(clearColor);
-
-	colorBuffer->Create(m_deviceManager.get(), name, width, height, arraySize, format);
-
-	return colorBuffer;
+	auto updateTask = make_shared<UpdateModelTransformTask>(model, matrix);
+	EnqueueTask(updateTask);
 }
 
-
-shared_ptr<DepthBuffer> Renderer::CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth,
-	uint32_t clearStencil)
-{
-	auto depthBuffer = make_shared<DepthBuffer>(clearDepth, clearStencil);
-
-	depthBuffer->Create(m_deviceManager.get(), name, width, height, format);
-
-	return depthBuffer;
-}
+} // namespace Renderer
 
 
 namespace Kodiak
 {
 
-namespace Renderer2
+shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
+	const DirectX::XMVECTORF32& clearColor)
 {
+	auto colorBuffer = make_shared<ColorBuffer>(clearColor);
 
-} // namespace Renderer2
+	colorBuffer->Create(Renderer::g_deviceManager.get(), name, width, height, arraySize, format);
+
+	return colorBuffer;
+}
+
+
+shared_ptr<DepthBuffer> CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth,
+	uint32_t clearStencil)
+{
+	auto depthBuffer = make_shared<DepthBuffer>(clearDepth, clearStencil);
+
+	depthBuffer->Create(Renderer::g_deviceManager.get(), name, width, height, format);
+
+	return depthBuffer;
+}
 
 } // namespace Kodiak

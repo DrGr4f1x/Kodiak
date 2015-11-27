@@ -235,9 +235,6 @@
     <ClInclude Include="Source\SetRenderTargetOp.h">
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SetViewportOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\SetViewportOp.h">
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
@@ -251,6 +248,9 @@
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
     <ClInclude Include="Source\StepTimer.h" />
+    <ClInclude Include="Source\UpdateSceneOp.h">
+      <Filter>Rendering\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -379,6 +379,10 @@
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\SetScissorOp.cpp">
+      <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SetViewportOp.cpp" />
+    <ClCompile Include="Source\UpdateSceneOp.cpp">
       <Filter>Rendering\Operations</Filter>
     </ClCompile>
   </ItemGroup>

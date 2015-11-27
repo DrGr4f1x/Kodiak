@@ -44,9 +44,6 @@ protected:
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
-	// Rendering engine components
-	std::unique_ptr<class Renderer> m_renderer{ nullptr };
-
 	// Window dimensions.
 	uint32_t m_width{ 1 };
 	uint32_t m_height{ 1 };

@@ -28,6 +28,7 @@ public:
 
 	void AddModel(std::shared_ptr<Model> model);
 
+	void Update(GraphicsCommandList& commandList);
 	void Render(GraphicsCommandList& commandList);
 
 private:
@@ -56,6 +57,9 @@ private:
 
 	uint32_t m_width;
 	uint32_t m_height;
+
+	// HACK
+	DirectX::XMFLOAT4X4 m_modelTransform;
 };
 
 

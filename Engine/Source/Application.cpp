@@ -34,8 +34,8 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 
 	m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
-	// Create renderer
-	m_renderer = make_unique<Renderer>();
+	// Start up renderer
+	Renderer::Initialize();
 
 	// Create step timer
 	m_timer = make_unique<StepTimer>();
@@ -233,10 +233,7 @@ bool Application::OnEvent(MSG msg)
 // Handle window resize events
 void Application::OnResize()
 {
-	if (m_renderer)
-	{
-		m_renderer->SetWindowSize(m_width, m_height);
-	}
+	Renderer::SetWindowSize(m_width, m_height);
 }
 
 
@@ -288,5 +285,7 @@ bool Application::Render()
 		return false;
 	}
 
-	return m_renderer->Render();
+	Renderer::Render();
+
+	return true;
 }

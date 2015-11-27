@@ -11,7 +11,6 @@
 
 #include "Model.h"
 
-
 #include "IndexBuffer.h"
 #include "Renderer.h"
 #include "RenderEnums.h"
@@ -66,20 +65,40 @@ void Mesh::SetMeshParts(vector<MeshPart>& meshParts)
 }
 
 
+Model::Model()
+{
+	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
+}
+
+
 void Model::SetSingleMesh(Mesh& mesh)
 {
 	m_meshes.clear();
 	m_meshes.push_back(mesh);
 
 	mesh.m_parent = this;
+	m_isReady = false;
 	loadTask = mesh.m_loadTask;
+}
+
+
+void Model::SetTransform(const XMFLOAT4X4& matrix)
+{
+	m_matrix = matrix;
+	m_isDirty = true;
+}
+
+
+const XMFLOAT4X4& Model::GetTransform() const
+{
+	return m_matrix;
 }
 
 
 namespace Kodiak
 {
 
-shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc)
+shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 {
 	auto model = make_shared<Model>();
 

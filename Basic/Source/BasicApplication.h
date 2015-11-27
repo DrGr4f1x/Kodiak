@@ -32,13 +32,20 @@ protected:
 	void OnInit() override;
 	void OnUpdate(StepTimer* timer) override;
 	void OnDestroy() override;
-	bool OnEvent(MSG msg) override;
+	
+	void OnMouseDown(WPARAM btnState, int x, int y) override;
+	void OnMouseUp(WPARAM btnState, int x, int y) override;
+	void OnMouseMove(WPARAM btnState, int x, int y) override;
 
 private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
 	std::shared_ptr<Model>			m_boxModel;
 	std::shared_ptr<Scene>			m_mainScene;
+
+	bool	m_isTracking{ false };
+	int		m_mouseX{ 0 };
+	int		m_mouseY{ 0 };
 };
 
 } // namespace Kodiak

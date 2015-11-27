@@ -16,7 +16,6 @@ namespace Kodiak
 
 // Forward declarations
 class IndexBuffer;
-class Renderer;
 class VertexBuffer;
 
 enum class PrimitiveTopology;
@@ -67,12 +66,24 @@ class Model
 {
 	friend class Scene;
 public:
+	Model();
+
 	void SetSingleMesh(Mesh& mesh);
 
 	concurrency::task<void>	loadTask;
 
+	void SetTransform(const DirectX::XMFLOAT4X4& matrix);
+	const DirectX::XMFLOAT4X4& GetTransform() const;
+
+	bool IsDirty() const { return m_isDirty; }
+	void ResetDirty() { m_isDirty = false; }
+
 private:
-	std::vector<Mesh> m_meshes;
+	std::vector<Mesh>	m_meshes;
+
+	DirectX::XMFLOAT4X4	m_matrix;
+	bool				m_isReady{ false };
+	bool				m_isDirty{ true };
 };
 
 
@@ -87,6 +98,6 @@ struct BoxModelDesc
 	bool facesIn{ false };
 };
 
-std::shared_ptr<Model> MakeBoxModel(Renderer* renderer, const BoxModelDesc& desc);
+std::shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc);
 
 } // namespace Kodiak

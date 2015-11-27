@@ -36,16 +36,16 @@ BasicApplication::BasicApplication(uint32_t width, uint32_t height, const std::w
 void BasicApplication::OnInit()
 {
 	LOG_INFO << "BasicApplication initialize";
-	m_renderer->SetWindow(m_width, m_height, m_hwnd);
+	Renderer::SetWindow(m_width, m_height, m_hwnd);
 	
 	// Create resources
-	m_colorTarget = m_renderer->CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float, 
+	m_colorTarget = CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float, 
 		DirectX::Colors::CornflowerBlue);
 
-	m_depthBuffer = m_renderer->CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
+	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
 
 	// Setup the root rendering pipeline
-	auto pipeline = m_renderer->GetRootPipeline();
+	auto pipeline = Renderer::GetRootPipeline();
 	
 	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
 	pipeline->SetViewport(0, 0, m_width, m_height, 0.0f, 1.0f);
@@ -64,12 +64,13 @@ void BasicApplication::OnInit()
 	desc.colors[6] = XMFLOAT3(1.0f, 1.0f, 0.0f);
 	desc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	desc.genColors = true;
-	m_boxModel = MakeBoxModel(m_renderer.get(), desc);
+	m_boxModel = MakeBoxModel(desc);
 	m_boxModel->loadTask.wait();
 
 	// Add model to scene and render (HACK)
 	m_mainScene = make_shared<Scene>(m_width, m_height);
-	m_renderer->AddModel(m_mainScene, m_boxModel);
+	Renderer::AddModel(m_mainScene, m_boxModel);
+	pipeline->UpdateScene(m_mainScene);
 	pipeline->RenderScene(m_mainScene);
 
 	pipeline->Present(m_colorTarget);
@@ -82,12 +83,36 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 void BasicApplication::OnDestroy()
 {
-	m_renderer->Finalize();
+	Renderer::Finalize();
 	LOG_INFO << "BasicApplication finalize";
 }
 
 
-bool BasicApplication::OnEvent(MSG msg)
+void BasicApplication::OnMouseDown(WPARAM btnState, int x, int y)
 {
-	return false;
+	m_isTracking = true;
+	m_mouseX = x;
+	m_mouseY = y;
+}
+
+
+void BasicApplication::OnMouseMove(WPARAM btnState, int x, int y)
+{
+	if (m_isTracking)
+	{
+		int deltaMouseX = x - m_mouseX;
+		float radians = XM_2PI * 2.0f * static_cast<float>(deltaMouseX) / static_cast<float>(m_width);
+		
+		XMFLOAT4X4 matrix;
+		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationY(radians)));
+
+		// Hand the new matrix to the render thread
+		Renderer::UpdateModelTransform(m_boxModel, matrix);
+	}
+}
+
+
+void BasicApplication::OnMouseUp(WPARAM btnState, int x, int y)
+{
+	m_isTracking = false;
 }

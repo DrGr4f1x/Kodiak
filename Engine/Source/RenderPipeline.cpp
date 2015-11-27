@@ -23,6 +23,7 @@
 #include "SetScissorOp.h"
 #include "SetRenderTargetOp.h"
 #include "SetViewportOp.h"
+#include "UpdateSceneOp.h"
 
 
 using namespace Kodiak;
@@ -83,6 +84,13 @@ void Pipeline::SetViewport(float topLeftX, float topLeftY, float width, float he
 void Pipeline::SetScissor(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height)
 {
 	auto operation = new SetScissorOperation(topLeftX, topLeftY, width, height);
+	m_renderOperations.push_back(operation);
+}
+
+
+void Pipeline::UpdateScene(shared_ptr<Scene> scene)
+{
+	auto operation = new UpdateSceneOperation(scene);
 	m_renderOperations.push_back(operation);
 }
 

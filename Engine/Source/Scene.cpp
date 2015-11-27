@@ -26,10 +26,12 @@
 
 using namespace Kodiak;
 using namespace std;
+using namespace DirectX;
 
 
 Scene::Scene(uint32_t width, uint32_t height) : m_width(width), m_height(height)
 {
+	XMStoreFloat4x4(&m_modelTransform, XMMatrixIdentity());
 	Initialize();
 }
 
@@ -40,18 +42,33 @@ void Scene::AddModel(shared_ptr<Model> model)
 }
 
 
-void Scene::Render(GraphicsCommandList& commandList)
+void Scene::Update(GraphicsCommandList& commandList)
 {
 	// Update per-view constants
 	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
 	commandList.UnmapConstants(*m_perViewConstantBuffer);
 
-	// Update per-object constants
-	auto perObjectData = commandList.MapConstants(*m_perObjectConstantBuffer);
-	memcpy(perObjectData, &m_perObjectConstants, sizeof(PerObjectConstants));
-	commandList.UnmapConstants(*m_perObjectConstantBuffer);
+	// Visit models (HACK)
+	for (auto model : m_models)
+	{
+		if (model->IsDirty())
+		{
+			m_perObjectConstants.model = model->GetTransform();
 
+			// Update per-object constants (HACK)
+			auto perObjectData = commandList.MapConstants(*m_perObjectConstantBuffer);
+			memcpy(perObjectData, &m_perObjectConstants, sizeof(PerObjectConstants));
+			commandList.UnmapConstants(*m_perObjectConstantBuffer);
+
+			model->ResetDirty();
+		}
+	}
+}
+
+
+void Scene::Render(GraphicsCommandList& commandList)
+{
 	// Visit models
 	for (auto model : m_models)
 	{
