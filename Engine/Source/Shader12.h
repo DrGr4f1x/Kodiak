@@ -9,6 +9,10 @@
 
 #pragma once
 
+#include "RenderEnums.h"
+
+#include <ppltasks.h>
+
 namespace Kodiak
 {
 
@@ -193,10 +197,33 @@ private:
 };
 
 
-// TODO: this shit
-struct ShaderConstantBufferDesc {};
-struct ShaderResourceDesc {};
-struct ShaderVariableDesc {};
+struct ShaderConstantBufferDesc
+{
+	std::string name;
+	uint32_t registerSlot;
+	uint32_t size;
+	std::vector<ShaderVariableDesc> variables;
+};
+
+
+struct ShaderResourceDesc
+{
+	std::string name;
+	uint32_t slot;
+	ShaderResourceDimension dimension;
+};
+
+
+struct ShaderVariableDesc
+{
+	std::string name;
+	uint32_t constantBuffer;
+	uint32_t startOffset;
+	uint32_t size;
+	ShaderVariableType type;
+};
+
+
 void Introspect(ID3D12ShaderReflection* reflector, std::vector<ShaderConstantBufferDesc>& constantBuffers,
 	std::vector<ShaderResourceDesc>& resources);
 
