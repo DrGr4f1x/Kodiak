@@ -251,6 +251,15 @@
     <ClInclude Include="Source\UpdateSceneOp.h">
       <Filter>Rendering\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Material.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Material11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Material12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -384,6 +393,12 @@
     <ClCompile Include="Source\SetViewportOp.cpp" />
     <ClCompile Include="Source\UpdateSceneOp.cpp">
       <Filter>Rendering\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Material11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Material12.cpp">
+      <Filter>Rendering\DX12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

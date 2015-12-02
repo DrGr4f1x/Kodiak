@@ -14,6 +14,7 @@
 #include "CommandList12.h"
 #include "CommandListManager12.h"
 #include "Format.h"
+#include "Log.h"
 #include "RenderEnums12.h"
 #include "RenderUtils.h"
 #include "Shader12.h"
@@ -153,7 +154,28 @@ void DeviceManager::CreateDeviceResources()
 
 	// Create DXGI device.
 	ComPtr<IDXGIFactory4> factory;
-	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&factory)));
+	ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
+
+	ComPtr<IDXGIAdapter1> adapter;
+	for (uint32_t i = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(i, &adapter); ++i)
+	{
+		DXGI_ADAPTER_DESC1 desc;
+		adapter->GetDesc1(&desc);
+		if(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+		{
+			continue;
+		}
+
+		LOG_INFO << "Found adapter " << i;
+		LOG_INFO << "  " << desc.Description;
+		LOG_INFO << "  " << desc.VendorId;
+		LOG_INFO << "  " << desc.DeviceId;
+		LOG_INFO << "  " << desc.SubSysId;
+		LOG_INFO << "  " << desc.Revision;
+		LOG_INFO << "  " << desc.DedicatedVideoMemory;
+		LOG_INFO << "  " << desc.DedicatedSystemMemory;
+		LOG_INFO << "  " << desc.SharedSystemMemory;
+	}
 
 	// Create DirectX 12 device.
 	ThrowIfFailed(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
