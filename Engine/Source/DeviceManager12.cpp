@@ -157,6 +157,8 @@ void DeviceManager::CreateDeviceResources()
 	ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
 
 	ComPtr<IDXGIAdapter1> adapter;
+	ComPtr<IDXGIAdapter1> bestAdapter;
+	size_t maxDedicatedVideoMemory = 0;
 	for (uint32_t i = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(i, &adapter); ++i)
 	{
 		DXGI_ADAPTER_DESC1 desc;
@@ -175,10 +177,16 @@ void DeviceManager::CreateDeviceResources()
 		LOG_INFO << "  " << desc.DedicatedVideoMemory;
 		LOG_INFO << "  " << desc.DedicatedSystemMemory;
 		LOG_INFO << "  " << desc.SharedSystemMemory;
+
+		if (desc.DedicatedVideoMemory > maxDedicatedVideoMemory)
+		{
+			maxDedicatedVideoMemory = desc.DedicatedVideoMemory;
+			bestAdapter = adapter;
+		}
 	}
 
 	// Create DirectX 12 device.
-	ThrowIfFailed(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
+	ThrowIfFailed(D3D12CreateDevice(bestAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
 
 	g_device = m_device.Get();
 
