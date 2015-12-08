@@ -168,16 +168,6 @@ void DeviceManager::CreateDeviceResources()
 			continue;
 		}
 
-		LOG_INFO << "Found adapter " << i;
-		LOG_INFO << "  " << desc.Description;
-		LOG_INFO << "  " << desc.VendorId;
-		LOG_INFO << "  " << desc.DeviceId;
-		LOG_INFO << "  " << desc.SubSysId;
-		LOG_INFO << "  " << desc.Revision;
-		LOG_INFO << "  " << desc.DedicatedVideoMemory;
-		LOG_INFO << "  " << desc.DedicatedSystemMemory;
-		LOG_INFO << "  " << desc.SharedSystemMemory;
-
 		if (desc.DedicatedVideoMemory > maxDedicatedVideoMemory)
 		{
 			maxDedicatedVideoMemory = desc.DedicatedVideoMemory;

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "PipelineState11.h"
+
 #include <ppltasks.h>
 
 namespace Kodiak
@@ -16,47 +18,68 @@ namespace Kodiak
 
 // Forward declarations
 class DomainShader;
-class GraphicsPSO;
+class GeometryShader;
 class HullShader;
+class PixelShader;
 class VertexShader;
-struct BlendStateDesc;
-struct RasterizerStateDesc;
-struct DepthStencilStateDesc;
+
+
+struct MaterialDesc
+{
+	std::string name;
+
+	std::string vertexShaderPath;
+	std::string vertexShaderFile;
+
+	std::string domainShaderPath;
+	std::string domainShaderFile;
+
+	std::string hullShaderPath;
+	std::string hullShaderFile;
+
+	std::string geometryShaderPath;
+	std::string geometryShaderFile;
+
+	std::string pixelShaderPath;
+	std::string pixelShaderFile;
+
+	BlendStateDesc			blendStateDesc;
+	DepthStencilStateDesc	depthStencilStateDesc;
+	RasterizerStateDesc		rasterizerStateDesc;
+};
+
+
+size_t ComputeHash(const MaterialDesc& desc);
 
 
 class Material
 {
+	friend class MaterialManager;
+
 public:
-	Material();
-	Material(const std::string& name);
-
+	explicit Material(const MaterialDesc& desc);
+	
 	const std::string& GetName() const { return m_name; }
-	void SetName(const std::string& name) { m_name = name; }
-
-	void SetVertexShaderPath(const std::string& shaderPath, const std::string& shaderFile);
-	void SetVertexShader(std::shared_ptr<VertexShader> vertexShader);
-
-	void SetDomainShaderPath(const std::string& shaderPath, const std::string& shaderFile);
-	void SetDomainShader(std::shared_ptr<DomainShader> domainShader);
-
-	void SetHullShaderPath(const std::string& shaderPath, const std::string& shaderFile);
-	void SetHullShader(std::shared_ptr<HullShader> hullShader);
-
+	
 public:
 	concurrency::task<void> loadTask;
 
 private:
+	void Create(const MaterialDesc& desc);
+
+private:
 	// Graphics objects
 	std::shared_ptr<GraphicsPSO>	m_pso;
+	std::shared_ptr<VertexShader>	m_vertexShader;
 	std::shared_ptr<DomainShader>	m_domainShader;
 	std::shared_ptr<HullShader>		m_hullShader;
-	std::shared_ptr<VertexShader>	m_vertexShader;
+	std::shared_ptr<GeometryShader>	m_geometryShader;
+	std::shared_ptr<PixelShader>	m_pixelShader;
 
 
 	// Material properties
 	std::string						m_name;
 	bool							m_isTaskValid{ false };
-	bool							m_isFinalized{ false };
 };
 
 } // namespace Kodiak

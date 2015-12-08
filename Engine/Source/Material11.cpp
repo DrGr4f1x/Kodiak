@@ -12,7 +12,8 @@
 #include "Material11.h"
 
 #include "InputLayout11.h"
-#include "PipelineState11.h"
+#include "Paths.h"
+#include "RenderUtils.h"
 #include "Shader11.h"
 #include "ShaderManager11.h"
 
@@ -21,16 +22,87 @@ using namespace Kodiak;
 using namespace std;
 
 
-Material::Material()
-	: m_pso(make_shared<GraphicsPSO>())
-	, m_name()
-{}
+namespace Kodiak
+{
+
+size_t ComputeHash(const MaterialDesc& desc)
+{
+	size_t hashVal = 0;
+
+	auto& shaderRootPath = Paths::GetInstance().ShaderDir();
+
+	// Vertex shader
+	{
+		auto fullPath = shaderRootPath + desc.vertexShaderPath + "\\SM5\\" + desc.vertexShaderFile;
+
+		hash<string> hashFunc;
+		size_t hashCode = hashFunc(fullPath);
+
+		hashVal = HashIterate(hashCode);
+	}
+
+	// Domain shader
+	if (!desc.domainShaderPath.empty() || !desc.domainShaderFile.empty())
+	{
+		auto fullPath = shaderRootPath + desc.domainShaderPath + "\\SM5\\" + desc.domainShaderFile;
+
+		hash<string> hashFunc;
+		size_t hashCode = hashFunc(fullPath);
+
+		hashVal = HashIterate(hashCode, hashVal);
+	}
+
+	// Hull shader
+	if (!desc.hullShaderPath.empty() || !desc.hullShaderFile.empty())
+	{
+		auto fullPath = shaderRootPath + desc.hullShaderPath + "\\SM5\\" + desc.hullShaderFile;
+
+		hash<string> hashFunc;
+		size_t hashCode = hashFunc(fullPath);
+
+		hashVal = HashIterate(hashCode, hashVal);
+	}
+
+	// Geometry shader
+	if (!desc.geometryShaderPath.empty() || !desc.geometryShaderFile.empty())
+	{
+		auto fullPath = shaderRootPath + desc.geometryShaderPath + "\\SM5\\" + desc.geometryShaderFile;
+
+		hash<string> hashFunc;
+		size_t hashCode = hashFunc(fullPath);
+
+		hashVal = HashIterate(hashCode, hashVal);
+	}
+
+	// Pixel shader
+	if (!desc.pixelShaderPath.empty() || !desc.pixelShaderFile.empty())
+	{
+		auto fullPath = shaderRootPath + desc.pixelShaderPath + "\\SM5\\" + desc.pixelShaderFile;
+
+		hash<string> hashFunc;
+		size_t hashCode = hashFunc(fullPath);
+
+		hashVal = HashIterate(hashCode, hashVal);
+	}
+
+	// State
+	hashVal = HashState(&desc.blendStateDesc, hashVal);
+	hashVal = HashState(&desc.depthStencilStateDesc, hashVal);
+	hashVal = HashState(&desc.rasterizerStateDesc);
+}
+
+} // namespace Kodiak
 
 
-Material::Material(const string& name)
-	: m_pso(make_shared<GraphicsPSO>())
-	, m_name(name)
-{}
+Material::Material(const MaterialDesc& desc)
+{
+	Create(desc);
+}
+
+
+void Material::Create(const MaterialDesc& desc)
+{
+}
 
 
 void Material::SetVertexShaderPath(const string& shaderPath, const string& shaderFile)

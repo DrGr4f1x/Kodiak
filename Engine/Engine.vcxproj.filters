@@ -176,7 +176,6 @@
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\BinaryReader.h" />
-    <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\PipelineState12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
@@ -259,6 +258,15 @@
     </ClInclude>
     <ClInclude Include="Source\Material12.h">
       <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialManager11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utility.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -399,6 +407,9 @@
     </ClCompile>
     <ClCompile Include="Source\Material12.cpp">
       <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialManager11.cpp">
+      <Filter>Rendering\DX11</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
