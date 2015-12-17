@@ -9,12 +9,53 @@
 
 #pragma once
 
+#include "BinaryReader.h"
+#include "RenderUtils.h"
+
+namespace Kodiak
+{
+
+// Forward declarations
+class ComputeShader;
+class DomainShader;
+class GeometryShader;
+class HullShader;
+class ShaderPath;
+class PixelShader;
+class VertexShader;
+
+
+class ShaderManager
+{
+public:
+	static ShaderManager& GetInstance();
+
+	static void DestroyAll();
+
+	std::shared_ptr<ComputeShader> LoadComputeShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<DomainShader> LoadDomainShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<GeometryShader> LoadGeometryShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<HullShader>	LoadHullShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<PixelShader> LoadPixelShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<VertexShader> LoadVertexShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
+
+private:
+	template<class ShaderClass>
+	void LoadShaderAsync(std::shared_ptr<ShaderClass>shader, const std::string& fullPathToShader) const;
+
+	template<class ShaderClass>
+	void LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const std::string& fullPathToShader) const;
+};
+
+
 #if defined(DX12)
-#include "ShaderManager12.h"
+#include "ShaderManager12.inl"
 #elif defined(DX11)
-#include "ShaderManager11.h"
+#include "ShaderManager11.inl"
 #elif defined(VK)
-#include "ShaderManagerVk.h"
+#include "ShaderManagerVk.inl"
 #else
 #error No graphics API defined!
 #endif
+
+} // namespace Kodiak

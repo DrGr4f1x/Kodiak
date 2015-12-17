@@ -133,8 +133,8 @@ void Scene::Initialize()
 	RasterizerStateDesc rasterizerState(CullMode::Back, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine", "SimpleVertexShader.cso");
-	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine", "SimplePixelShader.cso");
+	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "SimpleVertexShader.cso"));
+	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "SimplePixelShader.cso"));
 	(vs->loadTask && ps->loadTask).wait();
 
 #if defined(DX12)

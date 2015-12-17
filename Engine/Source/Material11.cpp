@@ -9,13 +9,7 @@
 
 #include "Stdafx.h"
 
-#include "Material11.h"
-
-#include "InputLayout11.h"
-#include "Paths.h"
-#include "RenderUtils.h"
-#include "Shader11.h"
-#include "ShaderManager11.h"
+#include "Material.h"
 
 
 using namespace Kodiak;
@@ -25,153 +19,33 @@ using namespace std;
 namespace Kodiak
 {
 
+shared_ptr<MaterialDesc> CreateMaterialDesc()
+{
+	return nullptr;
+}
+
+
 size_t ComputeHash(const MaterialDesc& desc)
 {
-	size_t hashVal = 0;
-
-	auto& shaderRootPath = Paths::GetInstance().ShaderDir();
-
-	// Vertex shader
-	{
-		auto fullPath = shaderRootPath + desc.vertexShaderPath + "\\SM5\\" + desc.vertexShaderFile;
-
-		hash<string> hashFunc;
-		size_t hashCode = hashFunc(fullPath);
-
-		hashVal = HashIterate(hashCode);
-	}
-
-	// Domain shader
-	if (!desc.domainShaderPath.empty() || !desc.domainShaderFile.empty())
-	{
-		auto fullPath = shaderRootPath + desc.domainShaderPath + "\\SM5\\" + desc.domainShaderFile;
-
-		hash<string> hashFunc;
-		size_t hashCode = hashFunc(fullPath);
-
-		hashVal = HashIterate(hashCode, hashVal);
-	}
-
-	// Hull shader
-	if (!desc.hullShaderPath.empty() || !desc.hullShaderFile.empty())
-	{
-		auto fullPath = shaderRootPath + desc.hullShaderPath + "\\SM5\\" + desc.hullShaderFile;
-
-		hash<string> hashFunc;
-		size_t hashCode = hashFunc(fullPath);
-
-		hashVal = HashIterate(hashCode, hashVal);
-	}
-
-	// Geometry shader
-	if (!desc.geometryShaderPath.empty() || !desc.geometryShaderFile.empty())
-	{
-		auto fullPath = shaderRootPath + desc.geometryShaderPath + "\\SM5\\" + desc.geometryShaderFile;
-
-		hash<string> hashFunc;
-		size_t hashCode = hashFunc(fullPath);
-
-		hashVal = HashIterate(hashCode, hashVal);
-	}
-
-	// Pixel shader
-	if (!desc.pixelShaderPath.empty() || !desc.pixelShaderFile.empty())
-	{
-		auto fullPath = shaderRootPath + desc.pixelShaderPath + "\\SM5\\" + desc.pixelShaderFile;
-
-		hash<string> hashFunc;
-		size_t hashCode = hashFunc(fullPath);
-
-		hashVal = HashIterate(hashCode, hashVal);
-	}
-
-	// State
-	hashVal = HashState(&desc.blendStateDesc, hashVal);
-	hashVal = HashState(&desc.depthStencilStateDesc, hashVal);
-	hashVal = HashState(&desc.rasterizerStateDesc);
+	return ComputeBaseHash(desc);
 }
+
 
 } // namespace Kodiak
 
 
-Material::Material(const MaterialDesc& desc)
+Material::Material(const string& name)
+	: m_name(name)
+{}
+
+
+void Material::BindParameters(const ShaderState& shaderState)
+{}
+
+
+void Material::SetupPSO(const MaterialDesc& desc)
 {
-	Create(desc);
-}
-
-
-void Material::Create(const MaterialDesc& desc)
-{
-}
-
-
-void Material::SetVertexShaderPath(const string& shaderPath, const string& shaderFile)
-{
-	auto vs = ShaderManager::GetInstance().LoadVertexShader(shaderPath, shaderFile);
-	SetVertexShader(vs);
-}
-
-
-void Material::SetVertexShader(shared_ptr<VertexShader> vertexShader)
-{
-	m_isFinalized = false;
-	m_vertexShader = vertexShader;
-
-	if (m_isTaskValid)
-	{
-		loadTask = loadTask && m_vertexShader->loadTask;
-	}
-	else
-	{
-		loadTask = m_vertexShader->loadTask;
-		m_isTaskValid = true;
-	}
-}
-
-
-void Material::SetDomainShaderPath(const string& shaderPath, const string& shaderFile)
-{
-	auto ds = ShaderManager::GetInstance().LoadDomainShader(shaderPath, shaderFile);
-	SetDomainShader(ds);
-}
-
-
-void Material::SetDomainShader(shared_ptr<DomainShader> domainShader)
-{
-	m_isFinalized = false;
-	m_domainShader = domainShader;
-
-	if (m_isTaskValid)
-	{
-		loadTask = loadTask && m_domainShader->loadTask;
-	}
-	else
-	{
-		loadTask = m_domainShader->loadTask;
-		m_isTaskValid = true;
-	}
-}
-
-
-void Material::SetHullShaderPath(const string& shaderPath, const string& shaderFile)
-{
-	auto hs = ShaderManager::GetInstance().LoadHullShader(shaderPath, shaderFile);
-	SetHullShader(hs);
-}
-
-
-void Material::SetHullShader(shared_ptr<HullShader> hullShader)
-{
-	m_isFinalized = false;
-	m_hullShader = hullShader;
-
-	if (m_isTaskValid)
-	{
-		loadTask = loadTask && m_hullShader->loadTask;
-	}
-	else
-	{
-		loadTask = m_hullShader->loadTask;
-		m_isTaskValid = true;
-	}
+	m_pso->SetBlendState(desc.blendStateDesc);
+	m_pso->SetDepthStencilState(desc.depthStencilStateDesc);
+	m_pso->SetRasterizerState(desc.rasterizerStateDesc);
 }

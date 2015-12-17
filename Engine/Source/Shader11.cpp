@@ -9,11 +9,12 @@
 
 #include "Stdafx.h"
 
-#include "Shader11.h"
+#include "Shader.h"
 
 #include "DeviceManager11.h"
 #include "InputLayout11.h"
 #include "Log.h"
+#include "Paths.h"
 #include "RenderEnums.h"
 #include "RenderUtils.h"
 
@@ -23,6 +24,24 @@
 using namespace Kodiak;
 using namespace std;
 using namespace Microsoft::WRL;
+
+
+ShaderPath::ShaderPath(const string& shaderFile)
+	: m_shaderPath()
+	, m_shaderFile(shaderFile)
+	, m_shaderFullPath()
+{
+	m_shaderFullPath = Paths::GetInstance().ShaderDir() + "SM5\\" + m_shaderFile;
+}
+
+
+ShaderPath::ShaderPath(const string& shaderPath, const string& shaderFile)
+	: m_shaderPath(shaderPath)
+	, m_shaderFile(shaderFile)
+	, m_shaderFullPath()
+{
+	m_shaderFullPath = Paths::GetInstance().ShaderDir() + m_shaderPath + "\\SM5\\" + m_shaderFile;
+}
 
 
 shared_ptr<InputLayout> VertexShader::GetInputLayout()

@@ -16,5 +16,12 @@
       <string>D:\KodiakDepot\Kodiak\Engine\Source\ShaderManager11.cpp</string>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\ShaderManager11.h</string>
     </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderUtils.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\PipelineState11.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\PipelineState11.h</string>
+    </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

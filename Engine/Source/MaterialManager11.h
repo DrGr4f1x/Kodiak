@@ -23,11 +23,11 @@ public:
 	static MaterialManager& GetInstance();
 	static void Destroy();
 
-	std::shared_ptr<Material> CreateMaterial(const MaterialDesc& desc, bool asyncCreate = true);
+	std::shared_ptr<Material> CreateMaterial(const std::string& name, std::shared_ptr<MaterialDesc> desc, bool asyncCreate = true);
 
 private:
-	void CreateMaterialAsync(std::shared_ptr<Material> material, const MaterialDesc& desc);
-	void CreateMaterialSerial(std::shared_ptr<Material> material, const MaterialDesc& desc);
+	void CreateMaterialAsync(std::shared_ptr<Material> material, std::shared_ptr<MaterialDesc> desc);
+	void CreateMaterialSerial(std::shared_ptr<Material> material, std::shared_ptr<MaterialDesc> desc);
 };
 
 

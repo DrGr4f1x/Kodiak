@@ -11,11 +11,12 @@
 
 #include "MaterialManager11.h"
 
-#include "Material11.h"
+#include "Material.h"
 #include "RenderUtils.h"
-#include "ShaderManager11.h"
+#include "ShaderManager.h"
 
 #include <map>
+#include <ppltasks.h>
 
 using namespace Kodiak;
 using namespace std;
@@ -44,9 +45,9 @@ void MaterialManager::Destroy()
 }
 
 
-shared_ptr<Material> MaterialManager::CreateMaterial(const MaterialDesc& desc, bool asyncCreate)
+shared_ptr<Material> MaterialManager::CreateMaterial(const string& name, shared_ptr<MaterialDesc> desc, bool asyncCreate)
 {
-	auto hashCode = ComputeHash(desc);
+	auto hashCode = ComputeHash(*desc);
 
 	shared_ptr<Material> material;
 
@@ -58,7 +59,7 @@ shared_ptr<Material> MaterialManager::CreateMaterial(const MaterialDesc& desc, b
 
 		if (iter == s_materialHashMap.end())
 		{
-			material = make_shared<Material>();
+			material = shared_ptr<Material>(new Material(name));
 			s_materialHashMap[hashCode] = material;
 
 			if (asyncCreate)
@@ -82,55 +83,98 @@ shared_ptr<Material> MaterialManager::CreateMaterial(const MaterialDesc& desc, b
 }
 
 
-void MaterialManager::CreateMaterialAsync(shared_ptr<Material> material, const MaterialDesc& desc)
+void MaterialManager::CreateMaterialAsync(shared_ptr<Material> material, std::shared_ptr<MaterialDesc> desc)
 {
+	using namespace concurrency;
+
 	// Verify we have a vertex shader (required)
-	assert(!desc.vertexShaderFile.empty());
+	assert(desc->vertexShaderPath.HasPath());
 
-	auto& shaderManager = ShaderManager::GetInstance();
-
-	// Load vertex shader
-	auto vs = shaderManager.LoadVertexShader(desc.vertexShaderPath, desc.vertexShaderFile, true);
-	material->loadTask = vs->loadTask;
-	material->m_vertexShader = vs;
-
-	// Load domain shader (optional)
-	if (!desc.domainShaderFile.empty())
+	create_task([material, desc]
 	{
-		auto ds = shaderManager.LoadDomainShader(desc.domainShaderPath, desc.domainShaderFile, true);
-		material->loadTask = (material->loadTask && ds->loadTask);
-		material->m_domainShader = ds;
-	}
+		auto& shaderManager = ShaderManager::GetInstance();
 
-	// Load hull shader (optional)
-	if (!desc.hullShaderFile.empty())
-	{
-		auto hs = shaderManager.LoadHullShader(desc.hullShaderPath, desc.hullShaderFile, true);
-		material->loadTask = (material->loadTask && hs->loadTask);
-		material->m_hullShader = hs;
-	}
+		ShaderState shaderState;
 
-	// Load geometry shader (optional)
-	if (!desc.geometryShaderFile.empty())
-	{
-		auto gs = shaderManager.LoadGeometryShader(desc.geometryShaderPath, desc.geometryShaderFile, true);
-		material->loadTask = (material->loadTask && gs->loadTask);
-		material->m_geometryShader = gs;
-	}
+		// Create PSO for material
+		material->m_pso = make_shared<GraphicsPSO>();
 
-	// Load pixel shader (optional)
-	if (!desc.pixelShaderFile.empty())
-	{
-		auto ps = shaderManager.LoadPixelShader(desc.pixelShaderPath, desc.pixelShaderFile, true);
-		material->loadTask = (material->loadTask && ps->loadTask);
-		material->m_pixelShader = ps;
-	}
+		// Load vertex shader
+		auto vs = shaderManager.LoadVertexShader(desc->vertexShaderPath, true);
+		shaderState.vertexShader = vs;
+		
+		// Once the shader has finished loading, set it on the PSO
+		auto psoTask = vs->loadTask.then([material, vs]
+		{
+			material->m_pso->SetVertexShader(vs.get());
+			material->m_pso->SetInputLayout(*vs->GetInputLayout());
+		});
 
-	// Configure the graphics PSO
+		// Load domain shader (optional)
+		if (desc->domainShaderPath.HasPath())
+		{
+			auto ds = shaderManager.LoadDomainShader(desc->domainShaderPath, true);
+			shaderState.domainShader = ds;
+
+			// Once the shader has finished loading, set it on the PSO
+			psoTask = psoTask && ds->loadTask.then([material, ds]
+			{
+				material->m_pso->SetDomainShader(ds.get());
+			});
+		}
+
+		// Load hull shader (optional)
+		if (desc->hullShaderPath.HasPath())
+		{
+			auto hs = shaderManager.LoadHullShader(desc->hullShaderPath, true);
+			shaderState.hullShader = hs;
+			
+			// Once the shader has finished loading, set it on the PSO
+			psoTask = psoTask && hs->loadTask.then([material, hs]
+			{
+				material->m_pso->SetHullShader(hs.get());
+			});
+		}
+
+		// Load geometry shader (optional)
+		if (desc->geometryShaderPath.HasPath())
+		{
+			auto gs = shaderManager.LoadGeometryShader(desc->geometryShaderPath, true);
+			shaderState.geometryShader = gs;
+			
+			// Once the shader has finished loading, set it on the PSO
+			psoTask = psoTask && gs->loadTask.then([material, gs]
+			{
+				material->m_pso->SetGeometryShader(gs.get());
+			});
+		}
+
+		// Load pixel shader (optional)
+		if (desc->pixelShaderPath.HasPath())
+		{
+			auto ps = shaderManager.LoadPixelShader(desc->pixelShaderPath, true);
+			shaderState.pixelShader = ps;
+			
+			// Once the shader has finished loading, set it on the PSO
+			psoTask = psoTask && ps->loadTask.then([material, ps]
+			{
+				material->m_pso->SetPixelShader(ps.get());
+			});
+		}
+
+		// Finalize the graphics PSO & bind material parameters
+		material->SetupPSO(*desc);
+		psoTask.wait();
+		material->m_pso->Finalize();
+
+		material->BindParameters(shaderState);
+
+		material->m_isReady = true;
+	});
 }
 
 
-void MaterialManager::CreateMaterialSerial(shared_ptr<Material> material, const MaterialDesc& desc)
+void MaterialManager::CreateMaterialSerial(shared_ptr<Material> material, std::shared_ptr<MaterialDesc> desc)
 {
 
 }

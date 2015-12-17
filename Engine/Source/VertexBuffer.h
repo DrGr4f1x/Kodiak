@@ -43,7 +43,12 @@ public:
 	{
 		m_size = sizeof(VertexType) * initializer.size();
 		m_data = (VertexType*)_aligned_malloc(m_size, 16);
-		memcpy(m_data, initializer.begin(), m_size);
+
+		assert(m_data);
+		if (m_data)
+		{
+			memcpy(m_data, initializer.begin(), m_size);
+		}
 	}
 
 	~VertexBufferData()

@@ -9,15 +9,12 @@
 
 #include "Stdafx.h"
 
-#include "ShaderManager12.h"
+#include "ShaderManager.h"
 
-#include "BinaryReader.h"
-#include "DeviceManager12.h"
-#include "Paths.h"
-#include "RenderUtils.h"
-#include "Shader12.h"
+#include "Shader.h"
 
 #include <map>
+#include <ppltasks.h>
 
 using namespace Kodiak;
 using namespace std;
@@ -26,12 +23,12 @@ using namespace std;
 namespace
 {
 
-	map<size_t, shared_ptr<ComputeShader>>		s_computeShaderHashMap;
-	map<size_t, shared_ptr<DomainShader>>		s_domainShaderHashMap;
-	map<size_t, shared_ptr<GeometryShader>>		s_geometryShaderHashMap;
-	map<size_t, shared_ptr<HullShader>>			s_hullShaderHashMap;
-	map<size_t, shared_ptr<PixelShader>>		s_pixelShaderHashMap;
-	map<size_t, shared_ptr<VertexShader>>		s_vertexShaderHashMap;
+map<size_t, shared_ptr<ComputeShader>>	s_computeShaderHashMap;
+map<size_t, shared_ptr<DomainShader>>	s_domainShaderHashMap;
+map<size_t, shared_ptr<GeometryShader>> s_geometryShaderHashMap;
+map<size_t, shared_ptr<HullShader>>		s_hullShaderHashMap;
+map<size_t, shared_ptr<PixelShader>>	s_pixelShaderHashMap;
+map<size_t, shared_ptr<VertexShader>>	s_vertexShaderHashMap;
 
 } // anonymous namespace
 
@@ -54,10 +51,9 @@ void ShaderManager::DestroyAll()
 }
 
 
-shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
+shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const ShaderPath& shaderPath, bool asyncLoad) const
 {
-	// Build full path to compiled shader object
-	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+	string fullPath = shaderPath.GetFullPath();
 
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(fullPath);
@@ -96,10 +92,9 @@ shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderP
 }
 
 
-shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
+shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const ShaderPath& shaderPath, bool asyncLoad) const
 {
-	// Build full path to compiled shader object
-	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+	string fullPath = shaderPath.GetFullPath();
 
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(fullPath);
@@ -138,10 +133,9 @@ shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPat
 }
 
 
-shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
+shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const ShaderPath& shaderPath, bool asyncLoad) const
 {
-	// Build full path to compiled shader object
-	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+	string fullPath = shaderPath.GetFullPath();
 
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(fullPath);
@@ -180,10 +174,9 @@ shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shade
 }
 
 
-shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
+shared_ptr<HullShader> ShaderManager::LoadHullShader(const ShaderPath& shaderPath, bool asyncLoad) const
 {
-	// Build full path to compiled shader object
-	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+	string fullPath = shaderPath.GetFullPath();
 
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(fullPath);
@@ -222,10 +215,9 @@ shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, c
 }
 
 
-shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
+shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const ShaderPath& shaderPath, bool asyncLoad) const
 {
-	// Build full path to compiled shader object
-	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+	string fullPath = shaderPath.GetFullPath();
 
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(fullPath);
@@ -264,10 +256,9 @@ shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath,
 }
 
 
-shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const string& shaderPath, const string& shaderFile, bool asyncLoad) const
+shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const ShaderPath& shaderPath, bool asyncLoad) const
 {
-	// Build full path to compiled shader object
-	string fullPath = Paths::GetInstance().ShaderDir() + shaderPath + "\\SM5.1\\" + shaderFile;
+	string fullPath = shaderPath.GetFullPath();
 
 	hash<string> hashFunc;
 	size_t hashCode = hashFunc(fullPath);

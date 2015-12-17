@@ -188,12 +188,6 @@
     <ClInclude Include="Source\InputLayout12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShaderManager12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ShaderManager11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\IndexBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -253,9 +247,6 @@
     <ClInclude Include="Source\Material.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Material11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Material12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
@@ -267,6 +258,9 @@
     </ClInclude>
     <ClInclude Include="Source\Utility.h">
       <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderManager11.inl">
+      <Filter>Rendering\DX11</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -349,17 +343,11 @@
     <ClCompile Include="Source\DXGIUtility.cpp">
       <Filter>Rendering\DXCommon</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ShaderManager11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
     <ClCompile Include="Source\BinaryReader.cpp" />
     <ClCompile Include="Source\PipelineState12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\Shader12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ShaderManager12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\IndexBuffer11.cpp">
@@ -411,6 +399,12 @@
     <ClCompile Include="Source\MaterialManager11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ShaderManager.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Material.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
@@ -425,5 +419,10 @@
     <FxCompile Include="Source\Shaders\Common\SimplePixelShader.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\ShaderManager12.inl">
+      <Filter>Rendering\DX12</Filter>
+    </None>
   </ItemGroup>
 </Project>

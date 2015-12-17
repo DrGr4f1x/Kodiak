@@ -9,7 +9,7 @@
 
 #include "Stdafx.h"
 
-#include "Shader12.h"
+#include "Shader.h"
 
 #include "InputLayout12.h"
 #include "Log.h"
@@ -22,6 +22,24 @@
 using namespace Kodiak;
 using namespace std;
 using namespace Microsoft::WRL;
+
+
+ShaderPath::ShaderPath(const string& shaderFile)
+	: m_shaderPath()
+	, m_shaderFile(shaderFile)
+	, m_shaderFullPath()
+{
+	m_shaderFullPath = Paths::GetInstance().ShaderDir() + "SM5.1\\" + m_shaderFile;
+}
+
+
+ShaderPath::ShaderPath(const string& shaderPath, const string& shaderFile)
+	: m_shaderPath(shaderPath)
+	, m_shaderFile(shaderFile)
+	, m_shaderFullPath()
+{
+	m_shaderFullPath = Paths::GetInstance().ShaderDir() + m_shaderPath + "\\SM5.1\\" + m_shaderFile;
+}
 
 
 void VertexShader::Finalize()

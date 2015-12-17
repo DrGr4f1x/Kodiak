@@ -42,7 +42,12 @@ public:
 	{
 		m_size = sizeof(uint16_t) * initializer.size();
 		m_data = (uint16_t*)_aligned_malloc(m_size, 16);
-		memcpy(m_data, initializer.begin(), m_size);
+
+		assert(m_data);
+		if (m_data)
+		{
+			memcpy(m_data, initializer.begin(), m_size);
+		}
 	}
 
 	~IndexBufferData16()
@@ -77,7 +82,12 @@ public:
 	{
 		m_size = sizeof(uint32_t) * initializer.size();
 		m_data = (uint32_t*)_aligned_malloc(m_size, 16);
-		memcpy(m_data, initializer.begin(), m_size);
+
+		assert(m_data);
+		if (m_data)
+		{
+			memcpy(m_data, initializer.begin(), m_size);
+		}
 	}
 
 	~IndexBufferData32()
