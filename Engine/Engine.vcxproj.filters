@@ -262,6 +262,11 @@
     <ClInclude Include="Source\ShaderManager11.inl">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
+    <ClInclude Include="Source\MaterialParameter.h" />
+    <ClInclude Include="Source\ShaderManager12.inl" />
+    <ClInclude Include="Source\Camera.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -405,6 +410,9 @@
     <ClCompile Include="Source\Material.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Camera.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
@@ -419,10 +427,5 @@
     <FxCompile Include="Source\Shaders\Common\SimplePixelShader.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Source\ShaderManager12.inl">
-      <Filter>Rendering\DX12</Filter>
-    </None>
   </ItemGroup>
 </Project>

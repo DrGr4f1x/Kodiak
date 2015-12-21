@@ -13,34 +13,63 @@
 namespace Math
 {
 
-	template <typename T> __forceinline T AlignUpWithMask(T value, size_t mask)
-	{
-		return (T)(((size_t)value + mask) & ~mask);
-	}
+template <typename T> __forceinline T AlignUpWithMask(T value, size_t mask)
+{
+	return (T)(((size_t)value + mask) & ~mask);
+}
 
-	template <typename T> __forceinline T AlignDownWithMask(T value, size_t mask)
-	{
-		return (T)((size_t)value & ~mask);
-	}
 
-	template <typename T> __forceinline T AlignUp(T value, size_t alignment)
-	{
-		return AlignUpWithMask(value, alignment - 1);
-	}
+template <typename T> __forceinline T AlignDownWithMask(T value, size_t mask)
+{
+	return (T)((size_t)value & ~mask);
+}
 
-	template <typename T> __forceinline T AlignDown(T value, size_t alignment)
-	{
-		return AlignDownWithMask(value, alignment - 1);
-	}
 
-	template <typename T> __forceinline bool IsAligned(T value, size_t alignment)
-	{
-		return 0 == ((size_t)value & (alignment - 1));
-	}
+template <typename T> __forceinline T AlignUp(T value, size_t alignment)
+{
+	return AlignUpWithMask(value, alignment - 1);
+}
 
-	template <typename T> __forceinline T DivideByMultiple(T value, size_t alignment)
-	{
-		return (T)((value + alignment - 1) / alignment);
-	}
+
+template <typename T> __forceinline T AlignDown(T value, size_t alignment)
+{
+	return AlignDownWithMask(value, alignment - 1);
+}
+
+
+template <typename T> __forceinline bool IsAligned(T value, size_t alignment)
+{
+	return 0 == ((size_t)value & (alignment - 1));
+}
+
+
+template <typename T> __forceinline T DivideByMultiple(T value, size_t alignment)
+{
+	return (T)((value + alignment - 1) / alignment);
+}
+
+
+__forceinline bool operator==(const DirectX::XMFLOAT3& vecA, const DirectX::XMFLOAT3& vecB)
+{
+	return (vecA.x == vecB.x) && (vecA.y == vecB.y) && (vecA.z == vecB.z);
+}
+
+
+__forceinline bool operator!=(const DirectX::XMFLOAT3& vecA, const DirectX::XMFLOAT3& vecB)
+{
+	return (vecA.x != vecB.x) || (vecA.y != vecB.y) || (vecA.z != vecB.z);
+}
+
+
+__forceinline bool operator==(const DirectX::XMFLOAT4& vecA, const DirectX::XMFLOAT4& vecB)
+{
+	return (vecA.x == vecB.x) && (vecA.y == vecB.y) && (vecA.z == vecB.z) && (vecA.w == vecB.w);
+}
+
+
+__forceinline bool operator!=(const DirectX::XMFLOAT4& vecA, const DirectX::XMFLOAT4& vecB)
+{
+	return (vecA.x != vecB.x) || (vecA.y != vecB.y) || (vecA.z != vecB.z) || (vecA.w != vecB.w);
+}
 
 } // namespace Math

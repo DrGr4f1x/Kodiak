@@ -13,6 +13,7 @@
 
 #include "InputLayout12.h"
 #include "Log.h"
+#include "Paths.h"
 #include "RenderEnums.h"
 #include "RenderUtils.h"
 

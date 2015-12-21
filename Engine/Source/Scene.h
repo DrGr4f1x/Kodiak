@@ -13,6 +13,8 @@ namespace Kodiak
 {
 
 // Forward declarations
+namespace RenderThread { class Camera; }
+class Camera;
 class ConstantBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
@@ -24,12 +26,14 @@ class RootSignature;
 class Scene
 {
 public:
-	Scene(uint32_t width, uint32_t height);
+	Scene();
 
 	void AddModel(std::shared_ptr<Model> model);
 
 	void Update(GraphicsCommandList& commandList);
 	void Render(GraphicsCommandList& commandList);
+
+	void SetCamera(std::shared_ptr<Camera> camera);
 
 private:
 	void Initialize();
@@ -55,8 +59,8 @@ private:
 		DirectX::XMFLOAT4X4 model;
 	} m_perObjectConstants;
 
-	uint32_t m_width;
-	uint32_t m_height;
+	// Scene camera
+	std::shared_ptr<RenderThread::Camera> m_camera;
 
 	// HACK
 	DirectX::XMFLOAT4X4 m_modelTransform;

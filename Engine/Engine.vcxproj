@@ -278,6 +278,7 @@
   <ItemGroup>
     <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\BinaryReader.h" />
+    <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\ClearColorBufferOp.h" />
     <ClInclude Include="Source\ClearDepthBufferOp.h" />
     <ClInclude Include="Source\ColorBuffer.h" />
@@ -451,6 +452,7 @@
     </ClInclude>
     <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="Source\SetRenderTargetOp.h" />
+    <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\ConstantBuffer12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>

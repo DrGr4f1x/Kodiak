@@ -11,6 +11,7 @@
 
 #include "Scene.h"
 
+#include "Camera.h"
 #include "CommandList.h"
 #include "ConstantBuffer.h"
 #include "Format.h"
@@ -27,9 +28,10 @@
 using namespace Kodiak;
 using namespace std;
 using namespace DirectX;
+using namespace RenderThread;
 
 
-Scene::Scene(uint32_t width, uint32_t height) : m_width(width), m_height(height)
+Scene::Scene()
 {
 	XMStoreFloat4x4(&m_modelTransform, XMMatrixIdentity());
 	Initialize();
@@ -45,6 +47,12 @@ void Scene::AddModel(shared_ptr<Model> model)
 void Scene::Update(GraphicsCommandList& commandList)
 {
 	// Update per-view constants
+	XMMATRIX xmProjection = XMLoadFloat4x4(&m_camera->GetProjectionMatrix());
+	XMStoreFloat4x4(&m_perViewConstants.projection, XMMatrixTranspose(xmProjection));
+
+	XMMATRIX xmView = XMLoadFloat4x4(&m_camera->GetViewMatrix());
+	XMStoreFloat4x4(&m_perViewConstants.view, XMMatrixTranspose(xmView));
+
 	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
 	commandList.UnmapConstants(*m_perViewConstantBuffer);
@@ -99,27 +107,20 @@ void Scene::Render(GraphicsCommandList& commandList)
 }
 
 
+void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
+{
+	if (!camera->GetProxy())
+	{
+		camera->CreateProxy();
+	}
+
+	m_camera = camera->GetProxy();
+}
+
+
 void Scene::Initialize()
 {
 	using namespace DirectX;
-
-	float aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
-	float fovAngleY = 70.0f * XM_PI / 180.0f;
-
-	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(
-		fovAngleY,
-		aspectRatio,
-		0.01f,
-		100.0f);
-
-	XMStoreFloat4x4(&m_perViewConstants.projection,	XMMatrixTranspose(perspectiveMatrix));
-
-	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 0.7f, 1.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
-	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
-	XMStoreFloat4x4(&m_perViewConstants.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 
 	XMStoreFloat4x4(&m_perObjectConstants.model, XMMatrixIdentity());
 

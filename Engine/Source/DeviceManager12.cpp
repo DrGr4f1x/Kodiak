@@ -17,8 +17,8 @@
 #include "Log.h"
 #include "RenderEnums12.h"
 #include "RenderUtils.h"
-#include "Shader12.h"
-#include "ShaderManager12.h"
+#include "Shader.h"
+#include "ShaderManager.h"
 
 
 using namespace Kodiak;
@@ -326,8 +326,8 @@ void DeviceManager::CreatePresentState()
 	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine", "ScreenQuadVS.cso");
-	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine", "BufferCopyPS.cso");
+	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "ScreenQuadVS.cso"));
+	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "BufferCopyPS.cso"));
 	(vs->loadTask && ps->loadTask).wait();
 
 	// Configure PSO

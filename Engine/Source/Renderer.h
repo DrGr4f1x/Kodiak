@@ -15,6 +15,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class Camera;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
@@ -53,6 +54,8 @@ namespace Renderer
 void Initialize();
 void Finalize();
 
+void EnqueueTask(std::shared_ptr<Kodiak::IAsyncRenderTask> task);
+
 void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
 void SetWindowSize(uint32_t width, uint32_t height);
 
@@ -60,6 +63,7 @@ void Render();
 
 std::shared_ptr<Kodiak::Pipeline> GetRootPipeline();
 
+// Model functions
 void AddModel(std::shared_ptr<Kodiak::Scene> scene, std::shared_ptr<Kodiak::Model> model);
 void UpdateModelTransform(std::shared_ptr<Kodiak::Model> model, const DirectX::XMFLOAT4X4& matrix);
 

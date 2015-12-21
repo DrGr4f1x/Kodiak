@@ -33,6 +33,7 @@
     </ArrayOfString>
     <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.h</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\IndexBuffer.h</string>
@@ -42,6 +43,17 @@
     </ArrayOfString>
     <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Basic\Source\Main.cpp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.cpp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Camera.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Camera.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Renderer.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Renderer.h</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

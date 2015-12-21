@@ -16,6 +16,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class Camera;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
@@ -42,6 +43,7 @@ private:
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
 	std::shared_ptr<Model>			m_boxModel;
 	std::shared_ptr<Scene>			m_mainScene;
+	std::shared_ptr<Camera>			m_camera;
 
 	bool	m_isTracking{ false };
 	int		m_mouseX{ 0 };

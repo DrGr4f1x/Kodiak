@@ -11,6 +11,7 @@
 
 #include "BasicApplication.h"
 
+#include "Engine\Source\Camera.h"
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\DepthBuffer.h"
@@ -67,8 +68,16 @@ void BasicApplication::OnInit()
 	m_boxModel = MakeBoxModel(desc);
 	m_boxModel->loadTask.wait();
 
+	// Setup scene camera
+	m_camera = make_shared<Camera>();
+	m_camera->SetPosition(XMFLOAT3(0.0f, 0.7f, 1.5f));
+	m_camera->LookAt(XMFLOAT3(0.0f, -0.1f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_camera->SetPerspective(70.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 100.0f);
+
 	// Add model to scene and render (HACK)
-	m_mainScene = make_shared<Scene>(m_width, m_height);
+	m_mainScene = make_shared<Scene>();
+	RenderThread::SetSceneCamera(m_mainScene, m_camera);
+	
 	Renderer::AddModel(m_mainScene, m_boxModel);
 	pipeline->UpdateScene(m_mainScene);
 	pipeline->RenderScene(m_mainScene);

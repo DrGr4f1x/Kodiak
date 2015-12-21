@@ -112,7 +112,7 @@ Concurrency::concurrent_queue<std::shared_ptr<IAsyncRenderTask>>	g_renderTaskQue
 
 void StartRenderTask();
 void StopRenderTask();
-void EnqueueTask(std::shared_ptr<IAsyncRenderTask> task);
+
 
 
 void Initialize()
