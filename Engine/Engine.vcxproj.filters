@@ -267,6 +267,9 @@
     <ClInclude Include="Source\Camera.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPass.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -411,6 +414,9 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\Camera.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPass.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>

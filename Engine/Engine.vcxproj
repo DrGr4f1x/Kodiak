@@ -443,6 +443,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\Renderer.h" />
+    <ClInclude Include="Source\RenderPass.h" />
     <ClInclude Include="Source\RenderSceneOp.h" />
     <ClInclude Include="Source\RenderUtils.h" />
     <ClInclude Include="Source\RenderPipeline.h" />
@@ -471,6 +472,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\MaterialManager11.cpp" />
+    <ClCompile Include="Source\RenderPass.cpp" />
     <ClCompile Include="Source\SetScissorOp.cpp" />
     <ClCompile Include="Source\SetViewportOp.cpp">
       <FileType>CppHeader</FileType>
