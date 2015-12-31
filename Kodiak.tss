@@ -2,58 +2,15 @@
 <ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ArrayOfArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material11.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderPass.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderPass.h</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\MaterialManager11.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\MaterialManager11.h</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\PipelineState12.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\PipelineState12.h</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\PipelineState11.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\PipelineState11.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\MaterialParameter.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Shader11.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Shader11.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\AxiomDepot\Source\AxiomNative\Material.cpp</string>
-      <string>D:\AxiomDepot\Source\AxiomNative\Material.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\AxiomDepot\Source\AxiomNative\MaterialParameter.cpp</string>
-      <string>D:\AxiomDepot\Source\AxiomNative\MaterialParameter.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\IndexBuffer.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\VertexBuffer.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Basic\Source\Main.cpp</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.cpp</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Camera.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Camera.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Renderer.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Renderer.h</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Format.h</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>
