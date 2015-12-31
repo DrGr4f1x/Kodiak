@@ -9,12 +9,25 @@
 
 #pragma once
 
-#if defined(DX12)
-#include "MaterialManager12.h"
-#elif defined(DX11)
-#include "MaterialManager11.h"
-#elif defined(VK)
-#include "MaterialManagerVk.h"
-#else
-#error No graphics API defined!
-#endif
+namespace Kodiak
+{
+
+// Forward declarations
+class Material;
+struct MaterialDesc;
+
+
+class MaterialManager
+{
+public:
+	static MaterialManager& GetInstance();
+	static void Destroy();
+
+	std::shared_ptr<Material> CreateMaterial(const std::string& name, std::shared_ptr<MaterialDesc> desc, bool asyncCreate = true);
+
+private:
+	void CreateMaterialAsync(std::shared_ptr<Material> material, std::shared_ptr<MaterialDesc> desc);
+	void CreateMaterialSerial(std::shared_ptr<Material> material, std::shared_ptr<MaterialDesc> desc);
+};
+
+} // namespace Kodiak

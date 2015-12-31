@@ -9,7 +9,7 @@
 
 #include "Stdafx.h"
 
-#include "MaterialManager11.h"
+#include "MaterialManager.h"
 
 #include "Material.h"
 #include "RenderUtils.h"
@@ -18,12 +18,13 @@
 #include <map>
 #include <ppltasks.h>
 
+
 using namespace Kodiak;
 using namespace std;
 
 
 namespace
-{ 
+{
 
 std::map<size_t, std::shared_ptr<Material>>		s_materialHashMap;
 std::map<size_t, MaterialDesc>					s_materialDescHashMap;
@@ -102,7 +103,7 @@ void MaterialManager::CreateMaterialAsync(shared_ptr<Material> material, std::sh
 		// Load vertex shader
 		auto vs = shaderManager.LoadVertexShader(desc->vertexShaderPath, true);
 		shaderState.vertexShader = vs;
-		
+
 		// Once the shader has finished loading, set it on the PSO
 		auto psoTask = vs->loadTask.then([material, vs]
 		{
@@ -128,7 +129,7 @@ void MaterialManager::CreateMaterialAsync(shared_ptr<Material> material, std::sh
 		{
 			auto hs = shaderManager.LoadHullShader(desc->hullShaderPath, true);
 			shaderState.hullShader = hs;
-			
+
 			// Once the shader has finished loading, set it on the PSO
 			psoTask = psoTask && hs->loadTask.then([material, hs]
 			{
@@ -141,7 +142,7 @@ void MaterialManager::CreateMaterialAsync(shared_ptr<Material> material, std::sh
 		{
 			auto gs = shaderManager.LoadGeometryShader(desc->geometryShaderPath, true);
 			shaderState.geometryShader = gs;
-			
+
 			// Once the shader has finished loading, set it on the PSO
 			psoTask = psoTask && gs->loadTask.then([material, gs]
 			{
@@ -154,7 +155,7 @@ void MaterialManager::CreateMaterialAsync(shared_ptr<Material> material, std::sh
 		{
 			auto ps = shaderManager.LoadPixelShader(desc->pixelShaderPath, true);
 			shaderState.pixelShader = ps;
-			
+
 			// Once the shader has finished loading, set it on the PSO
 			psoTask = psoTask && ps->loadTask.then([material, ps]
 			{
@@ -176,5 +177,64 @@ void MaterialManager::CreateMaterialAsync(shared_ptr<Material> material, std::sh
 
 void MaterialManager::CreateMaterialSerial(shared_ptr<Material> material, std::shared_ptr<MaterialDesc> desc)
 {
+	// Verify we have a vertex shader (required)
+	assert(desc->vertexShaderPath.HasPath());
 
+	auto& shaderManager = ShaderManager::GetInstance();
+
+	ShaderState shaderState;
+
+	// Create PSO for material
+	material->m_pso = make_shared<GraphicsPSO>();
+
+	// Load vertex shader
+	auto vs = shaderManager.LoadVertexShader(desc->vertexShaderPath, false);
+	shaderState.vertexShader = vs;
+
+	material->m_pso->SetVertexShader(vs.get());
+	material->m_pso->SetInputLayout(*vs->GetInputLayout());
+	
+	// Load domain shader (optional)
+	if (desc->domainShaderPath.HasPath())
+	{
+		auto ds = shaderManager.LoadDomainShader(desc->domainShaderPath, false);
+		shaderState.domainShader = ds;
+
+		material->m_pso->SetDomainShader(ds.get());
+	}
+
+	// Load hull shader (optional)
+	if (desc->hullShaderPath.HasPath())
+	{
+		auto hs = shaderManager.LoadHullShader(desc->hullShaderPath, false);
+		shaderState.hullShader = hs;
+
+		material->m_pso->SetHullShader(hs.get());
+	}
+
+	// Load geometry shader (optional)
+	if (desc->geometryShaderPath.HasPath())
+	{
+		auto gs = shaderManager.LoadGeometryShader(desc->geometryShaderPath, false);
+		shaderState.geometryShader = gs;
+
+		material->m_pso->SetGeometryShader(gs.get());
+	}
+
+	// Load pixel shader (optional)
+	if (desc->pixelShaderPath.HasPath())
+	{
+		auto ps = shaderManager.LoadPixelShader(desc->pixelShaderPath, false);
+		shaderState.pixelShader = ps;
+
+		material->m_pso->SetPixelShader(ps.get());
+	}
+
+	// Finalize the graphics PSO & bind material parameters
+	material->SetupPSO(*desc);
+	material->m_pso->Finalize();
+
+	material->BindParameters(shaderState);
+
+	material->m_isReady = true;
 }

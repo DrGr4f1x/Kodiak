@@ -258,16 +258,16 @@ ShaderResourceDimension ConvertToEngine(D3D_SRV_DIMENSION dim)
 {
 	switch (dim)
 	{
-	case D3D11_SRV_DIMENSION_BUFFER:			return ShaderResourceDimension::Buffer;
-	case D3D11_SRV_DIMENSION_TEXTURE1D:			return ShaderResourceDimension::Texture1d;
-	case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:	return ShaderResourceDimension::Texture1dArray;
-	case D3D11_SRV_DIMENSION_TEXTURE2D:			return ShaderResourceDimension::Texture2d;
-	case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:	return ShaderResourceDimension::Texture2dArray;
-	case D3D11_SRV_DIMENSION_TEXTURE2DMS:		return ShaderResourceDimension::Texture2dMS;
-	case D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY:	return ShaderResourceDimension::Texture2dMSArray;
-	case D3D11_SRV_DIMENSION_TEXTURE3D:			return ShaderResourceDimension::Texture3d;
-	case D3D11_SRV_DIMENSION_TEXTURECUBE:		return ShaderResourceDimension::TextureCube;
-	case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:	return ShaderResourceDimension::TextureCubeArray;
+	case D3D12_SRV_DIMENSION_BUFFER:			return ShaderResourceDimension::Buffer;
+	case D3D12_SRV_DIMENSION_TEXTURE1D:			return ShaderResourceDimension::Texture1d;
+	case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:	return ShaderResourceDimension::Texture1dArray;
+	case D3D12_SRV_DIMENSION_TEXTURE2D:			return ShaderResourceDimension::Texture2d;
+	case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:	return ShaderResourceDimension::Texture2dArray;
+	case D3D12_SRV_DIMENSION_TEXTURE2DMS:		return ShaderResourceDimension::Texture2dMS;
+	case D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY:	return ShaderResourceDimension::Texture2dMSArray;
+	case D3D12_SRV_DIMENSION_TEXTURE3D:			return ShaderResourceDimension::Texture3d;
+	case D3D12_SRV_DIMENSION_TEXTURECUBE:		return ShaderResourceDimension::TextureCube;
+	case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:	return ShaderResourceDimension::TextureCubeArray;
 	default:
 		LOG_ERROR << "Shader resource with dimension " << dim << " are not supported yet!";
 		return ShaderResourceDimension::Unsupported;

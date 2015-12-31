@@ -20,7 +20,9 @@ class Camera;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
+class Material;
 class Model;
+class RenderPass;
 class Scene;
 
 
@@ -39,11 +41,22 @@ protected:
 	void OnMouseMove(WPARAM btnState, int x, int y) override;
 
 private:
+	// Creation/setup helpers
+	void CreateResources();
+	void CreateMaterials();
+	void CreateModel();
+	void SetupScene();
+	void SetupPipeline();
+
+private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
 	std::shared_ptr<Model>			m_boxModel;
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
+
+	std::shared_ptr<RenderPass>		m_basePass;
+	std::shared_ptr<Material>		m_baseMaterial;
 
 	bool	m_isTracking{ false };
 	int		m_mouseX{ 0 };

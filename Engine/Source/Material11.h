@@ -4,7 +4,7 @@
 // IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
-// Author: David Elder
+// Author: DavSid Elder
 //
 
 #pragma once
@@ -17,30 +17,6 @@
 namespace Kodiak
 {
 
-
-struct MaterialDesc
-{
-	std::string name;
-
-	ShaderPath vertexShaderPath;
-	ShaderPath domainShaderPath;
-	ShaderPath hullShaderPath;
-	ShaderPath geometryShaderPath;
-	ShaderPath pixelShaderPath;
-
-	BlendStateDesc			blendStateDesc;
-	DepthStencilStateDesc	depthStencilStateDesc;
-	RasterizerStateDesc		rasterizerStateDesc;
-};
-
-
-std::shared_ptr<MaterialDesc> CreateMaterialDesc();
-
-
-
-size_t ComputeHash(const MaterialDesc& desc);
-
-
 class Material
 {
 	friend class MaterialManager;
@@ -49,17 +25,19 @@ public:
 	const std::string& GetName() const { return m_name; }
 
 private:
-	// To be called by MaterialManager
+	// To be called by MaterialManager (any thread)
 	Material(const std::string& name);
-	void BindParameters();
+	void BindParameters(const ShaderState& shaderState);
+	void SetupPSO(const MaterialDesc& desc);
 
 private:
 	// Graphics objects
 	std::shared_ptr<GraphicsPSO>	m_pso;
-	
+
 	// Material properties
 	std::string						m_name;
 	bool							m_isReady{ false };
 };
+
 
 } // namespace Kodiak

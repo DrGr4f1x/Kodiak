@@ -11,6 +11,7 @@
 
 #include "Material.h"
 
+#include "RenderPass.h"
 #include "RenderUtils.h"
 
 using namespace Kodiak;

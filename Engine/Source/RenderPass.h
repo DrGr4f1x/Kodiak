@@ -26,7 +26,10 @@ public:
 	size_t GetHash() const { return m_hash; }
 
 	// TODO: Maybe move this stuff to a render target manager?
-	void SetRenderTargetFormat(ColorFormat colorFormat, DepthFormat depthFormat, uint32_t msaaCount = 1, uint32_t msaaQuality = 1);
+	void SetRenderTargetFormat(ColorFormat colorFormat, DepthFormat depthFormat, uint32_t msaaCount = 1, uint32_t msaaQuality = 1)
+	{
+		SetRenderTargetFormats(1, &colorFormat, depthFormat, msaaCount, msaaQuality);
+	}
 	void SetRenderTargetFormats(uint32_t numRTVs, const ColorFormat* colorFormats, DepthFormat depthFormat, uint32_t msaaCount = 1,
 		uint32_t msaaQuality = 0);
 
