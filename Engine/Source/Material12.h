@@ -9,7 +9,44 @@
 
 #pragma once
 
+#include "PipelineState12.h"
+#include "Shader.h"
+
+#include <ppltasks.h>
+
 namespace Kodiak
 {
+
+// Forward declarations
+class RootSignature;
+
+
+class Material
+{
+	friend class MaterialManager;
+
+public:
+	const std::string& GetName() const { return m_name; }
+
+private:
+	// To be called by MaterialManager (any thread)
+	Material(const std::string& name);
+	void BindParameters(const ShaderState& shaderState);
+	void SetupPSO(const MaterialDesc& desc);
+
+	// To be called internally by Material
+	void ConfigureRootSignature(const ShaderState& shaderState);
+	bool ValidateConstants(const ShaderState& shaderState, uint32_t slot);
+
+private:
+	// Graphics objects
+	std::shared_ptr<RootSignature>	m_rootSig;
+	std::shared_ptr<GraphicsPSO>	m_pso;
+
+	// Material properties
+	std::string						m_name;
+	bool							m_isReady{ false };
+};
+
 
 } // namespace Kodiak

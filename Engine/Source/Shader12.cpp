@@ -258,16 +258,16 @@ ShaderResourceDimension ConvertToEngine(D3D_SRV_DIMENSION dim)
 {
 	switch (dim)
 	{
-	case D3D11_SRV_DIMENSION_BUFFER:			return ShaderResourceDimension::Buffer;
-	case D3D11_SRV_DIMENSION_TEXTURE1D:			return ShaderResourceDimension::Texture1d;
-	case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:	return ShaderResourceDimension::Texture1dArray;
-	case D3D11_SRV_DIMENSION_TEXTURE2D:			return ShaderResourceDimension::Texture2d;
-	case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:	return ShaderResourceDimension::Texture2dArray;
-	case D3D11_SRV_DIMENSION_TEXTURE2DMS:		return ShaderResourceDimension::Texture2dMS;
-	case D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY:	return ShaderResourceDimension::Texture2dMSArray;
-	case D3D11_SRV_DIMENSION_TEXTURE3D:			return ShaderResourceDimension::Texture3d;
-	case D3D11_SRV_DIMENSION_TEXTURECUBE:		return ShaderResourceDimension::TextureCube;
-	case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:	return ShaderResourceDimension::TextureCubeArray;
+	case D3D12_SRV_DIMENSION_BUFFER:			return ShaderResourceDimension::Buffer;
+	case D3D12_SRV_DIMENSION_TEXTURE1D:			return ShaderResourceDimension::Texture1d;
+	case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:	return ShaderResourceDimension::Texture1dArray;
+	case D3D12_SRV_DIMENSION_TEXTURE2D:			return ShaderResourceDimension::Texture2d;
+	case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:	return ShaderResourceDimension::Texture2dArray;
+	case D3D12_SRV_DIMENSION_TEXTURE2DMS:		return ShaderResourceDimension::Texture2dMS;
+	case D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY:	return ShaderResourceDimension::Texture2dMSArray;
+	case D3D12_SRV_DIMENSION_TEXTURE3D:			return ShaderResourceDimension::Texture3d;
+	case D3D12_SRV_DIMENSION_TEXTURECUBE:		return ShaderResourceDimension::TextureCube;
+	case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:	return ShaderResourceDimension::TextureCubeArray;
 	default:
 		LOG_ERROR << "Shader resource with dimension " << dim << " are not supported yet!";
 		return ShaderResourceDimension::Unsupported;
@@ -281,65 +281,78 @@ ShaderResourceDimension ConvertToEngine(D3D_SRV_DIMENSION dim)
 namespace Kodiak
 {
 
+void IntrospectCBuffer(vector<ShaderConstantBufferDesc>& constantBuffers, ID3D12ShaderReflection* reflector,
+	const D3D12_SHADER_INPUT_BIND_DESC& inputDesc)
+{
+	// Grab the D3D11 constant buffer description
+	auto reflCBuffer = reflector->GetConstantBufferByName(inputDesc.Name);
+	assert(reflCBuffer);
+
+	D3D12_SHADER_BUFFER_DESC bufferDesc;
+	reflCBuffer->GetDesc(&bufferDesc);
+
+	uint32_t constantBufferIndex = static_cast<uint32_t>(constantBuffers.size());
+
+	// Create our own description for the constant buffer
+	constantBuffers.emplace_back(bufferDesc.Name, inputDesc.BindPoint, bufferDesc.Size);
+	auto& shaderBufferDesc = constantBuffers[constantBufferIndex];
+
+	// Variables in constant buffer
+	for (uint32_t j = 0; j < bufferDesc.Variables; ++j)
+	{
+		// Grab the D3D11 variable & type descriptions
+		auto variable = reflCBuffer->GetVariableByIndex(j);
+		D3D12_SHADER_VARIABLE_DESC varDesc;
+		variable->GetDesc(&varDesc);
+		auto reflType = variable->GetType();
+		D3D12_SHADER_TYPE_DESC typeDesc;
+		reflType->GetDesc(&typeDesc);
+
+		// Create our own description for the variable
+		auto varType = ConvertToEngine(typeDesc.Type, typeDesc.Rows, typeDesc.Columns);
+		shaderBufferDesc.variables.emplace_back(varDesc.Name, constantBufferIndex, varDesc.StartOffset, varDesc.Size, varType);
+	}
+}
+
+
+void IntrospectTexture(vector<ShaderResourceDesc>& resources, const D3D12_SHADER_INPUT_BIND_DESC& inputDesc)
+{
+	resources.emplace_back(inputDesc.Name, inputDesc.BindPoint, ConvertToEngine(inputDesc.Dimension));
+}
+
+
 void Introspect(ID3D12ShaderReflection* reflector, vector<ShaderConstantBufferDesc>& constantBuffers,
 	vector<ShaderResourceDesc>& resources)
 {
-	D3D12_SHADER_DESC shaderDesc;
-	reflector->GetDesc(&shaderDesc);
+	D3D12_SHADER_DESC desc;
+	reflector->GetDesc(&desc);
 
-	// Constant buffers
-	for (uint32_t i = 0; i < shaderDesc.ConstantBuffers; ++i)
+	// Allocate space for constant buffers and textures
+	constantBuffers.clear();
+	constantBuffers.reserve(desc.BoundResources);
+	resources.clear();
+	resources.reserve(desc.BoundResources);
+
+	// Bound resources
+	for (uint32_t i = 0; i < desc.BoundResources; ++i)
 	{
-		// Grab the D3D11 constant buffer description
-		auto reflectedCBuffer = reflector->GetConstantBufferByIndex(i);
-		D3D12_SHADER_BUFFER_DESC bufferDesc;
-		reflectedCBuffer->GetDesc(&bufferDesc);
+		// Grab the D3D12 bound resource description
+		D3D12_SHADER_INPUT_BIND_DESC inputDesc;
+		ThrowIfFailed(reflector->GetResourceBindingDesc(i, &inputDesc));
 
-		// Create our own description for the constant buffer
-		ShaderConstantBufferDesc shaderBufferDesc;
-		shaderBufferDesc.name = bufferDesc.Name;
-		shaderBufferDesc.registerSlot = i;
-		shaderBufferDesc.size = bufferDesc.Size;
-
-		// Variables in constant buffer
-		for (uint32_t j = 0; j < bufferDesc.Variables; ++j)
+		switch (inputDesc.Type)
 		{
-			// Grab the D3D11 variable & type descriptions
-			auto variable = reflectedCBuffer->GetVariableByIndex(j);
-			D3D12_SHADER_VARIABLE_DESC varDesc;
-			variable->GetDesc(&varDesc);
-			auto reflectedType = variable->GetType();
-			D3D12_SHADER_TYPE_DESC typeDesc;
-			reflectedType->GetDesc(&typeDesc);
+		case D3D_SIT_CBUFFER:
+			IntrospectCBuffer(constantBuffers, reflector, inputDesc);
+			break;
 
-			// Create our own description for the variable
-			ShaderVariableDesc shaderVarDesc;
-			shaderVarDesc.name = varDesc.Name;
-			shaderVarDesc.constantBuffer = i;
-			shaderVarDesc.startOffset = varDesc.StartOffset;
-			shaderVarDesc.size = varDesc.Size;
-			shaderVarDesc.type = ConvertToEngine(typeDesc.Type, typeDesc.Rows, typeDesc.Columns);
+		case D3D_SIT_TEXTURE:
+			IntrospectTexture(resources, inputDesc);
+			break;
 
-			shaderBufferDesc.variables.push_back(shaderVarDesc);
-		}
-
-		constantBuffers.push_back(shaderBufferDesc);
-	}
-
-	// Textures
-	for (uint32_t i = 0; i < shaderDesc.BoundResources; ++i)
-	{
-		D3D12_SHADER_INPUT_BIND_DESC bindDesc;
-		auto reflResource = reflector->GetResourceBindingDesc(i, &bindDesc);
-
-		if (bindDesc.Type == D3D_SIT_TEXTURE)
-		{
-			ShaderResourceDesc resourceDesc;
-			resourceDesc.name = bindDesc.Name;
-			resourceDesc.slot = bindDesc.BindPoint;
-			resourceDesc.dimension = ConvertToEngine(bindDesc.Dimension);
-
-			resources.push_back(resourceDesc);
+		default:
+			assert(false);
+			break;
 		}
 	}
 }

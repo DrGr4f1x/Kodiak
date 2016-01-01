@@ -247,14 +247,8 @@
     <ClInclude Include="Source\Material.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Material12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Source\MaterialManager.h">
       <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\MaterialManager11.h">
-      <Filter>Rendering\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Source\Utility.h">
       <Filter>Rendering</Filter>
@@ -269,6 +263,15 @@
     </ClInclude>
     <ClInclude Include="Source\RenderPass.h">
       <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommonStates.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Material11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Material12.h">
+      <Filter>Rendering\DX12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -404,9 +407,6 @@
     <ClCompile Include="Source\Material12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\MaterialManager11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ShaderManager.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
@@ -417,6 +417,12 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPass.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CommonStates.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialManager.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>

@@ -48,6 +48,9 @@ public:
 
 	bool IsReady() const { return m_isReady; }
 
+	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
+	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
+
 	ShaderType GetType() const { return ShaderType::Vertex; }
 
 	concurrency::task<void> loadTask;
@@ -77,6 +80,9 @@ public:
 
 	bool IsReady() const { return m_isReady; }
 
+	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
+	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
+
 	ShaderType GetType() const { return ShaderType::Pixel; }
 
 	concurrency::task<void> loadTask;
@@ -102,6 +108,9 @@ public:
 	size_t GetByteCodeSize() const { return m_byteCodeSize; }
 
 	bool IsReady() const { return m_isReady; }
+
+	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
+	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
 
 	ShaderType GetType() const { return ShaderType::Geometry; }
 
@@ -129,6 +138,9 @@ public:
 
 	bool IsReady() const { return m_isReady; }
 
+	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
+	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
+
 	ShaderType GetType() const { return ShaderType::Domain; }
 
 	concurrency::task<void> loadTask;
@@ -154,6 +166,9 @@ public:
 	size_t GetByteCodeSize() const { return m_byteCodeSize; }
 
 	bool IsReady() const { return m_isReady; }
+
+	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
+	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
 
 	ShaderType GetType() const { return ShaderType::Hull; }
 
@@ -181,6 +196,9 @@ public:
 
 	bool IsReady() const { return m_isReady; }
 
+	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
+	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
+
 	ShaderType GetType() const { return ShaderType::Compute; }
 
 	concurrency::task<void> loadTask;
@@ -194,33 +212,6 @@ private:
 	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
 	std::vector<ShaderResourceDesc>			m_resources;
 	bool									m_isReady{ false };
-};
-
-
-struct ShaderConstantBufferDesc
-{
-	std::string name;
-	uint32_t registerSlot;
-	uint32_t size;
-	std::vector<ShaderVariableDesc> variables;
-};
-
-
-struct ShaderResourceDesc
-{
-	std::string name;
-	uint32_t slot;
-	ShaderResourceDimension dimension;
-};
-
-
-struct ShaderVariableDesc
-{
-	std::string name;
-	uint32_t constantBuffer;
-	uint32_t startOffset;
-	uint32_t size;
-	ShaderVariableType type;
 };
 
 

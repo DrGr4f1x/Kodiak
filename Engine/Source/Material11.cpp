@@ -19,17 +19,10 @@ using namespace std;
 namespace Kodiak
 {
 
-shared_ptr<MaterialDesc> CreateMaterialDesc()
-{
-	return nullptr;
-}
-
-
 size_t ComputeHash(const MaterialDesc& desc)
 {
 	return ComputeBaseHash(desc);
 }
-
 
 } // namespace Kodiak
 
