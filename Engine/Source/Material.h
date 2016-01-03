@@ -48,6 +48,15 @@ struct ShaderState
 	std::shared_ptr<PixelShader>		pixelShader;
 };
 
+
+// Make sure the return values of these functions match the shaders!
+uint32_t GetPerViewConstantsSlot();
+uint32_t GetPerObjectConstantsSlot();
+uint32_t GetPerMaterialConstantsSlot();
+const std::string& GetPerViewConstantsName();
+const std::string& GetPerObjectConstantsName();
+const std::string& GetPerMaterialConstantsName();
+
 } // namespace Kodiak
 
 

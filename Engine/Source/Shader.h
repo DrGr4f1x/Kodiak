@@ -69,7 +69,7 @@ struct ShaderResourceDesc
 		: name(std::move(other.name)), slot(other.slot), dimension(other.dimension)
 	{}
 
-	ShaderResourceDesc& operator(const ShaderResourceDesc& other) = default;
+	ShaderResourceDesc& operator=(const ShaderResourceDesc& other) = default;
 
 	std::string name;
 	uint32_t slot;

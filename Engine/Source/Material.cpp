@@ -18,6 +18,15 @@ using namespace Kodiak;
 using namespace std;
 
 
+// Make sure these values stay in sync with the shaders!
+static const uint32_t	s_perViewConstantsSlot = 0;
+static const uint32_t	s_perObjectConstantsSlot = 1;
+static const uint32_t	s_perMaterialConstantsSlot = 2;
+static const string		s_perViewConstantsName{ "PerViewConstants" };
+static const string		s_perObjectConstantsName{ "PerObjectConstants" };
+static const string		s_perMaterialConstantsName{ "PerMaterialConstants" };
+
+
 namespace Kodiak
 {
 
@@ -76,5 +85,13 @@ size_t ComputeBaseHash(const MaterialDesc& desc)
 
 	return hashVal;
 }
+
+
+uint32_t GetPerViewConstantsSlot() { return s_perViewConstantsSlot; }
+uint32_t GetPerObjectConstantsSlot() { return s_perObjectConstantsSlot; }
+uint32_t GetPerMaterialConstantsSlot() { return s_perMaterialConstantsSlot; }
+const string& GetPerViewConstantsName() { return s_perViewConstantsName; }
+const string& GetPerObjectConstantsName() {	return s_perObjectConstantsName; }
+const string& GetPerMaterialConstantsName() { return s_perMaterialConstantsName; }
 
 } // namespace Kodiak

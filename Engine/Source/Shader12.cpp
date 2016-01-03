@@ -43,6 +43,15 @@ ShaderPath::ShaderPath(const string& shaderPath, const string& shaderFile)
 }
 
 
+void BaseShader::Finalize()
+{
+	ComPtr<ID3D12ShaderReflection> reflector;
+	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
+
+	Introspect(reflector.Get(), m_constantBuffers, m_resources);
+}
+
+
 void VertexShader::Finalize()
 {
 	ComPtr<ID3D12ShaderReflection> reflector;
@@ -157,51 +166,6 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 		// Save element desc
 		m_inputLayout->elements.emplace_back(elementDesc);
 	}
-}
-
-
-void PixelShader::Finalize()
-{
-	ComPtr<ID3D12ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_constantBuffers, m_resources);
-}
-
-
-void GeometryShader::Finalize()
-{
-	ComPtr<ID3D12ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_constantBuffers, m_resources);
-}
-
-
-void DomainShader::Finalize()
-{
-	ComPtr<ID3D12ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_constantBuffers, m_resources);
-}
-
-
-void HullShader::Finalize()
-{
-	ComPtr<ID3D12ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_constantBuffers, m_resources);
-}
-
-
-void ComputeShader::Finalize()
-{
-	ComPtr<ID3D12ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_constantBuffers, m_resources);
 }
 
 

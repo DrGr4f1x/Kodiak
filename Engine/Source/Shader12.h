@@ -36,7 +36,7 @@ enum class ShaderType
 };
 
 
-class VertexShader
+class BaseShader
 {
 	friend class ShaderManager;
 
@@ -44,174 +44,79 @@ public:
 	const uint8_t* GetByteCode() const { return m_byteCode.get(); }
 	size_t GetByteCodeSize() const { return m_byteCodeSize; }
 
-	std::shared_ptr<InputLayout> GetInputLayout() { return m_inputLayout; }
-
 	bool IsReady() const { return m_isReady; }
 
 	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
 	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
 
-	ShaderType GetType() const { return ShaderType::Vertex; }
+	virtual ShaderType GetType() const = 0;
 
 	concurrency::task<void> loadTask;
 
+protected:
+	virtual void Finalize();
+
+protected:
+	std::unique_ptr<uint8_t[]>				m_byteCode;
+	size_t									m_byteCodeSize;
+	
+	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
+	std::vector<ShaderResourceDesc>			m_resources;
+
+	bool									m_isReady{ false };
+};
+
+
+class VertexShader : public BaseShader
+{
+	friend class ShaderManager;
+
+public:
+	std::shared_ptr<InputLayout> GetInputLayout() { return m_inputLayout; }
+
+	ShaderType GetType() const override { return ShaderType::Vertex; }
+
 private:
-	void Finalize();
+	void Finalize() override;
 	void CreateInputLayout(ID3D12ShaderReflection* reflector);
 
 private:
-	std::unique_ptr<uint8_t[]>				m_byteCode;
-	size_t									m_byteCodeSize;
 	std::shared_ptr<InputLayout>			m_inputLayout;
-	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
-	std::vector<ShaderResourceDesc>			m_resources;
-	bool									m_isReady{ false };
 };
 
 
-
-class PixelShader
+class PixelShader : public BaseShader
 {
-	friend class ShaderManager;
-
 public:
-	const uint8_t* GetByteCode() const { return m_byteCode.get(); }
-	size_t GetByteCodeSize() const { return m_byteCodeSize; }
-
-	bool IsReady() const { return m_isReady; }
-
-	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
-	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
-
-	ShaderType GetType() const { return ShaderType::Pixel; }
-
-	concurrency::task<void> loadTask;
-
-private:
-	void Finalize();
-
-private:
-	std::unique_ptr<uint8_t[]>				m_byteCode;
-	size_t									m_byteCodeSize;
-	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
-	std::vector<ShaderResourceDesc>			m_resources;
-	bool									m_isReady{ false };
+	ShaderType GetType() const override { return ShaderType::Pixel; }
 };
 
 
-class GeometryShader
+class DomainShader : public BaseShader
 {
-	friend class ShaderManager;
-
 public:
-	const uint8_t* GetByteCode() const { return m_byteCode.get(); }
-	size_t GetByteCodeSize() const { return m_byteCodeSize; }
-
-	bool IsReady() const { return m_isReady; }
-
-	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
-	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
-
-	ShaderType GetType() const { return ShaderType::Geometry; }
-
-	concurrency::task<void> loadTask;
-
-private:
-	void Finalize();
-
-private:
-	std::unique_ptr<uint8_t[]>				m_byteCode;
-	size_t									m_byteCodeSize;
-	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
-	std::vector<ShaderResourceDesc>			m_resources;
-	bool									m_isReady{ false };
+	ShaderType GetType() const override { return ShaderType::Domain; }
 };
 
 
-class DomainShader
+class HullShader : public BaseShader
 {
-	friend class ShaderManager;
-
 public:
-	const uint8_t* GetByteCode() const { return m_byteCode.get(); }
-	size_t GetByteCodeSize() const { return m_byteCodeSize; }
-
-	bool IsReady() const { return m_isReady; }
-
-	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
-	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
-
-	ShaderType GetType() const { return ShaderType::Domain; }
-
-	concurrency::task<void> loadTask;
-
-private:
-	void Finalize();
-
-private:
-	std::unique_ptr<uint8_t[]>				m_byteCode;
-	size_t									m_byteCodeSize;
-	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
-	std::vector<ShaderResourceDesc>			m_resources;
-	bool									m_isReady{ false };
+	ShaderType GetType() const override { return ShaderType::Hull; }
 };
 
 
-class HullShader
+class GeometryShader : public BaseShader
 {
-	friend class ShaderManager;
-
 public:
-	const uint8_t* GetByteCode() const { return m_byteCode.get(); }
-	size_t GetByteCodeSize() const { return m_byteCodeSize; }
-
-	bool IsReady() const { return m_isReady; }
-
-	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
-	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
-
-	ShaderType GetType() const { return ShaderType::Hull; }
-
-	concurrency::task<void> loadTask;
-
-private:
-	void Finalize();
-
-private:
-	std::unique_ptr<uint8_t[]>				m_byteCode;
-	size_t									m_byteCodeSize;
-	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
-	std::vector<ShaderResourceDesc>			m_resources;
-	bool									m_isReady{ false };
+	ShaderType GetType() const override { return ShaderType::Geometry; }
 };
 
 
-class ComputeShader
+class ComputeShader : public BaseShader
 {
-	friend class ShaderManager;
-
 public:
-	const uint8_t* GetByteCode() const { return m_byteCode.get(); }
-	size_t GetByteCodeSize() const { return m_byteCodeSize; }
-
-	bool IsReady() const { return m_isReady; }
-
-	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
-	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
-
-	ShaderType GetType() const { return ShaderType::Compute; }
-
-	concurrency::task<void> loadTask;
-
-private:
-	void Finalize();
-
-private:
-	std::unique_ptr<uint8_t[]>				m_byteCode;
-	size_t									m_byteCodeSize;
-	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
-	std::vector<ShaderResourceDesc>			m_resources;
-	bool									m_isReady{ false };
+	ShaderType GetType() const override { return ShaderType::Compute; }
 };
 
 
