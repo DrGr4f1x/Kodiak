@@ -16,10 +16,14 @@
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\CommonStates.h"
 #include "Engine\Source\DepthBuffer.h"
+#if 0
+#include "Engine\Source\Effect.h"
+#endif
 #include "Engine\Source\Format.h"
 #include "Engine\Source\Log.h"
+#if 0
 #include "Engine\Source\Material.h"
-#include "Engine\Source\MaterialManager.h"
+#endif
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
@@ -47,6 +51,11 @@ void BasicApplication::OnInit()
 
 	CreateMaterials();
 	CreateModel();
+
+#if 0
+	auto idx = m_boxModel.AddMaterial(m_baseMaterial);
+	m_boxModel.GetMesh(0)->SetMaterialIndex(idx);
+#endif
 
 	SetupScene();
 	SetupPipeline();
@@ -109,18 +118,23 @@ void BasicApplication::CreateMaterials()
 	m_basePass = make_shared<RenderPass>("Base");
 	m_basePass->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
 
+#if 0
+	// Base effect
+	auto effect = make_shared<Effect>();
+	effect->SetName("Base effect");
+	effect->SetVertexShaderPath("Engine", "SimpleVertexShader");
+	effect->SetPixelShaderPath("Engine", "SimplePixelShader");
+	effect->SetBlendState(CommonStates::Opaque());
+	effect->SetDepthStencilState(CommonStates::DepthDefault());
+	effect->SetRasterizerState(CommonStates::CullCounterClockwise());
+	effect->Finalize();
+
 	// Base material
-	auto desc = make_shared<MaterialDesc>();
-	desc->vertexShaderPath = ShaderPath("Engine", "SimpleVertexShader.cso");
-	desc->pixelShaderPath = ShaderPath("Engine", "SimplePixelShader.cso");
-
-	desc->blendStateDesc = CommonStates::Opaque();
-	desc->depthStencilStateDesc = CommonStates::DepthDefault();
-	desc->rasterizerStateDesc = CommonStates::CullCounterClockwise();
-
-	desc->renderPass = m_basePass;
-
-	m_baseMaterial = MaterialManager::GetInstance().CreateMaterial("Base material", desc, true);
+	m_baseMaterial = make_shared<Material>();
+	m_baseMaterial->SetName("Base material");
+	m_baseMaterial->SetEffect(effect);
+	m_baseMaterial->SetRenderPass(m_basePass);
+#endif
 }
 
 
@@ -165,7 +179,7 @@ void BasicApplication::SetupPipeline()
 	auto pipeline = Renderer::GetRootPipeline();
 
 	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
-	pipeline->SetViewport(0, 0, m_width, m_height, 0.0f, 1.0f);
+	pipeline->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
 	pipeline->SetScissor(0, 0, m_width, m_height);
 	pipeline->ClearColor(m_colorTarget);
 	pipeline->ClearDepth(m_depthBuffer);

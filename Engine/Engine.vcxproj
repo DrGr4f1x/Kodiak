@@ -355,6 +355,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\Effect.h" />
+    <ClInclude Include="Source\Effect11.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Source\Effect12.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Source\Format.h" />
     <ClInclude Include="Source\GpuBuffer.h" />
     <ClInclude Include="Source\GpuBuffer11.h">
@@ -411,7 +420,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\Material12.h" />
-    <ClInclude Include="Source\MaterialManager.h" />
     <ClInclude Include="Source\MaterialParameter.h" />
     <ClInclude Include="Source\MathUtil.h" />
     <ClInclude Include="Source\Model.h" />
@@ -466,6 +474,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\Effect.cpp" />
+    <ClCompile Include="Source\Effect11.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source\Effect12.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Source\LinearAllocator12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
@@ -479,7 +496,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source\MaterialManager.cpp" />
     <ClCompile Include="Source\RenderPass.cpp" />
     <ClCompile Include="Source\SetScissorOp.cpp" />
     <ClCompile Include="Source\SetViewportOp.cpp">
@@ -497,6 +513,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\ShaderManager.h" />
+    <ClInclude Include="Source\ShaderReflection.h" />
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\StepTimer.h" />
     <ClInclude Include="Source\UpdateSceneOp.h" />

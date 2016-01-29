@@ -10,6 +10,7 @@
 #pragma once
 
 #include "RenderEnums.h"
+#include "ShaderReflection.h"
 
 #include <ppltasks.h>
 
@@ -18,22 +19,6 @@ namespace Kodiak
 
 // Forward declarations
 class InputLayout;
-struct ShaderConstantBufferDesc;
-struct ShaderResourceDesc;
-struct ShaderVariableDesc;
-enum class ShaderResourceDimension;
-enum class ShaderVariableType;
-
-
-enum class ShaderType
-{
-	Compute,
-	Domain,
-	Geometry,
-	Hull,
-	Pixel,
-	Vertex
-};
 
 
 class VertexShader
@@ -57,8 +42,10 @@ private:
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>		m_shader;
 	std::shared_ptr<InputLayout>					m_inputLayout;
-	std::vector<ShaderConstantBufferDesc>			m_constantBuffers;
-	std::vector<ShaderResourceDesc>					m_resources;
+
+	ShaderBindingDesc								m_bindingDesc;
+	std::vector<ShaderVariableDesc>					m_variables;
+
 	bool											m_isReady{ false };
 };
 
@@ -81,8 +68,10 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>		m_shader;
-	std::vector<ShaderConstantBufferDesc>			m_constantBuffers;
-	std::vector<ShaderResourceDesc>					m_resources;
+
+	ShaderBindingDesc								m_bindingDesc;
+	std::vector<ShaderVariableDesc>					m_variables;
+
 	bool											m_isReady{ false };
 };
 
@@ -105,8 +94,10 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11GeometryShader>	m_shader;
-	std::vector<ShaderConstantBufferDesc>			m_constantBuffers;
-	std::vector<ShaderResourceDesc>					m_resources;
+
+	ShaderBindingDesc								m_bindingDesc;
+	std::vector<ShaderVariableDesc>					m_variables;
+
 	bool											m_isReady{ false };
 };
 
@@ -129,8 +120,10 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11DomainShader>		m_shader;
-	std::vector<ShaderConstantBufferDesc>			m_constantBuffers;
-	std::vector<ShaderResourceDesc>					m_resources;
+
+	ShaderBindingDesc								m_bindingDesc;
+	std::vector<ShaderVariableDesc>					m_variables;
+
 	bool											m_isReady{ false };
 };
 
@@ -153,8 +146,10 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11HullShader>		m_shader;
-	std::vector<ShaderConstantBufferDesc>			m_constantBuffers;
-	std::vector<ShaderResourceDesc>					m_resources;
+
+	ShaderBindingDesc								m_bindingDesc;
+	std::vector<ShaderVariableDesc>					m_variables;
+
 	bool											m_isReady{ false };
 };
 
@@ -177,14 +172,15 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11ComputeShader>		m_shader;
-	std::vector<ShaderConstantBufferDesc>			m_constantBuffers;
-	std::vector<ShaderResourceDesc>					m_resources;
+
+	ShaderBindingDesc								m_bindingDesc;
+	std::vector<ShaderVariableDesc>					m_variables;
+
 	bool											m_isReady{ false };
 };
 
 
-void Introspect(ID3D11ShaderReflection* reflector, std::vector<ShaderConstantBufferDesc>& constantBuffers,
-	std::vector<ShaderResourceDesc>& resources);
+void Introspect(ID3D11ShaderReflection* reflector, ShaderBindingDesc& bindingDesc, std::vector<ShaderVariableDesc>& variables);
 
 
 } // namespace Kodiak

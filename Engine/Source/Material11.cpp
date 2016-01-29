@@ -15,7 +15,7 @@
 using namespace Kodiak;
 using namespace std;
 
-
+#if 0
 namespace Kodiak
 {
 
@@ -42,3 +42,4 @@ void Material::SetupPSO(const MaterialDesc& desc)
 	m_pso->SetDepthStencilState(desc.depthStencilStateDesc);
 	m_pso->SetRasterizerState(desc.rasterizerStateDesc);
 }
+#endif

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "RenderEnums.h"
+#include "ShaderReflection.h"
 
 #include <ppltasks.h>
 
@@ -18,23 +19,6 @@ namespace Kodiak
 
 // Forward declarations
 class InputLayout;
-struct ShaderConstantBufferDesc;
-struct ShaderResourceDesc;
-struct ShaderVariableDesc;
-enum class ShaderResourceDimension;
-enum class ShaderVariable;
-
-
-enum class ShaderType
-{
-	Compute,
-	Domain,
-	Geometry,
-	Hull,
-	Pixel,
-	Vertex
-};
-
 
 class BaseShader
 {
@@ -46,8 +30,8 @@ public:
 
 	bool IsReady() const { return m_isReady; }
 
-	const std::vector<ShaderConstantBufferDesc>& GetConstantBuffers() const { return m_constantBuffers; }
-	const std::vector<ShaderResourceDesc>& GetResources() const { return m_resources; }
+	const ShaderBindingDesc& GetBindingSignature() const { return m_bindingDesc; }
+	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
 
 	virtual ShaderType GetType() const = 0;
 
@@ -60,8 +44,8 @@ protected:
 	std::unique_ptr<uint8_t[]>				m_byteCode;
 	size_t									m_byteCodeSize;
 	
-	std::vector<ShaderConstantBufferDesc>	m_constantBuffers;
-	std::vector<ShaderResourceDesc>			m_resources;
+	ShaderBindingDesc						m_bindingDesc;
+	std::vector<ShaderVariableDesc>			m_variables;
 
 	bool									m_isReady{ false };
 };
@@ -120,8 +104,7 @@ public:
 };
 
 
-void Introspect(ID3D12ShaderReflection* reflector, std::vector<ShaderConstantBufferDesc>& constantBuffers,
-	std::vector<ShaderResourceDesc>& resources);
+void Introspect(ID3D12ShaderReflection* reflector, ShaderBindingDesc& bindingDesc, std::vector<ShaderVariableDesc>& variables);
 
 
 } // namespace Kodiak

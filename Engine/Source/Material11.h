@@ -17,6 +17,7 @@
 namespace Kodiak
 {
 
+#if 0
 class Material
 {
 	friend class MaterialManager;
@@ -38,6 +39,7 @@ private:
 	std::string						m_name;
 	bool							m_isReady{ false };
 };
+#endif
 
 
 } // namespace Kodiak

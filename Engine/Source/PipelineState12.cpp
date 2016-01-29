@@ -258,7 +258,7 @@ void GraphicsPSO::SetRenderTargetFormats(uint32_t numRTVs, const ColorFormat* co
 	{
 		m_psoDesc.RTVFormats[i] = DXGIUtility::ConvertToDXGI(colorFormats[i]);
 	}
-	for (uint32_t i = numRTVs; i < m_psoDesc.NumRenderTargets; ++i)
+	for (uint32_t i = numRTVs; i < 8; ++i)
 	{
 		m_psoDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
 	}

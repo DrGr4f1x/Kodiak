@@ -247,9 +247,6 @@
     <ClInclude Include="Source\Material.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\MaterialManager.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Utility.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -272,6 +269,18 @@
     </ClInclude>
     <ClInclude Include="Source\Material12.h">
       <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Effect.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Effect12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Effect11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderReflection.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -422,7 +431,13 @@
     <ClCompile Include="Source\CommonStates.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Source\MaterialManager.cpp">
+    <ClCompile Include="Source\Effect12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Effect11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Effect.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>

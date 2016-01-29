@@ -110,4 +110,15 @@ enum class StencilOp
 	Decr =		D3D11_STENCIL_OP_DECR
 };
 
+
+enum class PrimitiveTopologyType
+{
+	Undefined,
+	Point,
+	Line,
+	Triangle,
+	Patch 
+};
+
+
 } // namespace Kodiak

@@ -39,6 +39,17 @@ enum class IndexBufferFormat
 };
 
 
+enum class ShaderType
+{
+	Vertex,
+	Domain,
+	Hull,
+	Geometry,
+	Pixel,
+	Compute
+};
+
+
 enum class ShaderVariableType
 {
 	Bool,
@@ -51,6 +62,23 @@ enum class ShaderVariableType
 	Float3,
 	Float4,
 	Float4x4,
+
+	Unsupported
+};
+
+
+enum class ShaderResourceType
+{
+	Texture,
+	TBuffer,
+	UAVRWTyped,
+	Structured,
+	UAVRWStructured,
+	ByteAddress,
+	UAVRWByteAddress,
+	UAVAppendStructured,
+	UAVConsumeStructured,
+	UAVRWStructuredWithCounter,
 
 	Unsupported
 };
