@@ -321,21 +321,21 @@ namespace RenderThread
 void SetSceneCamera(shared_ptr<Kodiak::Scene> scene, shared_ptr<Kodiak::Camera> camera)
 {
 	auto task = make_shared<SetSceneCameraTask>(scene, camera);
-	Renderer::EnqueueTask(task);
+	Renderer::GetInstance().EnqueueTask(task);
 }
 
 
 void SetCameraPositionAndOrientation(shared_ptr<Kodiak::Camera> camera, const XMFLOAT3& position, const XMFLOAT4& orientation)
 {
 	auto task = make_shared<SetCameraPositionAndOrientationTask>(camera, position, orientation);
-	Renderer::EnqueueTask(task);
+	Renderer::GetInstance().EnqueueTask(task);
 }
 
 
 void SetCameraPerspective(std::shared_ptr<Kodiak::Camera> camera, float fov, float aspect, float zNear, float zFar)
 {
 	auto task = make_shared<SetCameraPerspectiveTask>(camera, fov, aspect, zNear, zFar);
-	Renderer::EnqueueTask(task);
+	Renderer::GetInstance().EnqueueTask(task);
 }
 
 } // namespace RenderThread

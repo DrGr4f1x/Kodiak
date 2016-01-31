@@ -294,6 +294,9 @@
       <Filter>External\Remotery</Filter>
     </ClInclude>
     <ClInclude Include="Source\Profile.h" />
+    <ClInclude Include="Source\Batch.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />

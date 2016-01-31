@@ -20,6 +20,7 @@
 #include "Profile.h"
 #include "Model.h"
 #include "RenderEnums.h"
+#include "Renderer.h"
 #include "Shader.h"
 #include "ShaderManager.h"
 #include "VertexBuffer.h"
@@ -51,107 +52,15 @@ void Scene::AddModel(shared_ptr<Model> model)
 
 void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 {
-	using namespace concurrency;
-	
-	if (!model->m_renderThreadData)
-	{
-		auto modelData = make_shared<RenderThread::StaticModelData>();
-		model->m_renderThreadData = modelData;
-		modelData->matrix = model->m_matrix;
-
-		modelData->scenes.push_back(this);
-
-		auto prepareModelTask = create_task([this, model]()
-		{
-			auto modelData = model->m_renderThreadData;
-
-			std::vector<concurrency::task<void>> tasks;
-
-			// Determine the maximum number of tasks we need & pre-allocate memory
-			uint32_t maxTasks = 0;
-			const auto numMeshes = model->GetNumMeshes();
-			for (size_t i = 0; i < numMeshes; ++i)
-			{
-				maxTasks += 2 * static_cast<uint32_t>(model->m_meshes[i].GetNumMeshParts());
-			}
-
-			tasks.reserve(maxTasks);
-
-			modelData->meshes.reserve(numMeshes);
-
-			std::vector<shared_ptr<VertexBuffer>> uniqueVBuffers(maxTasks / 2);
-			std::vector<shared_ptr<IndexBuffer>> uniqueIBuffers(maxTasks / 2);
-
-			// Construct the render thread copy of meshes and mesh parts
-			for (size_t i = 0; i < numMeshes; ++i)
-			{
-				StaticMeshData meshData;
-				XMStoreFloat4x4(&meshData.matrix, XMMatrixIdentity());
-				
-				const auto& mesh = model->m_meshes[i];
-				const auto numParts = mesh.GetNumMeshParts();
-							
-				for (size_t j = 0; j < numParts; ++j)
-				{
-					const auto& meshPart = mesh.m_meshParts[j];
-
-					StaticMeshPartData meshPartData;
-
-					// Create index buffer
-					meshPartData.indexBuffer = IndexBuffer::Create(meshPart.indexData, Usage::Immutable);
-
-					// Track unique index buffers for this model
-					if (end(uniqueIBuffers) == find(begin(uniqueIBuffers), end(uniqueIBuffers), meshPartData.indexBuffer))
-					{
-						tasks.emplace_back(meshPartData.indexBuffer->loadTask);
-						uniqueIBuffers.emplace_back(meshPartData.indexBuffer);
-					}
-
-					// Create vertex buffer
-					meshPartData.vertexBuffer = VertexBuffer::Create(meshPart.vertexData, Usage::Immutable);
-
-					// Track unique vertex buffers for this model
-					if (end(uniqueVBuffers) == find(begin(uniqueVBuffers), end(uniqueVBuffers), meshPartData.vertexBuffer))
-					{
-						tasks.emplace_back(meshPartData.vertexBuffer->loadTask);
-						uniqueVBuffers.emplace_back(meshPartData.vertexBuffer);
-					}
-
-					// Fill in misc data for the mesh part draw-call
-					meshPartData.topology = meshPart.topology;
-					meshPartData.indexCount = meshPart.indexCount;
-					meshPartData.baseVertexOffset = meshPart.baseVertexOffset;
-					meshPartData.startIndex = meshPart.startIndex;
-
-					meshData.meshParts.emplace_back(meshPartData);
-				}
-
-				modelData->meshes.emplace_back(meshData);
-			}
-
-			// Wait on all the VB/IB load tasks, then add the model to the scene
-			modelData->prepareTask = 
-				concurrency::when_all(begin(tasks), end(tasks)).then([this, modelData] { AddStaticModelDeferred(modelData); });
-		});
-	}
-	else
-	{
-		auto modelData = model->m_renderThreadData;
-
-		// If the render thread data is not part of this scene, add it
-		if (end(modelData->scenes) == find(begin(modelData->scenes), end(modelData->scenes), this))
-		{
-			modelData->scenes.push_back(this);
-
-			modelData->prepareTask.then([this, modelData] { AddStaticModelDeferred(modelData); });
-		}
-	}
+	Renderer::GetInstance().AddStaticModelToScene(model, shared_from_this());
 }
 
 
 void Scene::Update(GraphicsCommandList& commandList)
 {
 	PROFILE(scene_Update);
+
+	UpdateStaticModels();
 
 	// Update per-view constants
 	XMMATRIX xmProjection = XMLoadFloat4x4(&m_camera->GetProjectionMatrix());
@@ -187,13 +96,13 @@ void Scene::Render(GraphicsCommandList& commandList)
 	PROFILE(scene_Render);
 
 	// Visit models
-	for (auto model : m_models)
+	for (auto model : m_staticModels)
 	{
 		// Visit meshes
-		for (auto mesh : model->m_meshes)
+		for (auto mesh : model->meshes)
 		{
 			// Visit mesh parts
-			for (auto meshPart : mesh.m_meshParts)
+			for (auto meshPart : mesh.meshParts)
 			{
 				commandList.SetPipelineState(*m_pso);
 #if defined(DX12)
@@ -205,11 +114,11 @@ void Scene::Render(GraphicsCommandList& commandList)
 				commandList.SetVertexShaderConstants(1, *m_perObjectConstantBuffer);
 #endif
 
-				commandList.SetVertexBuffer(0, *meshPart.m_vertexBuffer);
-				commandList.SetIndexBuffer(*meshPart.m_indexBuffer);
+				commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
+				commandList.SetIndexBuffer(*meshPart.indexBuffer);
 				commandList.SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-				commandList.DrawIndexed(meshPart.m_indexCount, meshPart.m_startIndex, meshPart.m_baseVertexOffset);
+				commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
 			}
 		}
 	}
@@ -288,4 +197,79 @@ void Scene::Initialize()
 void Scene::AddStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> model)
 {
 	m_deferredAddModels.push(model);
+}
+
+
+void Scene::RemoveStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> model)
+{
+	m_deferredRemoveModels.push(model);
+}
+
+
+void Scene::UpdateStaticModels()
+{
+	// Remove deferred models
+	auto task = concurrency::create_task([this]
+	{
+		uint32_t modelsProcessed = 0;
+
+		shared_ptr<RenderThread::StaticModelData> model;
+		while (modelsProcessed++ < m_staticModelRemoves && m_deferredRemoveModels.try_pop(model))
+		{
+			auto it = m_staticModelMap.find(model);
+			assert(it != end(m_staticModelMap));
+
+			const auto index = it->second;
+			InternalRemoveStaticModel(index);
+
+		}
+	});
+
+	// Add deferred models
+	task.then([this]
+	{
+		uint32_t modelsProcessed = 0;
+
+		shared_ptr<RenderThread::StaticModelData> model;
+		while (modelsProcessed++ < m_staticModelAdds && m_deferredAddModels.try_pop(model))
+		{
+			auto it = m_staticModelMap.find(model);
+			assert(it == end(m_staticModelMap));
+
+			InternalAddStaticModel(model);
+		}
+	});
+
+	task.wait();
+}
+
+
+void Scene::InternalAddStaticModel(shared_ptr<RenderThread::StaticModelData> model)
+{
+	const auto newIndex = m_staticModels.size();
+
+	// TODO: handle other data lists here, e.g. bounding boxes
+
+	m_staticModels.emplace_back(model);
+	m_staticModelMap[model] = newIndex;
+}
+
+
+void Scene::InternalRemoveStaticModel(size_t index)
+{
+	const auto numStaticModels = m_staticModels.size();
+
+	assert(index < numStaticModels);
+
+	// TODO: handle other data lists here, e.g. bounding boxes
+
+	if (numStaticModels > 1)
+	{
+		swap(m_staticModels[index], m_staticModels.back());
+		m_staticModels.pop_back();
+	}
+	else
+	{
+		m_staticModels.pop_back();
+	}
 }

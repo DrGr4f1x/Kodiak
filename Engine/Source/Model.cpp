@@ -12,6 +12,7 @@
 #include "Model.h"
 
 #include "IndexBuffer.h"
+#include "Profile.h"
 #include "Renderer.h"
 #include "RenderEnums.h"
 #include "VertexBuffer.h"
@@ -377,6 +378,75 @@ StaticModel::StaticModel()
 void StaticModel::AddMesh(StaticMesh mesh)
 {
 	m_meshes.emplace_back(mesh);
+}
+
+
+void StaticModel::CreateRenderThreadData()
+{
+	PROFILE(staticModel_CreateRenderThreadData);
+
+	const auto numMeshes = m_meshes.size();
+
+	m_renderThreadData = make_shared<RenderThread::StaticModelData>();
+	m_renderThreadData->matrix = m_matrix;
+	m_renderThreadData->meshes.reserve(numMeshes);
+
+	std::vector<concurrency::task<void>> tasks;
+
+	// Determine the maximum number of tasks we need & pre-allocate memory
+	uint32_t maxTasks = 0;
+	for (size_t i = 0; i < numMeshes; ++i)
+	{
+		maxTasks += 2 * static_cast<uint32_t>(m_meshes[i].GetNumMeshParts());
+	}
+
+	tasks.reserve(maxTasks);
+
+	std::vector<shared_ptr<VertexBuffer>> uniqueVBuffers(maxTasks / 2);
+	std::vector<shared_ptr<IndexBuffer>> uniqueIBuffers(maxTasks / 2);
+
+	for (const auto& mesh : m_meshes)
+	{
+		RenderThread::StaticMeshData meshData;
+		meshData.matrix = mesh.m_matrix;
+
+		for (const auto& part : mesh.m_meshParts)
+		{
+			RenderThread::StaticMeshPartData meshPartData;
+
+			// Create index buffer
+			meshPartData.indexBuffer = IndexBuffer::Create(part.indexData, Usage::Immutable);
+
+			// Track unique index buffers for this model
+			if (end(uniqueIBuffers) == find(begin(uniqueIBuffers), end(uniqueIBuffers), meshPartData.indexBuffer))
+			{
+				tasks.emplace_back(meshPartData.indexBuffer->loadTask);
+				uniqueIBuffers.emplace_back(meshPartData.indexBuffer);
+			}
+
+			// Create vertex buffer
+			meshPartData.vertexBuffer = VertexBuffer::Create(part.vertexData, Usage::Immutable);
+
+			// Track unique vertex buffers for this model
+			if (end(uniqueVBuffers) == find(begin(uniqueVBuffers), end(uniqueVBuffers), meshPartData.vertexBuffer))
+			{
+				tasks.emplace_back(meshPartData.vertexBuffer->loadTask);
+				uniqueVBuffers.emplace_back(meshPartData.vertexBuffer);
+			}
+
+			// Fill in misc data for the mesh part draw-call
+			meshPartData.topology = part.topology;
+			meshPartData.indexCount = part.indexCount;
+			meshPartData.baseVertexOffset = part.baseVertexOffset;
+			meshPartData.startIndex = part.startIndex;
+
+			meshData.meshParts.emplace_back(meshPartData);
+		}
+
+		m_renderThreadData->meshes.emplace_back(meshData);
+	}
+
+	m_renderThreadData->prepareTask = concurrency::when_all(begin(tasks), end(tasks));
 }
 
 

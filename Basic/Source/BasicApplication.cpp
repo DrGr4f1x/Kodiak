@@ -45,7 +45,7 @@ BasicApplication::BasicApplication(uint32_t width, uint32_t height, const std::w
 void BasicApplication::OnInit()
 {
 	LOG_INFO << "BasicApplication initialize";
-	Renderer::SetWindow(m_width, m_height, m_hwnd);
+	Renderer::GetInstance().SetWindow(m_width, m_height, m_hwnd);
 	
 	CreateResources();
 
@@ -68,7 +68,7 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 void BasicApplication::OnDestroy()
 {
-	Renderer::Finalize();
+	Renderer::GetInstance().Finalize();
 	LOG_INFO << "BasicApplication finalize";
 }
 
@@ -92,7 +92,7 @@ void BasicApplication::OnMouseMove(WPARAM btnState, int x, int y)
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationY(radians)));
 
 		// Hand the new matrix to the render thread
-		Renderer::UpdateModelTransform(m_boxModel, matrix);
+		RenderThread::UpdateModelTransform(m_boxModel, matrix);
 	}
 }
 
@@ -185,7 +185,7 @@ void BasicApplication::SetupScene()
 	// Add camera and model to scene
 	// TODO: decide on Renderer or RenderThread namespace
 	RenderThread::SetSceneCamera(m_mainScene, m_camera);
-	Renderer::AddModel(m_mainScene, m_boxModel);
+	RenderThread::AddModel(m_mainScene, m_boxModel);
 
 	m_mainScene->AddStaticModel(m_boxModel2);
 }
@@ -193,7 +193,7 @@ void BasicApplication::SetupScene()
 
 void BasicApplication::SetupPipeline()
 {
-	auto pipeline = Renderer::GetRootPipeline();
+	auto pipeline = Renderer::GetInstance().GetRootPipeline();
 
 	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
 	pipeline->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
@@ -202,7 +202,6 @@ void BasicApplication::SetupPipeline()
 	pipeline->ClearDepth(m_depthBuffer);
 
 	pipeline->UpdateScene(m_mainScene);
-	//pipeline->QueryVisibility(m_mainScene);
 	pipeline->RenderScene(m_mainScene);
 
 	pipeline->Present(m_colorTarget);

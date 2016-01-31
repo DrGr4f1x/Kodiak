@@ -286,6 +286,7 @@
   <ItemGroup>
     <ClInclude Include="..\External\Remotery\lib\Remotery.h" />
     <ClInclude Include="Source\Application.h" />
+    <ClInclude Include="Source\Batch.h" />
     <ClInclude Include="Source\BinaryReader.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\ClearColorBufferOp.h" />

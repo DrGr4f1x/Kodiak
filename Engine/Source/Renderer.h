@@ -9,7 +9,7 @@
 
 #pragma once
 
-
+#include <concurrent_queue.h>
 
 namespace Kodiak
 {
@@ -24,6 +24,10 @@ class IAsyncRenderTask;
 class Model;
 class Pipeline;
 class Scene;
+class StaticModel;
+
+class AddStaticModelAction;
+class RemoveStaticModelAction;
 
 enum class ColorFormat;
 enum class DepthFormat;
@@ -45,26 +49,60 @@ std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t
 std::shared_ptr<DepthBuffer> CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth = 1.0f,
 	uint32_t clearStencil = 0);
 
-} // namespace Kodiak
 
-
-namespace Renderer
+class Renderer
 {
+public:
+	static Renderer& GetInstance();
 
-void Initialize();
-void Finalize();
+	void Initialize();
+	void Finalize();
 
-void EnqueueTask(std::shared_ptr<Kodiak::IAsyncRenderTask> task);
+	void EnqueueTask(std::shared_ptr<Kodiak::IAsyncRenderTask> task);
 
-void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
-void SetWindowSize(uint32_t width, uint32_t height);
+	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
+	void SetWindowSize(uint32_t width, uint32_t height);
 
-void Render();
+	void Update();
+	void Render();
 
-std::shared_ptr<Kodiak::Pipeline> GetRootPipeline();
+	std::shared_ptr<Kodiak::Pipeline> GetRootPipeline() { return m_rootPipeline; }
+	DeviceManager* GetDeviceManager() { return m_deviceManager.get(); }
+
+	// Static model management
+	void AddStaticModelToScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene);
+	void RemoveStaticModelFromScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene);
+
+private:
+	void StartRenderTask();
+	void StopRenderTask();
+
+	void UpdateStaticModels();
+
+private:
+	std::shared_ptr<Pipeline>			m_rootPipeline{ nullptr };
+	RenderTaskEnvironment				m_renderTaskEnvironment;
+	bool								m_renderTaskStarted{ false };
+	Concurrency::task<void>				m_renderTask;
+	Concurrency::concurrent_queue<std::shared_ptr<IAsyncRenderTask>>	m_renderTaskQueue;
+	std::unique_ptr<DeviceManager>		m_deviceManager;
+
+	// Pending model actions
+	concurrency::concurrent_queue<std::shared_ptr<AddStaticModelAction>> m_pendingStaticModelAdds;
+	concurrency::concurrent_queue<std::shared_ptr<RemoveStaticModelAction>> m_pendingStaticModelRemovals;
+
+	uint32_t m_numStaticModelAdds{ 256 };
+	uint32_t m_numStaticModelRemovals{ 256 };
+};
+
+// TODO: Eliminate this
+namespace RenderThread
+{
 
 // Model functions
 void AddModel(std::shared_ptr<Kodiak::Scene> scene, std::shared_ptr<Kodiak::Model> model);
 void UpdateModelTransform(std::shared_ptr<Kodiak::Model> model, const DirectX::XMFLOAT4X4& matrix);
 
-} // namespace Renderer
+} // namespace RenderThread
+
+} // namespace Kodiak

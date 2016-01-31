@@ -37,7 +37,7 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 	m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 	
 	// Start up renderer
-	Renderer::Initialize();
+	Renderer::GetInstance().Initialize();
 
 	// Create step timer
 	m_timer = make_unique<StepTimer>();
@@ -236,7 +236,7 @@ bool Application::OnEvent(MSG msg)
 // Handle window resize events
 void Application::OnResize()
 {
-	Renderer::SetWindowSize(m_width, m_height);
+	Renderer::GetInstance().SetWindowSize(m_width, m_height);
 }
 
 
@@ -276,6 +276,9 @@ void Application::Update()
 	// Update scene objects
 	m_timer->Tick([this]()
 	{
+		// Update the renderer
+		Renderer::GetInstance().Update();
+
 		// Subclasses implement OnUpdate to supply their own scene update logic
 		OnUpdate(m_timer.get());
 	});
@@ -292,7 +295,7 @@ bool Application::Render()
 		return false;
 	}
 
-	Renderer::Render();
+	Renderer::GetInstance().Render();
 
 	return true;
 }

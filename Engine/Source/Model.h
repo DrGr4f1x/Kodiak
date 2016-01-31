@@ -10,6 +10,7 @@
 #pragma once
 
 #include <ppltasks.h>
+#include <unordered_set>
 
 namespace Kodiak
 {
@@ -157,6 +158,7 @@ struct StaticMeshPart
 class StaticMesh
 {
 	friend class Scene;
+	friend class StaticModel;
 public:
 	StaticMesh();
 
@@ -171,6 +173,10 @@ private:
 
 class StaticModel
 {
+	// TODO: A lot of friends here, refactor?
+	friend class AddStaticModelAction;
+	friend class RemoveStaticModelAction;
+	friend class Renderer;
 	friend class Scene;
 public:
 	StaticModel();
@@ -179,6 +185,9 @@ public:
 	//void RemoveMesh(uint32_t index);
 	//StaticMesh& GetMesh(uint32_t index);
 	size_t GetNumMeshes() const { return m_meshes.size(); }
+
+private:
+	void CreateRenderThreadData();
 
 private:
 	std::mutex				m_meshMutex;
