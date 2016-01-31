@@ -29,7 +29,7 @@ public:
 
 	void Destroy();
 
-	void Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, const std::string& debugName);
+	static std::shared_ptr<VertexBuffer> Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, bool async = true);
 
 	const D3D12_VERTEX_BUFFER_VIEW& GetVBV() const { return m_vbv; }
 
@@ -37,8 +37,11 @@ public:
 	concurrency::task<void> loadTask;
 
 private:
+	static void CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, std::shared_ptr<BaseVertexBufferData> data, Usage usage);
+
 	D3D12_RESOURCE_DESC DescribeBuffer(size_t numElements, size_t elementSize);
 
+private:
 	D3D12_VERTEX_BUFFER_VIEW	m_vbv;
 	size_t						m_bufferSize;
 	size_t						m_elementCount;

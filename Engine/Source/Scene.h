@@ -7,6 +7,8 @@
 // Author: David Elder
 //
 
+#include <concurrent_queue.h>
+
 #pragma once
 
 namespace Kodiak
@@ -19,9 +21,15 @@ class ConstantBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
 class Model;
+class StaticModel;
 #if defined(DX12)
 class RootSignature;
 #endif
+
+namespace RenderThread
+{
+struct StaticModelData;
+} // namespace RenderThread
 
 class Scene
 {
@@ -29,6 +37,7 @@ public:
 	Scene();
 
 	void AddModel(std::shared_ptr<Model> model);
+	void AddStaticModel(std::shared_ptr<StaticModel> model);
 
 	void Update(GraphicsCommandList& commandList);
 	void Render(GraphicsCommandList& commandList);
@@ -37,6 +46,8 @@ public:
 
 private:
 	void Initialize();
+
+	void AddStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 
 private:
 	std::vector<std::shared_ptr<Model>> m_models;
@@ -64,6 +75,9 @@ private:
 
 	// HACK
 	DirectX::XMFLOAT4X4 m_modelTransform;
+
+	// Deferred add lists
+	concurrency::concurrent_queue<std::shared_ptr<RenderThread::StaticModelData>> m_deferredAddModels;
 };
 
 

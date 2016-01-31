@@ -24,7 +24,10 @@ public:
 
 	concurrency::task<void> loadTask;
 
-	void Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, const std::string& debugName);
+	static std::shared_ptr<VertexBuffer> Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, bool async = true);
+
+private:
+	static void CreateInternal(std::shared_ptr<VertexBuffer> buffer, std::shared_ptr<BaseVertexBufferData> data, Usage usage);
 };
 
 } // namespace Kodiak

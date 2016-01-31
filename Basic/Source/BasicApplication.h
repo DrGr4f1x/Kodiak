@@ -26,6 +26,7 @@ class Material;
 class Model;
 class RenderPass;
 class Scene;
+class StaticModel;
 
 
 class BasicApplication : public Application
@@ -54,6 +55,7 @@ private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
 	std::shared_ptr<Model>			m_boxModel;
+	std::shared_ptr<StaticModel>	m_boxModel2;
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
 

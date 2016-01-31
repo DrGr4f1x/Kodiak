@@ -16,6 +16,7 @@
 #include "CommandListManager11.h"
 #include "DepthBuffer11.h"
 #include "Format.h"
+#include "Profile.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
 #include "Shader.h"
@@ -102,6 +103,8 @@ void DeviceManager::BeginFrame()
 
 void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 {
+	PROFILE(deviceManager_Present);
+
 	auto& commandList = GraphicsCommandList::Begin();
 
 	PreparePresent(commandList, presentSource);

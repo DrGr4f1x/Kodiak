@@ -102,7 +102,7 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 {
 	auto model = make_shared<Model>();
 
-	auto vbuffer = make_shared<VertexBuffer>();
+	shared_ptr<VertexBuffer> vbuffer;
 	shared_ptr<BaseVertexBufferData> vdata;
 
 	if (desc.genNormals && desc.genColors)
@@ -143,7 +143,8 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with normals and colors");
+		vdata->SetDebugName("Box vertex buffer with normals and colors");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else if (desc.genNormals)
 	{
@@ -183,7 +184,8 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with normals");
+		vdata->SetDebugName("Box vertex buffer with normals");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else if (desc.genColors)
 	{
@@ -200,7 +202,8 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with colors");
+		vdata->SetDebugName("Box vertex buffer with colors");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else
 	{
@@ -217,7 +220,8 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 		}
 		));
 
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer");
+		vdata->SetDebugName("Box vertex buffer");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 
 	// Create the mesh and mesh parts
@@ -231,11 +235,12 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// -X face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "-X face");
+			idata->SetDebugName("-X face");
+
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -243,11 +248,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// +X face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 4, 5, 6, 7 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "+X face");
+			idata->SetDebugName("+X face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -255,11 +260,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// -Y face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 8, 9, 10, 11 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "-Y face");
+			idata->SetDebugName("-Y face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -267,11 +272,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// +Y face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 12, 13, 14, 15 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "+Y face");
+			idata->SetDebugName("+Y face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -279,11 +284,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// -Z face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 16, 17, 18, 19 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "-Z face");
+			idata->SetDebugName("-Z face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -291,11 +296,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// +Z face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 20, 21, 22, 23 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "+Z face");
+			idata->SetDebugName("+Z face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -307,11 +312,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// Body
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "Body");
+			idata->SetDebugName("Body");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 10, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -319,11 +324,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// Top
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 6, 0, 4, 2 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "Top");
+			idata->SetDebugName("Top");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -331,11 +336,11 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 		// Bottom
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 5, 3, 7, 1 }));
 
-			ibuffer->Create(idata, Usage::Immutable, "Bottom");
+			idata->SetDebugName("Bottom");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
 			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
 			meshParts.emplace_back(meshPart);
@@ -347,5 +352,236 @@ shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
 
 	return model;
 }
+
+
+
+StaticMesh::StaticMesh()
+{
+	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
+}
+
+
+void StaticMesh::AddMeshPart(StaticMeshPart part)
+{
+	// TODO: Move to render thread
+	m_meshParts.emplace_back(part);
+}
+
+
+StaticModel::StaticModel()
+{
+	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
+}
+
+
+void StaticModel::AddMesh(StaticMesh mesh)
+{
+	m_meshes.emplace_back(mesh);
+}
+
+
+StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
+{
+	shared_ptr<BaseVertexBufferData> vdata;
+
+	if (desc.genNormals && desc.genColors)
+	{
+		vdata.reset(new VertexBufferData<VertexPositionNormalColor>(
+		{
+			// -X face
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[1]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[0]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[7]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[6]) },
+			// +X face
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[5]) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[4]) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[3]) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[2]) },
+			// -Y face
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[1]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[7]) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[3]) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[5]) },
+			// +Y face
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[2]) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[4]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[0]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[6]) },
+			// -Z face
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[3]) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[2]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[1]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[0]) },
+			// +Z face
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[7]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[6]) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[5]) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[4]) }
+
+		}
+		));
+	}
+	else if (desc.genNormals)
+	{
+		vdata.reset(new VertexBufferData<VertexPositionNormal>(
+		{
+			// -X face
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+			// +X face
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			// -Y face
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+			// +Y face
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			// -Z face
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+			// +Z face
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) }
+
+		}
+		));
+	}
+	else if (desc.genColors)
+	{
+		vdata.reset(new VertexBufferData<VertexPositionColor>(
+		{
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[0]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[1]) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[2]) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[3]) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[4]) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[5]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[6]) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[7]) }
+		}
+		));
+	}
+	else
+	{
+		vdata.reset(new VertexBufferData<VertexPosition>(
+		{
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) }
+		}
+		));
+	}
+
+	// Create the mesh and mesh parts
+	StaticMesh mesh;
+	
+	if (desc.genNormals)
+	{
+		// -X face
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 0, 1, 2, 3 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+
+		// +X face
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 4, 5, 6, 7 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+
+		// -Y face
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 8, 9, 10, 11 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+
+		// +Y face
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 12, 13, 14, 15 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+
+		// -Z face
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 16, 17, 18, 19 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+
+		// +Z face
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 20, 21, 22, 23 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+	}
+	else
+	{
+		// Body
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 10, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+
+		// Top
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 6, 0, 4, 2 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+
+		// Bottom
+		{
+			shared_ptr<BaseIndexBufferData> idata;
+			idata.reset(new IndexBufferData16({ 5, 3, 7, 1 }));
+
+			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh.AddMeshPart(meshPart);
+		}
+	}
+
+	return mesh;
+}
+
 
 } // namespace Kodiak

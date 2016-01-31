@@ -14,6 +14,7 @@
 #include "CommandList.h"
 #include "DeviceManager.h"
 #include "Log.h"
+#include "Profile.h"
 #include "Renderer.h"
 #include "StepTimer.h"
 
@@ -26,6 +27,7 @@ using namespace std;
 
 Application::Application(uint32_t width, uint32_t height, const std::wstring& name)
 {
+	InitializeProfiling();
 	InitializeLogging();
 
 	m_width = width;
@@ -33,7 +35,7 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 	m_title = name;
 
 	m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-
+	
 	// Start up renderer
 	Renderer::Initialize();
 
@@ -45,6 +47,7 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 Application::~Application()
 {
 	ShutdownLogging();
+	ShutdownProfiling();
 }
 
 
@@ -268,6 +271,8 @@ void Application::ParseCommandLineArgs()
 
 void Application::Update()
 {
+	PROFILE(application_Update);
+
 	// Update scene objects
 	m_timer->Tick([this]()
 	{
@@ -279,6 +284,8 @@ void Application::Update()
 
 bool Application::Render()
 {
+	PROFILE(application_Render);
+
 	// Don't try to render until we've run one Update tick
 	if (m_timer->GetFrameCount() == 0)
 	{

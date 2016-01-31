@@ -15,7 +15,10 @@ namespace Kodiak
 {
 
 // Forward declarations
+class BaseIndexBufferData;
+class BaseVertexBufferData;
 class IndexBuffer;
+class Scene;
 class VertexBuffer;
 
 enum class PrimitiveTopology;
@@ -99,5 +102,105 @@ struct BoxModelDesc
 };
 
 std::shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc);
+
+
+
+namespace RenderThread
+{
+
+struct StaticMeshPartData
+{
+	std::shared_ptr<VertexBuffer>	vertexBuffer;
+	std::shared_ptr<IndexBuffer>	indexBuffer;
+	PrimitiveTopology				topology;
+	uint32_t						indexCount;
+	uint32_t						startIndex;
+	int32_t							baseVertexOffset;
+};
+
+
+struct StaticMeshData
+{
+	std::vector<StaticMeshPartData>		meshParts;
+	DirectX::XMFLOAT4X4					matrix;
+};
+
+
+struct StaticModelData
+{
+	std::vector<StaticMeshData>		meshes;
+	std::vector<Scene*>				scenes;
+	DirectX::XMFLOAT4X4				matrix;
+
+	concurrency::task<void>			prepareTask;
+};
+
+
+} // namespace RenderThread
+
+
+struct StaticMeshPart
+{
+	// TODO: Support sharing vertex/index data between parts/meshes/models 
+	// Render thread needs to know if a particular VB/IB has already been created, and just use the cached one.
+	// Global VB and IB hash tables for caching should suffice.
+	std::shared_ptr<BaseVertexBufferData>	vertexData;
+	std::shared_ptr<BaseIndexBufferData>	indexData;
+
+	PrimitiveTopology						topology;
+	uint32_t								indexCount;
+	uint32_t								startIndex;
+	int32_t									baseVertexOffset;
+};
+
+
+class StaticMesh
+{
+	friend class Scene;
+public:
+	StaticMesh();
+
+	void AddMeshPart(StaticMeshPart part);
+	size_t GetNumMeshParts() const { return m_meshParts.size(); }
+
+private:
+	std::vector<StaticMeshPart>	m_meshParts;
+	DirectX::XMFLOAT4X4			m_matrix;
+};
+
+
+class StaticModel
+{
+	friend class Scene;
+public:
+	StaticModel();
+
+	void AddMesh(StaticMesh mesh);
+	//void RemoveMesh(uint32_t index);
+	//StaticMesh& GetMesh(uint32_t index);
+	size_t GetNumMeshes() const { return m_meshes.size(); }
+
+private:
+	std::mutex				m_meshMutex;
+	std::vector<StaticMesh>	m_meshes;
+	DirectX::XMFLOAT4X4		m_matrix;
+
+	std::shared_ptr<RenderThread::StaticModelData>	m_renderThreadData;
+};
+
+
+struct BoxMeshDesc
+{
+	float sizeX{ 1.0f };
+	float sizeY{ 1.0f };
+	float sizeZ{ 1.0f };
+	DirectX::XMFLOAT3 colors[8];
+	bool genColors{ false };
+	bool genNormals{ false };
+	bool facesIn{ false };
+};
+
+StaticMesh MakeBoxMesh(const BoxMeshDesc& desc);
+
 
 } // namespace Kodiak

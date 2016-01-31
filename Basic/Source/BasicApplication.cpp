@@ -154,6 +154,21 @@ void BasicApplication::CreateModel()
 
 	m_boxModel = MakeBoxModel(desc);
 	m_boxModel->loadTask.wait();
+
+	m_boxModel2 = make_shared<StaticModel>();
+	BoxMeshDesc meshDesc;
+	meshDesc.colors[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	meshDesc.colors[1] = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	meshDesc.colors[2] = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	meshDesc.colors[3] = XMFLOAT3(0.0f, 1.0f, 1.0f);
+	meshDesc.colors[4] = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	meshDesc.colors[5] = XMFLOAT3(1.0f, 0.0f, 1.0f);
+	meshDesc.colors[6] = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	meshDesc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	meshDesc.genColors = true;
+	m_boxModel2->AddMesh(MakeBoxMesh(meshDesc));
+
+	
 }
 
 
@@ -171,6 +186,8 @@ void BasicApplication::SetupScene()
 	// TODO: decide on Renderer or RenderThread namespace
 	RenderThread::SetSceneCamera(m_mainScene, m_camera);
 	Renderer::AddModel(m_mainScene, m_boxModel);
+
+	m_mainScene->AddStaticModel(m_boxModel2);
 }
 
 
@@ -185,6 +202,7 @@ void BasicApplication::SetupPipeline()
 	pipeline->ClearDepth(m_depthBuffer);
 
 	pipeline->UpdateScene(m_mainScene);
+	//pipeline->QueryVisibility(m_mainScene);
 	pipeline->RenderScene(m_mainScene);
 
 	pipeline->Present(m_colorTarget);

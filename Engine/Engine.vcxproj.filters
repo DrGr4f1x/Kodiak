@@ -28,6 +28,12 @@
     <Filter Include="Shaders\Common">
       <UniqueIdentifier>{e1ebbbc6-7fe8-4200-a1c9-9b71b0aeac9c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{59ae5e08-4ad2-4e40-ab63-e911482b8c60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Remotery">
+      <UniqueIdentifier>{3000e89b-ca1c-44e9-8f08-4c287b2e6aeb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -254,7 +260,6 @@
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Source\MaterialParameter.h" />
-    <ClInclude Include="Source\ShaderManager12.inl" />
     <ClInclude Include="Source\Camera.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -282,6 +287,13 @@
     <ClInclude Include="Source\ShaderReflection.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ShaderManager12.inl">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\Remotery\lib\Remotery.h">
+      <Filter>External\Remotery</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Profile.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -440,6 +452,10 @@
     <ClCompile Include="Source\Effect.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="..\External\Remotery\lib\Remotery.c">
+      <Filter>External\Remotery</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Profile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">

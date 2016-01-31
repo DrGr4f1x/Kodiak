@@ -18,6 +18,7 @@ namespace Kodiak
 class BaseIndexBufferData;
 enum class Usage;
 
+
 class IndexBuffer
 {
 public:
@@ -26,7 +27,10 @@ public:
 	
 	concurrency::task<void> loadTask;
 
-	void Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage, const std::string& debugName);
+	static std::shared_ptr<IndexBuffer> Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage, bool async = true);
+
+private:
+	static void CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, std::shared_ptr<BaseIndexBufferData> data, Usage usage);
 };
 
 
