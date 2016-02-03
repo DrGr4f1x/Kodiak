@@ -26,12 +26,10 @@ class Pipeline;
 class Scene;
 class StaticModel;
 
-class AddStaticModelAction;
-class RemoveStaticModelAction;
-
 enum class ColorFormat;
 enum class DepthFormat;
 enum class Usage;
+
 
 struct RenderTaskEnvironment
 {
@@ -72,6 +70,7 @@ public:
 	// Static model management
 	void AddStaticModelToScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene);
 	void RemoveStaticModelFromScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene);
+	void UpdateStaticModelMatrix(std::shared_ptr<StaticModel> model);
 
 private:
 	void StartRenderTask();
@@ -86,13 +85,6 @@ private:
 	Concurrency::task<void>				m_renderTask;
 	Concurrency::concurrent_queue<std::shared_ptr<IAsyncRenderTask>>	m_renderTaskQueue;
 	std::unique_ptr<DeviceManager>		m_deviceManager;
-
-	// Pending model actions
-	concurrency::concurrent_queue<std::shared_ptr<AddStaticModelAction>> m_pendingStaticModelAdds;
-	concurrency::concurrent_queue<std::shared_ptr<RemoveStaticModelAction>> m_pendingStaticModelRemovals;
-
-	uint32_t m_numStaticModelAdds{ 256 };
-	uint32_t m_numStaticModelRemovals{ 256 };
 };
 
 // TODO: Eliminate this

@@ -133,6 +133,8 @@ struct StaticModelData
 	std::vector<Scene*>				scenes;
 	DirectX::XMFLOAT4X4				matrix;
 
+	bool							isDirty{ true };
+
 	concurrency::task<void>			prepareTask;
 };
 
@@ -142,9 +144,6 @@ struct StaticModelData
 
 struct StaticMeshPart
 {
-	// TODO: Support sharing vertex/index data between parts/meshes/models 
-	// Render thread needs to know if a particular VB/IB has already been created, and just use the cached one.
-	// Global VB and IB hash tables for caching should suffice.
 	std::shared_ptr<BaseVertexBufferData>	vertexData;
 	std::shared_ptr<BaseIndexBufferData>	indexData;
 
@@ -171,13 +170,10 @@ private:
 };
 
 
-class StaticModel
+class StaticModel : public std::enable_shared_from_this<StaticModel>
 {
-	// TODO: A lot of friends here, refactor?
-	friend class AddStaticModelAction;
-	friend class RemoveStaticModelAction;
 	friend class Renderer;
-	friend class Scene;
+
 public:
 	StaticModel();
 
@@ -186,8 +182,12 @@ public:
 	//StaticMesh& GetMesh(uint32_t index);
 	size_t GetNumMeshes() const { return m_meshes.size(); }
 
-private:
+	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);
+	const DirectX::XMFLOAT4X4& GetMatrix() const { return m_matrix; }
+
+	// Should only be called by the Renderer, or async tasks created by the renderer
 	void CreateRenderThreadData();
+	std::shared_ptr<RenderThread::StaticModelData> GetRenderThreadData() { return m_renderThreadData; }
 
 private:
 	std::mutex				m_meshMutex;
@@ -210,6 +210,5 @@ struct BoxMeshDesc
 };
 
 StaticMesh MakeBoxMesh(const BoxMeshDesc& desc);
-
 
 } // namespace Kodiak

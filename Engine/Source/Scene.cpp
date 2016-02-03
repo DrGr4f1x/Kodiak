@@ -60,8 +60,6 @@ void Scene::Update(GraphicsCommandList& commandList)
 {
 	PROFILE(scene_Update);
 
-	UpdateStaticModels();
-
 	// Update per-view constants
 	XMMATRIX xmProjection = XMLoadFloat4x4(&m_camera->GetProjectionMatrix());
 	XMStoreFloat4x4(&m_perViewConstants.projection, XMMatrixTranspose(xmProjection));
@@ -196,80 +194,46 @@ void Scene::Initialize()
 
 void Scene::AddStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> model)
 {
-	m_deferredAddModels.push(model);
+	auto it = m_staticModelMap.find(model);
+
+	// Only add the model to the scene once
+	if (it == end(m_staticModelMap))
+	{
+		const auto newIndex = m_staticModels.size();
+
+		// TODO: handle other data lists here, e.g. bounding boxes
+
+		m_staticModels.emplace_back(model);
+		m_staticModelMap[model] = newIndex;
+	}
 }
 
 
 void Scene::RemoveStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> model)
 {
-	m_deferredRemoveModels.push(model);
-}
-
-
-void Scene::UpdateStaticModels()
-{
-	// Remove deferred models
-	auto task = concurrency::create_task([this]
+	auto it = m_staticModelMap.find(model);
+	if (it != end(m_staticModelMap))
 	{
-		uint32_t modelsProcessed = 0;
+		const auto numStaticModels = m_staticModels.size();
+		const auto index = it->second;
 
-		shared_ptr<RenderThread::StaticModelData> model;
-		while (modelsProcessed++ < m_staticModelRemoves && m_deferredRemoveModels.try_pop(model))
+		assert(index < numStaticModels);
+
+		// TODO: handle other data lists here, e.g. bounding boxes
+
+		if (numStaticModels > 1)
 		{
-			auto it = m_staticModelMap.find(model);
-			assert(it != end(m_staticModelMap));
+			// Update the map
+			m_staticModelMap[m_staticModels.back()] = index;
+			m_staticModelMap.erase(m_staticModels[index]);
 
-			const auto index = it->second;
-			InternalRemoveStaticModel(index);
-
+			swap(m_staticModels[index], m_staticModels.back());
+			m_staticModels.pop_back();
 		}
-	});
-
-	// Add deferred models
-	task.then([this]
-	{
-		uint32_t modelsProcessed = 0;
-
-		shared_ptr<RenderThread::StaticModelData> model;
-		while (modelsProcessed++ < m_staticModelAdds && m_deferredAddModels.try_pop(model))
+		else
 		{
-			auto it = m_staticModelMap.find(model);
-			assert(it == end(m_staticModelMap));
-
-			InternalAddStaticModel(model);
+			m_staticModelMap.erase(m_staticModels[0]);
+			m_staticModels.pop_back();
 		}
-	});
-
-	task.wait();
-}
-
-
-void Scene::InternalAddStaticModel(shared_ptr<RenderThread::StaticModelData> model)
-{
-	const auto newIndex = m_staticModels.size();
-
-	// TODO: handle other data lists here, e.g. bounding boxes
-
-	m_staticModels.emplace_back(model);
-	m_staticModelMap[model] = newIndex;
-}
-
-
-void Scene::InternalRemoveStaticModel(size_t index)
-{
-	const auto numStaticModels = m_staticModels.size();
-
-	assert(index < numStaticModels);
-
-	// TODO: handle other data lists here, e.g. bounding boxes
-
-	if (numStaticModels > 1)
-	{
-		swap(m_staticModels[index], m_staticModels.back());
-		m_staticModels.pop_back();
-	}
-	else
-	{
-		m_staticModels.pop_back();
 	}
 }

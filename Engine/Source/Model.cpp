@@ -381,6 +381,13 @@ void StaticModel::AddMesh(StaticMesh mesh)
 }
 
 
+void StaticModel::SetMatrix(const XMFLOAT4X4& matrix)
+{
+	m_matrix = matrix;
+	Renderer::GetInstance().UpdateStaticModelMatrix(shared_from_this());
+}
+
+
 void StaticModel::CreateRenderThreadData()
 {
 	PROFILE(staticModel_CreateRenderThreadData);

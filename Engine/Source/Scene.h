@@ -36,8 +36,6 @@ struct StaticModelData;
 
 class Scene : public std::enable_shared_from_this<Scene>
 {
-	friend class AddStaticModelAction;
-	friend class RemoveStaticModelAction;
 	friend class Renderer;
 
 public:
@@ -51,16 +49,12 @@ public:
 
 	void SetCamera(std::shared_ptr<Camera> camera);
 
-private:
-	void Initialize();
-
+	// To be called from the render thread only
 	void AddStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 	void RemoveStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 
-	void UpdateStaticModels();
-
-	void InternalAddStaticModel(std::shared_ptr<RenderThread::StaticModelData> model);
-	void InternalRemoveStaticModel(size_t index);
+private:
+	void Initialize();
 
 private:
 	std::vector<std::shared_ptr<Model>> m_models;
@@ -88,13 +82,6 @@ private:
 
 	// HACK
 	DirectX::XMFLOAT4X4 m_modelTransform;
-
-	// Deferred static model action lists
-	concurrency::concurrent_queue<std::shared_ptr<RenderThread::StaticModelData>> m_deferredAddModels;
-	concurrency::concurrent_queue<std::shared_ptr<RenderThread::StaticModelData>> m_deferredRemoveModels;
-
-	uint32_t			m_staticModelAdds{ 256 };
-	uint32_t			m_staticModelRemoves{ 256 };
 
 	// Maps from static model pointers into the m_staticModels list for faster adds/removes
 	std::map<std::shared_ptr<RenderThread::StaticModelData>, size_t>	m_staticModelMap;

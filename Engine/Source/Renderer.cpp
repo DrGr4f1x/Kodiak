@@ -28,6 +28,7 @@
 using namespace Kodiak;
 using namespace Microsoft::WRL;
 using namespace Concurrency;
+using namespace DirectX;
 using namespace std;
 
 
@@ -97,49 +98,62 @@ private:
 };
 
 
-namespace Kodiak
-{
-
-class AddStaticModelAction
+class AddStaticModelTask : public IAsyncRenderTask
 {
 public:
-	AddStaticModelAction(shared_ptr<StaticModel> model, shared_ptr<Scene> scene) : m_model(model), m_scene(scene) {}
+	AddStaticModelTask(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
+		: m_model(model)
+		, m_scene(scene)
+	{}
 
-	void Execute()
+	void Execute(RenderTaskEnvironment& environment)
 	{
-		if (!m_model->m_renderThreadData)
-		{
-			m_model->CreateRenderThreadData();
-		}
-
-		// Need to pass local variables to the continuation lambda, so the lambda will copy-by-value
-		// and keep the smart pointer references alive.
-		auto model = m_model;
-		auto scene = m_scene;
-		m_model->m_renderThreadData->prepareTask.then([model, scene] { scene->AddStaticModelDeferred(model->m_renderThreadData); });
+		m_scene->AddStaticModelDeferred(m_model->GetRenderThreadData());
 	}
 
 private:
-	shared_ptr<StaticModel>		m_model;
-	shared_ptr<Scene>			m_scene;
+	shared_ptr<StaticModel> m_model;
+	shared_ptr<Scene> m_scene;
 };
 
-class RemoveStaticModelAction
+
+class RemoveStaticModelTask : public IAsyncRenderTask
 {
 public:
-	RemoveStaticModelAction(shared_ptr<StaticModel> model, shared_ptr<Scene> scene) : m_model(model), m_scene(scene) {}
+	RemoveStaticModelTask(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
+		: m_model(model)
+		, m_scene(scene)
+	{}
 
-	void Execute()
+	void Execute(RenderTaskEnvironment& environment)
 	{
-		m_scene->RemoveStaticModelDeferred(m_model->m_renderThreadData);
+		m_scene->RemoveStaticModelDeferred(m_model->GetRenderThreadData());
 	}
 
 private:
-	shared_ptr<StaticModel>		m_model;
-	shared_ptr<Scene>			m_scene;
+	shared_ptr<StaticModel> m_model;
+	shared_ptr<Scene> m_scene;
 };
 
-}
+
+class UpdateStaticModelMatrixTask : public IAsyncRenderTask
+{
+public:
+	UpdateStaticModelMatrixTask(shared_ptr<RenderThread::StaticModelData> modelData, const XMFLOAT4X4& matrix)
+		: m_staticModelData(modelData)
+		, m_matrix(matrix)
+	{}
+
+	void Execute(RenderTaskEnvironment& environment)
+	{
+		m_staticModelData->matrix = m_matrix;
+		m_staticModelData->isDirty = true;
+	}
+
+private:
+	shared_ptr<RenderThread::StaticModelData>	m_staticModelData;
+	const XMFLOAT4X4							m_matrix;
+};
 
 
 Renderer& Renderer::GetInstance()
@@ -228,24 +242,58 @@ void Renderer::Render()
 }
 
 
-void Renderer::AddStaticModelToScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene)
+void Renderer::AddStaticModelToScene(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
 {
-	if (model->m_renderThreadData)
+	// Create render thread data if necessary
+	auto threadData = model->GetRenderThreadData();
+	if (nullptr == threadData)
 	{
-		model->m_renderThreadData->prepareTask.then([model, scene] {scene->AddStaticModelDeferred(model->m_renderThreadData); });
+		model->CreateRenderThreadData();
 	}
-	else
+	threadData = model->GetRenderThreadData();
+	
+	assert(nullptr != threadData);
+
+	threadData->prepareTask = threadData->prepareTask.then([model, scene]
 	{
-		auto meshAction = make_shared<AddStaticModelAction>(model, scene);
-		m_pendingStaticModelAdds.push(meshAction);
-	}
+		auto addStaticModelTask = make_shared<AddStaticModelTask>(model, scene);
+		Renderer::GetInstance().EnqueueTask(addStaticModelTask);
+	});
 }
 
 
-void Renderer::RemoveStaticModelFromScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene)
+void Renderer::RemoveStaticModelFromScene(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
 {
-	auto meshAction = make_shared<RemoveStaticModelAction>(model, scene);
-	m_pendingStaticModelRemovals.push(meshAction);
+	auto threadData = model->GetRenderThreadData();
+
+	assert(nullptr != threadData);
+
+	// Use the prepare task's continuation so we don't try to remove a model that's not fully loaded, and hence
+	// hasn't been added to the scene yet.
+	threadData->prepareTask = threadData->prepareTask.then([model, scene]
+	{
+		auto removeStaticModelTask = make_shared<RemoveStaticModelTask>(model, scene);
+		Renderer::GetInstance().EnqueueTask(removeStaticModelTask);
+	});
+}
+
+
+void Renderer::UpdateStaticModelMatrix(shared_ptr<StaticModel> model)
+{
+	// Create render thread data if necessary
+	auto threadData = model->GetRenderThreadData();
+	if (nullptr == threadData)
+	{
+		model->CreateRenderThreadData();
+	}
+	threadData = model->GetRenderThreadData();
+
+	assert(nullptr != threadData);
+
+	// Don't need to use the prepareTask continuation here.  Even if the VBs/IBs haven't been created yet,
+	// we'll still have a constant buffer to update.
+	auto updateStaticModelMatrixTask = make_shared<UpdateStaticModelMatrixTask>(threadData, model->GetMatrix());
+	EnqueueTask(updateStaticModelMatrixTask);
 }
 
 
@@ -292,33 +340,12 @@ void Renderer::StopRenderTask()
 	m_renderTaskStarted = false;
 }
 
+
 void Renderer::UpdateStaticModels()
 {
 	PROFILE(renderer_UpdateStaticModels);
 
-	auto task = concurrency::create_task([this]
-	{
-		size_t numActions = 0;
-		shared_ptr<RemoveStaticModelAction> action;
-
-		while (numActions++ < m_numStaticModelRemovals && m_pendingStaticModelRemovals.try_pop(action))
-		{
-			action->Execute();
-		}
-	});
-
-	task = task.then([this]
-	{
-		size_t numActions = 0;
-		shared_ptr<AddStaticModelAction> action;
-
-		while (numActions++ < m_numStaticModelAdds && m_pendingStaticModelAdds.try_pop(action))
-		{
-			action->Execute();
-		}
-	});
-
-	task.wait();
+	
 }
 
 
