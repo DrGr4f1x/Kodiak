@@ -86,11 +86,10 @@ void BasicApplication::OnMouseMove(WPARAM btnState, int x, int y)
 	if (m_isTracking)
 	{
 		int deltaMouseX = x - m_mouseX;
-		LOG_INFO << "x: " << x << " m_mouseX: " << m_mouseX << " delta: " << deltaMouseX;
-		m_radians = XM_2PI * 2.0f * static_cast<float>(deltaMouseX) / static_cast<float>(m_width);
+		m_deltaRadians = XM_2PI * 2.0f * static_cast<float>(deltaMouseX) / static_cast<float>(m_width);
 		
 		XMFLOAT4X4 matrix;
-		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationY(m_radians)));
+		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationY(m_radians + m_deltaRadians)));
 
 		m_boxModel->SetMatrix(matrix);
 	}
@@ -100,6 +99,7 @@ void BasicApplication::OnMouseMove(WPARAM btnState, int x, int y)
 void BasicApplication::OnMouseUp(WPARAM btnState, int x, int y)
 {
 	m_isTracking = false;
+	m_radians += m_deltaRadians;
 }
 
 
