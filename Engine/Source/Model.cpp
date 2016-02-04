@@ -57,6 +57,13 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 }
 
 
+void StaticMesh::SetMatrix(const XMFLOAT4X4& matrix)
+{
+	// TODO: Move to render thread
+	m_matrix = matrix;
+}
+
+
 StaticModel::StaticModel()
 {
 	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());

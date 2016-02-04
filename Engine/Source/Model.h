@@ -95,6 +95,8 @@ public:
 	void AddMeshPart(StaticMeshPart part);
 	size_t GetNumMeshParts() const { return m_meshParts.size(); }
 
+	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);
+
 private:
 	std::vector<StaticMeshPart>	m_meshParts;
 	DirectX::XMFLOAT4X4			m_matrix;
@@ -110,7 +112,7 @@ public:
 
 	void AddMesh(StaticMesh mesh);
 	//void RemoveMesh(uint32_t index);
-	//StaticMesh& GetMesh(uint32_t index);
+	StaticMesh& GetMesh(uint32_t index);
 	size_t GetNumMeshes() const { return m_meshes.size(); }
 
 	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);

@@ -151,9 +151,38 @@ void BasicApplication::CreateModel()
 	meshDesc.colors[6] = XMFLOAT3(1.0f, 1.0f, 0.0f);
 	meshDesc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	meshDesc.genColors = true;
-	m_boxModel->AddMesh(MakeBoxMesh(meshDesc));
 
+	auto mesh = MakeBoxMesh(meshDesc);
 	
+	m_boxModel->AddMesh(mesh);
+
+	{
+		XMFLOAT4X4 matrix;
+		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(3.0f, 0.0f, 0.0f)));
+		mesh.SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh);
+	}
+
+	{
+		XMFLOAT4X4 matrix;
+		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f)));
+		mesh.SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh);
+	}
+
+	{
+		XMFLOAT4X4 matrix;
+		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 3.0f)));
+		mesh.SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh);
+	}
+	
+	{
+		XMFLOAT4X4 matrix;
+		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -3.0f)));
+		mesh.SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh);
+	}
 }
 
 
