@@ -86,13 +86,13 @@ void BasicApplication::OnMouseMove(WPARAM btnState, int x, int y)
 	if (m_isTracking)
 	{
 		int deltaMouseX = x - m_mouseX;
-		float radians = XM_2PI * 2.0f * static_cast<float>(deltaMouseX) / static_cast<float>(m_width);
+		LOG_INFO << "x: " << x << " m_mouseX: " << m_mouseX << " delta: " << deltaMouseX;
+		m_radians = XM_2PI * 2.0f * static_cast<float>(deltaMouseX) / static_cast<float>(m_width);
 		
 		XMFLOAT4X4 matrix;
-		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationY(radians)));
+		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationY(m_radians)));
 
-		// Hand the new matrix to the render thread
-		RenderThread::UpdateModelTransform(m_boxModel, matrix);
+		m_boxModel->SetMatrix(matrix);
 	}
 }
 
@@ -140,22 +140,7 @@ void BasicApplication::CreateMaterials()
 
 void BasicApplication::CreateModel()
 {
-	// Create the box model
-	BoxModelDesc desc;
-	desc.colors[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	desc.colors[1] = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	desc.colors[2] = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	desc.colors[3] = XMFLOAT3(0.0f, 1.0f, 1.0f);
-	desc.colors[4] = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	desc.colors[5] = XMFLOAT3(1.0f, 0.0f, 1.0f);
-	desc.colors[6] = XMFLOAT3(1.0f, 1.0f, 0.0f);
-	desc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	desc.genColors = true;
-
-	m_boxModel = MakeBoxModel(desc);
-	m_boxModel->loadTask.wait();
-
-	m_boxModel2 = make_shared<StaticModel>();
+	m_boxModel = make_shared<StaticModel>();
 	BoxMeshDesc meshDesc;
 	meshDesc.colors[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	meshDesc.colors[1] = XMFLOAT3(0.0f, 0.0f, 1.0f);
@@ -166,7 +151,7 @@ void BasicApplication::CreateModel()
 	meshDesc.colors[6] = XMFLOAT3(1.0f, 1.0f, 0.0f);
 	meshDesc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	meshDesc.genColors = true;
-	m_boxModel2->AddMesh(MakeBoxMesh(meshDesc));
+	m_boxModel->AddMesh(MakeBoxMesh(meshDesc));
 
 	
 }
@@ -185,9 +170,7 @@ void BasicApplication::SetupScene()
 	// Add camera and model to scene
 	// TODO: decide on Renderer or RenderThread namespace
 	RenderThread::SetSceneCamera(m_mainScene, m_camera);
-	RenderThread::AddModel(m_mainScene, m_boxModel);
-
-	m_mainScene->AddStaticModel(m_boxModel2);
+	m_mainScene->AddStaticModel(m_boxModel);
 }
 
 

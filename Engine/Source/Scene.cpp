@@ -44,12 +44,6 @@ Scene::Scene()
 }
 
 
-void Scene::AddModel(shared_ptr<Model> model)
-{
-	m_models.push_back(model);
-}
-
-
 void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 {
 	Renderer::GetInstance().AddStaticModelToScene(model, shared_from_this());
@@ -71,19 +65,13 @@ void Scene::Update(GraphicsCommandList& commandList)
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
 	commandList.UnmapConstants(*m_perViewConstantBuffer);
 
-	// Visit models (HACK)
-	for (auto model : m_models)
+	// Visit static models
+	// TODO: go wide, update 32 per task or something
+	for (auto& model : m_staticModels)
 	{
-		if (model->IsDirty())
+		if (model->isDirty)
 		{
-			m_perObjectConstants.model = model->GetTransform();
-
-			// Update per-object constants (HACK)
-			auto perObjectData = commandList.MapConstants(*m_perObjectConstantBuffer);
-			memcpy(perObjectData, &m_perObjectConstants, sizeof(PerObjectConstants));
-			commandList.UnmapConstants(*m_perObjectConstantBuffer);
-
-			model->ResetDirty();
+			model->UpdateConstants(commandList);
 		}
 	}
 }
@@ -94,22 +82,22 @@ void Scene::Render(GraphicsCommandList& commandList)
 	PROFILE(scene_Render);
 
 	// Visit models
-	for (auto model : m_staticModels)
+	for (auto& model : m_staticModels)
 	{
 		// Visit meshes
-		for (auto mesh : model->meshes)
+		for (const auto& mesh : model->meshes)
 		{
 			// Visit mesh parts
-			for (auto meshPart : mesh.meshParts)
+			for (const auto& meshPart : mesh.meshParts)
 			{
 				commandList.SetPipelineState(*m_pso);
 #if defined(DX12)
 				commandList.SetRootSignature(*m_rootSignature);
 				commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
-				commandList.SetConstantBuffer(1, *m_perObjectConstantBuffer);
+				commandList.SetConstantBuffer(1, *mesh.perObjectConstants);
 #elif defined(DX11)
 				commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
-				commandList.SetVertexShaderConstants(1, *m_perObjectConstantBuffer);
+				commandList.SetVertexShaderConstants(1, *mesh.perObjectConstants);
 #endif
 
 				commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
@@ -137,8 +125,6 @@ void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
 void Scene::Initialize()
 {
 	using namespace DirectX;
-
-	XMStoreFloat4x4(&m_perObjectConstants.model, XMMatrixIdentity());
 
 	// Default blend state - no blend
 	BlendStateDesc defaultBlendState;
@@ -187,8 +173,6 @@ void Scene::Initialize()
 	// Create constant buffers
 	m_perViewConstantBuffer = make_shared<ConstantBuffer>();
 	m_perViewConstantBuffer->Create(sizeof(PerViewConstants), Usage::Dynamic);
-	m_perObjectConstantBuffer = make_shared<ConstantBuffer>();
-	m_perObjectConstantBuffer->Create(sizeof(PerObjectConstants), Usage::Dynamic);
 }
 
 

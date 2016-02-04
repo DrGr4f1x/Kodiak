@@ -21,7 +21,6 @@ class Camera;
 class ConstantBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
-class Model;
 class StaticModel;
 #if defined(DX12)
 class RootSignature;
@@ -41,7 +40,6 @@ class Scene : public std::enable_shared_from_this<Scene>
 public:
 	Scene();
 
-	void AddModel(std::shared_ptr<Model> model);
 	void AddStaticModel(std::shared_ptr<StaticModel> model);
 
 	void Update(GraphicsCommandList& commandList);
@@ -57,9 +55,7 @@ private:
 	void Initialize();
 
 private:
-	std::vector<std::shared_ptr<Model>> m_models;
 	std::shared_ptr<ConstantBuffer>		m_perViewConstantBuffer;
-	std::shared_ptr<ConstantBuffer>		m_perObjectConstantBuffer;
 	std::shared_ptr<GraphicsPSO>		m_pso;
 
 #if defined(DX12)
@@ -71,11 +67,6 @@ private:
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;
 	} m_perViewConstants;
-
-	struct PerObjectConstants
-	{
-		DirectX::XMFLOAT4X4 model;
-	} m_perObjectConstants;
 
 	// Scene camera
 	std::shared_ptr<RenderThread::Camera> m_camera;

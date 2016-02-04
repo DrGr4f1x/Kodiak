@@ -21,7 +21,6 @@ class CommandList;
 class DepthBuffer;
 class DeviceManager;
 class IAsyncRenderTask;
-class Model;
 class Pipeline;
 class Scene;
 class StaticModel;
@@ -87,14 +86,5 @@ private:
 	std::unique_ptr<DeviceManager>		m_deviceManager;
 };
 
-// TODO: Eliminate this
-namespace RenderThread
-{
-
-// Model functions
-void AddModel(std::shared_ptr<Kodiak::Scene> scene, std::shared_ptr<Kodiak::Model> model);
-void UpdateModelTransform(std::shared_ptr<Kodiak::Model> model, const DirectX::XMFLOAT4X4& matrix);
-
-} // namespace RenderThread
 
 } // namespace Kodiak

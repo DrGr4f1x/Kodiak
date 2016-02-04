@@ -60,44 +60,6 @@ private:
 };
 
 
-class AddModelTask : public IAsyncRenderTask
-{
-public:
-	AddModelTask(shared_ptr<Scene> scene, shared_ptr<Model> model)
-		: m_scene(scene)
-		, m_model(model)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment) override
-	{
-		m_scene->AddModel(m_model);
-	}
-
-private:
-	shared_ptr<Scene> m_scene;
-	shared_ptr<Model> m_model;
-};
-
-
-class UpdateModelTransformTask : public IAsyncRenderTask
-{
-public:
-	UpdateModelTransformTask(shared_ptr<Model> model, const DirectX::XMFLOAT4X4& matrix)
-		: m_model(model)
-		, m_matrix(matrix)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment) override
-	{
-		m_model->SetTransform(m_matrix);
-	}
-
-private:
-	shared_ptr<Model>		m_model;
-	DirectX::XMFLOAT4X4		m_matrix;
-};
-
-
 class AddStaticModelTask : public IAsyncRenderTask
 {
 public:
@@ -351,25 +313,6 @@ void Renderer::UpdateStaticModels()
 
 namespace Kodiak
 {
-
-namespace RenderThread
-{
-
-void AddModel(shared_ptr<Scene> scene, shared_ptr<Model> model)
-{
-	auto addModelTask = make_shared<AddModelTask>(scene, model);
-	Renderer::GetInstance().EnqueueTask(addModelTask);
-}
-
-
-void UpdateModelTransform(shared_ptr<Model> model, const DirectX::XMFLOAT4X4& matrix)
-{
-	auto updateTask = make_shared<UpdateModelTransformTask>(model, matrix);
-	Renderer::GetInstance().EnqueueTask(updateTask);
-}
-
-} // namespace RenderThread
-
 
 shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
 	const DirectX::XMVECTORF32& clearColor)

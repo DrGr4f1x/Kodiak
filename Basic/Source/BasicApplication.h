@@ -23,7 +23,6 @@ class DepthBuffer;
 #if 0
 class Material;
 #endif
-class Model;
 class RenderPass;
 class Scene;
 class StaticModel;
@@ -54,8 +53,7 @@ private:
 private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
-	std::shared_ptr<Model>			m_boxModel;
-	std::shared_ptr<StaticModel>	m_boxModel2;
+	std::shared_ptr<StaticModel>	m_boxModel;
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
 
@@ -67,6 +65,7 @@ private:
 	bool	m_isTracking{ false };
 	int		m_mouseX{ 0 };
 	int		m_mouseY{ 0 };
+	float	m_radians{ 0.0f };
 };
 
 } // namespace Kodiak
