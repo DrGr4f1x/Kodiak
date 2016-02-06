@@ -30,7 +30,9 @@ Camera::Camera()
 	, m_zNear(0.1f)
 	, m_zFar(10.0f)
 	, m_cameraProxy()
-{}
+{
+	CreateCameraProxy();
+}
 
 
 Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation)
@@ -41,7 +43,9 @@ Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation)
 	, m_zNear(0.1f)
 	, m_zFar(10.0f)
 	, m_cameraProxy()
-{}
+{
+	CreateCameraProxy();
+}
 
 
 Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation, float fov, float aspect, float zNear, float zFar)
@@ -52,7 +56,9 @@ Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation, float fov,
 	, m_zNear(zNear)
 	, m_zFar(zFar)
 	, m_cameraProxy()
-{}
+{
+	CreateCameraProxy();
+}
 
 
 void Camera::SetPosition(const XMFLOAT3& position)
@@ -168,7 +174,7 @@ void Camera::Strafe(const XMFLOAT3& strafe)
 }
 
 
-void Camera::CreateProxy()
+void Camera::CreateCameraProxy()
 {
 	if (!m_cameraProxy)
 	{
@@ -185,11 +191,7 @@ void Camera::RenderThreadSetCameraPerspective()
 	auto camera = shared_from_this();
 	Renderer::GetInstance().EnqueueTask([camera](RenderTaskEnvironment& rte)
 	{
-		auto cameraProxy = camera->GetProxy();
-		if (cameraProxy)
-		{
-			cameraProxy->SetPerspective(camera->m_fov, camera->m_aspect, camera->m_zNear, camera->m_zFar);
-		}
+		camera->m_cameraProxy->SetPerspective(camera->m_fov, camera->m_aspect, camera->m_zNear, camera->m_zFar);
 	});
 }
 
@@ -199,11 +201,7 @@ void Camera::RenderThreadSetCameraPositionAndOrientation()
 	auto camera = shared_from_this();
 	Renderer::GetInstance().EnqueueTask([camera](RenderTaskEnvironment& rte)
 	{
-		auto cameraProxy = camera->GetProxy();
-		if (cameraProxy)
-		{
-			cameraProxy->SetPositionAndOrientation(camera->m_position, camera->m_orientation);
-		}
+		camera->m_cameraProxy->SetPositionAndOrientation(camera->m_position, camera->m_orientation);
 	});
 }
 

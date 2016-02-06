@@ -157,31 +157,39 @@ void BasicApplication::CreateModel()
 	m_boxModel->AddMesh(mesh);
 
 	{
+		auto mesh2 = mesh->Clone();
+
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(3.0f, 0.0f, 0.0f)));
-		mesh.SetMatrix(matrix);
-		m_boxModel->AddMesh(mesh);
+		mesh2->SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh2);
 	}
 
 	{
+		auto mesh2 = mesh->Clone();
+
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f)));
-		mesh.SetMatrix(matrix);
-		m_boxModel->AddMesh(mesh);
+		mesh2->SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh2);
 	}
 
 	{
+		auto mesh2 = mesh->Clone();
+
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 3.0f)));
-		mesh.SetMatrix(matrix);
-		m_boxModel->AddMesh(mesh);
+		mesh2->SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh2);
 	}
 	
 	{
+		auto mesh2 = mesh->Clone();
+
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -3.0f)));
-		mesh.SetMatrix(matrix);
-		m_boxModel->AddMesh(mesh);
+		mesh2->SetMatrix(matrix);
+		m_boxModel->AddMesh(mesh2);
 	}
 }
 

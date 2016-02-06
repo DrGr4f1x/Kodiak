@@ -32,12 +32,17 @@ void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& command
 	
 	for (auto& mesh : meshes)
 	{
-		StaticMeshPerObjectData perObjectData;
-		perObjectData.matrix = XMMatrixMultiply(modelToWorld, XMLoadFloat4x4(&mesh.matrix));
+		if (isDirty || mesh->isDirty)
+		{
+			StaticMeshPerObjectData perObjectData;
+			perObjectData.matrix = XMMatrixMultiply(modelToWorld, XMLoadFloat4x4(&mesh->matrix));
 
-		auto dest = commandList.MapConstants(*mesh.perObjectConstants);
-		memcpy(dest, &perObjectData, sizeof(perObjectData));
-		commandList.UnmapConstants(*mesh.perObjectConstants);
+			auto dest = commandList.MapConstants(*mesh->perObjectConstants);
+			memcpy(dest, &perObjectData, sizeof(perObjectData));
+			commandList.UnmapConstants(*mesh->perObjectConstants);
+
+			mesh->isDirty = false;
+		}
 	}
 
 	isDirty = false;
@@ -47,6 +52,7 @@ void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& command
 StaticMesh::StaticMesh()
 {
 	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
+	CreateRenderThreadData();
 }
 
 
@@ -54,6 +60,19 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 {
 	// TODO: Move to render thread
 	m_meshParts.emplace_back(part);
+
+	auto indexBuffer = IndexBuffer::Create(part.indexData, Usage::Immutable);
+	auto vertexBuffer = VertexBuffer::Create(part.vertexData, Usage::Immutable);
+
+	auto thisMesh = shared_from_this();
+	(indexBuffer->loadTask && vertexBuffer->loadTask).then([indexBuffer, vertexBuffer, thisMesh, part]
+	{
+		Renderer::GetInstance().EnqueueTask([indexBuffer, vertexBuffer, thisMesh, part](RenderTaskEnvironment& rte)
+		{
+			RenderThread::StaticMeshPartData data = { vertexBuffer, indexBuffer, part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
+			thisMesh->m_renderThreadData->meshParts.emplace_back(data);
+		});
+	});
 }
 
 
@@ -61,20 +80,59 @@ void StaticMesh::SetMatrix(const XMFLOAT4X4& matrix)
 {
 	// TODO: Move to render thread
 	m_matrix = matrix;
+
+	auto staticMeshData = m_renderThreadData;
+	Renderer::GetInstance().EnqueueTask([staticMeshData, matrix](RenderTaskEnvironment& rte)
+	{
+		staticMeshData->matrix = matrix;
+		staticMeshData->isDirty = true;
+	});
+}
+
+
+shared_ptr<StaticMesh> StaticMesh::Clone()
+{
+	auto clone = make_shared<StaticMesh>();
+	clone->SetMatrix(m_matrix);
+
+	for (const auto& part : m_meshParts)
+	{
+		clone->AddMeshPart(part);
+	}
+
+	return clone;
+}
+
+
+void StaticMesh::CreateRenderThreadData()
+{
+	m_renderThreadData = make_shared<RenderThread::StaticMeshData>();
+	m_renderThreadData->matrix = m_matrix;
+	
+	m_renderThreadData->perObjectConstants = make_shared<ConstantBuffer>();
+	m_renderThreadData->perObjectConstants->Create(sizeof(RenderThread::StaticMeshPerObjectData), Usage::Dynamic);
 }
 
 
 StaticModel::StaticModel()
 {
 	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
+	CreateRenderThreadData();
 }
 
 
-void StaticModel::AddMesh(StaticMesh mesh)
+void StaticModel::AddMesh(shared_ptr<StaticMesh> mesh)
 {
-	// Can't add meshes once we're added to the render thread
-	assert(!m_renderThreadData);
+	// TODO: Move to render thread
 	m_meshes.emplace_back(mesh);
+
+	auto staticModelData = m_renderThreadData;
+	auto staticMeshData = mesh->m_renderThreadData;
+
+	Renderer::GetInstance().EnqueueTask([staticModelData, staticMeshData](RenderTaskEnvironment& rte)
+	{
+		staticModelData->meshes.emplace_back(staticMeshData);
+	});
 }
 
 
@@ -84,13 +142,8 @@ void StaticModel::SetMatrix(const XMFLOAT4X4& matrix)
 	auto thisModel = shared_from_this();
 	Renderer::GetInstance().EnqueueTask([thisModel](RenderTaskEnvironment& rte)
 	{
-		// TODO: Create static model proxy in StaticModel constructor
-		auto staticModelData = thisModel->GetRenderThreadData();
-		if (staticModelData)
-		{
-			staticModelData->matrix = thisModel->GetMatrix();
-			staticModelData->isDirty = true;
-		}
+		thisModel->m_renderThreadData->matrix = thisModel->GetMatrix();
+		thisModel->m_renderThreadData->isDirty = true;
 	});
 }
 
@@ -104,73 +157,13 @@ void StaticModel::CreateRenderThreadData()
 	m_renderThreadData = make_shared<RenderThread::StaticModelData>();
 	m_renderThreadData->matrix = m_matrix;
 	m_renderThreadData->meshes.reserve(numMeshes);
-
-	std::vector<concurrency::task<void>> tasks;
-
-	// Determine the maximum number of tasks we need & pre-allocate memory
-	uint32_t maxTasks = 0;
-	for (size_t i = 0; i < numMeshes; ++i)
-	{
-		maxTasks += 2 * static_cast<uint32_t>(m_meshes[i].GetNumMeshParts());
-	}
-
-	tasks.reserve(maxTasks);
-
-	std::vector<shared_ptr<VertexBuffer>> uniqueVBuffers(maxTasks / 2);
-	std::vector<shared_ptr<IndexBuffer>> uniqueIBuffers(maxTasks / 2);
-
-	for (const auto& mesh : m_meshes)
-	{
-		RenderThread::StaticMeshData meshData;
-		meshData.matrix = mesh.m_matrix;
-
-		meshData.perObjectConstants = make_shared<ConstantBuffer>();
-		meshData.perObjectConstants->Create(sizeof(RenderThread::StaticMeshPerObjectData), Usage::Dynamic);
-
-		for (const auto& part : mesh.m_meshParts)
-		{
-			RenderThread::StaticMeshPartData meshPartData;
-
-			// Create index buffer
-			meshPartData.indexBuffer = IndexBuffer::Create(part.indexData, Usage::Immutable);
-
-			// Track unique index buffers for this model
-			if (end(uniqueIBuffers) == find(begin(uniqueIBuffers), end(uniqueIBuffers), meshPartData.indexBuffer))
-			{
-				tasks.emplace_back(meshPartData.indexBuffer->loadTask);
-				uniqueIBuffers.emplace_back(meshPartData.indexBuffer);
-			}
-
-			// Create vertex buffer
-			meshPartData.vertexBuffer = VertexBuffer::Create(part.vertexData, Usage::Immutable);
-
-			// Track unique vertex buffers for this model
-			if (end(uniqueVBuffers) == find(begin(uniqueVBuffers), end(uniqueVBuffers), meshPartData.vertexBuffer))
-			{
-				tasks.emplace_back(meshPartData.vertexBuffer->loadTask);
-				uniqueVBuffers.emplace_back(meshPartData.vertexBuffer);
-			}
-
-			// Fill in misc data for the mesh part draw-call
-			meshPartData.topology = part.topology;
-			meshPartData.indexCount = part.indexCount;
-			meshPartData.baseVertexOffset = part.baseVertexOffset;
-			meshPartData.startIndex = part.startIndex;
-
-			meshData.meshParts.emplace_back(meshPartData);
-		}
-
-		m_renderThreadData->meshes.emplace_back(meshData);
-	}
-
-	m_renderThreadData->prepareTask = concurrency::when_all(begin(tasks), end(tasks));
 }
 
 
 namespace Kodiak
 {
 
-StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
+shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 {
 	shared_ptr<BaseVertexBufferData> vdata;
 
@@ -282,7 +275,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 	}
 
 	// Create the mesh and mesh parts
-	StaticMesh mesh;
+	auto mesh = make_shared<StaticMesh>();
 
 	if (desc.genNormals)
 	{
@@ -292,7 +285,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// +X face
@@ -301,7 +294,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 4, 5, 6, 7 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// -Y face
@@ -310,7 +303,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 8, 9, 10, 11 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// +Y face
@@ -319,7 +312,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 12, 13, 14, 15 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// -Z face
@@ -328,7 +321,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 16, 17, 18, 19 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// +Z face
@@ -337,7 +330,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 20, 21, 22, 23 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 	}
 	else
@@ -348,7 +341,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 10, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// Top
@@ -357,7 +350,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 6, 0, 4, 2 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// Bottom
@@ -366,7 +359,7 @@ StaticMesh MakeBoxMesh(const BoxMeshDesc& desc)
 			idata.reset(new IndexBufferData16({ 5, 3, 7, 1 }));
 
 			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
-			mesh.AddMeshPart(meshPart);
+			mesh->AddMeshPart(meshPart);
 		}
 	}
 

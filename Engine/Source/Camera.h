@@ -20,6 +20,8 @@ class Scene;
 // Main thread view of the camera
 class Camera : public std::enable_shared_from_this<Camera>
 {
+	friend class Scene;
+
 public:
 	Camera();
 	Camera(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation);
@@ -50,12 +52,10 @@ public:
 	void Rotate(float deltaPitch, float deltaYaw);
 	void Strafe(const DirectX::XMFLOAT3& strafe);
 
-	std::shared_ptr<RenderThread::Camera> GetProxy() { return m_cameraProxy; }
-	void CreateProxy();
-
 private:
 	void RenderThreadSetCameraPerspective();
 	void RenderThreadSetCameraPositionAndOrientation();
+	void CreateCameraProxy();
 
 private:
 	DirectX::XMFLOAT3	m_position;

@@ -46,25 +46,13 @@ Scene::Scene()
 
 void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 {
-	//Renderer::GetInstance().AddStaticModelToScene(model, shared_from_this());
-	auto staticModelData = model->GetRenderThreadData();
-	// TODO: get rid of this if-check.  RenderThreadData should never be null, as long as model isn't null.
-	if (!staticModelData)
+	auto thisScene = shared_from_this();
+	auto localModel = model;
+	
+	Renderer::GetInstance().EnqueueTask([localModel, thisScene](RenderTaskEnvironment& rte)
 	{
-		model->CreateRenderThreadData();
-	}
-	staticModelData = model->GetRenderThreadData();
-	if(staticModelData)
-	{
-		auto thisScene = shared_from_this();
-		staticModelData->prepareTask.then([staticModelData, thisScene]
-		{
-			Renderer::GetInstance().EnqueueTask([staticModelData, thisScene](RenderTaskEnvironment& rte)
-			{
-				thisScene->AddStaticModelDeferred(staticModelData);
-			});
-		});
-	}
+		thisScene->AddStaticModelDeferred(localModel->m_renderThreadData);
+	});
 }
 
 
@@ -87,10 +75,7 @@ void Scene::Update(GraphicsCommandList& commandList)
 	// TODO: go wide, update 32 per task or something
 	for (auto& model : m_staticModels)
 	{
-		if (model->isDirty)
-		{
-			model->UpdateConstants(commandList);
-		}
+		model->UpdateConstants(commandList);
 	}
 }
 
@@ -106,21 +91,21 @@ void Scene::Render(GraphicsCommandList& commandList)
 		for (const auto& mesh : model->meshes)
 		{
 			// Visit mesh parts
-			for (const auto& meshPart : mesh.meshParts)
+			for (const auto& meshPart : mesh->meshParts)
 			{
 				commandList.SetPipelineState(*m_pso);
 #if defined(DX12)
 				commandList.SetRootSignature(*m_rootSignature);
 				commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
-				commandList.SetConstantBuffer(1, *mesh.perObjectConstants);
+				commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
 #elif defined(DX11)
 				commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
-				commandList.SetVertexShaderConstants(1, *mesh.perObjectConstants);
+				commandList.SetVertexShaderConstants(1, *mesh->perObjectConstants);
 #endif
 
 				commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
 				commandList.SetIndexBuffer(*meshPart.indexBuffer);
-				commandList.SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+				commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 				commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
 			}
@@ -192,13 +177,7 @@ void Scene::Initialize()
 
 void Scene::SetCameraDeferred(shared_ptr<Kodiak::Camera> camera)
 {
-	// TODO: create Camera proxy in camera constructor
-	if (!camera->GetProxy())
-	{
-		camera->CreateProxy();
-	}
-
-	m_camera = camera->GetProxy();
+	m_camera = camera->m_cameraProxy;
 }
 
 

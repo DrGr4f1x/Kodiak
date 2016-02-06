@@ -120,27 +120,6 @@ void Renderer::Render()
 }
 
 
-namespace
-{
-
-shared_ptr<RenderThread::StaticModelData> ConditionalCreateStaticModelRenderData(shared_ptr<StaticModel> model)
-{
-	// Create render thread data if necessary
-	auto threadData = model->GetRenderThreadData();
-	if (nullptr == threadData)
-	{
-		model->CreateRenderThreadData();
-	}
-	threadData = model->GetRenderThreadData();
-
-	assert(nullptr != threadData);
-
-	return threadData;
-}
-
-} // Anonymous namespace
-
-
 void Renderer::StartRenderTask()
 {
 	if (m_renderTaskStarted)

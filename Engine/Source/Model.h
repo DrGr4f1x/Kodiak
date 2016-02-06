@@ -47,6 +47,7 @@ struct StaticMeshData
 	DirectX::XMFLOAT4X4					matrix;
 
 	std::shared_ptr<ConstantBuffer>		perObjectConstants;
+	bool								isDirty{ true };
 };
 
 
@@ -58,13 +59,10 @@ struct StaticMeshPerObjectData
 
 struct StaticModelData
 {
-	std::vector<StaticMeshData>		meshes;
-	std::vector<Scene*>				scenes;
-	DirectX::XMFLOAT4X4				matrix;
+	std::vector<std::shared_ptr<StaticMeshData>>	meshes;
+	DirectX::XMFLOAT4X4								matrix;
 
-	bool							isDirty{ true };
-
-	concurrency::task<void>			prepareTask;
+	bool											isDirty{ true };
 
 	void UpdateConstants(GraphicsCommandList& commandList);
 };
@@ -75,6 +73,8 @@ struct StaticModelData
 
 struct StaticMeshPart
 {
+	friend class StaticMesh;
+
 	std::shared_ptr<BaseVertexBufferData>	vertexData;
 	std::shared_ptr<BaseIndexBufferData>	indexData;
 
@@ -85,7 +85,7 @@ struct StaticMeshPart
 };
 
 
-class StaticMesh
+class StaticMesh : public std::enable_shared_from_this<StaticMesh>
 {
 	friend class Scene;
 	friend class StaticModel;
@@ -96,34 +96,41 @@ public:
 	size_t GetNumMeshParts() const { return m_meshParts.size(); }
 
 	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);
+	const DirectX::XMFLOAT4X4& GetMatrix() const { return m_matrix; }
+
+	std::shared_ptr<StaticMesh> Clone();
+
+private:
+	void CreateRenderThreadData();
 
 private:
 	std::vector<StaticMeshPart>	m_meshParts;
 	DirectX::XMFLOAT4X4			m_matrix;
+
+	std::shared_ptr<RenderThread::StaticMeshData>	m_renderThreadData;
 };
 
 
 class StaticModel : public std::enable_shared_from_this<StaticModel>
 {
-	friend class Renderer;
+	friend class Scene;
 
 public:
 	StaticModel();
 
-	void AddMesh(StaticMesh mesh);
+	void AddMesh(std::shared_ptr<StaticMesh> mesh);
 	size_t GetNumMeshes() const { return m_meshes.size(); }
 
 	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);
 	const DirectX::XMFLOAT4X4& GetMatrix() const { return m_matrix; }
 
-	// Should only be called by the Renderer, or async tasks created by the renderer
+private:
 	void CreateRenderThreadData();
-	std::shared_ptr<RenderThread::StaticModelData> GetRenderThreadData() { return m_renderThreadData; }
 
 private:
-	std::mutex				m_meshMutex;
-	std::vector<StaticMesh>	m_meshes;
-	DirectX::XMFLOAT4X4		m_matrix;
+	std::mutex									m_meshMutex;
+	std::vector<std::shared_ptr<StaticMesh>>	m_meshes;
+	DirectX::XMFLOAT4X4							m_matrix;
 
 	std::shared_ptr<RenderThread::StaticModelData>	m_renderThreadData;
 };
@@ -140,6 +147,6 @@ struct BoxMeshDesc
 	bool facesIn{ false };
 };
 
-StaticMesh MakeBoxMesh(const BoxMeshDesc& desc);
+std::shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc);
 
 } // namespace Kodiak
