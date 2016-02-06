@@ -54,6 +54,10 @@ public:
 	void CreateProxy();
 
 private:
+	void RenderThreadSetCameraPerspective();
+	void RenderThreadSetCameraPositionAndOrientation();
+
+private:
 	DirectX::XMFLOAT3	m_position;
 	DirectX::XMFLOAT4	m_orientation;
 	float				m_fov;
@@ -95,12 +99,6 @@ private:
 	float					m_zNear;
 	float					m_zFar;
 };
-
-
-void SetSceneCamera(std::shared_ptr<Scene> scene, std::shared_ptr<Kodiak::Camera> camera);
-void SetCameraPositionAndOrientation(std::shared_ptr<Kodiak::Camera> camera, const DirectX::XMFLOAT3& position, 
-	const DirectX::XMFLOAT4& orientation);
-void SetCameraPerspective(std::shared_ptr<Kodiak::Camera> camera, float fov, float aspect, float zNear, float zFar);
 
 } // namespace RenderThread
 

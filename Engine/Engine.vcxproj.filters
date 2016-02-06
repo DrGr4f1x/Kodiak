@@ -70,9 +70,6 @@
     <ClInclude Include="Source\VertexFormats.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\IAsyncRenderTask.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderEnums.h">
       <Filter>Rendering</Filter>
     </ClInclude>

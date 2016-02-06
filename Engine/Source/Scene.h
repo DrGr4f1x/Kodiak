@@ -48,6 +48,7 @@ public:
 	void SetCamera(std::shared_ptr<Camera> camera);
 
 	// To be called from the render thread only
+	void SetCameraDeferred(std::shared_ptr<Camera> camera);
 	void AddStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 	void RemoveStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 

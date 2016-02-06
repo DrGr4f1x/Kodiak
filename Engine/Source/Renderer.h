@@ -20,7 +20,6 @@ class ColorBuffer;
 class CommandList;
 class DepthBuffer;
 class DeviceManager;
-class IAsyncRenderTask;
 class Pipeline;
 class Scene;
 class StaticModel;
@@ -55,7 +54,7 @@ public:
 	void Initialize();
 	void Finalize();
 
-	void EnqueueTask(std::shared_ptr<Kodiak::IAsyncRenderTask> task);
+	void EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback);
 
 	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
 	void SetWindowSize(uint32_t width, uint32_t height);
@@ -65,11 +64,6 @@ public:
 
 	std::shared_ptr<Kodiak::Pipeline> GetRootPipeline() { return m_rootPipeline; }
 	DeviceManager* GetDeviceManager() { return m_deviceManager.get(); }
-
-	// Static model management
-	void AddStaticModelToScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene);
-	void RemoveStaticModelFromScene(std::shared_ptr<StaticModel> model, std::shared_ptr<Scene> scene);
-	void UpdateStaticModelMatrix(std::shared_ptr<StaticModel> model);
 
 private:
 	void StartRenderTask();
@@ -82,7 +76,7 @@ private:
 	RenderTaskEnvironment				m_renderTaskEnvironment;
 	bool								m_renderTaskStarted{ false };
 	Concurrency::task<void>				m_renderTask;
-	Concurrency::concurrent_queue<std::shared_ptr<IAsyncRenderTask>>	m_renderTaskQueue;
+	Concurrency::concurrent_queue<std::function<void(RenderTaskEnvironment&)>>	m_renderTaskQueue;
 	std::unique_ptr<DeviceManager>		m_deviceManager;
 };
 

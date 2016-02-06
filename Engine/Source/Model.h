@@ -111,8 +111,6 @@ public:
 	StaticModel();
 
 	void AddMesh(StaticMesh mesh);
-	//void RemoveMesh(uint32_t index);
-	StaticMesh& GetMesh(uint32_t index);
 	size_t GetNumMeshes() const { return m_meshes.size(); }
 
 	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);

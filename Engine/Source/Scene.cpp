@@ -46,7 +46,25 @@ Scene::Scene()
 
 void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 {
-	Renderer::GetInstance().AddStaticModelToScene(model, shared_from_this());
+	//Renderer::GetInstance().AddStaticModelToScene(model, shared_from_this());
+	auto staticModelData = model->GetRenderThreadData();
+	// TODO: get rid of this if-check.  RenderThreadData should never be null, as long as model isn't null.
+	if (!staticModelData)
+	{
+		model->CreateRenderThreadData();
+	}
+	staticModelData = model->GetRenderThreadData();
+	if(staticModelData)
+	{
+		auto thisScene = shared_from_this();
+		staticModelData->prepareTask.then([staticModelData, thisScene]
+		{
+			Renderer::GetInstance().EnqueueTask([staticModelData, thisScene](RenderTaskEnvironment& rte)
+			{
+				thisScene->AddStaticModelDeferred(staticModelData);
+			});
+		});
+	}
 }
 
 
@@ -113,12 +131,8 @@ void Scene::Render(GraphicsCommandList& commandList)
 
 void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
 {
-	if (!camera->GetProxy())
-	{
-		camera->CreateProxy();
-	}
-
-	m_camera = camera->GetProxy();
+	auto thisScene = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisScene, camera](RenderTaskEnvironment& rte) { thisScene->SetCameraDeferred(camera); });
 }
 
 
@@ -173,6 +187,18 @@ void Scene::Initialize()
 	// Create constant buffers
 	m_perViewConstantBuffer = make_shared<ConstantBuffer>();
 	m_perViewConstantBuffer->Create(sizeof(PerViewConstants), Usage::Dynamic);
+}
+
+
+void Scene::SetCameraDeferred(shared_ptr<Kodiak::Camera> camera)
+{
+	// TODO: create Camera proxy in camera constructor
+	if (!camera->GetProxy())
+	{
+		camera->CreateProxy();
+	}
+
+	m_camera = camera->GetProxy();
 }
 
 

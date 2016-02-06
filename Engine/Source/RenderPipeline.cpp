@@ -125,14 +125,3 @@ void Pipeline::Execute()
 
 	commandList.CloseAndExecute();
 }
-
-
-RenderPipelineTask::RenderPipelineTask(shared_ptr<Pipeline> pipeline)
-	: m_pipeline(pipeline)
-{}
-
-
-void RenderPipelineTask::Execute(RenderTaskEnvironment& environment)
-{
-	m_pipeline->Execute();
-}

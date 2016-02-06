@@ -72,6 +72,8 @@ StaticModel::StaticModel()
 
 void StaticModel::AddMesh(StaticMesh mesh)
 {
+	// Can't add meshes once we're added to the render thread
+	assert(!m_renderThreadData);
 	m_meshes.emplace_back(mesh);
 }
 
@@ -79,7 +81,17 @@ void StaticModel::AddMesh(StaticMesh mesh)
 void StaticModel::SetMatrix(const XMFLOAT4X4& matrix)
 {
 	m_matrix = matrix;
-	Renderer::GetInstance().UpdateStaticModelMatrix(shared_from_this());
+	auto thisModel = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisModel](RenderTaskEnvironment& rte)
+	{
+		// TODO: Create static model proxy in StaticModel constructor
+		auto staticModelData = thisModel->GetRenderThreadData();
+		if (staticModelData)
+		{
+			staticModelData->matrix = thisModel->GetMatrix();
+			staticModelData->isDirty = true;
+		}
+	});
 }
 
 

@@ -399,7 +399,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Source\IAsyncRenderTask.h" />
     <ClInclude Include="Source\IndexBuffer.h" />
     <ClInclude Include="Source\IndexBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>

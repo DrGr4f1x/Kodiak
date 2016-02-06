@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include "IAsyncRenderTask.h"
-
 namespace Kodiak
 {
 
@@ -52,18 +50,6 @@ protected:
 	std::vector<IRenderOperation*>	m_renderOperations;
 
 	std::shared_ptr<ColorBuffer>	m_presentSource;
-};
-
-
-class RenderPipelineTask : public IAsyncRenderTask
-{
-public:
-	RenderPipelineTask(std::shared_ptr<Pipeline> pipeline);
-
-	void Execute(RenderTaskEnvironment& environment) override;
-
-private:
-	std::shared_ptr<Pipeline> m_pipeline;
-};
+};;
 
 } // namespace Kodiak

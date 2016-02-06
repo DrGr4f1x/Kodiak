@@ -198,7 +198,8 @@ void BasicApplication::SetupScene()
 
 	// Add camera and model to scene
 	// TODO: decide on Renderer or RenderThread namespace
-	RenderThread::SetSceneCamera(m_mainScene, m_camera);
+	//RenderThread::SetSceneCamera(m_mainScene, m_camera);
+	m_mainScene->SetCamera(m_camera);
 	m_mainScene->AddStaticModel(m_boxModel);
 }
 

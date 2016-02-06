@@ -11,7 +11,6 @@
 
 #include "Camera.h"
 
-#include "IAsyncRenderTask.h"
 #include "MathUtil.h"
 #include "Renderer.h"
 #include "Scene.h"
@@ -61,7 +60,7 @@ void Camera::SetPosition(const XMFLOAT3& position)
 	if (m_position != position)
 	{
 		m_position = position;
-		RenderThread::SetCameraPositionAndOrientation(shared_from_this(), m_position, m_orientation);
+		RenderThreadSetCameraPositionAndOrientation();
 	}
 }
 
@@ -71,7 +70,7 @@ void Camera::SetOrientation(const XMFLOAT4& orientation)
 	if (m_orientation != orientation)
 	{
 		m_orientation = orientation;
-		RenderThread::SetCameraPositionAndOrientation(shared_from_this(), m_position, m_orientation);
+		RenderThreadSetCameraPositionAndOrientation();
 	}
 }
 
@@ -84,7 +83,7 @@ void Camera::SetPerspective(float fov, float aspect, float zNear, float zFar)
 		m_aspect = aspect;
 		m_zNear = zNear;
 		m_zFar = zFar;
-		RenderThread::SetCameraPerspective(shared_from_this(), m_fov, m_aspect, m_zNear, m_zFar);
+		RenderThreadSetCameraPerspective();
 	}
 }
 
@@ -94,7 +93,7 @@ void Camera::SetAspectRatio(float aspect)
 	if (m_aspect != aspect)
 	{
 		m_aspect = aspect;
-		RenderThread::SetCameraPerspective(shared_from_this(), m_fov, m_aspect, m_zNear, m_zFar);
+		RenderThreadSetCameraPerspective();
 	}
 }
 
@@ -104,7 +103,7 @@ void Camera::SetFOV(float fov)
 	if (m_fov != fov)
 	{
 		m_fov = fov;
-		RenderThread::SetCameraPerspective(shared_from_this(), m_fov, m_aspect, m_zNear, m_zFar);
+		RenderThreadSetCameraPerspective();
 	}
 }
 
@@ -115,7 +114,7 @@ void Camera::LookAt(const XMFLOAT3& target, const XMFLOAT3& up)
 	XMVECTOR dummy;
 	XMStoreFloat4(&m_orientation, XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp))));
 
-	RenderThread::SetCameraPositionAndOrientation(shared_from_this(), m_position, m_orientation);
+	RenderThreadSetCameraPositionAndOrientation();
 }
 
 
@@ -126,7 +125,7 @@ void Camera::LookIn(const XMFLOAT3& dir, const XMFLOAT3& up)
 	XMMATRIX temp = XMMatrixLookAtRH(pos, XMVectorAdd(pos, XMLoadFloat3(&dir)), XMLoadFloat3(&up));
 	XMStoreFloat4(&m_orientation, XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp))));
 
-	RenderThread::SetCameraPositionAndOrientation(shared_from_this(), m_position, m_orientation);
+	RenderThreadSetCameraPositionAndOrientation();
 }
 
 
@@ -165,7 +164,7 @@ void Camera::Strafe(const XMFLOAT3& strafe)
 
 	XMStoreFloat3(&m_position, xmPosition);
 
-	RenderThread::SetCameraPositionAndOrientation(shared_ptr<Camera>(this), m_position, m_orientation);
+	RenderThreadSetCameraPositionAndOrientation();
 }
 
 
@@ -181,83 +180,32 @@ void Camera::CreateProxy()
 }
 
 
-namespace
+void Camera::RenderThreadSetCameraPerspective()
 {
-
-class SetCameraPositionAndOrientationTask : public IAsyncRenderTask
-{
-public:
-	SetCameraPositionAndOrientationTask(shared_ptr<Kodiak::Camera> camera, const XMFLOAT3& position, const XMFLOAT4& orientation)
-		: m_camera(camera)
-		, m_position(position)
-		, m_orientation(orientation)
-	{}
-	
-	void Execute(RenderTaskEnvironment& environment) override
+	auto camera = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([camera](RenderTaskEnvironment& rte)
 	{
-		auto cameraProxy = m_camera->GetProxy();
+		auto cameraProxy = camera->GetProxy();
 		if (cameraProxy)
 		{
-			cameraProxy->SetPositionAndOrientation(m_position, m_orientation);
+			cameraProxy->SetPerspective(camera->m_fov, camera->m_aspect, camera->m_zNear, camera->m_zFar);
 		}
-	}
-
-private:
-	shared_ptr<Kodiak::Camera>	m_camera;
-	const XMFLOAT3				m_position;
-	const XMFLOAT4				m_orientation;
-};
+	});
+}
 
 
-class SetCameraPerspectiveTask : public IAsyncRenderTask
+void Camera::RenderThreadSetCameraPositionAndOrientation()
 {
-public:
-	SetCameraPerspectiveTask(shared_ptr<Kodiak::Camera> camera, float fov, float aspect, float zNear, float zFar)
-		: m_camera(camera)
-		, m_fov(fov)
-		, m_aspect(aspect)
-		, m_zNear(zNear)
-		, m_zFar(zFar)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment) override
+	auto camera = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([camera](RenderTaskEnvironment& rte)
 	{
-		auto cameraProxy = m_camera->GetProxy();
+		auto cameraProxy = camera->GetProxy();
 		if (cameraProxy)
 		{
-			cameraProxy->SetPerspective(m_fov, m_aspect, m_zNear, m_zFar);
+			cameraProxy->SetPositionAndOrientation(camera->m_position, camera->m_orientation);
 		}
-	}
-
-private:
-	shared_ptr<Kodiak::Camera>	m_camera;
-	float						m_fov;
-	float						m_aspect;
-	float						m_zNear;
-	float						m_zFar;
-};
-
-
-class SetSceneCameraTask : public IAsyncRenderTask
-{
-public:
-	SetSceneCameraTask(shared_ptr<Kodiak::Scene> scene, shared_ptr<Kodiak::Camera> camera)
-		: m_scene(scene)
-		, m_camera(camera)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment) override
-	{
-		m_scene->SetCamera(m_camera);
-	}
-
-private:
-	shared_ptr<Kodiak::Scene>	m_scene;
-	shared_ptr<Kodiak::Camera>	m_camera;
-};
-
-
-} // anonymous namespace
+	});
+}
 
 
 
@@ -311,33 +259,3 @@ void Kodiak::RenderThread::Camera::UpdateViewMatrix()
 			)
 		);
 }
-
-namespace Kodiak
-{
-
-namespace RenderThread
-{
-
-void SetSceneCamera(shared_ptr<Kodiak::Scene> scene, shared_ptr<Kodiak::Camera> camera)
-{
-	auto task = make_shared<SetSceneCameraTask>(scene, camera);
-	Renderer::GetInstance().EnqueueTask(task);
-}
-
-
-void SetCameraPositionAndOrientation(shared_ptr<Kodiak::Camera> camera, const XMFLOAT3& position, const XMFLOAT4& orientation)
-{
-	auto task = make_shared<SetCameraPositionAndOrientationTask>(camera, position, orientation);
-	Renderer::GetInstance().EnqueueTask(task);
-}
-
-
-void SetCameraPerspective(std::shared_ptr<Kodiak::Camera> camera, float fov, float aspect, float zNear, float zFar)
-{
-	auto task = make_shared<SetCameraPerspectiveTask>(camera, fov, aspect, zNear, zFar);
-	Renderer::GetInstance().EnqueueTask(task);
-}
-
-} // namespace RenderThread
-
-} // namespace Kodiak

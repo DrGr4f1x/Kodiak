@@ -17,7 +17,6 @@
 #include "DepthBuffer.h"
 #include "DeviceManager.h"
 #include "Format.h"
-#include "IAsyncRenderTask.h"
 #include "IndexBuffer.h"
 #include "Model.h"
 #include "Profile.h"
@@ -30,92 +29,6 @@ using namespace Microsoft::WRL;
 using namespace Concurrency;
 using namespace DirectX;
 using namespace std;
-
-
-class BeginFrameTask : public IAsyncRenderTask
-{
-public:
-	void Execute(RenderTaskEnvironment& environment) override
-	{
-		environment.deviceManager->BeginFrame();
-	}
-};
-
-class EndFrameTask : public IAsyncRenderTask
-{
-public:
-	EndFrameTask(shared_ptr<ColorBuffer> presentSource)
-		: m_presentSource(presentSource)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment) override
-	{
-		environment.deviceManager->Present(m_presentSource);
-		environment.currentFrame += 1;
-		environment.frameCompleted = true;
-	}
-
-private:
-	shared_ptr<ColorBuffer> m_presentSource;
-};
-
-
-class AddStaticModelTask : public IAsyncRenderTask
-{
-public:
-	AddStaticModelTask(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
-		: m_model(model)
-		, m_scene(scene)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment)
-	{
-		m_scene->AddStaticModelDeferred(m_model->GetRenderThreadData());
-	}
-
-private:
-	shared_ptr<StaticModel> m_model;
-	shared_ptr<Scene> m_scene;
-};
-
-
-class RemoveStaticModelTask : public IAsyncRenderTask
-{
-public:
-	RemoveStaticModelTask(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
-		: m_model(model)
-		, m_scene(scene)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment)
-	{
-		m_scene->RemoveStaticModelDeferred(m_model->GetRenderThreadData());
-	}
-
-private:
-	shared_ptr<StaticModel> m_model;
-	shared_ptr<Scene> m_scene;
-};
-
-
-class UpdateStaticModelMatrixTask : public IAsyncRenderTask
-{
-public:
-	UpdateStaticModelMatrixTask(shared_ptr<RenderThread::StaticModelData> modelData, const XMFLOAT4X4& matrix)
-		: m_staticModelData(modelData)
-		, m_matrix(matrix)
-	{}
-
-	void Execute(RenderTaskEnvironment& environment)
-	{
-		m_staticModelData->matrix = m_matrix;
-		m_staticModelData->isDirty = true;
-	}
-
-private:
-	shared_ptr<RenderThread::StaticModelData>	m_staticModelData;
-	const XMFLOAT4X4							m_matrix;
-};
 
 
 Renderer& Renderer::GetInstance()
@@ -147,11 +60,11 @@ void Renderer::Finalize()
 }
 
 
-void Renderer::EnqueueTask(shared_ptr<IAsyncRenderTask> task)
+void Renderer::EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback)
 {
 	if (!m_renderTaskEnvironment.stopRenderTask)
 	{
-		m_renderTaskQueue.push(task);
+		m_renderTaskQueue.push(callback);
 	}
 }
 
@@ -191,56 +104,26 @@ void Renderer::Render()
 	m_renderTaskEnvironment.frameCompleted = false;
 
 	// Start new frame
-	auto beginFrame = make_shared<BeginFrameTask>();
-	EnqueueTask(beginFrame);
-
+	EnqueueTask([](RenderTaskEnvironment& rte) { rte.deviceManager->BeginFrame(); });
+	
 	// Kick off rendering of root pipeline
-	auto renderRootPipeline = make_shared<RenderPipelineTask>(m_rootPipeline);
-	EnqueueTask(renderRootPipeline);
+	EnqueueTask([](RenderTaskEnvironment& rte) { rte.rootPipeline->Execute(); });
 
 	// Signal end of frame
-	auto endFrame = make_shared<EndFrameTask>(m_rootPipeline->GetPresentSource());
-	EnqueueTask(endFrame);
-}
-
-
-void Renderer::AddStaticModelToScene(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
-{
-	// Create render thread data if necessary
-	auto threadData = model->GetRenderThreadData();
-	if (nullptr == threadData)
+	auto presentSource = m_rootPipeline->GetPresentSource();
+	EnqueueTask([presentSource](RenderTaskEnvironment& rte)
 	{
-		model->CreateRenderThreadData();
-	}
-	threadData = model->GetRenderThreadData();
-	
-	assert(nullptr != threadData);
-
-	threadData->prepareTask = threadData->prepareTask.then([model, scene]
-	{
-		auto addStaticModelTask = make_shared<AddStaticModelTask>(model, scene);
-		Renderer::GetInstance().EnqueueTask(addStaticModelTask);
+		rte.deviceManager->Present(presentSource);
+		rte.currentFrame += 1;
+		rte.frameCompleted = true;
 	});
 }
 
 
-void Renderer::RemoveStaticModelFromScene(shared_ptr<StaticModel> model, shared_ptr<Scene> scene)
+namespace
 {
-	auto threadData = model->GetRenderThreadData();
 
-	assert(nullptr != threadData);
-
-	// Use the prepare task's continuation so we don't try to remove a model that's not fully loaded, and hence
-	// hasn't been added to the scene yet.
-	threadData->prepareTask = threadData->prepareTask.then([model, scene]
-	{
-		auto removeStaticModelTask = make_shared<RemoveStaticModelTask>(model, scene);
-		Renderer::GetInstance().EnqueueTask(removeStaticModelTask);
-	});
-}
-
-
-void Renderer::UpdateStaticModelMatrix(shared_ptr<StaticModel> model)
+shared_ptr<RenderThread::StaticModelData> ConditionalCreateStaticModelRenderData(shared_ptr<StaticModel> model)
 {
 	// Create render thread data if necessary
 	auto threadData = model->GetRenderThreadData();
@@ -252,11 +135,10 @@ void Renderer::UpdateStaticModelMatrix(shared_ptr<StaticModel> model)
 
 	assert(nullptr != threadData);
 
-	// Don't need to use the prepareTask continuation here.  Even if the VBs/IBs haven't been created yet,
-	// we'll still have a constant buffer to update.
-	auto updateStaticModelMatrixTask = make_shared<UpdateStaticModelMatrixTask>(threadData, model->GetMatrix());
-	EnqueueTask(updateStaticModelMatrixTask);
+	return threadData;
 }
+
+} // Anonymous namespace
 
 
 void Renderer::StartRenderTask()
@@ -279,10 +161,10 @@ void Renderer::StartRenderTask()
 			while (!m_renderTaskEnvironment.frameCompleted)
 			{
 				// Execute a render command, if one is available
-				shared_ptr<IAsyncRenderTask> command;
+				std::function<void(RenderTaskEnvironment&)> command;
 				if (m_renderTaskQueue.try_pop(command))
 				{
-					command->Execute(m_renderTaskEnvironment);
+					command(m_renderTaskEnvironment);
 				}
 			}
 
