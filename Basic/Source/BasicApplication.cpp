@@ -69,8 +69,8 @@ void BasicApplication::OnInit()
 
 void BasicApplication::OnUpdate(StepTimer* timer)
 {
-	auto seconds = timer->GetTotalSeconds();
-	seconds *= 0.5;
+	auto seconds = static_cast<float>(timer->GetTotalSeconds());
+	seconds *= 0.5f;
 
 	{
 		auto mesh = m_boxModel->GetMesh(1);
