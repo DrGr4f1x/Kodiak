@@ -126,40 +126,40 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">
     <OutDir>$(ProjectDir)Bin64\</OutDir>
     <TargetName>$(ProjectName)11_d</TargetName>
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">
     <OutDir>$(ProjectDir)Bin64\</OutDir>
     <TargetName>$(ProjectName)12_d</TargetName>
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">
     <OutDir>$(ProjectDir)Bin64\</OutDir>
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)11</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">
     <OutDir>$(ProjectDir)Bin64\</OutDir>
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)12</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">
     <OutDir>$(ProjectDir)Bin\</OutDir>
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)11_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug12|Win32'">
     <OutDir>$(ProjectDir)Bin\</OutDir>
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)12_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(ProjectDir)Bin\</OutDir>
     <TargetName>$(ProjectName)11</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">
-    <IntDir>$(ProjectDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)Source\Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(ProjectDir)Bin\</OutDir>
     <TargetName>$(ProjectName)12</TargetName>
   </PropertyGroup>
@@ -168,7 +168,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\; $(ProjectDir)..\External</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..; $(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_UNICODE;UNICODE;DX11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -182,7 +182,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\;$(ProjectDir)..\External</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..; $(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_UNICODE;UNICODE;DX12;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -232,7 +232,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..;$(ProjectDir)..\External</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..; $(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_UNICODE;UNICODE;DX11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -250,7 +250,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..;$(ProjectDir)..\External</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..; $(ProjectDir)..\External</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_UNICODE;UNICODE;DX12;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
