@@ -18,15 +18,13 @@ class ColorBuffer;
 class CommandList;
 class DepthBuffer;
 class DeviceResources;
-class IRenderOperation;
+class GraphicsCommandList;
 class Scene;
 
 
 class Pipeline
 {
 public:
-	virtual ~Pipeline();
-
 	void SetName(const std::string& name);
 	
 	void ClearColor(std::shared_ptr<ColorBuffer> colorBuffer);
@@ -47,7 +45,7 @@ public:
 
 protected:
 	std::string m_name;
-	std::vector<IRenderOperation*>	m_renderOperations;
+	std::vector<std::function<void(GraphicsCommandList&)>>	m_renderOperations;
 
 	std::shared_ptr<ColorBuffer>	m_presentSource;
 };;

@@ -10,9 +10,6 @@
     <Filter Include="Rendering\DX12">
       <UniqueIdentifier>{923144e8-eaf0-4a1a-8ffe-212ac2f50024}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Rendering\Operations">
-      <UniqueIdentifier>{41482bc2-1884-4aef-9460-9ce54fcd54f7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Rendering\DXCommon">
       <UniqueIdentifier>{450e1881-4871-48f4-9546-69626d6341ce}</UniqueIdentifier>
     </Filter>
@@ -55,9 +52,6 @@
     </ClInclude>
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\Log.h" />
-    <ClInclude Include="Source\IRenderOperation.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -120,9 +114,6 @@
     </ClInclude>
     <ClInclude Include="Source\GpuResource11.h">
       <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ClearColorBufferOp.h">
-      <Filter>Rendering\Operations</Filter>
     </ClInclude>
     <ClInclude Include="Source\GpuResource12.h">
       <Filter>Rendering\DX12</Filter>
@@ -213,9 +204,6 @@
     <ClInclude Include="Source\InputLayout11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderSceneOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ConstantBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -225,28 +213,13 @@
     <ClInclude Include="Source\ShaderManager.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ClearDepthBufferOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SetRenderTargetOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SetViewportOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ConstantBuffer12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\LinearAllocator12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SetScissorOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\StepTimer.h" />
-    <ClInclude Include="Source\UpdateSceneOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Material.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -339,9 +312,6 @@
     <ClCompile Include="Source\GpuBuffer11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ClearColorBufferOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="Source\GpuBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
@@ -397,30 +367,14 @@
     <ClCompile Include="Source\VertexBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderSceneOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ConstantBuffer11.cpp">
       <Filter>Rendering\DX11</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ClearDepthBufferOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\SetRenderTargetOp.cpp">
-      <Filter>Rendering\Operations</Filter>
     </ClCompile>
     <ClCompile Include="Source\ConstantBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\LinearAllocator12.cpp">
       <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\SetScissorOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\SetViewportOp.cpp" />
-    <ClCompile Include="Source\UpdateSceneOp.cpp">
-      <Filter>Rendering\Operations</Filter>
     </ClCompile>
     <ClCompile Include="Source\Material11.cpp">
       <Filter>Rendering\DX11</Filter>

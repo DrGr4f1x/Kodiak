@@ -289,8 +289,6 @@
     <ClInclude Include="Source\Batch.h" />
     <ClInclude Include="Source\BinaryReader.h" />
     <ClInclude Include="Source\Camera.h" />
-    <ClInclude Include="Source\ClearColorBufferOp.h" />
-    <ClInclude Include="Source\ClearDepthBufferOp.h" />
     <ClInclude Include="Source\ColorBuffer.h" />
     <ClInclude Include="Source\ColorBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -417,7 +415,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Source\IRenderOperation.h" />
     <ClInclude Include="Source\LinearAllocator12.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
@@ -469,7 +466,6 @@
     </ClInclude>
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\RenderPass.h" />
-    <ClInclude Include="Source\RenderSceneOp.h" />
     <ClInclude Include="Source\RenderUtils.h" />
     <ClInclude Include="Source\RenderPipeline.h" />
     <ClInclude Include="Source\RootSignature12.h">
@@ -477,7 +473,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\Scene.h" />
-    <ClInclude Include="Source\SetRenderTargetOp.h" />
     <ClCompile Include="..\External\Remotery\lib\Remotery.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">NotUsing</PrecompiledHeader>
@@ -518,12 +513,6 @@
     </ClCompile>
     <ClCompile Include="Source\Profile.cpp" />
     <ClCompile Include="Source\RenderPass.cpp" />
-    <ClCompile Include="Source\SetScissorOp.cpp" />
-    <ClCompile Include="Source\SetViewportOp.cpp">
-      <FileType>CppHeader</FileType>
-    </ClCompile>
-    <ClInclude Include="Source\SetScissorOp.h" />
-    <ClInclude Include="Source\SetViewportOp.h" />
     <ClInclude Include="Source\Shader.h" />
     <ClInclude Include="Source\Shader11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -537,7 +526,6 @@
     <ClInclude Include="Source\ShaderReflection.h" />
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\StepTimer.h" />
-    <ClInclude Include="Source\UpdateSceneOp.h" />
     <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\VertexBuffer.h" />
     <ClInclude Include="Source\VertexBuffer11.h">
@@ -554,8 +542,6 @@
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\BinaryReader.cpp" />
-    <ClCompile Include="Source\ClearColorBufferOp.cpp" />
-    <ClCompile Include="Source\ClearDepthBufferOp.cpp" />
     <ClCompile Include="Source\ColorBuffer11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -658,13 +644,11 @@
     </ClCompile>
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\RenderPipeline.cpp" />
-    <ClCompile Include="Source\RenderSceneOp.cpp" />
     <ClCompile Include="Source\RootSignature12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\Scene.cpp" />
-    <ClCompile Include="Source\SetRenderTargetOp.cpp" />
     <ClCompile Include="Source\Shader11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -684,7 +668,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\UpdateSceneOp.cpp" />
     <ClCompile Include="Source\Utility.cpp" />
     <ClCompile Include="Source\VertexBuffer11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
