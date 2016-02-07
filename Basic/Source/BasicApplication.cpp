@@ -96,7 +96,7 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 			m_meshRadians[1] += deltaRadians;
 
 			XMFLOAT4X4 matrix;
-			XMStoreFloat4x4(&matrix, XMMatrixTranspose(-XMMatrixRotationZ(deltaRadians)));
+			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationZ(-deltaRadians)));
 
 			mesh->ConcatenateMatrix(matrix);
 		}
@@ -126,7 +126,7 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 			m_meshRadians[3] += deltaRadians;
 
 			XMFLOAT4X4 matrix;
-			XMStoreFloat4x4(&matrix, XMMatrixTranspose(-XMMatrixRotationX(deltaRadians)));
+			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationX(-deltaRadians)));
 
 			mesh->ConcatenateMatrix(matrix);
 		}

@@ -2,56 +2,36 @@
 <ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ArrayOfArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Model.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Model.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Renderer.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Renderer.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Application.cpp</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\program files (x86)\microsoft visual studio 14.0\vc\include\memory</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderPass.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Batch.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceManager11.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Camera.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Camera.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderPipeline.cpp</string>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderPipeline.h</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\IAsyncRenderTask.h</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\CommandList12.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceManager11.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceManager11.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\ColorBuffer11.cpp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.cpp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\CommandList11.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\CommandList11.h</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\ConstantBuffer11.cpp</string>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\ConstantBuffer11.h</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\StepTimer.h</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Model.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Model.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.cpp</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>
