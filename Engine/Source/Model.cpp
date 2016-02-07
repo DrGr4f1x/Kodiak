@@ -33,7 +33,9 @@ void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& command
 	
 	for (auto& mesh : meshes)
 	{
+#if defined(DX11)
 		if (isDirty || mesh->isDirty)
+#endif
 		{
 			StaticMeshPerObjectData perObjectData;
 			perObjectData.matrix = XMMatrixMultiply(modelToWorld, XMLoadFloat4x4(&mesh->matrix));
