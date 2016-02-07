@@ -39,7 +39,12 @@ using namespace std;
 
 BasicApplication::BasicApplication(uint32_t width, uint32_t height, const std::wstring& name)
 	: Application(width, height, name)
-{}
+{
+	for (uint32_t i = 0; i < 4; ++i)
+	{
+		m_meshRadians[i] = 0.0f;
+	}
+}
 
 
 void BasicApplication::OnInit()
@@ -63,7 +68,70 @@ void BasicApplication::OnInit()
 
 
 void BasicApplication::OnUpdate(StepTimer* timer)
-{}
+{
+	auto seconds = timer->GetTotalSeconds();
+	seconds *= 0.5;
+
+	{
+		auto mesh = m_boxModel->GetMesh(1);
+		float deltaRadians = max(0.0f, 5.0f * (sinf(seconds) - 0.8f));
+		
+		if (deltaRadians > 0.0f)
+		{
+			m_meshRadians[0] += deltaRadians;
+
+			XMFLOAT4X4 matrix;
+			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationZ(deltaRadians)));
+
+			mesh->ConcatenateMatrix(matrix);
+		}
+	}
+
+	{
+		auto mesh = m_boxModel->GetMesh(2);
+		float deltaRadians = max(0.0f, 5.0f * (sinf(max(0.0f, seconds - 1.0f)) - 0.8f));
+
+		if (deltaRadians > 0.0f)
+		{
+			m_meshRadians[1] += deltaRadians;
+
+			XMFLOAT4X4 matrix;
+			XMStoreFloat4x4(&matrix, XMMatrixTranspose(-XMMatrixRotationZ(deltaRadians)));
+
+			mesh->ConcatenateMatrix(matrix);
+		}
+	}
+
+	{
+		auto mesh = m_boxModel->GetMesh(3);
+		float deltaRadians = max(0.0f, 5.0f * (sinf(max(0.0f, seconds - 2.0f)) - 0.8f));
+
+		if (deltaRadians > 0.0f)
+		{
+			m_meshRadians[2] += deltaRadians;
+
+			XMFLOAT4X4 matrix;
+			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationX(deltaRadians)));
+
+			mesh->ConcatenateMatrix(matrix);
+		}
+	}
+
+	{
+		auto mesh = m_boxModel->GetMesh(4);
+		float deltaRadians = max(0.0f, 5.0f * (sinf(max(0.0f, seconds - 3.0f)) - 0.8f));
+
+		if (deltaRadians > 0.0f)
+		{
+			m_meshRadians[3] += deltaRadians;
+
+			XMFLOAT4X4 matrix;
+			XMStoreFloat4x4(&matrix, XMMatrixTranspose(-XMMatrixRotationX(deltaRadians)));
+
+			mesh->ConcatenateMatrix(matrix);
+		}
+	}
+}
 
 
 void BasicApplication::OnDestroy()

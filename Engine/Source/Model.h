@@ -96,6 +96,7 @@ public:
 	size_t GetNumMeshParts() const { return m_meshParts.size(); }
 
 	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);
+	void ConcatenateMatrix(const DirectX::XMFLOAT4X4& matrix);
 	const DirectX::XMFLOAT4X4& GetMatrix() const { return m_matrix; }
 
 	std::shared_ptr<StaticMesh> Clone();
@@ -119,6 +120,7 @@ public:
 	StaticModel();
 
 	void AddMesh(std::shared_ptr<StaticMesh> mesh);
+	std::shared_ptr<StaticMesh> GetMesh(uint32_t index);
 	size_t GetNumMeshes() const { return m_meshes.size(); }
 
 	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);

@@ -67,6 +67,8 @@ private:
 	int		m_mouseY{ 0 };
 	float	m_radians{ 0.0f };
 	float	m_deltaRadians{ 0.0f };
+
+	float	m_meshRadians[4];
 };
 
 } // namespace Kodiak

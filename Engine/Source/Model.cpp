@@ -28,6 +28,7 @@ using namespace std;
 
 void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& commandList)
 {
+	PROFILE(staticModel_UpdateConstants);
 	const XMMATRIX modelToWorld = XMLoadFloat4x4(&matrix);
 	
 	for (auto& mesh : meshes)
@@ -58,7 +59,6 @@ StaticMesh::StaticMesh()
 
 void StaticMesh::AddMeshPart(StaticMeshPart part)
 {
-	// TODO: Move to render thread
 	m_meshParts.emplace_back(part);
 
 	auto indexBuffer = IndexBuffer::Create(part.indexData, Usage::Immutable);
@@ -69,6 +69,7 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 	{
 		Renderer::GetInstance().EnqueueTask([indexBuffer, vertexBuffer, thisMesh, part](RenderTaskEnvironment& rte)
 		{
+			PROFILE(staticMesh_addMeshPart_RT);
 			RenderThread::StaticMeshPartData data = { vertexBuffer, indexBuffer, part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
 			thisMesh->m_renderThreadData->meshParts.emplace_back(data);
 		});
@@ -78,13 +79,30 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 
 void StaticMesh::SetMatrix(const XMFLOAT4X4& matrix)
 {
-	// TODO: Move to render thread
 	m_matrix = matrix;
 
 	auto staticMeshData = m_renderThreadData;
 	Renderer::GetInstance().EnqueueTask([staticMeshData, matrix](RenderTaskEnvironment& rte)
 	{
+		PROFILE(staticMesh_setMatrix_RT);
 		staticMeshData->matrix = matrix;
+		staticMeshData->isDirty = true;
+	});
+}
+
+
+void StaticMesh::ConcatenateMatrix(const XMFLOAT4X4& matrix)
+{
+	XMMATRIX xmMatrix = XMLoadFloat4x4(&m_matrix);
+	XMStoreFloat4x4(&m_matrix, XMMatrixMultiply(xmMatrix, XMLoadFloat4x4(&matrix)));
+
+	auto matrix2 = m_matrix;
+
+	auto staticMeshData = m_renderThreadData;
+	Renderer::GetInstance().EnqueueTask([staticMeshData, matrix2](RenderTaskEnvironment& rte)
+	{
+		PROFILE(staticMesh_concatenateMatrix_RT);
+		staticMeshData->matrix = matrix2;
 		staticMeshData->isDirty = true;
 	});
 }
@@ -123,7 +141,6 @@ StaticModel::StaticModel()
 
 void StaticModel::AddMesh(shared_ptr<StaticMesh> mesh)
 {
-	// TODO: Move to render thread
 	m_meshes.emplace_back(mesh);
 
 	auto staticModelData = m_renderThreadData;
@@ -133,6 +150,14 @@ void StaticModel::AddMesh(shared_ptr<StaticMesh> mesh)
 	{
 		staticModelData->meshes.emplace_back(staticMeshData);
 	});
+}
+
+
+shared_ptr<StaticMesh> StaticModel::GetMesh(uint32_t index)
+{
+	assert(index < m_meshes.size());
+
+	return m_meshes[index];
 }
 
 
