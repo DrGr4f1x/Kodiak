@@ -39,6 +39,7 @@ void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const 
 	// Set initial state on the shader
 	shader->m_shader = nullptr;
 	shader->m_isReady = false;
+	shader->loadTask = concurrency::create_task([] {});
 
 	// Load the compiled shader file
 	unique_ptr<uint8_t[]> data;

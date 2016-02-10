@@ -48,7 +48,7 @@ public:
 	}
 
 	// Lower level helper reads directly from filesystem into memory
-	static HRESULT ReadEntireFile(const std::string& fileNAme, std::unique_ptr<uint8_t[]>& data, size_t* dataSize);
+	static HRESULT ReadEntireFile(const std::string& fileName, std::unique_ptr<uint8_t[]>& data, size_t* dataSize);
 
 private:
 	// Data currently being read

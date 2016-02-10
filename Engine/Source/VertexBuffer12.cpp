@@ -64,6 +64,7 @@ shared_ptr<VertexBuffer> VertexBuffer::Create(shared_ptr<BaseVertexBufferData> d
 			else
 			{
 				// Blocking synchronous create
+				vbuffer->loadTask = concurrency::create_task([] {});
 				CreateInternal(vbuffer, data, usage);
 			}
 		}

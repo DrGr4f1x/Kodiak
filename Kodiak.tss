@@ -2,36 +2,78 @@
 <ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ArrayOfArrayOfString>
     <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Sponza\Source\SponzaApplication.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Sponza\Source\SponzaApplication.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderPipeline.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\RenderPipeline.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\CommandList12.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceManager11.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\DeviceManager11.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\ColorBuffer11.cpp</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.cpp</string>
     </ArrayOfString>
     <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\CommandList11.cpp</string>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\CommandList11.h</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\ConstantBuffer11.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\ConstantBuffer11.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\Model.cpp</string>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\Model.h</string>
     </ArrayOfString>
     <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Basic\Source\BasicApplication.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Model_H3D.cpp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\ShaderManager.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\ShaderManager.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\BinaryReader.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\BinaryReader.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\VertexBuffer.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\VertexBuffer.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>c:\program files (x86)\microsoft visual studio 14.0\vc\include\type_traits</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\IndexBuffer.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DrawParameters.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\IndexBuffer12.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\IndexBuffer12.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Texture11.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Texture11.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Texture12.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Texture12.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Texture.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DDSTextureLoader12.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DDSTextureLoader12.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DepthBuffer12.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\dds.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DDSCommon.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DXGIUtility.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\DXGIUtility.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\Tripwire\KF2_Main\Development\External\XAudio2\Legacy\Include\XAudio2.h</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

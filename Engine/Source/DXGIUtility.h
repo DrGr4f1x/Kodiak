@@ -23,4 +23,6 @@ DXGI_FORMAT GetDSVFormat(DXGI_FORMAT defaultFormat);
 DXGI_FORMAT GetDepthFormat(DXGI_FORMAT defaultFormat);
 DXGI_FORMAT GetStencilFormat(DXGI_FORMAT defaultFormat);
 
+size_t BitsPerPixel(DXGI_FORMAT fmt);
+
 } // namespace DXGIUtility

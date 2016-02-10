@@ -16,8 +16,6 @@ namespace Kodiak
 {
 
 // Forward declarations
-class BaseIndexBufferData;
-class BaseVertexBufferData;
 class ConstantBuffer;
 class GraphicsCommandList;
 class IndexBuffer;
@@ -75,13 +73,13 @@ struct StaticMeshPart
 {
 	friend class StaticMesh;
 
-	std::shared_ptr<BaseVertexBufferData>	vertexData;
-	std::shared_ptr<BaseIndexBufferData>	indexData;
+	std::shared_ptr<VertexBuffer>	vertexBuffer;
+	std::shared_ptr<IndexBuffer>	indexBuffer;
 
-	PrimitiveTopology						topology;
-	uint32_t								indexCount;
-	uint32_t								startIndex;
-	int32_t									baseVertexOffset;
+	PrimitiveTopology				topology;
+	uint32_t						indexCount;
+	uint32_t						startIndex;
+	int32_t							baseVertexOffset;
 };
 
 
@@ -138,6 +136,7 @@ private:
 };
 
 
+// Factory methods
 struct BoxMeshDesc
 {
 	float sizeX{ 1.0f };
@@ -149,6 +148,11 @@ struct BoxMeshDesc
 	bool facesIn{ false };
 };
 
+
 std::shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc);
+
+// Loaders
+std::shared_ptr<StaticModel> LoadModel(const std::string& path);
+std::shared_ptr<StaticModel> LoadModelH3D(const std::string& fullPath);
 
 } // namespace Kodiak

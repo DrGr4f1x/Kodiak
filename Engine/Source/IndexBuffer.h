@@ -62,20 +62,39 @@ public:
 		}
 	}
 
+
+	IndexBufferData16(uint8_t* data, size_t sizeInBytes)
+	{
+		m_id = s_baseId++;
+
+		m_numElements = sizeInBytes / sizeof(uint16_t);
+		m_data = (uint16_t*)_aligned_malloc(sizeof(uint16_t) * m_numElements, 16);
+
+		assert(m_data);
+		if (m_data)
+		{
+			memcpy(m_data, data, sizeInBytes);
+		}
+	}
+
+
 	~IndexBufferData16()
 	{
 		_aligned_free(m_data);
 	}
+
 
 	size_t GetDataSize() const override
 	{
 		return sizeof(uint16_t) * m_numElements;
 	}
 
+
 	const void* GetData() const
 	{
 		return m_data;
 	}
+
 
 	DXGI_FORMAT GetFormat() const override { return DXGI_FORMAT_R16_UINT; }
 	size_t GetElementSize() const override { return sizeof(uint16_t); }
@@ -103,20 +122,39 @@ public:
 		}
 	}
 
+
+	IndexBufferData32(uint8_t* data, size_t sizeInBytes)
+	{
+		m_id = s_baseId++;
+
+		m_numElements = sizeInBytes / sizeof(uint32_t);
+		m_data = (uint32_t*)_aligned_malloc(sizeof(uint32_t) * m_numElements, 16);
+
+		assert(m_data);
+		if (m_data)
+		{
+			memcpy(m_data, data, sizeInBytes);
+		}
+	}
+
+
 	~IndexBufferData32()
 	{
 		_aligned_free(m_data);
 	}
+
 
 	size_t GetDataSize() const override
 	{
 		return sizeof(uint32_t) * m_numElements;
 	}
 
+
 	const void* GetData() const
 	{
 		return m_data;
 	}
+
 
 	DXGI_FORMAT GetFormat() const override { return DXGI_FORMAT_R32_UINT; }
 	size_t GetElementSize() const override { return sizeof(uint32_t); }

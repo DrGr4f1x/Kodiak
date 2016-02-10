@@ -14,6 +14,7 @@
 #include "CommandList.h"
 #include "ConstantBuffer.h"
 #include "IndexBuffer.h"
+#include "Paths.h"
 #include "Profile.h"
 #include "Renderer.h"
 #include "RenderEnums.h"
@@ -63,16 +64,13 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 {
 	m_meshParts.emplace_back(part);
 
-	auto indexBuffer = IndexBuffer::Create(part.indexData, Usage::Immutable);
-	auto vertexBuffer = VertexBuffer::Create(part.vertexData, Usage::Immutable);
-
 	auto thisMesh = shared_from_this();
-	(indexBuffer->loadTask && vertexBuffer->loadTask).then([indexBuffer, vertexBuffer, thisMesh, part]
+	(part.indexBuffer->loadTask && part.vertexBuffer->loadTask).then([thisMesh, part]
 	{
-		Renderer::GetInstance().EnqueueTask([indexBuffer, vertexBuffer, thisMesh, part](RenderTaskEnvironment& rte)
+		Renderer::GetInstance().EnqueueTask([thisMesh, part](RenderTaskEnvironment& rte)
 		{
 			PROFILE(staticMesh_addMeshPart_RT);
-			RenderThread::StaticMeshPartData data = { vertexBuffer, indexBuffer, part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
+			RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
 			thisMesh->m_renderThreadData->meshParts.emplace_back(data);
 		});
 	});
@@ -301,6 +299,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 		));
 	}
 
+	// Create vertex buffer
+	auto vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
+
 	// Create the mesh and mesh parts
 	auto mesh = make_shared<StaticMesh>();
 
@@ -311,7 +312,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -320,7 +323,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 4, 5, 6, 7 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -329,7 +334,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 8, 9, 10, 11 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -338,7 +345,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 12, 13, 14, 15 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -347,7 +356,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 16, 17, 18, 19 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -356,7 +367,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 20, 21, 22, 23 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 	}
@@ -367,7 +380,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 10, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 10, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -376,7 +391,9 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 6, 0, 4, 2 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -385,12 +402,71 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			shared_ptr<BaseIndexBufferData> idata;
 			idata.reset(new IndexBufferData16({ 5, 3, 7, 1 }));
 
-			StaticMeshPart meshPart{ vdata, idata, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
+
+			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 	}
 
 	return mesh;
 }
+
+
+namespace
+{
+
+enum class ModelFormat : uint32_t
+{
+	None,
+	H3D,
+
+	NumFormats
+};
+
+const string s_formatString[] =
+{
+	"none",
+	"h3d",
+};
+
+} // Anonymous namespace
+
+
+std::shared_ptr<StaticModel> LoadModel(const string& path)
+{
+	ModelFormat format = ModelFormat::None;
+
+	auto sepIndex = path.rfind('.');
+	if (sepIndex != string::npos)
+	{
+		string extension = path.substr(sepIndex + 1);
+		transform(begin(extension), end(extension), begin(extension), ::tolower);
+
+		for (uint32_t i = 0; i < static_cast<uint32_t>(ModelFormat::NumFormats); ++i)
+		{
+			if (extension == s_formatString[i])
+			{
+				format = static_cast<ModelFormat>(i);
+				break;
+			}
+		}
+
+		if (format != ModelFormat::None)
+		{
+			string fullPath = Paths::GetInstance().ModelDir() + path;
+
+			switch (format)
+			{
+			case ModelFormat::H3D:
+				return LoadModelH3D(fullPath);
+				break;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
 
 } // namespace Kodiak

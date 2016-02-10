@@ -51,6 +51,7 @@ private:
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
+	std::shared_ptr<StaticModel>	m_sponzaModel;
 
 	std::shared_ptr<RenderPass>		m_basePass;
 #if 0

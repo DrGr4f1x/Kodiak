@@ -71,6 +71,7 @@ shared_ptr<IndexBuffer> IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data
 			else
 			{
 				// Blocking synchronous create
+				ibuffer->loadTask = concurrency::create_task([] {});
 				CreateInternal(ibuffer, data, usage);
 			}
 		}

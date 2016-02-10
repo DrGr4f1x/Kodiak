@@ -267,6 +267,30 @@
     <ClInclude Include="Source\Batch.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\DrawParameters.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Texture.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Texture11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Texture12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DDSTextureLoader12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\dds.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DDSCommon.h">
+      <Filter>Rendering\DXCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DDSTextureLoader11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -410,6 +434,24 @@
       <Filter>External\Remotery</Filter>
     </ClCompile>
     <ClCompile Include="Source\Profile.cpp" />
+    <ClCompile Include="Source\Model_H3D.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VertexBuffer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Texture11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Texture12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DDSTextureLoader12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DDSTextureLoader11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">

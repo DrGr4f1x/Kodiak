@@ -110,7 +110,7 @@ void SponzaApplication::CreateMaterials()
 
 void SponzaApplication::CreateModel()
 {
-	
+	m_sponzaModel = LoadModel("Models\\sponza.h3d");
 }
 
 

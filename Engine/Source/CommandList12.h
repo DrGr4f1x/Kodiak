@@ -79,6 +79,7 @@ public:
 	void CopyBuffer(GpuResource& dest, GpuResource& src);
 	void CopyBufferRegion(GpuResource& dest, size_t destOffset, GpuResource& src, size_t srcOffset, size_t numBytes);
 
+	static void InitializeTexture(GpuResource& dest, UINT numSubresources, D3D12_SUBRESOURCE_DATA subData[]);
 	static void InitializeBuffer(GpuResource& dest, const void* data, size_t numBytes);
 
 	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);

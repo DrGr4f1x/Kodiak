@@ -30,9 +30,7 @@ static uint32_t g_currentFrame = 0;
 
 namespace Kodiak
 {
-
 ID3D12Device* g_device = nullptr;
-
 } // namespace Kodiak
 
 
