@@ -149,6 +149,15 @@ struct MaterialData
 
 	// Callbacks for binding cbuffers to the command list at render time
 	std::array<std::function<void(GraphicsCommandList&)>, 5> cbufferCallbacks;
+
+	// Per-shader stage resource bindings
+	struct ResourceBinding
+	{
+		std::vector<std::pair<uint32_t, ID3D11ShaderResourceView*>> resources;
+	};
+
+	std::array<ResourceBinding, 5> resourceBindings;
+	std::array<std::function<void(GraphicsCommandList&)>, 5> resourceCallbacks;
 };
 
 
@@ -190,11 +199,12 @@ class MaterialResourceData
 {
 	friend class Material;
 public:
-	MaterialResourceData();
+	MaterialResourceData(MaterialData* materialData);
 
 	void SetResource(ID3D11ShaderResourceView* srv);
 
 private:
+	MaterialData* m_materialData;
 	std::array<uint32_t, 5> m_shaderSlots;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
 };

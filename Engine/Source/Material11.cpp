@@ -105,6 +105,55 @@ void SetupDefaultCBufferCallbacks(RenderThread::MaterialData& materialData)
 }
 
 
+void SetupResourceCallbacks(RenderThread::MaterialData& materialData)
+{
+	auto& localVSBindings = materialData.resourceBindings[0];
+	materialData.resourceCallbacks[0] = [localVSBindings](GraphicsCommandList& commandList)
+	{
+		for (const auto& binding : localVSBindings.resources)
+		{
+			commandList.SetVertexShaderResource(binding.first, binding.second);
+		}
+	};
+
+	auto& localDSBindings = materialData.resourceBindings[1];
+	materialData.resourceCallbacks[1] = [localDSBindings](GraphicsCommandList& commandList)
+	{
+		for (const auto& binding : localDSBindings.resources)
+		{
+			commandList.SetDomainShaderResource(binding.first, binding.second);
+		}
+	};
+
+	auto& localHSBindings = materialData.resourceBindings[2];
+	materialData.resourceCallbacks[2] = [localHSBindings](GraphicsCommandList& commandList)
+	{
+		for (const auto& binding : localHSBindings.resources)
+		{
+			commandList.SetHullShaderResource(binding.first, binding.second);
+		}
+	};
+
+	auto& localGSBindings = materialData.resourceBindings[3];
+	materialData.resourceCallbacks[3] = [localGSBindings](GraphicsCommandList& commandList)
+	{
+		for (const auto& binding : localGSBindings.resources)
+		{
+			commandList.SetGeometryShaderResource(binding.first, binding.second);
+		}
+	};
+
+	auto& localPSBindings = materialData.resourceBindings[4];
+	materialData.resourceCallbacks[4] = [localPSBindings](GraphicsCommandList& commandList)
+	{
+		for (const auto& binding : localPSBindings.resources)
+		{
+			commandList.SetPixelShaderResource(binding.first, binding.second);
+		}
+	};
+}
+
+
 void SetupCBuffer(RenderThread::MaterialData& materialData, size_t cbufferSizeInBytes)
 {
 	// Create an uber-cbuffer for the entire material
@@ -266,8 +315,6 @@ void Material::CreateRenderThreadData()
 	
 	// Bind parameters
 	{
-		auto* materialData = m_renderThreadData.get();
-
 		lock_guard<mutex> CS(m_parameterLock);
 
 		for (const auto& effectVar : effectSig.variables)
@@ -297,12 +344,12 @@ void Material::CreateRenderThreadData()
 
 				if (effectBinding.cbufferIndex != 0xFFFFFFFF)
 				{
-					assert(materialData->cbufferBindings[i].numBuffers >= effectBinding.cbufferIndex);
-					assert(materialData->cbufferBindings[i].numConstants[effectBinding.cbufferIndex] != 0);
+					assert(materialData.cbufferBindings[i].numBuffers >= effectBinding.cbufferIndex);
+					assert(materialData.cbufferBindings[i].numConstants[effectBinding.cbufferIndex] != 0);
 
 					materialParam->m_renderThreadData->m_bindings[i] =
-						materialData->cbufferData + 16 * materialData->cbufferBindings[i].firstConstant[effectBinding.cbufferIndex];
-					materialParam->m_renderThreadData->m_dirtyFlag = &materialData->cbufferDirty;
+						materialData.cbufferData + 16 * materialData.cbufferBindings[i].firstConstant[effectBinding.cbufferIndex];
+					materialParam->m_renderThreadData->m_dirtyFlag = &materialData.cbufferDirty;
 				}
 				else
 				{
@@ -323,8 +370,6 @@ void Material::CreateRenderThreadData()
 
 	// Bind resources
 	{
-		auto* materialData = m_renderThreadData.get();
-
 		lock_guard<mutex> CS(m_resourceLock);
 
 		for (const auto& effectRes : effectSig.resources)
@@ -343,7 +388,7 @@ void Material::CreateRenderThreadData()
 				materialRes = make_shared<MaterialResource>(effectRes.name);
 			}
 
-			materialRes->m_renderThreadData = make_shared<RenderThread::MaterialResourceData>();
+			materialRes->m_renderThreadData = make_shared<RenderThread::MaterialResourceData>(m_renderThreadData);
 
 			materialRes->m_shaderSlots = effectRes.shaderSlots;
 			materialRes->m_renderThreadData->m_shaderSlots = materialRes->m_shaderSlots;
@@ -352,6 +397,16 @@ void Material::CreateRenderThreadData()
 			if (materialRes->m_texture)
 			{
 				materialRes->m_renderThreadData->m_srv = materialRes->m_texture->GetSRV();
+			}
+
+			for (uint32_t shaderType = 0; shaderType < 5; ++shaderType)
+			{
+				auto shaderSlot = materialRes->m_renderThreadData->m_shaderSlots[shaderType];
+				auto srv = materialRes->m_renderThreadData->m_srv.Get();
+				if (shaderSlot != 0xFFFFFFFF)
+				{
+					materialData.resourceBindings[shaderType].resources.push_back(make_pair(shaderSlot, srv));
+				}
 			}
 		}
 	}
@@ -427,6 +482,13 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 	cbufferCallbacks[2](commandList); // HS
 	cbufferCallbacks[3](commandList); // GS
 	cbufferCallbacks[4](commandList); // PS
+
+	// Execute resource binding callbacks
+	resourceCallbacks[0](commandList); // VS
+	resourceCallbacks[1](commandList); // DS
+	resourceCallbacks[2](commandList); // HS
+	resourceCallbacks[3](commandList); // GS
+	resourceCallbacks[4](commandList); // PS
 }
 
 
@@ -563,11 +625,13 @@ void RenderThread::MaterialParameterData::InternalSetValue(T value)
 }
 
 
-RenderThread::MaterialResourceData::MaterialResourceData()
+RenderThread::MaterialResourceData::MaterialResourceData(MaterialData* materialData)
+	: m_materialData(materialData)
 {}
 
 
 void RenderThread::MaterialResourceData::SetResource(ID3D11ShaderResourceView* srv)
 {
 	m_srv = srv;
+
 }
