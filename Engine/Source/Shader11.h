@@ -33,6 +33,12 @@ public:
 
 	ShaderType GetType() const { return ShaderType::Vertex; }
 
+	// Reflection info
+	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
+	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
+	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
+	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
+
 	concurrency::task<void> loadTask;
 
 private:
@@ -61,6 +67,12 @@ public:
 
 	ShaderType GetType() const { return ShaderType::Pixel; }
 
+	// Reflection info
+	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
+	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
+	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
+	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
+
 	concurrency::task<void> loadTask;
 
 private:
@@ -86,6 +98,12 @@ public:
 	bool IsReady() const { return m_isReady; }
 
 	ShaderType GetType() const { return ShaderType::Geometry; }
+
+	// Reflection info
+	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
+	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
+	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
+	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
 
 	concurrency::task<void> loadTask;
 
@@ -113,6 +131,12 @@ public:
 
 	ShaderType GetType() const { return ShaderType::Domain; }
 
+	// Reflection info
+	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
+	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
+	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
+	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
+
 	concurrency::task<void> loadTask;
 
 private:
@@ -138,6 +162,12 @@ public:
 	bool IsReady() const { return m_isReady; }
 
 	ShaderType GetType() const { return ShaderType::Hull; }
+
+	// Reflection info
+	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
+	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
+	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
+	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
 
 	concurrency::task<void> loadTask;
 

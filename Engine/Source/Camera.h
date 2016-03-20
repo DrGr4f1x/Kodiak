@@ -84,6 +84,7 @@ public:
 	const DirectX::XMFLOAT4X4& GetProjectionMatrix() const { return m_projectionMatrix; }
 	const DirectX::XMFLOAT4X4& GetViewMatrix() const { return m_viewMatrix; }
 	const DirectX::XMFLOAT4X4& GetPrevViewMatrix() const { return m_prevViewMatrix; }
+	const DirectX::XMFLOAT3& GetPosition() const { return m_position; }
 
 private:
 	void UpdateViewMatrix();

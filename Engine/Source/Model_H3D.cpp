@@ -12,8 +12,11 @@
 #include "Model.h"
 
 #include "BinaryReader.h"
+#include "Defaults.h"
 #include "IndexBuffer.h"
+#include "Material.h"
 #include "RenderEnums.h"
+#include "Texture.h"
 #include "VertexBuffer.h"
 
 
@@ -21,7 +24,7 @@ using namespace Kodiak;
 using namespace std;
 
 
-namespace
+namespace H3D
 {
 
 struct BoundingBox
@@ -224,19 +227,19 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 {
 	BinaryReader reader(fullPath);
 
-	Header header;
-	auto headerSize = sizeof(Header);
+	H3D::Header header;
+	auto headerSize = sizeof(H3D::Header);
 
 	ReadHeader(header, reader);
 	
-	std::vector<Mesh> meshes(header.meshCount);
+	std::vector<H3D::Mesh> meshes(header.meshCount);
 	for (uint32_t i = 0; i < header.meshCount; ++i)
 	{
 		ReadMesh(meshes[i], reader);
 		reader.Read<uint32_t>(); // Padding
 	}
 
-	std::vector<Material> materials(header.materialCount);
+	std::vector<H3D::Material> materials(header.materialCount);
 	for (uint32_t i = 0; i < header.materialCount; ++i)
 	{
 		ReadMaterial(materials[i], reader);
@@ -287,7 +290,60 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 	// Create model
 	auto model = make_shared<StaticModel>();
 
-	// TODO: textures and materials
+	// Textures and materials
+	std::vector<std::shared_ptr<Material>> opaqueMaterials(header.materialCount);
+	std::vector<std::shared_ptr<Material>> depthMaterials(header.materialCount);
+	for (uint32_t i = 0; i < header.materialCount; ++i)
+	{
+		auto opaqueMaterial = make_shared<Material>();
+		opaqueMaterial->SetEffect(GetDefaultBaseEffect());
+		opaqueMaterial->SetRenderPass(GetDefaultBasePass());
+
+		shared_ptr<Texture> diffuseTexture;
+		shared_ptr<Texture> specularTexture;
+		shared_ptr<Texture> normalTexture;
+
+		if (materials[i].texDiffusePath.back() == '\\' || materials[i].texDiffusePath.back() == '/')
+		{
+			diffuseTexture = Texture::Load("default.dds", true);
+		}
+		else
+		{
+			diffuseTexture = Texture::Load(materials[i].texDiffusePath, true);
+		}
+
+		if (materials[i].texSpecularPath.back() == '\\' || materials[i].texSpecularPath.back() == '/')
+		{
+			specularTexture = Texture::Load("default_specular.dds", true);
+		}
+		else
+		{
+			specularTexture = Texture::Load(materials[i].texSpecularPath, true);
+		}
+
+		if (materials[i].texNormalPath.back() == '\\' || materials[i].texNormalPath.back() == '/')
+		{
+			normalTexture = Texture::Load("default_normal.dds", true);
+		}
+		else
+		{
+			normalTexture = Texture::Load(materials[i].texNormalPath, true);
+		}
+
+		opaqueMaterial->GetResource("texDiffuse")->SetResource(diffuseTexture);
+		opaqueMaterial->GetResource("texSpecular")->SetResource(specularTexture);
+		opaqueMaterial->GetResource("texNormal")->SetResource(normalTexture);
+
+		opaqueMaterials.emplace_back(opaqueMaterial);
+
+		auto depthMaterial = make_shared<Material>();
+		depthMaterial->SetEffect(GetDefaultDepthEffect());
+		depthMaterial->SetRenderPass(GetDefaultDepthPass());
+
+		depthMaterial->GetResource("texDiffuse")->SetResource(diffuseTexture);
+
+		depthMaterials.emplace_back(depthMaterial);
+	}
 
 	// Create meshes
 	for (uint32_t i = 0; i < header.meshCount; ++i)
@@ -300,6 +356,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		StaticMeshPart opaquePart{ 
 			vbuffer, 
 			ibuffer, 
+			opaqueMaterials[h3dMesh.materialIndex],
 			PrimitiveTopology::TriangleList, 
 			h3dMesh.indexCount, 
 			h3dMesh.indexDataByteOffset / sizeof(uint16_t),
@@ -310,6 +367,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		StaticMeshPart depthPart{
 			vbufferDepth,
 			ibufferDepth,
+			depthMaterials[h3dMesh.materialIndex],
 			PrimitiveTopology::TriangleList,
 			h3dMesh.indexCount,
 			h3dMesh.indexDataByteOffset / sizeof(uint16_t),

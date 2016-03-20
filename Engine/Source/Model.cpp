@@ -13,7 +13,9 @@
 
 #include "CommandList.h"
 #include "ConstantBuffer.h"
+#include "Defaults.h"
 #include "IndexBuffer.h"
+#include "Material.h"
 #include "Paths.h"
 #include "Profile.h"
 #include "Renderer.h"
@@ -65,12 +67,12 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 	m_meshParts.emplace_back(part);
 
 	auto thisMesh = shared_from_this();
-	(part.indexBuffer->loadTask && part.vertexBuffer->loadTask).then([thisMesh, part]
+	(part.indexBuffer->loadTask && part.vertexBuffer->loadTask && part.material->prepareTask).then([thisMesh, part]
 	{
 		Renderer::GetInstance().EnqueueTask([thisMesh, part](RenderTaskEnvironment& rte)
 		{
 			PROFILE(staticMesh_addMeshPart_RT);
-			RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
+			RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.material->GetRenderThreadData(), part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
 			thisMesh->m_renderThreadData->meshParts.emplace_back(data);
 		});
 	});
@@ -191,6 +193,10 @@ namespace Kodiak
 shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 {
 	shared_ptr<BaseVertexBufferData> vdata;
+
+	auto material = make_shared<Material>();
+	material->SetEffect(GetDefaultBaseEffect());
+	material->SetRenderPass(GetDefaultBasePass());
 
 	if (desc.genNormals && desc.genColors)
 	{
@@ -314,7 +320,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -325,7 +331,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -336,7 +342,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -347,7 +353,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -358,7 +364,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -369,7 +375,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 	}
@@ -382,7 +388,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 10, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 10, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -393,7 +399,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 
@@ -404,7 +410,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			StaticMeshPart meshPart{ vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
 			mesh->AddMeshPart(meshPart);
 		}
 	}

@@ -17,7 +17,6 @@
 #include "RenderUtils.h"
 #include "Shader11.h"
 
-#include <map>
 #include <ppltasks.h>
 
 using namespace Kodiak;

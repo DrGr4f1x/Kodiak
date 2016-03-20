@@ -31,6 +31,7 @@ public:
 public:
 	// Constructor/destructor
 	BaseEffect();
+	BaseEffect(const std::string& name);
 	virtual ~BaseEffect() {}
 
 	void SetName(const std::string& name) { m_name = name; }

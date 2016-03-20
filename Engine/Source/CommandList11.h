@@ -51,6 +51,7 @@ public:
 protected:
 	CommandListManager*			m_owner{ nullptr };
 	ID3D11DeviceContext*		m_context{ nullptr };
+	ID3D11DeviceContext1*		m_context1{ nullptr };
 
 	// Current state caching
 	uint32_t m_currentStencilRef{ 0 };
@@ -133,10 +134,28 @@ public:
 
 	void SetVertexShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
 	void SetVertexShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetVertexShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant, 
+		const uint32_t* numConstants);
+
 	void SetDomainShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetDomainShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetDomainShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+
 	void SetHullShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetHullShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetHullShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+
 	void SetGeometryShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetGeometryShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetGeometryShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+
 	void SetPixelShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetPixelShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
 };
 
 

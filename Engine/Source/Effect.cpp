@@ -36,6 +36,23 @@ BaseEffect::BaseEffect()
 }
 
 
+BaseEffect::BaseEffect(const string& name) : m_name(name)
+{
+	loadTask = concurrency::create_task([] {});
+
+	m_topology = PrimitiveTopologyType::Triangle;
+	for (uint32_t i = 0; i < 8; ++i)
+	{
+		m_colorFormats[i] = ColorFormat::Unknown;
+	}
+	m_numRenderTargets = 0;
+	m_depthFormat = DepthFormat::Unknown;
+
+	m_shaderBindings.reserve(5);
+}
+
+
+
 void BaseEffect::SetVertexShaderPath(const ShaderPath& shaderPath)
 {
 	m_shaderPaths[0] = shaderPath;

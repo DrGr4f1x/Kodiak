@@ -17,7 +17,6 @@
 #include "RenderUtils.h"
 
 #include <locale>
-#include <map>
 #include <codecvt>
 
 using namespace Kodiak;

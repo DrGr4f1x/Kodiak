@@ -18,9 +18,11 @@
 #include "IndexBuffer.h"
 #include "PipelineState.h"
 #include "Profile.h"
+#include "Material.h"
 #include "Model.h"
-#include "RenderEnums.h"
 #include "Renderer.h"
+#include "RenderEnums.h"
+#include "RenderPass.h"
 #include "Shader.h"
 #include "ShaderManager.h"
 #include "VertexBuffer.h"
@@ -67,6 +69,8 @@ void Scene::Update(GraphicsCommandList& commandList)
 	XMMATRIX xmView = XMLoadFloat4x4(&m_camera->GetViewMatrix());
 	XMStoreFloat4x4(&m_perViewConstants.view, XMMatrixTranspose(xmView));
 
+	m_perViewConstants.viewPosition = m_camera->GetPosition();
+
 	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
 	commandList.UnmapConstants(*m_perViewConstantBuffer);
@@ -108,6 +112,45 @@ void Scene::Render(GraphicsCommandList& commandList)
 				commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 				commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
+			}
+		}
+	}
+}
+
+
+void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList)
+{
+	PROFILE(scene_RenderPass);
+
+	// Visit models
+	for (auto& model : m_staticModels)
+	{
+		// Visit meshes
+		for (const auto& mesh : model->meshes)
+		{
+			// Visit mesh parts
+			for (const auto& meshPart : mesh->meshParts)
+			{
+				if (meshPart.material->renderPass == renderPass)
+				{
+					meshPart.material->Commit(commandList);
+
+					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
+#if defined(DX12)
+					commandList.SetRootSignature(*m_rootSignature);
+					commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
+					commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
+#elif defined(DX11)
+					commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
+					commandList.SetVertexShaderConstants(1, *mesh->perObjectConstants);
+#endif
+					
+					commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
+					commandList.SetIndexBuffer(*meshPart.indexBuffer);
+					commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+					commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
+				}
 			}
 		}
 	}

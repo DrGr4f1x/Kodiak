@@ -19,6 +19,7 @@ class CommandList;
 class DepthBuffer;
 class DeviceResources;
 class GraphicsCommandList;
+class RenderPass;
 class Scene;
 
 
@@ -37,6 +38,7 @@ public:
 
 	void UpdateScene(std::shared_ptr<Scene> scene);
 	void RenderScene(std::shared_ptr<Scene> scene);
+	void RenderScenePass(std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Scene> scene);
 
 	void Present(std::shared_ptr<ColorBuffer> colorBuffer);
 	std::shared_ptr<ColorBuffer> GetPresentSource();

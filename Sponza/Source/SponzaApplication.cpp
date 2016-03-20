@@ -15,15 +15,12 @@
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\CommonStates.h"
+#include "Engine\Source\Defaults.h"
 #include "Engine\Source\DepthBuffer.h"
-#if 0
 #include "Engine\Source\Effect.h"
-#endif
 #include "Engine\Source\Format.h"
 #include "Engine\Source\Log.h"
-#if 0
 #include "Engine\Source\Material.h"
-#endif
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
@@ -49,7 +46,7 @@ void SponzaApplication::OnInit()
 
 	CreateResources();
 
-	CreateMaterials();
+	CreateEffects();
 	CreateModel();
 
 #if 0
@@ -68,6 +65,12 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 
 void SponzaApplication::OnDestroy()
 {
+	SetDefaultBasePass(nullptr);
+	SetDefaultDepthPass(nullptr);
+	
+	SetDefaultBaseEffect(nullptr);
+	SetDefaultDepthEffect(nullptr);
+
 	Renderer::GetInstance().Finalize();
 	LOG_INFO << "SponzaApplication finalize";
 }
@@ -82,11 +85,48 @@ void SponzaApplication::CreateResources()
 }
 
 
-void SponzaApplication::CreateMaterials()
+void SponzaApplication::CreateEffects()
 {
-	// Base render pass
-	m_basePass = make_shared<RenderPass>("Base");
-	m_basePass->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
+	// Default render passes
+	auto basePass = make_shared<RenderPass>("Base");
+	basePass->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
+	SetDefaultBasePass(basePass);
+
+	auto depthPass = make_shared<RenderPass>("Depth");
+	depthPass->SetDepthTargetFormat(DepthFormat::D32);
+	SetDefaultDepthPass(depthPass);
+
+	// Default effects
+	auto baseEffect = make_shared<Effect>("Base");
+	baseEffect->SetVertexShaderPath(ShaderPath("BaseVS.cso"));
+	baseEffect->SetPixelShaderPath(ShaderPath("BasePS.cso"));
+	baseEffect->SetBlendState(CommonStates::Opaque());
+	baseEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
+	baseEffect->SetDepthStencilState(CommonStates::DepthDefault());
+	baseEffect->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
+	baseEffect->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
+	baseEffect->Finalize();
+	SetDefaultBaseEffect(baseEffect);
+
+	auto depthEffect = make_shared<Effect>("Depth");
+	depthEffect->SetVertexShaderPath(ShaderPath("DepthVS.cso"));
+	depthEffect->SetPixelShaderPath(ShaderPath("DepthPS.cso"));
+	depthEffect->SetBlendState(CommonStates::Opaque());
+	depthEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
+	depthEffect->SetDepthStencilState(CommonStates::DepthDefault());
+	depthEffect->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
+	depthEffect->SetRenderTargetFormats(0, nullptr, DepthFormat::D32);
+	depthEffect->Finalize();
+	SetDefaultDepthEffect(depthEffect);
+
+	// TEMP: materials
+	m_baseMaterial = make_shared<Material>();
+	m_baseMaterial->SetName("Base");
+	m_baseMaterial->SetEffect(baseEffect);
+
+	m_depthMaterial = make_shared<Material>();
+	m_depthMaterial->SetName("Depth");
+	m_depthMaterial->SetEffect(depthEffect);
 
 #if 0
 	// Base effect

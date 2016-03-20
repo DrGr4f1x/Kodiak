@@ -256,6 +256,22 @@ ShaderVariableType ConvertToEngine(D3D_SHADER_VARIABLE_TYPE type, uint32_t rows,
 		}
 	}
 
+	if (type == D3D_SVT_UINT)
+	{
+		if (rows != 1)
+		{
+			LOG_ERROR << "Unsigned integer matrix shader variable not supported yet";
+			return ShaderVariableType::Unsupported;
+		}
+		switch (columns)
+		{
+		case 1: return ShaderVariableType::UInt;
+		case 2: return ShaderVariableType::UInt2;
+		case 3: return ShaderVariableType::UInt3;
+		default: return ShaderVariableType::UInt4;
+		}
+	}
+
 	if (type == D3D_SVT_FLOAT)
 	{
 		if (rows == 1)
@@ -323,19 +339,24 @@ void IntrospectCBuffer(ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc
 
 	uint32_t constantBufferIndex = static_cast<uint32_t>(bindingDesc.cbuffers.size());
 
+	const std::string cbufferName(bufferDesc.Name);
+
+	// If this cbuffer holds per-view or per-object constants, record the size for validation against other shaders
+	if (cbufferName == GetPerViewConstantsName())
+	{
+		bindingDesc.perViewDataSize = bufferDesc.Size;
+		return; // Don't create a record for per-view constant buffer
+	}
+	else if (cbufferName == GetPerObjectConstantsName())
+	{
+		bindingDesc.perObjectDataSize = bufferDesc.Size;
+		return; // Don't create a record for per-object constant buffer
+	}
+
 	// Create our own description for the constant buffer
 	bindingDesc.cbuffers.emplace_back(bufferDesc.Name, inputDesc.BindPoint, bufferDesc.Size);
 	auto& shaderBufferDesc = bindingDesc.cbuffers[constantBufferIndex];
-
-	// If this cbuffer holds per-view or per-object constants, record the size for validation against other shaders
-	if (shaderBufferDesc.name == GetPerViewConstantsName())
-	{
-		bindingDesc.perViewDataSize = shaderBufferDesc.size;
-	}
-	else if (shaderBufferDesc.name == GetPerObjectConstantsName())
-	{
-		bindingDesc.perObjectDataSize = shaderBufferDesc.size;
-	}
+	
 
 	// Variables in constant buffer
 	for (uint32_t j = 0; j < bufferDesc.Variables; ++j)
@@ -359,6 +380,7 @@ void IntrospectResource(vector<ShaderResourceDesc>& resources, ShaderResourceTyp
 {
 	resources.emplace_back(inputDesc.Name, inputDesc.BindPoint, type, ConvertToEngine(inputDesc.Dimension));
 }
+
 
 
 void Introspect(ID3D11ShaderReflection* reflector, ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc>& variables)
@@ -386,11 +408,11 @@ void Introspect(ID3D11ShaderReflection* reflector, ShaderBindingDesc& bindingDes
 			break;
 
 		case D3D_SIT_TBUFFER:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::Texture, inputDesc);
+			IntrospectResource(bindingDesc.resources, ShaderResourceType::TBuffer, inputDesc);
 			break;
 
 		case D3D_SIT_TEXTURE:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::TBuffer, inputDesc);
+			IntrospectResource(bindingDesc.resources, ShaderResourceType::Texture, inputDesc);
 			break;
 
 		case D3D_SIT_UAV_RWTYPED:
@@ -423,6 +445,10 @@ void Introspect(ID3D11ShaderReflection* reflector, ShaderBindingDesc& bindingDes
 
 		case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
 			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWStructuredWithCounter, inputDesc);
+			break;
+
+		case D3D_SIT_SAMPLER:
+			// TODO: handle samplers
 			break;
 
 		default:

@@ -11,11 +11,10 @@
 
 #include "Texture11.h"
 
+#include "DeviceManager11.h"
 #include "DDSTextureLoader11.h"
 #include "Paths.h"
 #include "RenderUtils.h"
-
-#include <map>
 
 using namespace Kodiak;
 using namespace std;

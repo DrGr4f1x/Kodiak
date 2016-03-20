@@ -102,6 +102,15 @@ void Pipeline::RenderScene(shared_ptr<Scene> scene)
 }
 
 
+void Pipeline::RenderScenePass(shared_ptr<RenderPass> renderPass, shared_ptr<Scene> scene)
+{
+	m_renderOperations.push_back([renderPass, scene](GraphicsCommandList& commandList)
+	{
+		scene->Render(renderPass, commandList);
+	});
+}
+
+
 void Pipeline::Present(shared_ptr<ColorBuffer> colorBuffer)
 {
 	m_presentSource = colorBuffer;
@@ -118,7 +127,7 @@ void Pipeline::Execute()
 {
 	auto& commandList = GraphicsCommandList::Begin();
 
-	for (auto operation : m_renderOperations)
+	for (const auto& operation : m_renderOperations)
 	{
 		operation(commandList);
 	}

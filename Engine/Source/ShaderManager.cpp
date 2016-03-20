@@ -13,7 +13,6 @@
 
 #include "Shader.h"
 
-#include <map>
 #include <ppltasks.h>
 
 using namespace Kodiak;

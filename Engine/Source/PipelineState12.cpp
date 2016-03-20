@@ -21,8 +21,6 @@
 #include "RootSignature12.h"
 #include "Shader12.h"
 
-#include <map>
-
 using namespace Kodiak;
 using namespace std;
 using namespace Microsoft::WRL;

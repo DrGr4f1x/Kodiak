@@ -24,6 +24,7 @@ public:
 	Texture() : m_srv() {}
 	Texture(ID3D11ShaderResourceView* srv) : m_srv(srv) {}
 
+	ID3D11ShaderResourceView* GetSRV() { return m_srv.Get(); }
 	const ID3D11ShaderResourceView* GetSRV() const { return m_srv.Get(); }
 
 	bool operator!() { return nullptr == m_srv.Get(); }

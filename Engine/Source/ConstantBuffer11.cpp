@@ -12,6 +12,7 @@
 #include "ConstantBuffer11.h"
 
 #include "DeviceManager11.h"
+#include "MathUtil.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
 
@@ -22,6 +23,8 @@ using namespace std;
 
 void ConstantBuffer::Create(size_t size, Usage usage)
 {
+	size = Math::AlignUp(size, 16);
+
 	// Fill in a buffer description
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));

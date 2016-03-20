@@ -20,9 +20,7 @@ class Camera;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
-#if 0
 class Material;
-#endif
 class RenderPass;
 class Scene;
 class StaticModel;
@@ -41,7 +39,7 @@ protected:
 private:
 	// Creation/setup helpers
 	void CreateResources();
-	void CreateMaterials();
+	void CreateEffects();
 	void CreateModel();
 	void SetupScene();
 	void SetupPipeline();
@@ -53,10 +51,8 @@ private:
 	std::shared_ptr<Camera>			m_camera;
 	std::shared_ptr<StaticModel>	m_sponzaModel;
 
-	std::shared_ptr<RenderPass>		m_basePass;
-#if 0
 	std::shared_ptr<Material>		m_baseMaterial;
-#endif
+	std::shared_ptr<Material>		m_depthMaterial;
 };
 
 } // namespace Kodiak

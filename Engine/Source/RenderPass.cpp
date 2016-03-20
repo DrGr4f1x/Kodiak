@@ -37,6 +37,8 @@ RenderPass::RenderPass(const string& name)
 
 void RenderPass::SetRenderTargetFormats(uint32_t numRTVs, const ColorFormat* colorFormat, DepthFormat depthFormat, uint32_t msaaCount, uint32_t msaaQuality)
 {
+	m_numRenderTargets = numRTVs;
+
 	m_depthFormat = depthFormat;
 
 	for (uint32_t i = 0; i < numRTVs; ++i)
@@ -62,7 +64,7 @@ void RenderPass::GetRenderTargetFormat(ColorFormat& colorFormat, DepthFormat& de
 }
 
 
-void RenderPass::GetRenderTargetFormats(uint32_t numRTVs, ColorFormat** colorFormats, DepthFormat& depthFormat, uint32_t& msaaCount,
+void RenderPass::GetRenderTargetFormats(uint32_t& numRTVs, ColorFormat** colorFormats, DepthFormat& depthFormat, uint32_t& msaaCount,
 	uint32_t& msaaQuality)
 {
 	for (uint32_t i = 0; i < numRTVs; ++i)

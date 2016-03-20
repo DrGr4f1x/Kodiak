@@ -46,12 +46,14 @@
 #endif
 
 // Standard library
+#include <array>
 #include <chrono>
 #include <ctime>
 #include <fstream>
 #include <future>
 #include <iostream>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <queue>

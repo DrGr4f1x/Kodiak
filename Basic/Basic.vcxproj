@@ -103,7 +103,8 @@
       <AdditionalDependencies>d2d1.lib;d3d11.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;windowscodecs.lib;dwrite.lib;Engine11_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5\*.*" "$(ProjectDir)Shaders\Engine\SM5"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">
@@ -120,7 +121,8 @@
       <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;d3dcompiler.lib;dxguid.lib;dxgi.lib;Engine12_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)Shaders\Engine\SM5.1"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">
@@ -141,7 +143,8 @@
       <AdditionalDependencies>d2d1.lib;d3d11.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;windowscodecs.lib;dwrite.lib;Engine11.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5\*.*" "$(ProjectDir)Shaders\Engine\SM5"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">
@@ -162,7 +165,8 @@
       <AdditionalDependencies>d2d1.lib;dwrite.lib;d3d11.lib;d3d12.lib;d3dcompiler.lib;dxguid.lib;dxgi.lib;Engine12.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)Shaders\Engine\SM5.1"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -15,15 +15,11 @@
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\CommonStates.h"
+#include "Engine\Source\Defaults.h"
 #include "Engine\Source\DepthBuffer.h"
-#if 0
 #include "Engine\Source\Effect.h"
-#endif
 #include "Engine\Source\Format.h"
 #include "Engine\Source\Log.h"
-#if 0
-#include "Engine\Source\Material.h"
-#endif
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
@@ -183,26 +179,20 @@ void BasicApplication::CreateResources()
 void BasicApplication::CreateMaterials()
 {
 	// Base render pass
-	m_basePass = make_shared<RenderPass>("Base");
-	m_basePass->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
+	auto basePass = make_shared<RenderPass>("Base");
+	basePass->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
+	SetDefaultBasePass(basePass);
 
-#if 0
 	// Base effect
 	auto effect = make_shared<Effect>();
 	effect->SetName("Base effect");
-	effect->SetVertexShaderPath("Engine", "SimpleVertexShader");
-	effect->SetPixelShaderPath("Engine", "SimplePixelShader");
+	effect->SetVertexShaderPath("Engine", "SimpleVertexShader.cso");
+	effect->SetPixelShaderPath("Engine", "SimplePixelShader.cso");
 	effect->SetBlendState(CommonStates::Opaque());
 	effect->SetDepthStencilState(CommonStates::DepthDefault());
 	effect->SetRasterizerState(CommonStates::CullCounterClockwise());
 	effect->Finalize();
-
-	// Base material
-	m_baseMaterial = make_shared<Material>();
-	m_baseMaterial->SetName("Base material");
-	m_baseMaterial->SetEffect(effect);
-	m_baseMaterial->SetRenderPass(m_basePass);
-#endif
+	SetDefaultBaseEffect(effect);
 }
 
 
@@ -291,7 +281,7 @@ void BasicApplication::SetupPipeline()
 	pipeline->ClearDepth(m_depthBuffer);
 
 	pipeline->UpdateScene(m_mainScene);
-	pipeline->RenderScene(m_mainScene);
+	pipeline->RenderScenePass(GetDefaultBasePass(), m_mainScene);
 
 	pipeline->Present(m_colorTarget);
 }

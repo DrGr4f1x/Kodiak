@@ -32,10 +32,14 @@ public:
 	}
 	void SetRenderTargetFormats(uint32_t numRTVs, const ColorFormat* colorFormats, DepthFormat depthFormat, uint32_t msaaCount = 1,
 		uint32_t msaaQuality = 0);
+	void SetDepthTargetFormat(DepthFormat depthFormat, uint32_t msaaCount = 1, uint32_t msaaQuality = 0)
+	{
+		SetRenderTargetFormats(0, nullptr, depthFormat, msaaCount, msaaQuality);
+	}
 
 	uint32_t GetNumRenderTargets() const { return m_numRenderTargets; }
 	void GetRenderTargetFormat(ColorFormat& colorFormat, DepthFormat& depthFormat, uint32_t& msaaCount, uint32_t& msaaQuality);
-	void GetRenderTargetFormats(uint32_t numRTVs, ColorFormat** colorFormats, DepthFormat& depthFormat, uint32_t& msaaCount, 
+	void GetRenderTargetFormats(uint32_t& numRTVs, ColorFormat** colorFormats, DepthFormat& depthFormat, uint32_t& msaaCount, 
 		uint32_t& msaaQuality);
 
 private:

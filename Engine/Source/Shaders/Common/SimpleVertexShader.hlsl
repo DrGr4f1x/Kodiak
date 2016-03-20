@@ -1,18 +1,6 @@
-// A constant buffer that stores the three basic column-major matrices for composing geometry.
-cbuffer PerViewConstants : register(b0)
-{
-	matrix view;
-	matrix projection;
-};
+#include "PerViewData.hlsli"
+#include "StaticMeshPerObjectData.hlsli"
 
-
-cbuffer PerObjectConstants : register(b1)
-{
-	matrix model;
-};
-
-
-// Per-vertex data used as input to the vertex shader.
 struct VertexShaderInput
 {
 	float3 pos : POSITION;

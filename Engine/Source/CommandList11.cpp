@@ -78,6 +78,7 @@ void CommandList::Initialize(CommandListManager& manager)
 {
 	m_owner = &manager;
 	m_owner->CreateNewDeferredContext(&m_context);
+	ThrowIfFailed(m_context->QueryInterface(__uuidof(ID3D11DeviceContext1), reinterpret_cast<void**>(&m_context1)));
 }
 
 
@@ -383,4 +384,72 @@ void GraphicsCommandList::SetVertexShaderConstants(uint32_t slot, const Constant
 {
 	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
 	m_context->VSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetVertexShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, 
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->VSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetHullShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->HSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetHullShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->HSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetDomainShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->DSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetDomainShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->DSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetGeometryShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->GSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetGeometryShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->GSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetPixelShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->PSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->PSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
 }

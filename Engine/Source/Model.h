@@ -19,6 +19,7 @@ namespace Kodiak
 class ConstantBuffer;
 class GraphicsCommandList;
 class IndexBuffer;
+class Material;
 class Scene;
 class VertexBuffer;
 
@@ -27,11 +28,13 @@ enum class PrimitiveTopology;
 
 namespace RenderThread
 {
+struct MaterialData;
 
 struct StaticMeshPartData
 {
 	std::shared_ptr<VertexBuffer>	vertexBuffer;
 	std::shared_ptr<IndexBuffer>	indexBuffer;
+	std::shared_ptr<MaterialData>	material;
 	PrimitiveTopology				topology;
 	uint32_t						indexCount;
 	uint32_t						startIndex;
@@ -75,6 +78,7 @@ struct StaticMeshPart
 
 	std::shared_ptr<VertexBuffer>	vertexBuffer;
 	std::shared_ptr<IndexBuffer>	indexBuffer;
+	std::shared_ptr<Material>		material;
 
 	PrimitiveTopology				topology;
 	uint32_t						indexCount;

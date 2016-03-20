@@ -14,8 +14,6 @@
 #include "DeviceManager11.h"
 #include "RenderUtils.h"
 
-#include <map>
-
 using namespace Kodiak;
 using namespace std;
 using namespace Microsoft::WRL;

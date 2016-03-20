@@ -8,7 +8,6 @@
 //
 
 #include <concurrent_queue.h>
-#include <map>
 
 #pragma once
 
@@ -21,6 +20,7 @@ class Camera;
 class ConstantBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
+class RenderPass;
 class StaticModel;
 #if defined(DX12)
 class RootSignature;
@@ -44,6 +44,7 @@ public:
 
 	void Update(GraphicsCommandList& commandList);
 	void Render(GraphicsCommandList& commandList);
+	void Render(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList);
 
 	void SetCamera(std::shared_ptr<Camera> camera);
 
@@ -67,6 +68,7 @@ private:
 	{
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;
+		DirectX::XMFLOAT3 viewPosition;
 	} m_perViewConstants;
 
 	// Scene camera

@@ -17,8 +17,6 @@
 #include "Renderer.h"
 #include "RenderUtils.h"
 
-#include <map>
-
 
 using namespace Kodiak;
 using namespace std;
