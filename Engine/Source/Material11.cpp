@@ -40,12 +40,12 @@ void Material::SetEffect(shared_ptr<Effect> effect)
 {
 	assert(effect);
 
+	m_effect = effect;
+
 	auto thisMaterial = shared_from_this();
 
 	prepareTask = effect->loadTask.then([thisMaterial, effect]
 	{
-		thisMaterial->m_effect = effect;
-
 		thisMaterial->CreateRenderThreadData();
 	});
 }
@@ -91,6 +91,18 @@ shared_ptr<MaterialResource> Material::GetResource(const string& name)
 }
 
 
+shared_ptr<Material> Material::Clone()
+{
+	auto clone = make_shared<Material>();
+
+	clone->SetName(m_name);
+	clone->SetEffect(m_effect);
+	clone->SetRenderPass(m_renderPass);
+
+	return clone;
+}
+
+
 // Helper functions for setting up render-thread material data
 namespace
 {
@@ -110,45 +122,45 @@ void SetupResourceCallbacks(RenderThread::MaterialData& materialData)
 	auto& localVSBindings = materialData.resourceBindings[0];
 	materialData.resourceCallbacks[0] = [localVSBindings](GraphicsCommandList& commandList)
 	{
-		for (const auto& binding : localVSBindings.resources)
+		for (const auto& binding : localVSBindings.resourceRanges)
 		{
-			commandList.SetVertexShaderResource(binding.first, binding.second);
-		}
-	};
-
-	auto& localDSBindings = materialData.resourceBindings[1];
-	materialData.resourceCallbacks[1] = [localDSBindings](GraphicsCommandList& commandList)
-	{
-		for (const auto& binding : localDSBindings.resources)
-		{
-			commandList.SetDomainShaderResource(binding.first, binding.second);
+			commandList.SetVertexShaderResources(binding.startSlot, binding.numResources, &binding.resources[0]);
 		}
 	};
 
 	auto& localHSBindings = materialData.resourceBindings[2];
-	materialData.resourceCallbacks[2] = [localHSBindings](GraphicsCommandList& commandList)
+	materialData.resourceCallbacks[1] = [localHSBindings](GraphicsCommandList& commandList)
 	{
-		for (const auto& binding : localHSBindings.resources)
+		for (const auto& binding : localHSBindings.resourceRanges)
 		{
-			commandList.SetHullShaderResource(binding.first, binding.second);
+			commandList.SetHullShaderResources(binding.startSlot, binding.numResources, &binding.resources[0]);
+		}
+	};
+
+	auto& localDSBindings = materialData.resourceBindings[1];
+	materialData.resourceCallbacks[2] = [localDSBindings](GraphicsCommandList& commandList)
+	{
+		for (const auto& binding : localDSBindings.resourceRanges)
+		{
+			commandList.SetDomainShaderResources(binding.startSlot, binding.numResources, &binding.resources[0]);
 		}
 	};
 
 	auto& localGSBindings = materialData.resourceBindings[3];
 	materialData.resourceCallbacks[3] = [localGSBindings](GraphicsCommandList& commandList)
 	{
-		for (const auto& binding : localGSBindings.resources)
+		for (const auto& binding : localGSBindings.resourceRanges)
 		{
-			commandList.SetGeometryShaderResource(binding.first, binding.second);
+			commandList.SetGeometryShaderResources(binding.startSlot, binding.numResources, &binding.resources[0]);
 		}
 	};
 
 	auto& localPSBindings = materialData.resourceBindings[4];
 	materialData.resourceCallbacks[4] = [localPSBindings](GraphicsCommandList& commandList)
 	{
-		for (const auto& binding : localPSBindings.resources)
+		for (const auto& binding : localPSBindings.resourceRanges)
 		{
-			commandList.SetPixelShaderResource(binding.first, binding.second);
+			commandList.SetPixelShaderResources(binding.startSlot, binding.numResources, &binding.resources[0]);
 		}
 	};
 }
@@ -195,8 +207,8 @@ void SetupBinding(uint32_t& constantOffset, RenderThread::MaterialData::CBufferB
 			const auto index = effectCBuffer.shaderRegister - minSlot;
 
 			binding.cbuffers[index] = d3dBuffer;
-			binding.firstConstant[index] = constantOffset;
-			binding.numConstants[index] = static_cast<uint32_t>(Math::AlignUp(effectCBuffer.size, 16) / 16);
+			binding.firstConstant[index] = 16 * constantOffset;
+			binding.numConstants[index] = static_cast<uint32_t>(Math::AlignUp(effectCBuffer.size, 16));
 			constantOffset += binding.numConstants[index];
 		}
 	}
@@ -299,11 +311,13 @@ void Material::CreateRenderThreadData()
 	auto& materialData = *m_renderThreadData;
 
 	SetupDefaultCBufferCallbacks(materialData);
+	SetupResourceCallbacks(materialData);
 
 	// Setup the DX11 cbuffer and bindings per shader stage
-	if (effectSig.perMaterialDataSize > 0)
+	materialData.cbufferSize = effectSig.perMaterialDataSize;
+	if (materialData.cbufferSize > 0)
 	{
-		SetupCBuffer(materialData, effectSig.perMaterialDataSize);
+		SetupCBuffer(materialData, materialData.cbufferSize);
 
 		uint32_t constantOffset = 0;
 		SetupShaderCBufferBindings(constantOffset, materialData, effectSig, ShaderType::Vertex);
@@ -335,7 +349,8 @@ void Material::CreateRenderThreadData()
 			
 			// Render thread data
 			materialParam->m_renderThreadData = make_shared<RenderThread::MaterialParameterData>();
-			materialParam->m_renderThreadData->m_type = effectVar.type;
+			auto& materialParamData = *materialParam->m_renderThreadData;
+			materialParamData.m_type = effectVar.type;
 
 			// Bindings into cbuffer memory
 			for (uint32_t i = 0; i < 5; ++i)
@@ -347,24 +362,50 @@ void Material::CreateRenderThreadData()
 					assert(materialData.cbufferBindings[i].numBuffers >= effectBinding.cbufferIndex);
 					assert(materialData.cbufferBindings[i].numConstants[effectBinding.cbufferIndex] != 0);
 
-					materialParam->m_renderThreadData->m_bindings[i] =
+					materialParamData.m_size = effectVar.size;
+					materialParamData.m_bindings[i] =
 						materialData.cbufferData + 16 * materialData.cbufferBindings[i].firstConstant[effectBinding.cbufferIndex];
-					materialParam->m_renderThreadData->m_dirtyFlag = &materialData.cbufferDirty;
+					materialParamData.m_dirtyFlag = &materialData.cbufferDirty;
 				}
 				else
 				{
-					materialParam->m_renderThreadData->m_bindings[i] = nullptr;
-					materialParam->m_renderThreadData->m_dirtyFlag = nullptr;
+					materialParamData.m_size = 0;
+					materialParamData.m_bindings[i] = nullptr;
+					materialParamData.m_dirtyFlag = nullptr;
 				}
 			}
 
 			// TODO: make a MaterialParameter::CreateRenderThreadData() method to do this
 			if (copyData)
 			{
-				materialParam->m_renderThreadData->m_data = materialParam->m_data;
+				materialParamData.m_data = materialParam->m_data;
+				for (uint32_t i = 0; i < 5; ++i)
+				{
+					if (materialParamData.m_bindings[i] != nullptr)
+					{
+						memcpy(materialParamData.m_bindings[i], &materialParamData.m_data[0], materialParamData.m_size);
+					}
+				}
+				*materialParamData.m_dirtyFlag = true;
 			}
 
 			m_parameters[materialParam->GetName()] = materialParam;
+		}
+	}
+
+	// Resource ranges
+	for (uint32_t i = 0; i < 5; ++i)
+	{
+		materialData.resourceBindings[i].resourceRanges.clear();
+		for (const auto& effectResourceRange : effectSig.resourceBindings[i].resourceRanges)
+		{
+			RenderThread::MaterialData::ResourceBinding::ResourceRange range;
+
+			range.startSlot = effectResourceRange.startSlot;
+			range.numResources = effectResourceRange.numResources;
+			fill_n(begin(range.resources), range.numResources, nullptr);
+
+			materialData.resourceBindings[i].resourceRanges.push_back(range);
 		}
 	}
 
@@ -388,25 +429,44 @@ void Material::CreateRenderThreadData()
 				materialRes = make_shared<MaterialResource>(effectRes.name);
 			}
 
-			materialRes->m_renderThreadData = make_shared<RenderThread::MaterialResourceData>(m_renderThreadData);
+			materialRes->m_renderThreadData = make_shared<RenderThread::MaterialResourceData>(m_renderThreadData.get());
 
 			materialRes->m_shaderSlots = effectRes.shaderSlots;
-			materialRes->m_renderThreadData->m_shaderSlots = materialRes->m_shaderSlots;
+			
+			// Map the resource destination ranges
+			for (uint32_t i = 0; i < 5; ++i)
+			{
+				const auto slot = materialRes->m_shaderSlots[i];
+
+				if (slot != 0xFFFFFFFF)
+				{
+					// Find the appropriate destination resource range for this shader stage
+					bool found = false;
+					uint32_t rangeIndex = 0;
+					for (const auto& range : materialData.resourceBindings[i].resourceRanges)
+					{
+						if (slot >= range.startSlot && slot < (range.startSlot + range.numResources))
+						{
+							const uint32_t resourceIndex = slot - range.startSlot;
+							materialRes->m_renderThreadData->BindDestination(i, rangeIndex, resourceIndex);
+							found = true;
+							break;
+						}
+						++rangeIndex;
+					}
+					assert(found);
+				}
+				else
+				{
+					// Default range (resource not bound to this shader stage)
+					materialRes->m_renderThreadData->BindDestination(i, 0xFFFFFFFF, 0xFFFFFFFF);
+				}
+			}
 
 			// TODO: make a MaterialResource::CreateRenderThreadData() method to do this
 			if (materialRes->m_texture)
 			{
 				materialRes->m_renderThreadData->m_srv = materialRes->m_texture->GetSRV();
-			}
-
-			for (uint32_t shaderType = 0; shaderType < 5; ++shaderType)
-			{
-				auto shaderSlot = materialRes->m_renderThreadData->m_shaderSlots[shaderType];
-				auto srv = materialRes->m_renderThreadData->m_srv.Get();
-				if (shaderSlot != 0xFFFFFFFF)
-				{
-					materialData.resourceBindings[shaderType].resources.push_back(make_pair(shaderSlot, srv));
-				}
 			}
 		}
 	}
@@ -420,10 +480,230 @@ MaterialParameter::MaterialParameter(const string& name)
 }
 
 
-template <typename T>
-void MaterialParameter::SetValue(T value)
+void MaterialParameter::SetValue(bool value)
 {
-	memcpy(m_data, &value, sizeof(T));
+	memcpy(&m_data[0], &value, sizeof(bool));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(int32_t value)
+{
+	memcpy(&m_data[0], &value, sizeof(int32_t));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMINT2 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMINT2));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMINT3 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMINT3));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMINT4 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMINT4));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(uint32_t value)
+{
+	memcpy(&m_data[0], &value, sizeof(uint32_t));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMUINT2 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMUINT2));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMUINT3 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMUINT3));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMUINT4 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMUINT4));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(float value)
+{
+	memcpy(&m_data[0], &value, sizeof(float));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMFLOAT2 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT2));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMFLOAT3 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT3));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMFLOAT4 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT4));
+
+	_ReadWriteBarrier();
+
+	if (m_renderThreadData)
+	{
+		auto renderThreadData = m_renderThreadData;
+		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
+		{
+			renderThreadData->SetValue(value);
+		});
+	}
+}
+
+
+void MaterialParameter::SetValue(XMFLOAT4X4 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT4X4));
 
 	_ReadWriteBarrier();
 
@@ -467,6 +747,19 @@ void MaterialResource::SetResource(shared_ptr<Texture> texture)
 				renderThreadData->SetResource(nullptr);
 			}
 		});
+	}
+}
+
+
+void RenderThread::MaterialData::Update(GraphicsCommandList& commandList)
+{
+	if (cbufferDirty && cbufferSize > 0)
+	{
+		auto dest = commandList.MapConstants(*cbuffer);
+		memcpy(dest, cbufferData, cbufferSize);
+		commandList.UnmapConstants(*cbuffer);
+
+		cbufferDirty = false;
 	}
 }
 
@@ -625,13 +918,31 @@ void RenderThread::MaterialParameterData::InternalSetValue(T value)
 }
 
 
-RenderThread::MaterialResourceData::MaterialResourceData(MaterialData* materialData)
+RenderThread::MaterialResourceData::MaterialResourceData(RenderThread::MaterialData* materialData)
 	: m_materialData(materialData)
 {}
 
 
 void RenderThread::MaterialResourceData::SetResource(ID3D11ShaderResourceView* srv)
 {
-	m_srv = srv;
+	if (m_srv.Get() != srv)
+	{
+		m_srv = srv;
 
+		for (uint32_t i = 0; i < 5; ++i)
+		{
+			const auto& range = m_shaderSlots[i];
+			if (range.first != 0xFFFFFFFF)
+			{
+				m_materialData->resourceBindings[i].resourceRanges[range.first].resources[range.second] = srv;
+			}
+		}
+	}
+}
+
+
+void RenderThread::MaterialResourceData::BindDestination(uint32_t shaderIndex, uint32_t rangeIndex, uint32_t resourceIndex)
+{
+	m_shaderSlots[shaderIndex].first = rangeIndex;
+	m_shaderSlots[shaderIndex].second = resourceIndex;
 }

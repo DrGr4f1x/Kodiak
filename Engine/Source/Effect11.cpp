@@ -124,6 +124,7 @@ void Effect::ProcessShaderBindings(uint32_t index, ShaderClass* shader)
 		}
 
 		// Resources
+		std::vector<uint32_t> resourceSlots;
 		for (const auto& shaderResource : shaderSig.resources)
 		{
 			bool found = false;
@@ -149,7 +150,34 @@ void Effect::ProcessShaderBindings(uint32_t index, ShaderClass* shader)
 				effectResource.dimension = shaderResource.dimension;
 				m_signature.resources.emplace_back(effectResource);
 			}
+
+			// Store slots so we can build resource ranges
+			resourceSlots.push_back(shaderResource.registerSlot);
 		}
+
+		// Build resource ranges
+		if (!resourceSlots.empty())
+		{
+			sort(begin(resourceSlots), end(resourceSlots));
+
+			EffectShaderResourceBinding::ResourceRange range = { resourceSlots[0], 1 };
+			const size_t numSlots = resourceSlots.size();
+			for (size_t i = 1; i < numSlots; ++i)
+			{
+				if (resourceSlots[i] == range.startSlot + range.numResources)
+				{
+					++range.numResources;
+				}
+				else
+				{
+					m_signature.resourceBindings[index].resourceRanges.push_back(range);
+					range.startSlot = resourceSlots[i];
+					range.numResources = 1;
+				}
+			}
+			m_signature.resourceBindings[index].resourceRanges.push_back(range);
+		}
+
 
 		// Variables
 		const auto& shaderVariables = shader->GetVariables();

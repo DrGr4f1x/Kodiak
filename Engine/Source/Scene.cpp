@@ -80,6 +80,16 @@ void Scene::Update(GraphicsCommandList& commandList)
 	for (auto& model : m_staticModels)
 	{
 		model->UpdateConstants(commandList);
+
+		// Visit meshes
+		for (const auto& mesh : model->meshes)
+		{
+			// Visit mesh parts
+			for (const auto& meshPart : mesh->meshParts)
+			{
+				meshPart.material->Update(commandList);
+			}
+		}
 	}
 }
 

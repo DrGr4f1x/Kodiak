@@ -101,6 +101,11 @@ public:
 	void ConcatenateMatrix(const DirectX::XMFLOAT4X4& matrix);
 	const DirectX::XMFLOAT4X4& GetMatrix() const { return m_matrix; }
 
+	std::shared_ptr<Material> GetMaterial(uint32_t meshPartIndex)
+	{
+		return m_meshParts[meshPartIndex].material;
+	}
+
 	std::shared_ptr<StaticMesh> Clone();
 
 private:

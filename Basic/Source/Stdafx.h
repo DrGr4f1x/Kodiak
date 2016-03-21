@@ -45,6 +45,7 @@
 #endif
 
 // Standard library
+#include <array>
 #include <functional>
 #include <list>
 #include <map>

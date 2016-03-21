@@ -20,6 +20,7 @@ class Camera;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
+class MaterialParameter;
 class RenderPass;
 class Scene;
 class StaticModel;
@@ -53,6 +54,8 @@ private:
 	std::shared_ptr<StaticModel>	m_boxModel;
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
+
+	std::array<std::shared_ptr<MaterialParameter>, 5> m_parameters;
 
 	bool	m_isTracking{ false };
 	int		m_mouseX{ 0 };

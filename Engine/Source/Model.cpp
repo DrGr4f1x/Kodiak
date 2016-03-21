@@ -117,7 +117,9 @@ shared_ptr<StaticMesh> StaticMesh::Clone()
 
 	for (const auto& part : m_meshParts)
 	{
-		clone->AddMeshPart(part);
+		StaticMeshPart partCopy = part;
+		partCopy.material = part.material->Clone();
+		clone->AddMeshPart(partCopy);
 	}
 
 	return clone;

@@ -133,26 +133,31 @@ public:
 	//void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 
 	void SetVertexShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetVertexShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
 	void SetVertexShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetVertexShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant, 
 		const uint32_t* numConstants);
 
 	void SetDomainShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetDomainShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
 	void SetDomainShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetDomainShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
 		const uint32_t* numConstants);
 
 	void SetHullShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetHullShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
 	void SetHullShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetHullShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
 		const uint32_t* numConstants);
 
 	void SetGeometryShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetGeometryShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
 	void SetGeometryShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetGeometryShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
 		const uint32_t* numConstants);
 
 	void SetPixelShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetPixelShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
 	void SetPixelShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
 		const uint32_t* numConstants);
@@ -207,9 +212,21 @@ inline void GraphicsCommandList::SetVertexShaderResource(uint32_t slot, ID3D11Sh
 }
 
 
+inline void GraphicsCommandList::SetVertexShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->VSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
 inline void GraphicsCommandList::SetHullShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv)
 {
 	m_context->HSSetShaderResources(slot, 1, &srv);
+}
+
+
+inline void GraphicsCommandList::SetHullShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->HSSetShaderResources(startSlot, numResources, srvs);
 }
 
 
@@ -219,15 +236,33 @@ inline void GraphicsCommandList::SetDomainShaderResource(uint32_t slot, ID3D11Sh
 }
 
 
+inline void GraphicsCommandList::SetDomainShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->DSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
 inline void GraphicsCommandList::SetGeometryShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv)
 {
 	m_context->GSSetShaderResources(slot, 1, &srv);
 }
 
 
+inline void GraphicsCommandList::SetGeometryShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->GSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
 inline void GraphicsCommandList::SetPixelShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv)
 {
 	m_context->PSSetShaderResources(slot, 1, &srv);
+}
+
+
+inline void GraphicsCommandList::SetPixelShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->PSSetShaderResources(startSlot, numResources, srvs);
 }
 
 

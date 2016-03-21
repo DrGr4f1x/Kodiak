@@ -25,6 +25,7 @@ class RenderPass;
 class Texture;
 enum class ShaderResourceDimension;
 enum class ShaderResourceType;
+enum class ShaderType;
 enum class ShaderVariableType;
 
 
@@ -52,6 +53,8 @@ public:
 	std::shared_ptr<MaterialResource> GetResource(const std::string& name);
 
 	std::shared_ptr<RenderThread::MaterialData> GetRenderThreadData() { return m_renderThreadData; }
+
+	std::shared_ptr<Material> Clone();
 
 	concurrency::task<void> prepareTask;
 
@@ -82,8 +85,20 @@ public:
 
 	const std::string& GetName() const { return m_name; }
 	
-	template <typename T>
-	void SetValue(T value);
+	void SetValue(bool value);
+	void SetValue(int32_t value);
+	void SetValue(DirectX::XMINT2 value);
+	void SetValue(DirectX::XMINT3 value);
+	void SetValue(DirectX::XMINT4 value);
+	void SetValue(uint32_t value);
+	void SetValue(DirectX::XMUINT2 value);
+	void SetValue(DirectX::XMUINT3 value);
+	void SetValue(DirectX::XMUINT4 value);
+	void SetValue(float value);
+	void SetValue(DirectX::XMFLOAT2 value);
+	void SetValue(DirectX::XMFLOAT3 value);
+	void SetValue(DirectX::XMFLOAT4 value);
+	void SetValue(DirectX::XMFLOAT4X4 value);
 
 private:
 	const std::string m_name;
@@ -122,6 +137,7 @@ struct MaterialData
 {
 	~MaterialData() { _aligned_free(cbufferData); }
 
+	void Update(GraphicsCommandList& commandList);
 	void Commit(GraphicsCommandList& commandList);
 
 	// Render pass
@@ -134,6 +150,7 @@ struct MaterialData
 	std::shared_ptr<ConstantBuffer> cbuffer;
 	uint8_t*						cbufferData{ nullptr };
 	bool							cbufferDirty{ true };
+	size_t							cbufferSize{ 0 };
 
 	// Per-shader stage cbuffer bindings
 	struct CBufferBinding
@@ -153,7 +170,13 @@ struct MaterialData
 	// Per-shader stage resource bindings
 	struct ResourceBinding
 	{
-		std::vector<std::pair<uint32_t, ID3D11ShaderResourceView*>> resources;
+		struct ResourceRange
+		{
+			uint32_t startSlot;
+			uint32_t numResources;
+			std::vector<ID3D11ShaderResourceView*> resources;
+		};
+		std::vector<ResourceRange> resourceRanges;
 	};
 
 	std::array<ResourceBinding, 5> resourceBindings;
@@ -191,6 +214,7 @@ private:
 	std::array<uint8_t, 64> m_data;
 
 	std::array<uint8_t*, 5>	m_bindings;
+	size_t					m_size{ 0 };
 	bool*					m_dirtyFlag{ nullptr };
 };
 
@@ -202,10 +226,11 @@ public:
 	MaterialResourceData(MaterialData* materialData);
 
 	void SetResource(ID3D11ShaderResourceView* srv);
+	void BindDestination(uint32_t shaderIndex, uint32_t rangeIndex, uint32_t resourceIndex);
 
 private:
-	MaterialData* m_materialData;
-	std::array<uint32_t, 5> m_shaderSlots;
+	std::array<std::pair<uint32_t, uint32_t>, 5>		m_shaderSlots;
+	MaterialData* const									m_materialData;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
 };
 

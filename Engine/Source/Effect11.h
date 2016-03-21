@@ -33,6 +33,16 @@ struct EffectResource
 	ShaderResourceDimension dimension;
 };
 
+struct EffectShaderResourceBinding
+{
+	struct ResourceRange
+	{
+		uint32_t startSlot;
+		uint32_t numResources;
+	};
+	std::vector<ResourceRange> resourceRanges;
+};
+
 
 struct EffectVariableBinding
 {
@@ -62,6 +72,7 @@ struct EffectSignature
 
 	// Resources
 	std::vector<EffectResource> resources;
+	std::array<EffectShaderResourceBinding, 5> resourceBindings;
 
 	std::vector<EffectVariable>	variables;
 };

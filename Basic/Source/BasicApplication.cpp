@@ -20,6 +20,7 @@
 #include "Engine\Source\Effect.h"
 #include "Engine\Source\Format.h"
 #include "Engine\Source\Log.h"
+#include "Engine\Source\Material.h"
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
@@ -81,6 +82,9 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 			mesh->ConcatenateMatrix(matrix);
 		}
+
+		auto v = 0.5f * sinf(seconds) + 0.5f;
+		m_parameters[0]->SetValue(XMFLOAT3(v, v, v));
 	}
 
 	{
@@ -96,6 +100,9 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 			mesh->ConcatenateMatrix(matrix);
 		}
+
+		auto v = 0.5f * sinf(seconds - 1.0f) + 0.5f;
+		m_parameters[1]->SetValue(XMFLOAT3(v, v, v));
 	}
 
 	{
@@ -111,6 +118,9 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 			mesh->ConcatenateMatrix(matrix);
 		}
+
+		auto v = 0.5f * sinf(seconds - 2.0f) + 0.5f;
+		m_parameters[2]->SetValue(XMFLOAT3(v, v, v));
 	}
 
 	{
@@ -126,6 +136,9 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 			mesh->ConcatenateMatrix(matrix);
 		}
+
+		auto v = 0.5f * sinf(seconds - 3.0f) + 0.5f;
+		m_parameters[3]->SetValue(XMFLOAT3(v, v, v));
 	}
 }
 
@@ -211,11 +224,20 @@ void BasicApplication::CreateModel()
 	meshDesc.genColors = true;
 
 	auto mesh = MakeBoxMesh(meshDesc);
+	auto material = mesh->GetMaterial(0);
+	auto parameter = material->GetParameter("tint");
+	parameter->SetValue(XMFLOAT3(1.0f, 1.0f, 1.0f));
+	m_parameters[0] = parameter;
 	
 	m_boxModel->AddMesh(mesh);
 
 	{
 		auto mesh2 = mesh->Clone();
+
+		auto material = mesh2->GetMaterial(0);
+		auto parameter = material->GetParameter("tint");
+		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
+		m_parameters[1] = parameter;
 
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(3.0f, 0.0f, 0.0f)));
@@ -226,6 +248,11 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
+		auto material = mesh2->GetMaterial(0);
+		auto parameter = material->GetParameter("tint");
+		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
+		m_parameters[2] = parameter;
+
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f)));
 		mesh2->SetMatrix(matrix);
@@ -235,6 +262,11 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
+		auto material = mesh2->GetMaterial(0);
+		auto parameter = material->GetParameter("tint");
+		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
+		m_parameters[3] = parameter;
+
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 3.0f)));
 		mesh2->SetMatrix(matrix);
@@ -243,6 +275,11 @@ void BasicApplication::CreateModel()
 	
 	{
 		auto mesh2 = mesh->Clone();
+
+		auto material = mesh2->GetMaterial(0);
+		auto parameter = material->GetParameter("tint");
+		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
+		m_parameters[4] = parameter;
 
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -3.0f)));
