@@ -84,12 +84,15 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 {
 	TextureFormat format = TextureFormat::None;
 
+	string extension;
+	bool appendExtension = false;
+
 	extern ID3D11Device* g_device;
 
 	auto sepIndex = path.rfind('.');
 	if (sepIndex != string::npos)
 	{
-		string extension = path.substr(sepIndex + 1);
+		extension = path.substr(sepIndex + 1);
 		transform(begin(extension), end(extension), begin(extension), ::tolower);
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(TextureFormat::NumFormats); ++i)
@@ -100,23 +103,33 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 				break;
 			}
 		}
+	}
+	else
+	{
+		// Assume .dds if there is no extension
+		format = TextureFormat::DDS;
+		extension = ".dds";
+		appendExtension = true;
+	}
 
-		if (format != TextureFormat::None)
+	if (format != TextureFormat::None)
+	{
+		string fullPath = Paths::GetInstance().TextureDir() + path;
+		if (appendExtension)
 		{
-			string fullPath = Paths::GetInstance().TextureDir() + path;
-			
-			switch (format)
-			{
-			case TextureFormat::DDS:
+			fullPath += extension;
+		}
 
-				ThrowIfFailed(CreateDDSTextureFromFile(g_device,
-					fullPath,
-					0, // maxsize
-					sRGB,
-					texture->m_resource.GetAddressOf(),
-					texture->m_srv.GetAddressOf()));
-				break;
-			}
+		switch (format)
+		{
+		case TextureFormat::DDS:
+			ThrowIfFailed(CreateDDSTextureFromFile(g_device,
+				fullPath,
+				0, // maxsize
+				sRGB,
+				texture->m_resource.GetAddressOf(),
+				texture->m_srv.GetAddressOf()));
+			break;
 		}
 	}
 }

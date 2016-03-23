@@ -20,8 +20,6 @@ class Camera;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
-class Material;
-class RenderPass;
 class Scene;
 class StaticModel;
 
@@ -50,9 +48,6 @@ private:
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
 	std::shared_ptr<StaticModel>	m_sponzaModel;
-
-	std::shared_ptr<Material>		m_baseMaterial;
-	std::shared_ptr<Material>		m_depthMaterial;
 };
 
 } // namespace Kodiak

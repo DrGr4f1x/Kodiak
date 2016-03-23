@@ -118,33 +118,6 @@ void SponzaApplication::CreateEffects()
 	depthEffect->SetRenderTargetFormats(0, nullptr, DepthFormat::D32);
 	depthEffect->Finalize();
 	SetDefaultDepthEffect(depthEffect);
-
-	// TEMP: materials
-	m_baseMaterial = make_shared<Material>();
-	m_baseMaterial->SetName("Base");
-	m_baseMaterial->SetEffect(baseEffect);
-
-	m_depthMaterial = make_shared<Material>();
-	m_depthMaterial->SetName("Depth");
-	m_depthMaterial->SetEffect(depthEffect);
-
-#if 0
-	// Base effect
-	auto effect = make_shared<Effect>();
-	effect->SetName("Base effect");
-	effect->SetVertexShaderPath("Engine", "SimpleVertexShader");
-	effect->SetPixelShaderPath("Engine", "SimplePixelShader");
-	effect->SetBlendState(CommonStates::Opaque());
-	effect->SetDepthStencilState(CommonStates::DepthDefault());
-	effect->SetRasterizerState(CommonStates::CullCounterClockwise());
-	effect->Finalize();
-
-	// Base material
-	m_baseMaterial = make_shared<Material>();
-	m_baseMaterial->SetName("Base material");
-	m_baseMaterial->SetEffect(effect);
-	m_baseMaterial->SetRenderPass(m_basePass);
-#endif
 }
 
 
@@ -158,14 +131,15 @@ void SponzaApplication::SetupScene()
 {
 	// Setup scene camera
 	m_camera = make_shared<Camera>();
-	m_camera->SetPosition(XMFLOAT3(0.0f, 0.7f, 1.5f));
-	m_camera->LookAt(XMFLOAT3(0.0f, -0.1f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
-	m_camera->SetPerspective(70.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 100.0f);
+	m_camera->SetPosition(XMFLOAT3(1099.0f, 652.0f, -39.0f));
+	m_camera->LookAt(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_camera->SetPerspective(45.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 1.0f, 10000.0f);
 
 	m_mainScene = make_shared<Scene>();
 
 	// Add camera and model to scene
 	m_mainScene->SetCamera(m_camera);
+	m_mainScene->AddStaticModel(m_sponzaModel);
 }
 
 
@@ -180,7 +154,7 @@ void SponzaApplication::SetupPipeline()
 	pipeline->ClearDepth(m_depthBuffer);
 
 	pipeline->UpdateScene(m_mainScene);
-	pipeline->RenderScene(m_mainScene);
+	pipeline->RenderScenePass(GetDefaultBasePass(), m_mainScene);
 
 	pipeline->Present(m_colorTarget);
 }

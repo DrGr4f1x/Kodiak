@@ -161,6 +161,7 @@ public:
 	void SetPixelShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
 		const uint32_t* numConstants);
+	void SetPixelShaderSampler(uint32_t slot, ID3D11SamplerState* state);
 };
 
 
@@ -263,6 +264,12 @@ inline void GraphicsCommandList::SetPixelShaderResource(uint32_t slot, ID3D11Sha
 inline void GraphicsCommandList::SetPixelShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
 {
 	m_context->PSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
+inline void GraphicsCommandList::SetPixelShaderSampler(uint32_t slot, ID3D11SamplerState* state)
+{
+	m_context->PSSetSamplers(slot, 1, &state);
 }
 
 

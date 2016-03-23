@@ -14,6 +14,7 @@
 #include "Camera.h"
 #include "CommandList.h"
 #include "ConstantBuffer.h"
+#include "DeviceManager.h"
 #include "Format.h"
 #include "IndexBuffer.h"
 #include "PipelineState.h"
@@ -41,7 +42,6 @@ using namespace RenderThread;
 
 Scene::Scene()
 {
-	XMStoreFloat4x4(&m_modelTransform, XMMatrixIdentity());
 	Initialize();
 }
 
@@ -132,6 +132,8 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 {
 	PROFILE(scene_RenderPass);
 
+	BindSamplerStates(commandList);
+
 	// Visit models
 	for (auto& model : m_staticModels)
 	{
@@ -157,7 +159,7 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 					
 					commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
 					commandList.SetIndexBuffer(*meshPart.indexBuffer);
-					commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+					commandList.SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);
 
 					commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
 				}
@@ -222,6 +224,16 @@ void Scene::Initialize()
 
 	m_pso->Finalize();
 
+	// TODO: Remove this and handle sampler state in a non-stupid way
+#if defined(DX11)
+	auto samplerDesc = CD3D11_SAMPLER_DESC(D3D11_DEFAULT);
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MaxAnisotropy = 16;
+
+	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf()));
+#endif
+
 	// Create constant buffers
 	m_perViewConstantBuffer = make_shared<ConstantBuffer>();
 	m_perViewConstantBuffer->Create(sizeof(PerViewConstants), Usage::Dynamic);
@@ -278,4 +290,12 @@ void Scene::RemoveStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> 
 			m_staticModels.pop_back();
 		}
 	}
+}
+
+
+void Scene::BindSamplerStates(GraphicsCommandList& commandList)
+{
+#if defined(DX11)
+	commandList.SetPixelShaderSampler(0, m_samplerState.Get());
+#endif
 }

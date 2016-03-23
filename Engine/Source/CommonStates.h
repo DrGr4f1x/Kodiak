@@ -17,7 +17,6 @@ struct BlendStateDesc;
 struct DepthStencilStateDesc;
 struct RasterizerStateDesc;
 
-
 class CommonStates
 {
 public:

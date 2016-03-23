@@ -53,6 +53,9 @@ public:
 	void AddStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 	void RemoveStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 
+	// TODO: Super-hacky way to ram sampler states into the engine
+	void BindSamplerStates(GraphicsCommandList& commandList);
+
 private:
 	void Initialize();
 
@@ -75,7 +78,9 @@ private:
 	std::shared_ptr<RenderThread::Camera> m_camera;
 
 	// HACK
-	DirectX::XMFLOAT4X4 m_modelTransform;
+#if defined(DX11)
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_samplerState;
+#endif
 
 	// Maps from static model pointers into the m_staticModels list for faster adds/removes
 	std::map<std::shared_ptr<RenderThread::StaticModelData>, size_t>	m_staticModelMap;

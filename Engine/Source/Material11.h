@@ -115,6 +115,8 @@ class MaterialResource
 public:
 	MaterialResource(const std::string& name);
 
+	const std::string& GetName() const { return m_name; }
+
 	void SetResource(std::shared_ptr<Texture> texture);
 
 private:
@@ -135,7 +137,10 @@ namespace RenderThread
 
 struct MaterialData
 {
-	~MaterialData() { _aligned_free(cbufferData); }
+	~MaterialData() 
+	{ 
+		_aligned_free(cbufferData); 
+	}
 
 	void Update(GraphicsCommandList& commandList);
 	void Commit(GraphicsCommandList& commandList);
@@ -165,7 +170,7 @@ struct MaterialData
 	std::array<CBufferBinding, 5> cbufferBindings;
 
 	// Callbacks for binding cbuffers to the command list at render time
-	std::array<std::function<void(GraphicsCommandList&)>, 5> cbufferCallbacks;
+	std::array<std::function<void(const MaterialData&, GraphicsCommandList&)>, 5> cbufferCallbacks;
 
 	// Per-shader stage resource bindings
 	struct ResourceBinding
@@ -180,7 +185,7 @@ struct MaterialData
 	};
 
 	std::array<ResourceBinding, 5> resourceBindings;
-	std::array<std::function<void(GraphicsCommandList&)>, 5> resourceCallbacks;
+	std::array<std::function<void(const MaterialData&, GraphicsCommandList&)>, 5> resourceCallbacks;
 };
 
 
@@ -188,7 +193,7 @@ class MaterialParameterData
 {
 	friend class Material;
 public:
-	MaterialParameterData();
+	MaterialParameterData(std::shared_ptr<MaterialData> materialData);
 
 	void SetValue(bool value);
 	void SetValue(int32_t value);
@@ -213,6 +218,7 @@ private:
 	ShaderVariableType		m_type;
 	std::array<uint8_t, 64> m_data;
 
+	std::weak_ptr<MaterialData> m_materialData;
 	std::array<uint8_t*, 5>	m_bindings;
 	size_t					m_size{ 0 };
 	bool*					m_dirtyFlag{ nullptr };
@@ -223,14 +229,14 @@ class MaterialResourceData
 {
 	friend class Material;
 public:
-	MaterialResourceData(MaterialData* materialData);
+	MaterialResourceData(std::shared_ptr<MaterialData> materialData);
 
 	void SetResource(ID3D11ShaderResourceView* srv);
 	void BindDestination(uint32_t shaderIndex, uint32_t rangeIndex, uint32_t resourceIndex);
 
 private:
 	std::array<std::pair<uint32_t, uint32_t>, 5>		m_shaderSlots;
-	MaterialData* const									m_materialData;
+	std::weak_ptr<MaterialData>							m_materialData;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
 };
 

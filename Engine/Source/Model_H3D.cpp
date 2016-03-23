@@ -295,7 +295,8 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 	std::vector<std::shared_ptr<Material>> depthMaterials(header.materialCount);
 	for (uint32_t i = 0; i < header.materialCount; ++i)
 	{
-		auto opaqueMaterial = make_shared<Material>();
+		// Setup opaque base-pass material
+		auto opaqueMaterial = opaqueMaterials[i] = make_shared<Material>();
 		opaqueMaterial->SetEffect(GetDefaultBaseEffect());
 		opaqueMaterial->SetRenderPass(GetDefaultBasePass());
 
@@ -334,15 +335,18 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		opaqueMaterial->GetResource("texSpecular")->SetResource(specularTexture);
 		opaqueMaterial->GetResource("texNormal")->SetResource(normalTexture);
 
-		opaqueMaterials.emplace_back(opaqueMaterial);
+		// TODO move this stuff to per-view data
+		using namespace DirectX;
+		opaqueMaterial->GetParameter("sunDirection")->SetValue(XMFLOAT3(0.336f, 0.924f, -0.183f));
+		opaqueMaterial->GetParameter("sunColor")->SetValue(XMFLOAT3(4.0f, 4.0f, 4.0f));
+		opaqueMaterial->GetParameter("ambientColor")->SetValue(XMFLOAT3(0.2f, 0.2f, 0.2f));
 
-		auto depthMaterial = make_shared<Material>();
+		// Setup depth material
+		auto depthMaterial = depthMaterials[i] = make_shared<Material>();
 		depthMaterial->SetEffect(GetDefaultDepthEffect());
 		depthMaterial->SetRenderPass(GetDefaultDepthPass());
 
 		depthMaterial->GetResource("texDiffuse")->SetResource(diffuseTexture);
-
-		depthMaterials.emplace_back(depthMaterial);
 	}
 
 	// Create meshes
@@ -372,7 +376,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 			h3dMesh.indexCount,
 			h3dMesh.indexDataByteOffset / sizeof(uint16_t),
 			static_cast<int32_t>(h3dMesh.vertexDataByteOffset / vertexStride)};
-		mesh->AddMeshPart(opaquePart);
+		mesh->AddMeshPart(depthPart);
 
 		model->AddMesh(mesh);
 	}

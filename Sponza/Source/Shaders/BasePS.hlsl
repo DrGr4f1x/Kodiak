@@ -2,9 +2,13 @@ Texture2D<float3> texDiffuse : register(t0);
 Texture2D<float3> texSpecular : register(t1);
 Texture2D<float3> texNormal : register(t2);
 
-SamplerState sampler0 : register(s0);
+SamplerState sampler0
+{
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
 
-cbuffer PerMaterialConstants : register(b2)
+cbuffer PerMaterialData : register(b2)
 {
 	float3 sunDirection;
 	float3 sunColor;

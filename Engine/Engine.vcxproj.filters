@@ -296,6 +296,7 @@
     <ClInclude Include="Source\MaterialParameter.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Input.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -460,6 +461,7 @@
     <ClCompile Include="Source\Defaults.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Input.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
