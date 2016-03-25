@@ -59,7 +59,6 @@ public:
 	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
 	void SetWindowSize(uint32_t width, uint32_t height);
 
-	void Update();
 	void Render();
 
 	std::shared_ptr<Kodiak::Pipeline> GetRootPipeline() { return m_rootPipeline; }

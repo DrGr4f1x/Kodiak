@@ -81,16 +81,6 @@ void Renderer::SetWindowSize(uint32_t width, uint32_t height)
 }
 
 
-void Renderer::Update()
-{
-	PROFILE(renderer_Update);
-
-	auto staticModelTask = concurrency::create_task([this] { UpdateStaticModels(); });
-
-	staticModelTask.wait();
-}
-
-
 void Renderer::Render()
 {
 	PROFILE(renderer_Render);

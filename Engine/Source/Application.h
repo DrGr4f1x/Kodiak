@@ -15,6 +15,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class InputState;
 class StepTimer;
 
 class Application
@@ -60,6 +61,9 @@ protected:
 	bool m_minimized{ false };
 	bool m_maximized{ false };
 	bool m_resizing{ false };
+
+	// Input state
+	std::shared_ptr<InputState> m_inputState;
 
 private:
 	void ParseCommandLineArgs();

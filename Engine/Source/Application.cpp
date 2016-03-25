@@ -13,6 +13,7 @@
 
 #include "CommandList.h"
 #include "DeviceManager.h"
+#include "InputState.h"
 #include "Log.h"
 #include "Profile.h"
 #include "Renderer.h"
@@ -46,6 +47,7 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 
 Application::~Application()
 {
+	m_inputState->Shutdown();
 	ShutdownLogging();
 	ShutdownProfiling();
 }
@@ -81,6 +83,9 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 		NULL);		// We aren't using multiple windows, NULL.
 
 	ShowWindow(m_hwnd, nCmdShow);
+
+	m_inputState = make_shared<InputState>();
+	m_inputState->Initialize(m_hwnd);
 
 	// Initialize the sample. OnInit is defined in each child-implementation of Application.
 	OnInit();
@@ -276,8 +281,8 @@ void Application::Update()
 	// Update scene objects
 	m_timer->Tick([this]()
 	{
-		// Update the renderer
-		Renderer::GetInstance().Update();
+		// Update the input state
+		m_inputState->Update(static_cast<float>(m_timer->GetElapsedSeconds()));
 
 		// Subclasses implement OnUpdate to supply their own scene update logic
 		OnUpdate(m_timer.get());

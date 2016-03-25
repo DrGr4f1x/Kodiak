@@ -296,7 +296,10 @@
     <ClInclude Include="Source\MaterialParameter.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Input.h" />
+    <ClInclude Include="Source\DebugUtility.h">
+      <Filter>External</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InputState.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -461,7 +464,7 @@
     <ClCompile Include="Source\Defaults.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Input.cpp" />
+    <ClCompile Include="Source\InputState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">

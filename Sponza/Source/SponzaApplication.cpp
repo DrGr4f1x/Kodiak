@@ -11,6 +11,7 @@
 
 #include "SponzaApplication.h"
 
+#include "CameraController.h"
 #include "Engine\Source\Camera.h"
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
@@ -19,6 +20,7 @@
 #include "Engine\Source\DepthBuffer.h"
 #include "Engine\Source\Effect.h"
 #include "Engine\Source\Format.h"
+#include "Engine\Source\InputState.h"
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Material.h"
 #include "Engine\Source\Model.h"
@@ -49,18 +51,20 @@ void SponzaApplication::OnInit()
 	CreateEffects();
 	CreateModel();
 
-#if 0
-	auto idx = m_boxModel.AddMaterial(m_baseMaterial);
-	m_boxModel.GetMesh(0)->SetMaterialIndex(idx);
-#endif
-
 	SetupScene();
 	SetupPipeline();
 }
 
 
 void SponzaApplication::OnUpdate(StepTimer* timer)
-{}
+{
+	if (m_inputState->IsFirstPressed(InputState::kKey_escape))
+	{
+		PostQuitMessage(0);
+	}
+
+	m_cameraController->Update(static_cast<float>(timer->GetElapsedSeconds()));
+}
 
 
 void SponzaApplication::OnDestroy()
@@ -134,6 +138,8 @@ void SponzaApplication::SetupScene()
 	m_camera->SetPosition(XMFLOAT3(1099.0f, 652.0f, -39.0f));
 	m_camera->LookAt(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_camera->SetPerspective(45.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 1.0f, 10000.0f);
+
+	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, XMFLOAT3(0.0f, 1.0f, 0.0f));
 
 	m_mainScene = make_shared<Scene>();
 

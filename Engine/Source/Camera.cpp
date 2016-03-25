@@ -76,6 +76,37 @@ void Camera::SetOrientation(const XMFLOAT4& orientation)
 	if (m_orientation != orientation)
 	{
 		m_orientation = orientation;
+
+		XMVECTOR xmOrientation = XMLoadFloat4(&m_orientation);
+		XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
+
+		RenderThreadSetCameraPositionAndOrientation();
+	}
+}
+
+
+void Camera::SetPositionAndOrientation(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation)
+{
+	bool update = false;
+
+	if (m_position != position)
+	{
+		m_position = position;
+		update = true;
+	}
+
+	if (m_orientation != orientation)
+	{
+		m_orientation = orientation;
+
+		XMVECTOR xmOrientation = XMLoadFloat4(&m_orientation);
+		XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
+
+		update = true;
+	}
+
+	if (update)
+	{
 		RenderThreadSetCameraPositionAndOrientation();
 	}
 }
@@ -118,7 +149,11 @@ void Camera::LookAt(const XMFLOAT3& target, const XMFLOAT3& up)
 {
 	XMMATRIX temp = XMMatrixLookAtRH(XMLoadFloat3(&m_position), XMLoadFloat3(&target), XMLoadFloat3(&up));
 	XMVECTOR dummy;
-	XMStoreFloat4(&m_orientation, XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp))));
+	XMVECTOR xmOrientation = XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp)));
+	XMStoreFloat4(&m_orientation, xmOrientation);
+
+	XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
+	XMStoreFloat3(&m_right, XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), xmOrientation));
 
 	RenderThreadSetCameraPositionAndOrientation();
 }
@@ -129,7 +164,11 @@ void Camera::LookIn(const XMFLOAT3& dir, const XMFLOAT3& up)
 	XMVECTOR pos = XMLoadFloat3(&m_position);
 	XMVECTOR dummy;
 	XMMATRIX temp = XMMatrixLookAtRH(pos, XMVectorAdd(pos, XMLoadFloat3(&dir)), XMLoadFloat3(&up));
-	XMStoreFloat4(&m_orientation, XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp))));
+	XMVECTOR xmOrientation = XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp)));
+	XMStoreFloat4(&m_orientation, xmOrientation);
+
+	XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
+	XMStoreFloat3(&m_right, XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), xmOrientation));
 
 	RenderThreadSetCameraPositionAndOrientation();
 }
@@ -149,6 +188,9 @@ void Camera::Orbit(float deltaPitch, float deltaYaw, const XMFLOAT3& target, con
 
 	XMStoreFloat3(&m_position, xmPosition);
 	XMStoreFloat4(&m_orientation, xmOrientation);
+
+	XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
+	XMStoreFloat3(&m_right, XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), xmOrientation));
 
 	LookAt(target, up);
 }

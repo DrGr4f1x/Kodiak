@@ -12,6 +12,7 @@
 
 #include "RootSignature12.h"
 
+#include "DebugUtility.h"
 #include "DeviceManager12.h"
 #include "RenderUtils.h"
 
@@ -57,23 +58,23 @@ void RootSignature::InitStaticSampler(
 		staticSamplerDesc.AddressW == D3D12_TEXTURE_ADDRESS_MODE_BORDER)
 	{
 		// TODO: implement this macro
-		//WARN_ONCE_IF_NOT(
-		//	// Transparent Black
-		//	nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[3] == 0.0f ||
-		//	// Opaque Black
-		//	nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[3] == 1.0f ||
-		//	// Opaque White
-		//	nonStaticSamplerDesc.BorderColor[0] == 1.0f &&
-		//	nonStaticSamplerDesc.BorderColor[1] == 1.0f &&
-		//	nonStaticSamplerDesc.BorderColor[2] == 1.0f &&
-		//	nonStaticSamplerDesc.BorderColor[3] == 1.0f,
-		//	"Sampler border color does not match static sampler limitations");
+		warn_once_if_not(
+			// Transparent Black
+			nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[3] == 0.0f ||
+			// Opaque Black
+			nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[3] == 1.0f ||
+			// Opaque White
+			nonStaticSamplerDesc.BorderColor[0] == 1.0f &&
+			nonStaticSamplerDesc.BorderColor[1] == 1.0f &&
+			nonStaticSamplerDesc.BorderColor[2] == 1.0f &&
+			nonStaticSamplerDesc.BorderColor[3] == 1.0f,
+			"Sampler border color does not match static sampler limitations");
 
 		if(nonStaticSamplerDesc.BorderColor[3] == 1.0f)
 		{

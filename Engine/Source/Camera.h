@@ -28,11 +28,18 @@ public:
 	Camera(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation, float fov, float aspect,
 		float zNear = 0.1f, float zFar = 10.0f);
 
-	const DirectX::XMFLOAT3& GetPosition() const { return m_position; }
 	void SetPosition(const DirectX::XMFLOAT3& position);
-
-	const DirectX::XMFLOAT4& GetOrientation() const { return m_orientation; }
 	void SetOrientation(const DirectX::XMFLOAT4& orientation);
+	void SetPositionAndOrientation(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation);
+
+	const DirectX::XMFLOAT3& GetPosition() const { return m_position; }
+	const DirectX::XMFLOAT4& GetOrientation() const { return m_orientation; }
+	const DirectX::XMFLOAT3& GetForwardVector() const { return m_forward; }
+	const DirectX::XMFLOAT3& GetRightVector() const { return m_right; }
+
+	void SetPerspective(float fov, float aspect, float zNear, float zFar);
+	void SetAspectRatio(float aspect);
+	void SetFOV(float fov);
 
 	void GetPerspective(float& fov, float& aspect, float& zNear, float& zFar)
 	{
@@ -41,10 +48,7 @@ public:
 		zNear = m_zNear;
 		zFar = m_zFar;
 	}
-	void SetPerspective(float fov, float aspect, float zNear, float zFar);
-	void SetAspectRatio(float aspect);
-	void SetFOV(float fov);
-
+	
 	void LookAt(const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
 	void LookIn(const DirectX::XMFLOAT3& dir, const DirectX::XMFLOAT3& up);
 
@@ -60,6 +64,8 @@ private:
 private:
 	DirectX::XMFLOAT3	m_position;
 	DirectX::XMFLOAT4	m_orientation;
+	DirectX::XMFLOAT3	m_forward;
+	DirectX::XMFLOAT3	m_right;
 	float				m_fov;
 	float				m_aspect;
 	float				m_zNear;
