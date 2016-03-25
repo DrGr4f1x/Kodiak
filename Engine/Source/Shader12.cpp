@@ -44,7 +44,7 @@ ShaderPath::ShaderPath(const string& shaderPath, const string& shaderFile)
 }
 
 
-void BaseShader::Finalize()
+void Shader::Finalize()
 {
 	ComPtr<ID3D12ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));

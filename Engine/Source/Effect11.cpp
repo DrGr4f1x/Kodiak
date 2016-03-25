@@ -118,7 +118,7 @@ void Effect::ProcessShaderBindings(uint32_t index, ShaderClass* shader)
 			effectCBuffer.name = shaderCBuffer.name;
 			effectCBuffer.size = shaderCBuffer.size;
 			effectCBuffer.shaderRegister = shaderCBuffer.registerSlot;
-			m_signature.constantBuffers[index].emplace_back(effectCBuffer);
+			m_signature.internalCBVToDXMap[index].emplace_back(effectCBuffer);
 
 			m_signature.perMaterialDataSize += Math::AlignUp(shaderCBuffer.size, 16);
 		}
@@ -170,12 +170,12 @@ void Effect::ProcessShaderBindings(uint32_t index, ShaderClass* shader)
 				}
 				else
 				{
-					m_signature.resourceBindings[index].resourceRanges.push_back(range);
+					m_signature.internalSRVToDXMap[index].resourceRanges.push_back(range);
 					range.startSlot = resourceSlots[i];
 					range.numResources = 1;
 				}
 			}
-			m_signature.resourceBindings[index].resourceRanges.push_back(range);
+			m_signature.internalSRVToDXMap[index].resourceRanges.push_back(range);
 		}
 
 

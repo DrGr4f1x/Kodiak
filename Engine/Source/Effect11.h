@@ -13,7 +13,6 @@ namespace Kodiak
 {
 
 // Forward declarations
-class BaseShader;
 class GraphicsPSO;
 
 
@@ -60,34 +59,39 @@ struct EffectVariable
 };
 
 
-struct EffectSignature
-{
-	// Shared constants for multiple shader stages
-	size_t	perViewDataSize;
-	size_t	perObjectDataSize;
-	size_t  perMaterialDataSize;
-
-	// Constant buffers
-	std::array<std::vector<EffectConstantBuffer>, 5> constantBuffers;
-
-	// Resources
-	std::vector<EffectResource> resources;
-	std::array<EffectShaderResourceBinding, 5> resourceBindings;
-
-	std::vector<EffectVariable>	variables;
-};
-
-
 class Effect : public BaseEffect
 {
 public:
+	// Forward decls
+	struct Signature;
+
 	Effect();
 	explicit Effect(const std::string& name);
 
-	const EffectSignature& GetSignature() const { return m_signature; }
+	const Signature& GetSignature() const { return m_signature; }
 	std::shared_ptr<GraphicsPSO> GetPSO() { return m_pso; }
 
 	void Finalize() override;
+
+	struct Signature
+	{
+		// Shared constants for multiple shader stages
+		size_t	perViewDataSize;
+		size_t	perObjectDataSize;
+		size_t  perMaterialDataSize;
+
+		// Remap internal CBVs to DX11 
+		std::array<std::vector<EffectConstantBuffer>, 5>	internalCBVToDXMap;
+		// Remap internal SRVs to DX11
+		std::array<EffectShaderResourceBinding, 5>			internalSRVToDXMap;
+		// TODO: internal UAVs to DX11
+
+		// Application SRV to internal remap
+		std::vector<EffectResource> resources;
+		// Application parameter to internal CPU memory
+		std::vector<EffectVariable> variables;
+		// TODO: Application UAV to internal remap
+	};
 
 private:
 	void BuildEffectSignature();
@@ -97,7 +101,7 @@ private:
 
 private:
 	std::shared_ptr<GraphicsPSO>	m_pso;
-	EffectSignature					m_signature;
+	Signature						m_signature;
 };
 
 } // namespace Kodiak

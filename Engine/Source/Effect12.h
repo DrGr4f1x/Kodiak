@@ -14,9 +14,9 @@ namespace Kodiak
 {
 
 // Forward declarations
-class BaseShader;
 class GraphicsPSO;
 class RootSignature;
+class Shader;
 enum class ShaderType;
 
 
@@ -90,7 +90,7 @@ private:
 	void BuildConstantBufferDesc(const ShaderConstantBufferDesc& desc, uint32_t rootParameterIndex, uint32_t rootTableOffset,
 		ShaderType shaderType);
 	void BuildResourceDesc(const ShaderResourceDesc& desc, uint32_t rootParameterIndex, uint32_t rootTableOffset, uint32_t shaderIndex);
-	void ProcessShaderBindings(uint32_t index, BaseShader* shader);
+	void ProcessShaderBindings(uint32_t index, Shader* shader);
 	
 
 private:

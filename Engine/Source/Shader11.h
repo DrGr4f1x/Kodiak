@@ -21,17 +21,12 @@ namespace Kodiak
 class InputLayout;
 
 
-class VertexShader
+class Shader
 {
-	friend class ShaderManager;
-
 public:
-	ID3D11VertexShader* GetShader() { return m_shader.Get(); }
-	std::shared_ptr<InputLayout> GetInputLayout();
-
 	bool IsReady() const { return m_isReady; }
 
-	ShaderType GetType() const { return ShaderType::Vertex; }
+	virtual ShaderType GetType() const = 0;
 
 	// Reflection info
 	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
@@ -40,6 +35,24 @@ public:
 	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
 
 	concurrency::task<void> loadTask;
+
+protected:
+	ShaderBindingDesc								m_bindingDesc;
+	std::vector<ShaderVariableDesc>					m_variables;
+
+	bool											m_isReady{ false };
+};
+
+
+class VertexShader : public Shader
+{
+	friend class ShaderManager;
+
+public:
+	ID3D11VertexShader* GetShader() { return m_shader.Get(); }
+	std::shared_ptr<InputLayout> GetInputLayout();
+
+	ShaderType GetType() const override { return ShaderType::Vertex; }
 
 private:
 	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize);
@@ -48,165 +61,91 @@ private:
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>		m_shader;
 	std::shared_ptr<InputLayout>					m_inputLayout;
-
-	ShaderBindingDesc								m_bindingDesc;
-	std::vector<ShaderVariableDesc>					m_variables;
-
-	bool											m_isReady{ false };
 };
 
 
-class PixelShader
+class PixelShader : public Shader
 {
 	friend class ShaderManager;
 
 public:
 	ID3D11PixelShader* GetShader() { return m_shader.Get(); }
 
-	bool IsReady() const { return m_isReady; }
-
-	ShaderType GetType() const { return ShaderType::Pixel; }
-
-	// Reflection info
-	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
-	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
-	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
-	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
-
-	concurrency::task<void> loadTask;
+	ShaderType GetType() const override { return ShaderType::Pixel; }
 
 private:
 	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize);
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>		m_shader;
-
-	ShaderBindingDesc								m_bindingDesc;
-	std::vector<ShaderVariableDesc>					m_variables;
-
-	bool											m_isReady{ false };
 };
 
 
-class GeometryShader
+class GeometryShader : public Shader
 {
 	friend class ShaderManager;
 
 public:
 	ID3D11GeometryShader* GetShader() { return m_shader.Get(); }
 
-	bool IsReady() const { return m_isReady; }
-
-	ShaderType GetType() const { return ShaderType::Geometry; }
-
-	// Reflection info
-	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
-	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
-	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
-	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
-
-	concurrency::task<void> loadTask;
+	ShaderType GetType() const override { return ShaderType::Geometry; }
 
 private:
 	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize);
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11GeometryShader>	m_shader;
-
-	ShaderBindingDesc								m_bindingDesc;
-	std::vector<ShaderVariableDesc>					m_variables;
-
-	bool											m_isReady{ false };
 };
 
 
-class DomainShader
+class DomainShader : public Shader
 {
 	friend class ShaderManager;
 
 public:
 	ID3D11DomainShader* GetShader() { return m_shader.Get(); }
 
-	bool IsReady() const { return m_isReady; }
-
-	ShaderType GetType() const { return ShaderType::Domain; }
-
-	// Reflection info
-	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
-	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
-	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
-	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
-
-	concurrency::task<void> loadTask;
+	ShaderType GetType() const override { return ShaderType::Domain; }
 
 private:
 	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize);
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11DomainShader>		m_shader;
-
-	ShaderBindingDesc								m_bindingDesc;
-	std::vector<ShaderVariableDesc>					m_variables;
-
-	bool											m_isReady{ false };
 };
 
 
-class HullShader
+class HullShader : public Shader
 {
 	friend class ShaderManager;
 
 public:
 	ID3D11HullShader* GetShader() { return m_shader.Get(); }
 
-	bool IsReady() const { return m_isReady; }
-
-	ShaderType GetType() const { return ShaderType::Hull; }
-
-	// Reflection info
-	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
-	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
-	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
-	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
-
-	concurrency::task<void> loadTask;
+	ShaderType GetType() const override { return ShaderType::Hull; }
 
 private:
 	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize);
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11HullShader>		m_shader;
-
-	ShaderBindingDesc								m_bindingDesc;
-	std::vector<ShaderVariableDesc>					m_variables;
-
-	bool											m_isReady{ false };
 };
 
 
-class ComputeShader
+class ComputeShader : public Shader
 {
 	friend class ShaderManager;
 
 public:
 	ID3D11ComputeShader* GetShader() { return m_shader.Get(); }
 
-	bool IsReady() const { return m_isReady; }
-
-	ShaderType GetType() const { return ShaderType::Compute; }
-
-	concurrency::task<void> loadTask;
+	ShaderType GetType() const override { return ShaderType::Compute; }
 
 private:
 	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize);
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11ComputeShader>		m_shader;
-
-	ShaderBindingDesc								m_bindingDesc;
-	std::vector<ShaderVariableDesc>					m_variables;
-
-	bool											m_isReady{ false };
 };
 
 

@@ -213,13 +213,13 @@ void SetupBinding(uint32_t& constantOffset, RenderThread::MaterialData::CBufferB
 }
 
 
-void SetupShaderCBufferBindings(uint32_t& constantOffset, RenderThread::MaterialData& materialData, const EffectSignature& effectSig, ShaderType shaderType)
+void SetupShaderCBufferBindings(uint32_t& constantOffset, RenderThread::MaterialData& materialData, const Effect::Signature& effectSig, ShaderType shaderType)
 {
 	const uint32_t index = static_cast<uint32_t>(shaderType);
 
 	auto& binding = materialData.cbufferBindings[index];
 
-	const auto& effectCBuffers = effectSig.constantBuffers[index];
+	const auto& effectCBuffers = effectSig.internalCBVToDXMap[index];
 
 	auto d3dBuffer = materialData.cbuffer->constantBuffer.Get();
 	SetupBinding(constantOffset, binding, d3dBuffer, effectCBuffers);
@@ -375,7 +375,7 @@ void Material::CreateRenderThreadData()
 	for (uint32_t i = 0; i < 5; ++i)
 	{
 		materialData.resourceBindings[i].resourceRanges.clear();
-		for (const auto& effectResourceRange : effectSig.resourceBindings[i].resourceRanges)
+		for (const auto& effectResourceRange : effectSig.internalSRVToDXMap[i].resourceRanges)
 		{
 			RenderThread::MaterialData::ResourceBinding::ResourceRange range;
 

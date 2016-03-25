@@ -247,7 +247,7 @@ void Effect::BuildResourceDesc(const ShaderResourceDesc& desc, uint32_t rootPara
 }
 
 
-void Effect::ProcessShaderBindings(uint32_t index, BaseShader* shader)
+void Effect::ProcessShaderBindings(uint32_t index, Shader* shader)
 {
 	if (shader)
 	{

@@ -20,7 +20,7 @@ namespace Kodiak
 // Forward declarations
 class InputLayout;
 
-class BaseShader
+class Shader
 {
 	friend class ShaderManager;
 
@@ -51,7 +51,7 @@ protected:
 };
 
 
-class VertexShader : public BaseShader
+class VertexShader : public Shader
 {
 	friend class ShaderManager;
 
@@ -69,35 +69,35 @@ private:
 };
 
 
-class PixelShader : public BaseShader
+class PixelShader : public Shader
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Pixel; }
 };
 
 
-class DomainShader : public BaseShader
+class DomainShader : public Shader
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Domain; }
 };
 
 
-class HullShader : public BaseShader
+class HullShader : public Shader
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Hull; }
 };
 
 
-class GeometryShader : public BaseShader
+class GeometryShader : public Shader
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Geometry; }
 };
 
 
-class ComputeShader : public BaseShader
+class ComputeShader : public Shader
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Compute; }
