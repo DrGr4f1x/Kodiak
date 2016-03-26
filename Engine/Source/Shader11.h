@@ -28,33 +28,15 @@ public:
 	virtual ShaderType GetType() const = 0;
 
 	// Reflection info
-	struct Signature;
 	uint32_t GetPerViewDataSize() const { return m_signature.cbvPerViewData.sizeInBytes; }
 	uint32_t GetPerObjectDataSize() const { return m_signature.cbvPerObjectData.sizeInBytes; }
-	const struct Signature& GetSignature() const { return m_signature; }
+	const struct ShaderReflection::Signature& GetSignature() const { return m_signature; }
 
 	concurrency::task<void> loadTask;
 
-	struct Signature
-	{
-		// DX11 API inputs
-		ShaderReflection::CBVLayout						cbvPerViewData;
-		ShaderReflection::CBVLayout						cbvPerObjectData;
-		std::vector<ShaderReflection::CBVLayout>		cbvTable;
-		std::vector<ShaderReflection::TableLayout>		srvTable;
-		std::vector<ShaderReflection::TableLayout>		uavTable;
-		std::vector<ShaderReflection::TableLayout>		samplerTable;
-
-		// Application inputs
-		std::vector<ShaderReflection::Parameter<1>>		parameters;
-		std::vector<ShaderReflection::ResourceSRV<1>>	resources;
-		std::vector<ShaderReflection::ResourceUAV<1>>	uavs;
-		std::vector<ShaderReflection::Sampler<1>>		samplers;
-	};
-
 protected:
-	Signature	m_signature;
-	bool		m_isReady{ false };
+	ShaderReflection::Signature		m_signature;
+	bool							m_isReady{ false };
 };
 
 
@@ -161,9 +143,6 @@ private:
 private:
 	Microsoft::WRL::ComPtr<ID3D11ComputeShader>		m_shader;
 };
-
-
-void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature);
 
 
 } // namespace Kodiak

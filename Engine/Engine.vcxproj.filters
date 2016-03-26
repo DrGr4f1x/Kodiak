@@ -480,6 +480,9 @@
     <ClCompile Include="Source\MaterialResource11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ShaderReflection.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">

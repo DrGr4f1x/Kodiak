@@ -85,4 +85,56 @@ struct Sampler
 	std::array<TableEntry, SlotCount>	binding;
 };
 
-} // namespace Kodiak
+
+struct Signature
+{
+	// DX API inputs
+	ShaderReflection::CBVLayout						cbvPerViewData;
+	ShaderReflection::CBVLayout						cbvPerObjectData;
+	std::vector<ShaderReflection::CBVLayout>		cbvTable;
+	std::vector<ShaderReflection::TableLayout>		srvTable;
+	std::vector<ShaderReflection::TableLayout>		uavTable;
+	std::vector<ShaderReflection::TableLayout>		samplerTable;
+
+	// Application inputs
+	std::vector<ShaderReflection::Parameter<1>>		parameters;
+	std::vector<ShaderReflection::ResourceSRV<1>>	resources;
+	std::vector<ShaderReflection::ResourceUAV<1>>	uavs;
+	std::vector<ShaderReflection::Sampler<1>>		samplers;
+};
+
+
+//
+// Utility functions
+//
+Kodiak::ShaderVariableType ConvertToEngine(D3D_SHADER_VARIABLE_TYPE type, uint32_t rows, uint32_t columns);
+Kodiak::ShaderResourceDimension ConvertToEngine(D3D_SRV_DIMENSION dim);
+
+#if defined(DX11)
+using ID3DShaderReflection			= ID3D11ShaderReflection;
+using D3D_SHADER_INPUT_BIND_DESC	= D3D11_SHADER_INPUT_BIND_DESC;
+using D3D_SHADER_BUFFER_DESC		= D3D11_SHADER_BUFFER_DESC;
+using D3D_SHADER_VARIABLE_DESC		= D3D11_SHADER_VARIABLE_DESC;
+using D3D_SHADER_TYPE_DESC			= D3D11_SHADER_TYPE_DESC;
+using D3D_SHADER_TYPE_DESC			= D3D11_SHADER_TYPE_DESC;
+using D3D_SHADER_DESC				= D3D11_SHADER_DESC;
+#elif defined(DX12)
+using ID3DShaderReflection			= ID3D12ShaderReflection;
+using D3D_SHADER_INPUT_BIND_DESC	= D3D12_SHADER_INPUT_BIND_DESC;
+using D3D_SHADER_BUFFER_DESC		= D3D12_SHADER_BUFFER_DESC;
+using D3D_SHADER_VARIABLE_DESC		= D3D12_SHADER_VARIABLE_DESC;
+using D3D_SHADER_TYPE_DESC			= D3D12_SHADER_TYPE_DESC;
+using D3D_SHADER_DESC				= D3D12_SHADER_DESC;
+#else
+#error Not using DirectX!
+#endif
+
+void IntrospectCBuffer(ID3DShaderReflection* reflector, const D3D_SHADER_INPUT_BIND_DESC& inputDesc, Signature& signature);
+void IntrospectResourceSRV(Kodiak::ShaderResourceType type, const D3D_SHADER_INPUT_BIND_DESC& inputDesc, Signature& signature);
+void IntrospectResourceUAV(Kodiak::ShaderResourceType type, const D3D_SHADER_INPUT_BIND_DESC& inputDesc, Signature& signature);
+void IntrospectSampler(const D3D_SHADER_INPUT_BIND_DESC& inputDesc, Signature& signature);
+void ResetSignature(Signature& signature);
+
+void Introspect(ID3DShaderReflection* reflector, Signature& signature);
+
+} // namespace ShaderReflection
