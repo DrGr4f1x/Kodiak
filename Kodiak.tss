@@ -2,6 +2,16 @@
 <ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <ArrayOfArrayOfString>
     <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Effect11.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\BinaryReader.cpp</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material11.cpp</string>
+      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material11.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\Scene.cpp</string>
     </ArrayOfString>
     <ArrayOfString>
@@ -11,13 +21,6 @@
     <ArrayOfString>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\Material12.cpp</string>
       <string>D:\KodiakDepot\Kodiak\Engine\Source\Material12.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material11.cpp</string>
-      <string>D:\KodiakDepot\Kodiak\Engine\Source\Material11.h</string>
-    </ArrayOfString>
-    <ArrayOfString>
-      <string>c:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\um\d3d11.h</string>
     </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>

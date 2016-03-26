@@ -52,7 +52,7 @@ public:
 		std::array<std::vector<ShaderReflection::TableLayout>, 5> samplerBindings;
 
 		// Parameters and resources
-		std::vector<ShaderReflection::Parameter<5>>							parameters;
+		std::vector<ShaderReflection::Parameter<5>>		parameters;
 		std::vector<ShaderReflection::ResourceSRV<5>>	srvs;
 		std::vector<ShaderReflection::ResourceUAV<5>>	uavs;
 		std::vector<ShaderReflection::Sampler<5>>		samplers;

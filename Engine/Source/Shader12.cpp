@@ -49,7 +49,7 @@ void Shader::Finalize()
 	ComPtr<ID3D12ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 }
 
 
@@ -58,7 +58,7 @@ void VertexShader::Finalize()
 	ComPtr<ID3D12ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 	CreateInputLayout(reflector.Get());
 }
 
@@ -246,36 +246,44 @@ ShaderResourceDimension ConvertToEngine(D3D_SRV_DIMENSION dim)
 namespace Kodiak
 {
 
-void IntrospectCBuffer(ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc>& variables, ID3D12ShaderReflection* reflector,
-	const D3D12_SHADER_INPUT_BIND_DESC& inputDesc)
+void IntrospectCBuffer(ID3D12ShaderReflection* reflector, const D3D12_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
-	// Grab the D3D11 constant buffer description
+	// Grab the D3D12 constant buffer description
 	auto reflCBuffer = reflector->GetConstantBufferByName(inputDesc.Name);
 	assert(reflCBuffer);
 
 	D3D12_SHADER_BUFFER_DESC bufferDesc;
 	reflCBuffer->GetDesc(&bufferDesc);
 
-	uint32_t constantBufferIndex = static_cast<uint32_t>(bindingDesc.cbuffers.size());
-
-	// Create our own description for the constant buffer
-	bindingDesc.cbuffers.emplace_back(bufferDesc.Name, inputDesc.BindPoint, bufferDesc.Size);
-	auto& shaderBufferDesc = bindingDesc.cbuffers[constantBufferIndex];
+	const std::string cbufferName(bufferDesc.Name);
 
 	// If this cbuffer holds per-view or per-object constants, record the size for validation against other shaders
-	if (shaderBufferDesc.name == GetPerViewConstantsName())
+	if (cbufferName == GetPerViewConstantsName())
 	{
-		bindingDesc.perViewDataSize = shaderBufferDesc.size;
+		signature.cbvPerViewData.sizeInBytes = bufferDesc.Size;
+		signature.cbvPerViewData.shaderRegister = inputDesc.BindPoint;
+		return; // Don't create a record for per-view constant buffer
 	}
-	else if (shaderBufferDesc.name == GetPerObjectConstantsName())
+	else if (cbufferName == GetPerObjectConstantsName())
 	{
-		bindingDesc.perObjectDataSize = shaderBufferDesc.size;
+		signature.cbvPerObjectData.sizeInBytes = bufferDesc.Size;
+		signature.cbvPerObjectData.shaderRegister = inputDesc.BindPoint;
+		return; // Don't create a record for per-object constant buffer
 	}
+
+	// Create our own description for the constant buffer
+	ShaderReflection::CBVLayout cbvLayout;
+	cbvLayout.name = cbufferName;
+	cbvLayout.byteOffset = 0;
+	cbvLayout.sizeInBytes = bufferDesc.Size;
+	cbvLayout.shaderRegister = inputDesc.BindPoint;
+
+	signature.cbvTable.push_back(cbvLayout);
 
 	// Variables in constant buffer
 	for (uint32_t j = 0; j < bufferDesc.Variables; ++j)
 	{
-		// Grab the D3D11 variable & type descriptions
+		// Grab the D3D12 variable & type descriptions
 		auto variable = reflCBuffer->GetVariableByIndex(j);
 		D3D12_SHADER_VARIABLE_DESC varDesc;
 		variable->GetDesc(&varDesc);
@@ -285,27 +293,71 @@ void IntrospectCBuffer(ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc
 
 		// Create our own description for the variable
 		auto varType = ConvertToEngine(typeDesc.Type, typeDesc.Rows, typeDesc.Columns);
-		variables.emplace_back(varDesc.Name, constantBufferIndex, varDesc.StartOffset, varDesc.Size, varType);
+
+		ShaderReflection::Parameter<1> parameter;
+		parameter.name = varDesc.Name;
+		parameter.type = varType;
+		parameter.sizeInBytes = varDesc.Size;
+		parameter.cbvShaderRegister[0] = inputDesc.BindPoint;
+		parameter.byteOffset[0] = varDesc.StartOffset;
+
+		signature.parameters.push_back(parameter);
 	}
 }
 
 
-void IntrospectResource(vector<ShaderResourceDesc>& resources, ShaderResourceType type, const D3D12_SHADER_INPUT_BIND_DESC& inputDesc)
+void IntrospectResourceSRV(ShaderResourceType type, const D3D12_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
-	resources.emplace_back(inputDesc.Name, inputDesc.BindPoint, type, ConvertToEngine(inputDesc.Dimension));
+	ShaderReflection::ResourceSRV<1> resourceSRV;
+	resourceSRV.name = inputDesc.Name;
+	resourceSRV.type = type;
+	resourceSRV.dimension = ConvertToEngine(inputDesc.Dimension);
+	resourceSRV.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
+	signature.resources.push_back(resourceSRV);
 }
 
 
-void Introspect(ID3D12ShaderReflection* reflector, ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc>& variables)
+void IntrospectResourceUAV(ShaderResourceType type, const D3D12_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
+	ShaderReflection::ResourceUAV<1> resourceUAV;
+	resourceUAV.name = inputDesc.Name;
+	resourceUAV.type = type;
+	resourceUAV.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
+	signature.uavs.push_back(resourceUAV);
+}
+
+
+void ResetSignature(Shader::Signature& signature)
+{
+	// Reset per-view and per-object CBV bindings
+	signature.cbvPerViewData.byteOffset = kInvalid;
+	signature.cbvPerViewData.sizeInBytes = kInvalid;
+	signature.cbvPerViewData.shaderRegister = kInvalid;
+
+	signature.cbvPerObjectData.byteOffset = kInvalid;
+	signature.cbvPerObjectData.sizeInBytes = kInvalid;
+	signature.cbvPerObjectData.shaderRegister = kInvalid;
+
+	// Clear tables
+	signature.cbvTable.clear();
+	signature.srvTable.clear();
+	signature.uavTable.clear();
+	signature.samplerTable.clear();
+
+	// Clear parameters
+	signature.parameters.clear();
+	signature.resources.clear();
+	signature.uavs.clear();
+	signature.samplers.clear();
+}
+
+
+void Introspect(ID3D12ShaderReflection* reflector, Shader::Signature& signature)
+{
+	ResetSignature(signature);
+
 	D3D12_SHADER_DESC desc;
 	reflector->GetDesc(&desc);
-
-	// Allocate space for constant buffers and resources
-	bindingDesc.cbuffers.clear();
-	bindingDesc.cbuffers.reserve(desc.BoundResources);
-	bindingDesc.resources.clear();
-	bindingDesc.resources.reserve(desc.BoundResources);
 
 	// Bound resources
 	for (uint32_t i = 0; i < desc.BoundResources; ++i)
@@ -319,47 +371,47 @@ void Introspect(ID3D12ShaderReflection* reflector, ShaderBindingDesc& bindingDes
 		switch (inputDesc.Type)
 		{
 		case D3D_SIT_CBUFFER:
-			IntrospectCBuffer(bindingDesc, variables, reflector, inputDesc);
+			IntrospectCBuffer(reflector, inputDesc, signature);
 			break;
 
 		case D3D_SIT_TBUFFER:	
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::Texture, inputDesc);	
+			IntrospectResourceSRV(ShaderResourceType::Texture, inputDesc, signature);
 			break;
 
 		case D3D_SIT_TEXTURE:	
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::TBuffer, inputDesc);	
+			IntrospectResourceSRV(ShaderResourceType::TBuffer, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWTYPED:	
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWTyped, inputDesc);	
+			IntrospectResourceUAV(ShaderResourceType::UAVRWTyped, inputDesc, signature);
 			break;
 
 		case D3D_SIT_STRUCTURED:	
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::Structured, inputDesc);	
+			IntrospectResourceUAV(ShaderResourceType::Structured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWSTRUCTURED:	
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWStructured, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVRWStructured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_BYTEADDRESS:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::ByteAddress, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::ByteAddress, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWBYTEADDRESS:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWByteAddress, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVRWByteAddress, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_APPEND_STRUCTURED:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVAppendStructured, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVAppendStructured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_CONSUME_STRUCTURED:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVConsumeStructured, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVConsumeStructured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWStructuredWithCounter, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVRWStructuredWithCounter, inputDesc, signature);
 			break;
 
 		default:

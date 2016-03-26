@@ -29,25 +29,42 @@ public:
 	size_t GetByteCodeSize() const { return m_byteCodeSize; }
 
 	bool IsReady() const { return m_isReady; }
-
-	const ShaderBindingDesc& GetBindingSignature() const { return m_bindingDesc; }
-	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
-
 	virtual ShaderType GetType() const = 0;
 
+	// Reflection info
+	struct Signature;
+	uint32_t GetPerViewDataSize() const { return m_signature.cbvPerViewData.sizeInBytes; }
+	uint32_t GetPerObjectDataSize() const { return m_signature.cbvPerObjectData.sizeInBytes; }
+	const struct Signature& GetSignature() const { return m_signature; }
+
 	concurrency::task<void> loadTask;
+
+	struct Signature
+	{
+		// DX12 API inputs
+		ShaderReflection::CBVLayout						cbvPerViewData;
+		ShaderReflection::CBVLayout						cbvPerObjectData;
+		std::vector<ShaderReflection::CBVLayout>		cbvTable;
+		std::vector<ShaderReflection::TableLayout>		srvTable;
+		std::vector<ShaderReflection::TableLayout>		uavTable;
+		std::vector<ShaderReflection::TableLayout>		samplerTable;
+
+		// Application inputs
+		std::vector<ShaderReflection::Parameter<1>>		parameters;
+		std::vector<ShaderReflection::ResourceSRV<1>>	resources;
+		std::vector<ShaderReflection::ResourceUAV<1>>	uavs;
+		std::vector<ShaderReflection::Sampler<1>>		samplers;
+	};
 
 protected:
 	virtual void Finalize();
 
 protected:
-	std::unique_ptr<uint8_t[]>				m_byteCode;
-	size_t									m_byteCodeSize;
+	std::unique_ptr<uint8_t[]>	m_byteCode;
+	size_t						m_byteCodeSize;
 	
-	ShaderBindingDesc						m_bindingDesc;
-	std::vector<ShaderVariableDesc>			m_variables;
-
-	bool									m_isReady{ false };
+	Signature					m_signature;
+	bool						m_isReady{ false };
 };
 
 
@@ -104,7 +121,7 @@ public:
 };
 
 
-void Introspect(ID3D12ShaderReflection* reflector, ShaderBindingDesc& bindingDesc, std::vector<ShaderVariableDesc>& variables);
+void Introspect(ID3D12ShaderReflection* reflector, Shader::Signature& signature);
 
 
 } // namespace Kodiak
