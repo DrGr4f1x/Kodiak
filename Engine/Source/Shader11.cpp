@@ -354,7 +354,7 @@ void IntrospectCBuffer(ID3D11ShaderReflection* reflector, const D3D11_SHADER_INP
 	}
 
 	// Create our own description for the constant buffer
-	Shader::CBVLayout cbvLayout;
+	ShaderReflection::CBVLayout cbvLayout;
 	cbvLayout.name = cbufferName;
 	cbvLayout.byteOffset = 0;
 	cbvLayout.sizeInBytes = bufferDesc.Size;
@@ -376,12 +376,12 @@ void IntrospectCBuffer(ID3D11ShaderReflection* reflector, const D3D11_SHADER_INP
 		// Create our own description for the variable
 		auto varType = ConvertToEngine(typeDesc.Type, typeDesc.Rows, typeDesc.Columns);
 
-		Shader::Parameter parameter;
+		ShaderReflection::Parameter<1> parameter;
 		parameter.name = varDesc.Name;
 		parameter.type = varType;
 		parameter.sizeInBytes = varDesc.Size;
-		parameter.cbvShaderRegister = inputDesc.BindPoint;
-		parameter.byteOffset = varDesc.StartOffset;
+		parameter.cbvShaderRegister[0] = inputDesc.BindPoint;
+		parameter.byteOffset[0] = varDesc.StartOffset;
 
 		signature.parameters.push_back(parameter);
 	}
@@ -390,21 +390,30 @@ void IntrospectCBuffer(ID3D11ShaderReflection* reflector, const D3D11_SHADER_INP
 
 void IntrospectResourceSRV(ShaderResourceType type, const D3D11_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
-	Shader::ResourceSRV resourceSRV{ inputDesc.Name, type, ConvertToEngine(inputDesc.Dimension), inputDesc.BindPoint };
+	ShaderReflection::ResourceSRV<1> resourceSRV;
+	resourceSRV.name = inputDesc.Name;
+	resourceSRV.type = type;
+	resourceSRV.dimension = ConvertToEngine(inputDesc.Dimension);
+	resourceSRV.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
 	signature.resources.push_back(resourceSRV);
 }
 
 
 void IntrospectResourceUAV(ShaderResourceType type, const D3D11_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
-	Shader::ResourceUAV resourceUAV{ inputDesc.Name, type, inputDesc.BindPoint };
+	ShaderReflection::ResourceUAV<1> resourceUAV;
+	resourceUAV.name = inputDesc.Name;
+	resourceUAV.type = type;
+	resourceUAV.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
 	signature.uavs.push_back(resourceUAV);
 }
 
 
 void IntrospectSampler(const D3D11_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
-	Shader::Sampler sampler{ inputDesc.Name, inputDesc.BindPoint };
+	ShaderReflection::Sampler<1> sampler;
+	sampler.name = inputDesc.Name;
+	sampler.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
 	signature.samplers.push_back(sampler);
 }
 
@@ -516,18 +525,22 @@ void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature)
 	// Merge SRVs into tables
 	if (!signature.resources.empty())
 	{
-		Shader::TableLayout currentLayout{ signature.resources[0].shaderRegister, 1 };
+		ShaderReflection::TableLayout currentLayout;
+		currentLayout.shaderRegister = signature.resources[0].binding[0].tableIndex;
+		currentLayout.numItems = 1;
+
 		const uint32_t numSRVs = static_cast<uint32_t>(signature.resources.size());
 		for (uint32_t i = 1; i < numSRVs; ++i)
 		{
-			if (signature.resources[i].shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
+			const auto shaderRegister = signature.resources[i].binding[0].tableIndex;
+			if (shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
 			{
 				++currentLayout.numItems;
 			}
 			else
 			{
 				signature.srvTable.push_back(currentLayout);
-				currentLayout.shaderRegister = signature.resources[i].shaderRegister;
+				currentLayout.shaderRegister = shaderRegister;
 				currentLayout.numItems = 1;
 			}
 		}
@@ -537,18 +550,22 @@ void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature)
 	// Merge UAVs into tables
 	if (!signature.uavs.empty())
 	{
-		Shader::TableLayout currentLayout{ signature.uavs[0].shaderRegister, 1 };
+		ShaderReflection::TableLayout currentLayout;
+		currentLayout.shaderRegister = signature.uavs[0].binding[0].tableIndex;
+		currentLayout.numItems = 1;
+
 		const uint32_t numUAVs = static_cast<uint32_t>(signature.uavs.size());
 		for (uint32_t i = 1; i < numUAVs; ++i)
 		{
-			if (signature.uavs[i].shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
+			const auto shaderRegister = signature.uavs[i].binding[0].tableIndex;
+			if (shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
 			{
 				++currentLayout.numItems;
 			}
 			else
 			{
 				signature.uavTable.push_back(currentLayout);
-				currentLayout.shaderRegister = signature.uavs[i].shaderRegister;
+				currentLayout.shaderRegister = shaderRegister;
 				currentLayout.numItems = 1;
 			}
 		}
@@ -558,18 +575,22 @@ void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature)
 	// Merge samplers into tables
 	if (!signature.samplers.empty())
 	{
-		Shader::TableLayout currentLayout{ signature.samplers[0].shaderRegister, 1 };
+		ShaderReflection::TableLayout currentLayout;
+		currentLayout.shaderRegister = signature.samplers[0].binding[0].tableIndex;
+		currentLayout.numItems = 1;
+
 		const uint32_t numSamplers = static_cast<uint32_t>(signature.samplers.size());
 		for (uint32_t i = 1; i < numSamplers; ++i)
 		{
-			if (signature.samplers[i].shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
+			const auto shaderRegister = signature.samplers[i].binding[0].tableIndex;
+			if (shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
 			{
 				++currentLayout.numItems;
 			}
 			else
 			{
 				signature.samplerTable.push_back(currentLayout);
-				currentLayout.shaderRegister = signature.samplers[i].shaderRegister;
+				currentLayout.shaderRegister = shaderRegister;
 				currentLayout.numItems = 1;
 			}
 		}
@@ -581,12 +602,13 @@ void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature)
 	{
 		bool found = false;
 		uint32_t tableIndex = 0;
+		const uint32_t shaderRegister = resource.binding[0].tableIndex;
 		for (const auto& table : signature.srvTable)
 		{
-			if (resource.shaderRegister >= table.shaderRegister && resource.shaderRegister < (table.shaderRegister + table.numItems))
+			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
 			{
-				resource.tableIndex = tableIndex;
-				resource.tableSlot = resource.shaderRegister - table.shaderRegister;
+				resource.binding[0].tableIndex = tableIndex;
+				resource.binding[0].tableSlot = shaderRegister - table.shaderRegister;
 				
 				found = true;
 				break;
@@ -601,12 +623,13 @@ void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature)
 	{
 		bool found = false;
 		uint32_t tableIndex = 0;
+		const uint32_t shaderRegister = uav.binding[0].tableIndex;
 		for (const auto& table : signature.srvTable)
 		{
-			if (uav.shaderRegister >= table.shaderRegister && uav.shaderRegister < (table.shaderRegister + table.numItems))
+			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
 			{
-				uav.tableIndex = tableIndex;
-				uav.tableSlot = uav.shaderRegister - table.shaderRegister;
+				uav.binding[0].tableIndex = tableIndex;
+				uav.binding[0].tableSlot = shaderRegister - table.shaderRegister;
 
 				found = true;
 				break;
@@ -621,12 +644,13 @@ void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature)
 	{
 		bool found = false;
 		uint32_t tableIndex = 0;
+		const uint32_t shaderRegister = sampler.binding[0].tableIndex;
 		for (const auto& table : signature.srvTable)
 		{
-			if (sampler.shaderRegister >= table.shaderRegister && sampler.shaderRegister < (table.shaderRegister + table.numItems))
+			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
 			{
-				sampler.tableIndex = tableIndex;
-				sampler.tableSlot = sampler.shaderRegister - table.shaderRegister;
+				sampler.binding[0].tableIndex = tableIndex;
+				sampler.binding[0].tableSlot = shaderRegister - table.shaderRegister;
 
 				found = true;
 				break;

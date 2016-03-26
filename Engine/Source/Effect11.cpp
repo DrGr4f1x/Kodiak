@@ -82,7 +82,7 @@ void Effect::BuildEffectSignature()
 	{
 		for (uint32_t i = 0; i < 5; ++i)
 		{
-			if (parameter.byteOffsets[i] != kInvalid)
+			if (parameter.byteOffset[i] != kInvalid)
 			{
 				const auto cbvShaderRegister = parameter.cbvShaderRegister[i];
 
@@ -91,12 +91,12 @@ void Effect::BuildEffectSignature()
 					if (cbvBinding.shaderRegister == cbvShaderRegister)
 					{
 						assert(cbvBinding.byteOffset != kInvalid);
-						parameter.byteOffsets[i] += cbvBinding.byteOffset;
+						parameter.byteOffset[i] += cbvBinding.byteOffset;
 						break;
 					}
 				}
 
-				assert(parameter.byteOffsets[i] != kInvalid);
+				assert(parameter.byteOffset[i] != kInvalid);
 			}
 		}
 	}
@@ -173,7 +173,7 @@ void Effect::ProcessShaderBindings(Shader* shader)
 	// Constant buffers
 	for (const auto& cbv : shaderSig.cbvTable)
 	{
-		CBVBinding binding;
+		ShaderReflection::CBVLayout binding;
 		binding.byteOffset = 0;
 		binding.sizeInBytes = cbv.sizeInBytes;
 		binding.shaderRegister = cbv.shaderRegister;
@@ -183,7 +183,7 @@ void Effect::ProcessShaderBindings(Shader* shader)
 	// Copy SRV tables
 	for (const auto& table : shaderSig.srvTable)
 	{
-		TableLayout layout;
+		ShaderReflection::TableLayout layout;
 		layout.shaderRegister = table.shaderRegister;
 		layout.numItems = table.numItems;;
 		m_signature.srvBindings[shaderIndex].push_back(layout);
@@ -192,7 +192,7 @@ void Effect::ProcessShaderBindings(Shader* shader)
 	// Copy UAV tables
 	for (const auto& table : shaderSig.uavTable)
 	{
-		TableLayout layout;
+		ShaderReflection::TableLayout layout;
 		layout.shaderRegister = table.shaderRegister;
 		layout.numItems = table.numItems; 
 		m_signature.uavBindings[shaderIndex].push_back(layout);
@@ -201,7 +201,7 @@ void Effect::ProcessShaderBindings(Shader* shader)
 	// Copy sampler tables
 	for (const auto& table : shaderSig.samplerTable)
 	{
-		TableLayout layout;
+		ShaderReflection::TableLayout layout;
 		layout.shaderRegister = table.shaderRegister;
 		layout.numItems = table.numItems;
 		m_signature.samplerBindings[shaderIndex].push_back(layout);
@@ -219,8 +219,8 @@ void Effect::ProcessShaderBindings(Shader* shader)
 				// Confirm that the pre-existing parameter matches the new one
 				assert(fxParameter.type == parameter.type);
 				assert(fxParameter.sizeInBytes == parameter.sizeInBytes);
-				fxParameter.byteOffsets[shaderIndex] = parameter.byteOffset; // Will be patched after all shaders are processed
-				fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister;
+				fxParameter.byteOffset[shaderIndex] = parameter.byteOffset[0]; // Will be patched after all shaders are processed
+				fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister[0];
 
 				newParameter = false;
 				break;
@@ -230,12 +230,12 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new parameter, if necessary
 		if (newParameter)
 		{
-			Parameter fxParameter;
+			ShaderReflection::Parameter<5> fxParameter;
 			fxParameter.name = parameter.name;
 			fxParameter.type = parameter.type;
 			fxParameter.sizeInBytes = parameter.sizeInBytes;
-			fxParameter.byteOffsets[shaderIndex] = parameter.byteOffset; // Will be patched after all shaders are processed
-			fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister;
+			fxParameter.byteOffset[shaderIndex] = parameter.byteOffset[0]; // Will be patched after all shaders are processed
+			fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister[0];
 
 			m_signature.parameters.push_back(fxParameter);
 		}
@@ -253,8 +253,8 @@ void Effect::ProcessShaderBindings(Shader* shader)
 				// Confirm that the pre-existing SRV resource matches the new one
 				assert(fxSrv.type == srv.type);
 				assert(fxSrv.dimension == srv.dimension);
-				fxSrv.bindings[shaderIndex].tableIndex = srv.tableIndex;
-				fxSrv.bindings[shaderIndex].tableSlot = srv.tableSlot;
+				fxSrv.binding[shaderIndex].tableIndex = srv.binding[0].tableIndex;
+				fxSrv.binding[shaderIndex].tableSlot = srv.binding[0].tableSlot;
 
 				newResource = false;
 				break;
@@ -264,12 +264,12 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new SRV resource, if necessary
 		if (newResource)
 		{
-			ResourceSRV fxSrv;
+			ShaderReflection::ResourceSRV<5> fxSrv;
 			fxSrv.name = srv.name;
 			fxSrv.type = srv.type;
 			fxSrv.dimension = srv.dimension;
-			fxSrv.bindings[shaderIndex].tableIndex = srv.tableIndex;
-			fxSrv.bindings[shaderIndex].tableSlot = srv.tableSlot;
+			fxSrv.binding[shaderIndex].tableIndex = srv.binding[0].tableIndex;
+			fxSrv.binding[shaderIndex].tableSlot = srv.binding[0].tableSlot;
 
 			m_signature.srvs.push_back(fxSrv);
 		}
@@ -286,8 +286,8 @@ void Effect::ProcessShaderBindings(Shader* shader)
 			{
 				// Confirm that the pre-existing UAV resource matches the new one
 				assert(fxUav.type == uav.type);
-				fxUav.bindings[shaderIndex].tableIndex = uav.tableIndex;
-				fxUav.bindings[shaderIndex].tableSlot = uav.tableSlot;
+				fxUav.binding[shaderIndex].tableIndex = uav.binding[0].tableIndex;
+				fxUav.binding[shaderIndex].tableSlot = uav.binding[0].tableSlot;
 
 				newResource = false;
 				break;
@@ -297,11 +297,11 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new UAV resource, if necessary
 		if (newResource)
 		{
-			ResourceUAV fxUav;
+			ShaderReflection::ResourceUAV<5> fxUav;
 			fxUav.name = uav.name;
 			fxUav.type = uav.type;
-			fxUav.bindings[shaderIndex].tableIndex = uav.tableIndex;
-			fxUav.bindings[shaderIndex].tableSlot = uav.tableSlot;
+			fxUav.binding[shaderIndex].tableIndex = uav.binding[0].tableIndex;
+			fxUav.binding[shaderIndex].tableSlot = uav.binding[0].tableSlot;
 
 			m_signature.uavs.push_back(fxUav);
 		}
@@ -317,8 +317,8 @@ void Effect::ProcessShaderBindings(Shader* shader)
 			if (fxSampler.name == sampler.name)
 			{
 				// Nothing to validate for samplers
-				fxSampler.bindings[shaderIndex].tableIndex = sampler.tableIndex;
-				fxSampler.bindings[shaderIndex].tableSlot = sampler.tableSlot;
+				fxSampler.binding[shaderIndex].tableIndex = sampler.binding[0].tableIndex;
+				fxSampler.binding[shaderIndex].tableSlot = sampler.binding[0].tableSlot;
 
 				newSampler = false;
 				break;
@@ -328,10 +328,10 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new sampler, if necessary
 		if (newSampler)
 		{
-			Sampler fxSampler;
+			ShaderReflection::Sampler<5> fxSampler;
 			fxSampler.name = sampler.name;
-			fxSampler.bindings[shaderIndex].tableIndex = sampler.tableIndex;
-			fxSampler.bindings[shaderIndex].tableSlot = sampler.tableSlot;
+			fxSampler.binding[shaderIndex].tableIndex = sampler.binding[0].tableIndex;
+			fxSampler.binding[shaderIndex].tableSlot = sampler.binding[0].tableSlot;
 
 			m_signature.samplers.push_back(fxSampler);
 		}

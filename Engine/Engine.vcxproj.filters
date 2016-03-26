@@ -296,9 +296,6 @@
     <ClInclude Include="Source\MaterialParameter.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DebugUtility.h">
-      <Filter>External</Filter>
-    </ClInclude>
     <ClInclude Include="Source\InputState.h" />
     <ClInclude Include="Source\Constants.h" />
     <ClInclude Include="Source\MaterialParameter11.h">
@@ -310,6 +307,7 @@
     <ClInclude Include="Source\MaterialResource.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\DebugUtility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />

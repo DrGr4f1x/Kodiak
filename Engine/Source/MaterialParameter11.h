@@ -9,8 +9,7 @@
 
 #pragma once
 
-// TODO Get rid of this header
-#include "Effect.h"
+#include "ShaderReflection.h"
 
 namespace Kodiak
 {
@@ -46,7 +45,7 @@ public:
 	void SetValue(DirectX::XMFLOAT4 value);
 	void SetValue(DirectX::XMFLOAT4X4 value);
 
-	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const Effect::Parameter& parameter);
+	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::Parameter<5>& parameter);
 	
 private:
 	const std::string m_name;

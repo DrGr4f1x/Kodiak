@@ -10,6 +10,7 @@
 #pragma once
 
 #include "RenderEnums.h"
+#include "ShaderReflection.h"
 
 #include <ppltasks.h>
 
@@ -34,71 +35,21 @@ public:
 
 	concurrency::task<void> loadTask;
 
-	struct CBVLayout
-	{
-		std::string		name;
-		uint32_t		byteOffset{ kInvalid };		// offset from start of large cbuffer (16-byte aligned)
-		uint32_t		sizeInBytes{ kInvalid };    // cbuffer size in bytes (multiple of 16)
-		uint32_t		shaderRegister{ kInvalid };
-	};
-
-	struct TableLayout
-	{
-		uint32_t		shaderRegister;
-		uint32_t		numItems;
-	};
-
-	struct Parameter
-	{
-		std::string				name;
-		ShaderVariableType		type;
-		uint32_t				cbvShaderRegister{ kInvalid };
-		uint32_t				sizeInBytes{ 0 };
-		uint32_t				byteOffset{ kInvalid };
-	};
-
-	struct ResourceSRV
-	{
-		std::string				name;
-		ShaderResourceType		type;
-		ShaderResourceDimension dimension;
-		uint32_t				shaderRegister;
-		uint32_t				tableIndex;
-		uint32_t				tableSlot;
-	};
-
-	struct ResourceUAV
-	{
-		std::string				name;
-		ShaderResourceType		type;
-		uint32_t				shaderRegister;
-		uint32_t				tableIndex;
-		uint32_t				tableSlot;
-	};
-
-	struct Sampler
-	{
-		std::string				name;
-		uint32_t				shaderRegister;
-		uint32_t				tableIndex;
-		uint32_t				tableSlot;
-	};
-
 	struct Signature
 	{
 		// DX11 API inputs
-		CBVLayout					cbvPerViewData;
-		CBVLayout					cbvPerObjectData;
-		std::vector<CBVLayout>		cbvTable;
-		std::vector<TableLayout>	srvTable;
-		std::vector<TableLayout>	uavTable;
-		std::vector<TableLayout>	samplerTable;
+		ShaderReflection::CBVLayout						cbvPerViewData;
+		ShaderReflection::CBVLayout						cbvPerObjectData;
+		std::vector<ShaderReflection::CBVLayout>		cbvTable;
+		std::vector<ShaderReflection::TableLayout>		srvTable;
+		std::vector<ShaderReflection::TableLayout>		uavTable;
+		std::vector<ShaderReflection::TableLayout>		samplerTable;
 
 		// Application inputs
-		std::vector<Parameter>		parameters;
-		std::vector<ResourceSRV>	resources;
-		std::vector<ResourceUAV>	uavs;
-		std::vector<Sampler>		samplers;
+		std::vector<ShaderReflection::Parameter<1>>		parameters;
+		std::vector<ShaderReflection::ResourceSRV<1>>	resources;
+		std::vector<ShaderReflection::ResourceUAV<1>>	uavs;
+		std::vector<ShaderReflection::Sampler<1>>		samplers;
 	};
 
 protected:

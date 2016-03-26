@@ -265,7 +265,7 @@ void MaterialParameter::SetValue(XMFLOAT4X4 value)
 }
 
 
-void MaterialParameter::CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const Effect::Parameter& parameter)
+void MaterialParameter::CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::Parameter<5>& parameter)
 {
 	m_renderThreadData = make_shared<RenderThread::MaterialParameterData>(materialData);
 
@@ -274,9 +274,9 @@ void MaterialParameter::CreateRenderThreadData(std::shared_ptr<RenderThread::Mat
 
 	for (uint32_t i = 0; i < 5; ++i)
 	{
-		if (parameter.byteOffsets[i] != kInvalid)
+		if (parameter.byteOffset[i] != kInvalid)
 		{
-			m_renderThreadData->m_bindings[i] = materialData->cbufferData + parameter.byteOffsets[i];
+			m_renderThreadData->m_bindings[i] = materialData->cbufferData + parameter.byteOffset[i];
 
 			memcpy(m_renderThreadData->m_bindings[i], &m_data[0], parameter.sizeInBytes);
 			materialData->cbufferDirty = true;

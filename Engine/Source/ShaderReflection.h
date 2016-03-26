@@ -9,73 +9,80 @@
 
 #pragma once
 
+// Forward declarations
 namespace Kodiak
 {
+enum class ShaderResourceDimension;
+enum class ShaderResourceType;
+enum class ShaderVariableType;
+}
 
-struct ShaderConstantBufferDesc
+namespace ShaderReflection
 {
-	ShaderConstantBufferDesc(const char* _name, uint32_t _registerSlot, uint32_t _size)
-		: name(_name), registerSlot(_registerSlot), size(_size)
-	{}
 
-	ShaderConstantBufferDesc(ShaderConstantBufferDesc&& other)
-		: name(std::move(other.name)), registerSlot(other.registerSlot), size(other.size)
-	{}
-
-	ShaderConstantBufferDesc& operator=(const ShaderConstantBufferDesc& other) = default;
-
+struct CBVLayout
+{
 	std::string		name;
-	uint32_t		registerSlot;
-	uint32_t		size;
+	uint32_t		byteOffset{ kInvalid };		// offset from start of large cbuffer (16-byte aligned)
+	uint32_t		sizeInBytes{ kInvalid };    // cbuffer size in bytes (multiple of 16)
+	uint32_t		shaderRegister{ kInvalid };
 };
 
 
-struct ShaderResourceDesc
+struct TableLayout
 {
-	ShaderResourceDesc(const char* _name, uint32_t _registerSlot, ShaderResourceType _type, ShaderResourceDimension _dimension)
-		: name(_name), registerSlot(_registerSlot), type(_type), dimension(_dimension)
-	{}
-
-	ShaderResourceDesc(ShaderResourceDesc&& other)
-		: name(std::move(other.name)), registerSlot(other.registerSlot), type(other.type), dimension(other.dimension)
-	{}
-
-	ShaderResourceDesc& operator=(const ShaderResourceDesc& other) = default;
-
-	std::string				name;
-	uint32_t				registerSlot;
-	ShaderResourceType		type;
-	ShaderResourceDimension dimension;
+	uint32_t		shaderRegister{ kInvalid };
+	uint32_t		numItems{ kInvalid };
 };
 
 
-struct ShaderVariableDesc
+struct TableEntry
 {
-	ShaderVariableDesc(const char* _name, uint32_t _constantBuffer, uint32_t _startOffset, uint32_t _size, ShaderVariableType _type)
-		: name(_name), constantBuffer(_constantBuffer), startOffset(_startOffset), size(_size), type(_type)
-	{}
-
-	ShaderVariableDesc(ShaderVariableDesc&& other)
-		: name(std::move(other.name)), constantBuffer(other.constantBuffer), startOffset(other.startOffset), size(other.size), type(other.type)
-	{}
-
-	ShaderVariableDesc& operator=(const ShaderVariableDesc& other) = default;
-
-	std::string name;
-	uint32_t constantBuffer;
-	uint32_t startOffset;
-	uint32_t size;
-	ShaderVariableType type;
+	uint32_t		tableIndex{ kInvalid };
+	uint32_t		tableSlot{ kInvalid };
 };
 
 
-struct ShaderBindingDesc
+template <uint32_t SlotCount = 1>
+struct Parameter
 {
-	std::vector<ShaderConstantBufferDesc>	cbuffers;
-	std::vector<ShaderResourceDesc>			resources;
+	Parameter()
+	{
+		cbvShaderRegister.fill(kInvalid);
+		byteOffset.fill(kInvalid);
+	}
+	std::string							name;
+	Kodiak::ShaderVariableType			type;
+	uint32_t							sizeInBytes{ 0 }; 
+	std::array<uint32_t, SlotCount>		cbvShaderRegister;
+	std::array<uint32_t, SlotCount>		byteOffset;
+};
 
-	size_t									perViewDataSize{ 0 };
-	size_t									perObjectDataSize{ 0 };
+
+template <uint32_t SlotCount = 1>
+struct ResourceSRV
+{
+	std::string							name;
+	Kodiak::ShaderResourceType			type;
+	Kodiak::ShaderResourceDimension		dimension;
+	std::array<TableEntry, SlotCount>	binding;
+};
+
+
+template <uint32_t SlotCount = 1>
+struct ResourceUAV
+{
+	std::string							name;
+	Kodiak::ShaderResourceType			type;
+	std::array<TableEntry, SlotCount>	binding;
+};
+
+
+template <uint32_t SlotCount = 1>
+struct Sampler
+{
+	std::string							name;
+	std::array<TableEntry, SlotCount>	binding;
 };
 
 } // namespace Kodiak

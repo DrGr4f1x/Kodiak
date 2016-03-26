@@ -9,8 +9,7 @@
 
 #pragma once
 
-// TODO: get rid of this header
-#include "Effect.h"
+#include "ShaderReflection.h"
 
 namespace Kodiak
 {
@@ -35,7 +34,7 @@ public:
 
 	void SetResource(std::shared_ptr<Texture> texture);
 
-	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const Effect::ResourceSRV& resource);
+	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource);;
 
 private:
 	const std::string m_name;

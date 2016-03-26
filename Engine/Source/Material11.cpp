@@ -127,7 +127,7 @@ void SetupCBuffer(RenderThread::MaterialData& materialData, size_t cbufferSizeIn
 
 
 void SetupBinding(RenderThread::MaterialData::CBufferBinding& binding, ID3D11Buffer* d3dBuffer, 
-	const std::vector<Effect::CBVBinding>& effectCBuffers)
+	const vector<ShaderReflection::CBVLayout>& effectCBuffers)
 {
 	uint32_t minSlot = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
 	uint32_t numBuffers = static_cast<uint32_t>(effectCBuffers.size());

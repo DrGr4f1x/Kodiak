@@ -21,6 +21,27 @@ using namespace Kodiak;
 using namespace std;
 
 
+namespace
+{
+
+void SetResourceRenderThread(std::shared_ptr<RenderThread::MaterialResourceData> renderThreadData, std::shared_ptr<Texture> texture)
+{
+	Renderer::GetInstance().EnqueueTask([renderThreadData, texture](RenderTaskEnvironment& rte)
+	{
+		if (texture)
+		{
+			renderThreadData->SetResource(texture->GetSRV());
+		}
+		else
+		{
+			renderThreadData->SetResource(nullptr);
+		}
+	});
+}
+
+} // anonymous namespace
+
+
 MaterialResource::MaterialResource(const string& name)
 	: m_name(name)
 	, m_type(ShaderResourceType::Unsupported)
@@ -41,46 +62,30 @@ void MaterialResource::SetResource(shared_ptr<Texture> texture)
 
 		if (m_texture)
 		{
-			m_texture->loadTask.then([renderThreadData, texture]
+			if (m_texture->loadTask.is_done())
 			{
-				Renderer::GetInstance().EnqueueTask([renderThreadData, texture](RenderTaskEnvironment& rte)
-				{
-					if (texture)
-					{
-						renderThreadData->SetResource(texture->GetSRV());
-					}
-					else
-					{
-						renderThreadData->SetResource(nullptr);
-					}
-				});
-			});
+				SetResourceRenderThread(renderThreadData, texture);
+			}
+			else
+			{
+				m_texture->loadTask.then([renderThreadData, texture] { SetResourceRenderThread(renderThreadData, texture); });
+			}
 		}
 		else
 		{
-			Renderer::GetInstance().EnqueueTask([renderThreadData, texture](RenderTaskEnvironment& rte)
-			{
-				if (texture)
-				{
-					renderThreadData->SetResource(texture->GetSRV());
-				}
-				else
-				{
-					renderThreadData->SetResource(nullptr);
-				}
-			});
+			SetResourceRenderThread(renderThreadData, texture);
 		}
 	}
 }
 
 
-void MaterialResource::CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const Effect::ResourceSRV& resource)
+void MaterialResource::CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource)
 {
 	m_renderThreadData = make_shared<RenderThread::MaterialResourceData>(materialData);
 
 	for (uint32_t i = 0; i < 5; ++i)
 	{
-		const auto& binding = resource.bindings[i];
+		const auto& binding = resource.binding[i];
 		m_renderThreadData->m_shaderSlots[i].first = binding.tableIndex;
 		m_renderThreadData->m_shaderSlots[i].second = binding.tableSlot;
 	}
