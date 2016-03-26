@@ -9,12 +9,4 @@
 
 #pragma once
 
-#if defined(DX11)
-#include "MaterialParameter11.h"
-#elif defined(DX12)
-#include "MaterialParameter12.h"
-#elif defined(VK)
-#include "MaterialParameterVk.h"
-#else
-#error No graphics API defined!
-#endif
+extern const uint32_t kInvalid;

@@ -54,3 +54,6 @@
 #include <sstream>
 #include <stdint.h>
 #include <string>
+
+// Engine headers
+#include "Engine\Source\Constants.h"

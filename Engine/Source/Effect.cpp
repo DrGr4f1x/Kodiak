@@ -31,8 +31,6 @@ BaseEffect::BaseEffect()
 	}
 	m_numRenderTargets = 0;
 	m_depthFormat = DepthFormat::Unknown;
-
-	m_shaderBindings.reserve(5);
 }
 
 
@@ -47,8 +45,6 @@ BaseEffect::BaseEffect(const string& name) : m_name(name)
 	}
 	m_numRenderTargets = 0;
 	m_depthFormat = DepthFormat::Unknown;
-
-	m_shaderBindings.reserve(5);
 }
 
 

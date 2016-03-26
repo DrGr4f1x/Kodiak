@@ -15,6 +15,7 @@
 #include "InputLayout11.h"
 #include "Log.h"
 #include "Material.h"
+#include "MathUtil.h"
 #include "Paths.h"
 #include "RenderEnums.h"
 #include "RenderUtils.h"
@@ -58,7 +59,7 @@ void VertexShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 	ComPtr<ID3D11ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 	CreateInputLayout(reflector.Get(), data, dataSize);
 }
 
@@ -165,7 +166,7 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 		inputLayoutDesc.push_back(elementDesc);
 	}
 
-	// Try to create Input Layout
+	// Try to create input layout
 	if (!inputLayoutDesc.empty())
 	{
 		m_inputLayout = make_shared<InputLayout>();
@@ -187,7 +188,7 @@ void PixelShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 	ComPtr<ID3D11ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 }
 
 
@@ -198,7 +199,7 @@ void GeometryShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 	ComPtr<ID3D11ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 }
 
 
@@ -209,7 +210,7 @@ void DomainShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 	ComPtr<ID3D11ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 }
 
 
@@ -220,7 +221,7 @@ void HullShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 	ComPtr<ID3D11ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 }
 
 
@@ -231,7 +232,7 @@ void ComputeShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 	ComPtr<ID3D11ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
 
-	Introspect(reflector.Get(), m_bindingDesc, m_variables);
+	Introspect(reflector.Get(), m_signature);
 }
 
 
@@ -327,8 +328,7 @@ ShaderResourceDimension ConvertToEngine(D3D_SRV_DIMENSION dim)
 namespace Kodiak
 {
 
-void IntrospectCBuffer(ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc>& variables, ID3D11ShaderReflection* reflector,
-	const D3D11_SHADER_INPUT_BIND_DESC& inputDesc)
+void IntrospectCBuffer(ID3D11ShaderReflection* reflector, const D3D11_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
 	// Grab the D3D11 constant buffer description
 	auto reflCBuffer = reflector->GetConstantBufferByName(inputDesc.Name);
@@ -337,27 +337,31 @@ void IntrospectCBuffer(ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc
 	D3D11_SHADER_BUFFER_DESC bufferDesc;
 	reflCBuffer->GetDesc(&bufferDesc);
 
-	uint32_t constantBufferIndex = static_cast<uint32_t>(bindingDesc.cbuffers.size());
-
 	const std::string cbufferName(bufferDesc.Name);
 
 	// If this cbuffer holds per-view or per-object constants, record the size for validation against other shaders
 	if (cbufferName == GetPerViewConstantsName())
 	{
-		bindingDesc.perViewDataSize = bufferDesc.Size;
+		signature.cbvPerViewData.sizeInBytes = bufferDesc.Size;
+		signature.cbvPerViewData.shaderRegister = inputDesc.BindPoint;
 		return; // Don't create a record for per-view constant buffer
 	}
 	else if (cbufferName == GetPerObjectConstantsName())
 	{
-		bindingDesc.perObjectDataSize = bufferDesc.Size;
+		signature.cbvPerObjectData.sizeInBytes = bufferDesc.Size;
+		signature.cbvPerObjectData.shaderRegister = inputDesc.BindPoint;
 		return; // Don't create a record for per-object constant buffer
 	}
 
 	// Create our own description for the constant buffer
-	bindingDesc.cbuffers.emplace_back(bufferDesc.Name, inputDesc.BindPoint, bufferDesc.Size);
-	auto& shaderBufferDesc = bindingDesc.cbuffers[constantBufferIndex];
-	
+	Shader::CBVLayout cbvLayout;
+	cbvLayout.name = cbufferName;
+	cbvLayout.byteOffset = 0;
+	cbvLayout.sizeInBytes = bufferDesc.Size;
+	cbvLayout.shaderRegister = inputDesc.BindPoint;
 
+	signature.cbvTable.push_back(cbvLayout);
+	
 	// Variables in constant buffer
 	for (uint32_t j = 0; j < bufferDesc.Variables; ++j)
 	{
@@ -371,28 +375,71 @@ void IntrospectCBuffer(ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc
 
 		// Create our own description for the variable
 		auto varType = ConvertToEngine(typeDesc.Type, typeDesc.Rows, typeDesc.Columns);
-		variables.emplace_back(varDesc.Name, constantBufferIndex, varDesc.StartOffset, varDesc.Size, varType);
+
+		Shader::Parameter parameter;
+		parameter.name = varDesc.Name;
+		parameter.type = varType;
+		parameter.sizeInBytes = varDesc.Size;
+		parameter.cbvShaderRegister = inputDesc.BindPoint;
+		parameter.byteOffset = varDesc.StartOffset;
+
+		signature.parameters.push_back(parameter);
 	}
 }
 
 
-void IntrospectResource(vector<ShaderResourceDesc>& resources, ShaderResourceType type, const D3D11_SHADER_INPUT_BIND_DESC& inputDesc)
+void IntrospectResourceSRV(ShaderResourceType type, const D3D11_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
-	resources.emplace_back(inputDesc.Name, inputDesc.BindPoint, type, ConvertToEngine(inputDesc.Dimension));
+	Shader::ResourceSRV resourceSRV{ inputDesc.Name, type, ConvertToEngine(inputDesc.Dimension), inputDesc.BindPoint };
+	signature.resources.push_back(resourceSRV);
 }
 
 
-
-void Introspect(ID3D11ShaderReflection* reflector, ShaderBindingDesc& bindingDesc, vector<ShaderVariableDesc>& variables)
+void IntrospectResourceUAV(ShaderResourceType type, const D3D11_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
 {
+	Shader::ResourceUAV resourceUAV{ inputDesc.Name, type, inputDesc.BindPoint };
+	signature.uavs.push_back(resourceUAV);
+}
+
+
+void IntrospectSampler(const D3D11_SHADER_INPUT_BIND_DESC& inputDesc, Shader::Signature& signature)
+{
+	Shader::Sampler sampler{ inputDesc.Name, inputDesc.BindPoint };
+	signature.samplers.push_back(sampler);
+}
+
+
+void ResetSignature(Shader::Signature& signature)
+{
+	// Reset per-view and per-object CBV bindings
+	signature.cbvPerViewData.byteOffset = kInvalid;
+	signature.cbvPerViewData.sizeInBytes = kInvalid;
+	signature.cbvPerViewData.shaderRegister = kInvalid;
+
+	signature.cbvPerObjectData.byteOffset = kInvalid;
+	signature.cbvPerObjectData.sizeInBytes = kInvalid;
+	signature.cbvPerObjectData.shaderRegister = kInvalid;
+
+	// Clear tables
+	signature.cbvTable.clear();
+	signature.srvTable.clear();
+	signature.uavTable.clear();
+	signature.samplerTable.clear();
+
+	// Clear parameters
+	signature.parameters.clear();
+	signature.resources.clear();
+	signature.uavs.clear();
+	signature.samplers.clear();
+}
+
+
+void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature)
+{
+	ResetSignature(signature);
+
 	D3D11_SHADER_DESC desc;
 	reflector->GetDesc(&desc);
-
-	// Allocate space for constant buffers and resources
-	bindingDesc.cbuffers.clear();
-	bindingDesc.cbuffers.reserve(desc.BoundResources);
-	bindingDesc.resources.clear();
-	bindingDesc.resources.reserve(desc.BoundResources);
 
 	// Bound resources
 	for (uint32_t i = 0; i < desc.BoundResources; ++i)
@@ -404,57 +451,189 @@ void Introspect(ID3D11ShaderReflection* reflector, ShaderBindingDesc& bindingDes
 		switch (inputDesc.Type)
 		{
 		case D3D_SIT_CBUFFER:
-			IntrospectCBuffer(bindingDesc, variables, reflector, inputDesc);
+			IntrospectCBuffer(reflector, inputDesc, signature);
 			break;
 
 		case D3D_SIT_TBUFFER:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::TBuffer, inputDesc);
+			IntrospectResourceSRV(ShaderResourceType::TBuffer, inputDesc, signature);
 			break;
 
 		case D3D_SIT_TEXTURE:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::Texture, inputDesc);
+			IntrospectResourceSRV(ShaderResourceType::Texture, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWTYPED:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWTyped, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVRWTyped, inputDesc, signature);
 			break;
 
 		case D3D_SIT_STRUCTURED:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::Structured, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::Structured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWSTRUCTURED:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWStructured, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVRWStructured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_BYTEADDRESS:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::ByteAddress, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::ByteAddress, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWBYTEADDRESS:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWByteAddress, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVRWByteAddress, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_APPEND_STRUCTURED:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVAppendStructured, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVAppendStructured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_CONSUME_STRUCTURED:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVConsumeStructured, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVConsumeStructured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-			IntrospectResource(bindingDesc.resources, ShaderResourceType::UAVRWStructuredWithCounter, inputDesc);
+			IntrospectResourceUAV(ShaderResourceType::UAVRWStructuredWithCounter, inputDesc, signature);
 			break;
 
 		case D3D_SIT_SAMPLER:
-			// TODO: handle samplers
+			IntrospectSampler(inputDesc, signature);
 			break;
 
 		default:
 			assert(false);
 			break;
 		}
+	}
+
+	// Compute new cbuffer offsets, cbuffers are mapped consecutively to a contiguous memory block
+	const uint32_t numCBuffers = static_cast<uint32_t>(signature.cbvTable.size());
+	uint32_t currentOffset = 0;
+	for (uint32_t i = 0; i < numCBuffers; ++i)
+	{
+		signature.cbvTable[i].byteOffset = currentOffset;
+		currentOffset += signature.cbvTable[i].sizeInBytes;
+	}
+
+	// Merge SRVs into tables
+	if (!signature.resources.empty())
+	{
+		Shader::TableLayout currentLayout{ signature.resources[0].shaderRegister, 1 };
+		const uint32_t numSRVs = static_cast<uint32_t>(signature.resources.size());
+		for (uint32_t i = 1; i < numSRVs; ++i)
+		{
+			if (signature.resources[i].shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
+			{
+				++currentLayout.numItems;
+			}
+			else
+			{
+				signature.srvTable.push_back(currentLayout);
+				currentLayout.shaderRegister = signature.resources[i].shaderRegister;
+				currentLayout.numItems = 1;
+			}
+		}
+		signature.srvTable.push_back(currentLayout);
+	}
+
+	// Merge UAVs into tables
+	if (!signature.uavs.empty())
+	{
+		Shader::TableLayout currentLayout{ signature.uavs[0].shaderRegister, 1 };
+		const uint32_t numUAVs = static_cast<uint32_t>(signature.uavs.size());
+		for (uint32_t i = 1; i < numUAVs; ++i)
+		{
+			if (signature.uavs[i].shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
+			{
+				++currentLayout.numItems;
+			}
+			else
+			{
+				signature.uavTable.push_back(currentLayout);
+				currentLayout.shaderRegister = signature.uavs[i].shaderRegister;
+				currentLayout.numItems = 1;
+			}
+		}
+		signature.uavTable.push_back(currentLayout);
+	}
+
+	// Merge samplers into tables
+	if (!signature.samplers.empty())
+	{
+		Shader::TableLayout currentLayout{ signature.samplers[0].shaderRegister, 1 };
+		const uint32_t numSamplers = static_cast<uint32_t>(signature.samplers.size());
+		for (uint32_t i = 1; i < numSamplers; ++i)
+		{
+			if (signature.samplers[i].shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
+			{
+				++currentLayout.numItems;
+			}
+			else
+			{
+				signature.samplerTable.push_back(currentLayout);
+				currentLayout.shaderRegister = signature.samplers[i].shaderRegister;
+				currentLayout.numItems = 1;
+			}
+		}
+		signature.samplerTable.push_back(currentLayout);
+	}
+
+	// Remap SRVs into table ranges
+	for (auto& resource : signature.resources)
+	{
+		bool found = false;
+		uint32_t tableIndex = 0;
+		for (const auto& table : signature.srvTable)
+		{
+			if (resource.shaderRegister >= table.shaderRegister && resource.shaderRegister < (table.shaderRegister + table.numItems))
+			{
+				resource.tableIndex = tableIndex;
+				resource.tableSlot = resource.shaderRegister - table.shaderRegister;
+				
+				found = true;
+				break;
+			}
+			++tableIndex;
+		}
+		assert(found);
+	}
+
+	// Remap UAVs into table ranges
+	for (auto& uav : signature.uavs)
+	{
+		bool found = false;
+		uint32_t tableIndex = 0;
+		for (const auto& table : signature.srvTable)
+		{
+			if (uav.shaderRegister >= table.shaderRegister && uav.shaderRegister < (table.shaderRegister + table.numItems))
+			{
+				uav.tableIndex = tableIndex;
+				uav.tableSlot = uav.shaderRegister - table.shaderRegister;
+
+				found = true;
+				break;
+			}
+			++tableIndex;
+		}
+		assert(found);
+	}
+
+	// Remap samplers into table ranges
+	for (auto& sampler : signature.samplers)
+	{
+		bool found = false;
+		uint32_t tableIndex = 0;
+		for (const auto& table : signature.srvTable)
+		{
+			if (sampler.shaderRegister >= table.shaderRegister && sampler.shaderRegister < (table.shaderRegister + table.numItems))
+			{
+				sampler.tableIndex = tableIndex;
+				sampler.tableSlot = sampler.shaderRegister - table.shaderRegister;
+
+				found = true;
+				break;
+			}
+			++tableIndex;
+		}
+		assert(found);
 	}
 }
 

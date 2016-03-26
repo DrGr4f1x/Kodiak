@@ -229,7 +229,7 @@ void Scene::Initialize()
 	auto samplerDesc = CD3D11_SAMPLER_DESC(D3D11_DEFAULT);
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxAnisotropy = 8;
 
 	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf()));
 #endif

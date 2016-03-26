@@ -300,6 +300,16 @@
       <Filter>External</Filter>
     </ClInclude>
     <ClInclude Include="Source\InputState.h" />
+    <ClInclude Include="Source\Constants.h" />
+    <ClInclude Include="Source\MaterialParameter11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialResource11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -465,6 +475,13 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\InputState.cpp" />
+    <ClCompile Include="Source\Constants.cpp" />
+    <ClCompile Include="Source\MaterialParameter11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialResource11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">

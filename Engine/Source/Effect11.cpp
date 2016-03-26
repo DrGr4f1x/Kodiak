@@ -39,16 +39,67 @@ void Effect::Finalize()
 void Effect::BuildEffectSignature()
 {
 	// Clear out old effect signature data (shouldn't have any, but just to be safe...)
+	for (uint32_t i = 0; i < 5; ++i)
+	{
+		m_signature.perViewDataBindings[i] = kInvalid;
+		m_signature.perObjectDataBindings[i] = kInvalid;
+	}
 	m_signature.perViewDataSize = 0;
 	m_signature.perObjectDataSize = 0;
-	m_signature.perMaterialDataSize = 0;
+	m_signature.cbvPerMaterialDataSize = 0;
 
 	// Process the shaders
-	ProcessShaderBindings(0, m_vertexShader.get());
-	ProcessShaderBindings(1, m_domainShader.get());
-	ProcessShaderBindings(2, m_hullShader.get());
-	ProcessShaderBindings(3, m_geometryShader.get());
-	ProcessShaderBindings(4, m_pixelShader.get());
+	ProcessShaderBindings(m_vertexShader.get());
+	ProcessShaderBindings(m_domainShader.get());
+	ProcessShaderBindings(m_hullShader.get());
+	ProcessShaderBindings(m_geometryShader.get());
+	ProcessShaderBindings(m_pixelShader.get());
+
+	// Patch the constant buffer offsets 
+	// (number of bytes from the start of the uber-cbuffer for each sub-buffer)
+	uint32_t currentOffset = 0;
+	for (uint32_t i = 0; i < 5; ++i)
+	{
+		// Patch cbuffer offsets (for logical sub-buffers)
+		for (auto& cbvBinding : m_signature.cbvBindings[i])
+		{
+			if (cbvBinding.byteOffset == 0)
+			{
+				// Verify that the cbuffer has a legitimate size
+				assert(cbvBinding.sizeInBytes != kInvalid);
+				assert(cbvBinding.sizeInBytes != 0);
+
+				cbvBinding.byteOffset = currentOffset;
+				currentOffset += cbvBinding.sizeInBytes;
+				m_signature.cbvPerMaterialDataSize += cbvBinding.sizeInBytes;
+			}
+		}
+	}
+
+	// Patch the parameter offsets
+	// (number of bytes from the start of the uber-cbuffer for each sub-buffer)
+	for (auto& parameter : m_signature.parameters)
+	{
+		for (uint32_t i = 0; i < 5; ++i)
+		{
+			if (parameter.byteOffsets[i] != kInvalid)
+			{
+				const auto cbvShaderRegister = parameter.cbvShaderRegister[i];
+
+				for (const auto& cbvBinding : m_signature.cbvBindings[i])
+				{
+					if (cbvBinding.shaderRegister == cbvShaderRegister)
+					{
+						assert(cbvBinding.byteOffset != kInvalid);
+						parameter.byteOffsets[i] += cbvBinding.byteOffset;
+						break;
+					}
+				}
+
+				assert(parameter.byteOffsets[i] != kInvalid);
+			}
+		}
+	}
 }
 
 
@@ -88,126 +139,201 @@ void Effect::BuildPSO()
 }
 
 
-template <class ShaderClass>
-void Effect::ProcessShaderBindings(uint32_t index, ShaderClass* shader)
+void Effect::ProcessShaderBindings(Shader* shader)
 {
-	if (shader)
+	if (!shader)
 	{
-		// Validate per-view data size - must be zero or the same as the other shaders in the effect
-		auto perViewDataSize = shader->GetPerViewDataSize();
-		if (perViewDataSize > 0)
+		return;
+	}
+
+	const auto& shaderSig = shader->GetSignature();
+	const auto shaderType = shader->GetType();
+	const uint32_t shaderIndex = static_cast<uint32_t>(shaderType);
+
+	// Validate per-view data size - must be zero or the same as the other shaders in the effect
+	auto perViewDataSize = shader->GetPerViewDataSize();
+	if (perViewDataSize > 0 && perViewDataSize != kInvalid)
+	{
+		assert((m_signature.perViewDataSize == 0) || (m_signature.perViewDataSize == perViewDataSize));
+		m_signature.perViewDataSize = perViewDataSize;
+
+		m_signature.perViewDataBindings[shaderIndex] = shaderSig.cbvPerViewData.shaderRegister;
+	}
+
+	// Validate per-object data size - must be zero or the same as the other shaders in the effect
+	auto perObjectDataSize = shader->GetPerObjectDataSize();
+	if (perObjectDataSize > 0 && perObjectDataSize != kInvalid)
+	{
+		assert((m_signature.perObjectDataSize == 0) || (m_signature.perObjectDataSize == perObjectDataSize));
+		m_signature.perObjectDataSize = perObjectDataSize;
+
+		m_signature.perObjectDataBindings[shaderIndex] = shaderSig.cbvPerObjectData.shaderRegister;
+	}
+
+	// Constant buffers
+	for (const auto& cbv : shaderSig.cbvTable)
+	{
+		CBVBinding binding;
+		binding.byteOffset = 0;
+		binding.sizeInBytes = cbv.sizeInBytes;
+		binding.shaderRegister = cbv.shaderRegister;
+		m_signature.cbvBindings[shaderIndex].push_back(binding);
+	}
+
+	// Copy SRV tables
+	for (const auto& table : shaderSig.srvTable)
+	{
+		TableLayout layout;
+		layout.shaderRegister = table.shaderRegister;
+		layout.numItems = table.numItems;;
+		m_signature.srvBindings[shaderIndex].push_back(layout);
+	}
+
+	// Copy UAV tables
+	for (const auto& table : shaderSig.uavTable)
+	{
+		TableLayout layout;
+		layout.shaderRegister = table.shaderRegister;
+		layout.numItems = table.numItems; 
+		m_signature.uavBindings[shaderIndex].push_back(layout);
+	}
+
+	// Copy sampler tables
+	for (const auto& table : shaderSig.samplerTable)
+	{
+		TableLayout layout;
+		layout.shaderRegister = table.shaderRegister;
+		layout.numItems = table.numItems;
+		m_signature.samplerBindings[shaderIndex].push_back(layout);
+	}
+
+	// Parameters
+	for (const auto& parameter : shaderSig.parameters)
+	{
+		// See if we already have this parameter from a previous shader stage
+		bool newParameter = true;
+		for (auto& fxParameter : m_signature.parameters)
 		{
-			assert((m_signature.perViewDataSize == 0) || (m_signature.perViewDataSize == perViewDataSize));
-			m_signature.perViewDataSize = perViewDataSize;
+			if (fxParameter.name == parameter.name)
+			{
+				// Confirm that the pre-existing parameter matches the new one
+				assert(fxParameter.type == parameter.type);
+				assert(fxParameter.sizeInBytes == parameter.sizeInBytes);
+				fxParameter.byteOffsets[shaderIndex] = parameter.byteOffset; // Will be patched after all shaders are processed
+				fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister;
+
+				newParameter = false;
+				break;
+			}
 		}
 
-		// Validate per-object data size - must be zero or the same as the other shaders in the effect
-		auto perObjectDataSize = shader->GetPerObjectDataSize();
-		if (perObjectDataSize > 0)
+		// Create new parameter, if necessary
+		if (newParameter)
 		{
-			assert((m_signature.perObjectDataSize == 0) || (m_signature.perObjectDataSize == perObjectDataSize));
-			m_signature.perObjectDataSize = perObjectDataSize;
+			Parameter fxParameter;
+			fxParameter.name = parameter.name;
+			fxParameter.type = parameter.type;
+			fxParameter.sizeInBytes = parameter.sizeInBytes;
+			fxParameter.byteOffsets[shaderIndex] = parameter.byteOffset; // Will be patched after all shaders are processed
+			fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister;
+
+			m_signature.parameters.push_back(fxParameter);
+		}
+	}
+
+	// SRV resources
+	for (const auto& srv : shaderSig.resources)
+	{
+		// See if we already have this SRV resource from a previous shader stage
+		bool newResource = true;
+		for (auto& fxSrv : m_signature.srvs)
+		{
+			if (fxSrv.name == srv.name)
+			{
+				// Confirm that the pre-existing SRV resource matches the new one
+				assert(fxSrv.type == srv.type);
+				assert(fxSrv.dimension == srv.dimension);
+				fxSrv.bindings[shaderIndex].tableIndex = srv.tableIndex;
+				fxSrv.bindings[shaderIndex].tableSlot = srv.tableSlot;
+
+				newResource = false;
+				break;
+			}
 		}
 
-		const auto& shaderSig = shader->GetSignature();
-
-		// Constant buffers
-		for (const auto& shaderCBuffer : shaderSig.cbuffers)
+		// Create new SRV resource, if necessary
+		if (newResource)
 		{
-			EffectConstantBuffer effectCBuffer;
-			effectCBuffer.name = shaderCBuffer.name;
-			effectCBuffer.size = shaderCBuffer.size;
-			effectCBuffer.shaderRegister = shaderCBuffer.registerSlot;
-			m_signature.internalCBVToDXMap[index].emplace_back(effectCBuffer);
+			ResourceSRV fxSrv;
+			fxSrv.name = srv.name;
+			fxSrv.type = srv.type;
+			fxSrv.dimension = srv.dimension;
+			fxSrv.bindings[shaderIndex].tableIndex = srv.tableIndex;
+			fxSrv.bindings[shaderIndex].tableSlot = srv.tableSlot;
 
-			m_signature.perMaterialDataSize += Math::AlignUp(shaderCBuffer.size, 16);
+			m_signature.srvs.push_back(fxSrv);
+		}
+	}
+
+	// UAV resources
+	for (const auto& uav : shaderSig.uavs)
+	{
+		// See if we already have this UAV resource from a previous shader stage
+		bool newResource = true;
+		for (auto& fxUav : m_signature.uavs)
+		{
+			if (fxUav.name == uav.name)
+			{
+				// Confirm that the pre-existing UAV resource matches the new one
+				assert(fxUav.type == uav.type);
+				fxUav.bindings[shaderIndex].tableIndex = uav.tableIndex;
+				fxUav.bindings[shaderIndex].tableSlot = uav.tableSlot;
+
+				newResource = false;
+				break;
+			}
 		}
 
-		// Resources
-		std::vector<uint32_t> resourceSlots;
-		for (const auto& shaderResource : shaderSig.resources)
+		// Create new UAV resource, if necessary
+		if (newResource)
 		{
-			bool found = false;
-			for (auto& effectResource : m_signature.resources)
-			{
-				if (effectResource.name == shaderResource.name)
-				{
-					assert(effectResource.type == shaderResource.type);
-					assert(effectResource.dimension == shaderResource.dimension);
-					effectResource.shaderSlots[index] = shaderResource.registerSlot;
-					found = true;
-					break;
-				}
-			}
+			ResourceUAV fxUav;
+			fxUav.name = uav.name;
+			fxUav.type = uav.type;
+			fxUav.bindings[shaderIndex].tableIndex = uav.tableIndex;
+			fxUav.bindings[shaderIndex].tableSlot = uav.tableSlot;
 
-			if (!found)
-			{
-				EffectResource effectResource;
-				effectResource.name = shaderResource.name;
-				fill(begin(effectResource.shaderSlots), end(effectResource.shaderSlots), 0xFFFFFFFF);
-				effectResource.shaderSlots[index] = shaderResource.registerSlot;
-				effectResource.type = shaderResource.type;
-				effectResource.dimension = shaderResource.dimension;
-				m_signature.resources.emplace_back(effectResource);
-			}
+			m_signature.uavs.push_back(fxUav);
+		}
+	}
 
-			// Store slots so we can build resource ranges
-			resourceSlots.push_back(shaderResource.registerSlot);
+	// Samplers
+	for (const auto& sampler : shaderSig.samplers)
+	{
+		// See if we already have this sampler from a previous shader stage
+		bool newSampler = true;
+		for (auto& fxSampler : m_signature.samplers)
+		{
+			if (fxSampler.name == sampler.name)
+			{
+				// Nothing to validate for samplers
+				fxSampler.bindings[shaderIndex].tableIndex = sampler.tableIndex;
+				fxSampler.bindings[shaderIndex].tableSlot = sampler.tableSlot;
+
+				newSampler = false;
+				break;
+			}
 		}
 
-		// Build resource ranges
-		if (!resourceSlots.empty())
+		// Create new sampler, if necessary
+		if (newSampler)
 		{
-			sort(begin(resourceSlots), end(resourceSlots));
+			Sampler fxSampler;
+			fxSampler.name = sampler.name;
+			fxSampler.bindings[shaderIndex].tableIndex = sampler.tableIndex;
+			fxSampler.bindings[shaderIndex].tableSlot = sampler.tableSlot;
 
-			EffectShaderResourceBinding::ResourceRange range = { resourceSlots[0], 1 };
-			const size_t numSlots = resourceSlots.size();
-			for (size_t i = 1; i < numSlots; ++i)
-			{
-				if (resourceSlots[i] == range.startSlot + range.numResources)
-				{
-					++range.numResources;
-				}
-				else
-				{
-					m_signature.internalSRVToDXMap[index].resourceRanges.push_back(range);
-					range.startSlot = resourceSlots[i];
-					range.numResources = 1;
-				}
-			}
-			m_signature.internalSRVToDXMap[index].resourceRanges.push_back(range);
-		}
-
-
-		// Variables
-		const auto& shaderVariables = shader->GetVariables();
-		for (const auto& shaderVariable : shaderVariables)
-		{
-			bool found = false;
-			for (auto& effectVariable : m_signature.variables)
-			{
-				if (effectVariable.name == shaderVariable.name)
-				{
-					assert(effectVariable.size == shaderVariable.size);
-					assert(effectVariable.type == shaderVariable.type);
-					effectVariable.shaderSlots[index].cbufferIndex = shaderVariable.constantBuffer;
-					effectVariable.shaderSlots[index].offset = shaderVariable.startOffset;
-					found = true;
-					break;
-				}
-			}
-
-			if (!found)
-			{
-				EffectVariable effectVariable;
-				effectVariable.name = shaderVariable.name;
-				effectVariable.size = shaderVariable.size;
-				effectVariable.type = shaderVariable.type;
-				fill(begin(effectVariable.shaderSlots), end(effectVariable.shaderSlots), EffectVariableBinding{ 0xFFFFFFFF, 0xFFFFFFFF });
-				effectVariable.shaderSlots[index].cbufferIndex = shaderVariable.constantBuffer;
-				effectVariable.shaderSlots[index].offset = shaderVariable.startOffset;
-				m_signature.variables.emplace_back(effectVariable);
-			}
+			m_signature.samplers.push_back(fxSampler);
 		}
 	}
 }

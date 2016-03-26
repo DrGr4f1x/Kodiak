@@ -106,9 +106,6 @@ protected:
 	uint32_t							m_numRenderTargets{ 0 };
 	uint32_t							m_msaaCount{ 1 };
 	uint32_t							m_msaaQuality{ 0 };
-
-	// Shader bindings
-	std::vector<ShaderBindingDesc>		m_shaderBindings;
 };
 
 } // namespace Kodiak

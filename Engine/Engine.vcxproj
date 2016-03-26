@@ -208,6 +208,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\Constants.h" />
     <ClInclude Include="Source\dds.h" />
     <ClInclude Include="Source\DDSCommon.h" />
     <ClInclude Include="Source\DDSTextureLoader11.h">
@@ -310,6 +311,9 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\MaterialParameter.h" />
+    <ClInclude Include="Source\MaterialParameter11.h" />
+    <ClInclude Include="Source\MaterialResource.h" />
+    <ClInclude Include="Source\MaterialResource11.h" />
     <ClInclude Include="Source\MathUtil.h" />
     <ClInclude Include="Source\Model.h" />
     <ClInclude Include="Source\Paths.h" />
@@ -366,6 +370,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\Constants.cpp" />
     <ClCompile Include="Source\DDSTextureLoader11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -398,6 +403,8 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\MaterialParameter11.cpp" />
+    <ClCompile Include="Source\MaterialResource11.cpp" />
     <ClCompile Include="Source\Model_H3D.cpp" />
     <ClCompile Include="Source\Profile.cpp" />
     <ClCompile Include="Source\RenderPass.cpp" />

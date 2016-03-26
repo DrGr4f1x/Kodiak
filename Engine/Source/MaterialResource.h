@@ -10,11 +10,11 @@
 #pragma once
 
 #if defined(DX11)
-#include "MaterialParameter11.h"
+#include "MaterialResource11.h"
 #elif defined(DX12)
-#include "MaterialParameter12.h"
+#include "MaterialResource12.h"
 #elif defined(VK)
-#include "MaterialParameterVk.h"
+#include "MaterialResourceVk.h"
 #else
 #error No graphics API defined!
 #endif

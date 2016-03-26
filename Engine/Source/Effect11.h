@@ -14,49 +14,8 @@ namespace Kodiak
 
 // Forward declarations
 class GraphicsPSO;
-
-
-struct EffectConstantBuffer
-{
-	std::string name;
-	uint32_t	shaderRegister;
-	size_t		size;
-};
-
-
-struct EffectResource
-{
-	std::string				name;
-	std::array<uint32_t, 5> shaderSlots;
-	ShaderResourceType		type;
-	ShaderResourceDimension dimension;
-};
-
-struct EffectShaderResourceBinding
-{
-	struct ResourceRange
-	{
-		uint32_t startSlot;
-		uint32_t numResources;
-	};
-	std::vector<ResourceRange> resourceRanges;
-};
-
-
-struct EffectVariableBinding
-{
-	uint32_t cbufferIndex;
-	uint32_t offset;
-};
-
-
-struct EffectVariable
-{
-	std::string								name;
-	size_t									size;
-	ShaderVariableType						type;
-	std::array<EffectVariableBinding, 5>	shaderSlots;
-};
+class Shader;
+enum class ShaderType;
 
 
 class Effect : public BaseEffect
@@ -73,31 +32,83 @@ public:
 
 	void Finalize() override;
 
+	struct CBVBinding
+	{
+		uint32_t		byteOffset{ kInvalid };		// offset from start of large cbuffer (16-byte aligned)
+		uint32_t		sizeInBytes{ kInvalid };    // cbuffer size in bytes (multiple of 16)
+		uint32_t		shaderRegister{ kInvalid };
+	};
+
+	struct TableLayout
+	{
+		uint32_t		shaderRegister{ kInvalid };
+		uint32_t		numItems{ kInvalid };
+	};
+
+	struct TableEntry
+	{
+		uint32_t		tableIndex{ kInvalid };
+		uint32_t		tableSlot{ kInvalid };
+	};
+
+	struct Parameter
+	{
+		std::string					name;
+		ShaderVariableType			type;
+		uint32_t					sizeInBytes{ 0 };
+		std::array<uint32_t, 5>		byteOffsets{ kInvalid, kInvalid, kInvalid, kInvalid, kInvalid };
+		std::array<uint32_t, 5>		cbvShaderRegister{ kInvalid, kInvalid, kInvalid, kInvalid, kInvalid };
+	};
+
+	struct ResourceSRV
+	{
+		std::string					name;
+		ShaderResourceType			type;
+		ShaderResourceDimension		dimension;
+		std::array<TableEntry, 5>	bindings;
+	};
+
+	struct ResourceUAV
+	{
+		std::string					name;
+		ShaderResourceType			type;
+		std::array<TableEntry, 5>	bindings;
+	};
+
+	struct Sampler
+	{
+		std::string					name;
+		std::array<TableEntry, 5>	bindings;
+	};
+
 	struct Signature
 	{
-		// Shared constants for multiple shader stages
-		size_t	perViewDataSize;
-		size_t	perObjectDataSize;
-		size_t  perMaterialDataSize;
+		// Per-view and per-object CBV bindings
+		std::array<uint32_t, 5> perViewDataBindings;
+		std::array<uint32_t, 5> perObjectDataBindings;
+		uint32_t				perViewDataSize;	// For validation
+		uint32_t				perObjectDataSize;	// For validation
 
-		// Remap internal CBVs to DX11 
-		std::array<std::vector<EffectConstantBuffer>, 5>	internalCBVToDXMap;
-		// Remap internal SRVs to DX11
-		std::array<EffectShaderResourceBinding, 5>			internalSRVToDXMap;
-		// TODO: internal UAVs to DX11
+		// Per-material CBV bindings (one large cbuffer for everything)
+		uint32_t cbvPerMaterialDataSize{ kInvalid };
+		std::array<std::vector<CBVBinding>, 5> cbvBindings;
 
-		// Application SRV to internal remap
-		std::vector<EffectResource> resources;
-		// Application parameter to internal CPU memory
-		std::vector<EffectVariable> variables;
-		// TODO: Application UAV to internal remap
+		// Resource bindings
+		std::array<std::vector<TableLayout>, 5> srvBindings;
+		std::array<std::vector<TableLayout>, 5> uavBindings;
+		std::array<std::vector<TableLayout>, 5> samplerBindings;
+
+		// Parameters and resources
+		std::vector<Parameter>					parameters;
+		std::vector<ResourceSRV>				srvs;
+		std::vector<ResourceUAV>				uavs;
+		std::vector<Sampler>					samplers;
 	};
 
 private:
 	void BuildEffectSignature();
 	void BuildPSO();
-	template <class ShaderClass>
-	void ProcessShaderBindings(uint32_t index, ShaderClass* shader);
+	void ProcessShaderBindings(Shader* shader);
 
 private:
 	std::shared_ptr<GraphicsPSO>	m_pso;

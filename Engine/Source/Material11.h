@@ -28,7 +28,6 @@ enum class ShaderResourceType;
 enum class ShaderType;
 enum class ShaderVariableType;
 
-
 namespace RenderThread
 {
 struct MaterialData;
@@ -77,61 +76,6 @@ private:
 };
 
 
-class MaterialParameter
-{
-	friend class Material;
-public:
-	MaterialParameter(const std::string& name);
-
-	const std::string& GetName() const { return m_name; }
-	
-	void SetValue(bool value);
-	void SetValue(int32_t value);
-	void SetValue(DirectX::XMINT2 value);
-	void SetValue(DirectX::XMINT3 value);
-	void SetValue(DirectX::XMINT4 value);
-	void SetValue(uint32_t value);
-	void SetValue(DirectX::XMUINT2 value);
-	void SetValue(DirectX::XMUINT3 value);
-	void SetValue(DirectX::XMUINT4 value);
-	void SetValue(float value);
-	void SetValue(DirectX::XMFLOAT2 value);
-	void SetValue(DirectX::XMFLOAT3 value);
-	void SetValue(DirectX::XMFLOAT4 value);
-	void SetValue(DirectX::XMFLOAT4X4 value);
-
-private:
-	const std::string m_name;
-
-	std::array<uint8_t, 64> m_data;
-
-	std::shared_ptr<RenderThread::MaterialParameterData> m_renderThreadData;
-};
-
-
-class MaterialResource
-{
-	friend class Material;
-public:
-	MaterialResource(const std::string& name);
-
-	const std::string& GetName() const { return m_name; }
-
-	void SetResource(std::shared_ptr<Texture> texture);
-
-private:
-	const std::string m_name;
-
-	std::array<uint32_t, 5> m_shaderSlots;
-	ShaderResourceType		m_type;
-	ShaderResourceDimension m_dimension;
-
-	std::shared_ptr<Texture>	m_texture;
-
-	std::shared_ptr<RenderThread::MaterialResourceData>	m_renderThreadData;
-};
-
-
 namespace RenderThread
 {
 
@@ -169,76 +113,23 @@ struct MaterialData
 
 	std::array<CBufferBinding, 5> cbufferBindings;
 
-	// Callbacks for binding cbuffers to the command list at render time
-	std::array<std::function<void(const MaterialData&, GraphicsCommandList&)>, 5> cbufferCallbacks;
-
-	// Per-shader stage resource bindings
-	struct ResourceBinding
+	template<class ResourceType>
+	struct ResourceTable
 	{
-		struct ResourceRange
+		struct TableLayout
 		{
-			uint32_t startSlot;
-			uint32_t numResources;
-			std::vector<ID3D11ShaderResourceView*> resources;
+			uint32_t						shaderRegister;
+			uint32_t						numItems;
+			std::vector<ResourceType*>		resources;
 		};
-		std::vector<ResourceRange> resourceRanges;
+		std::vector<TableLayout>			layouts;
 	};
 
-	std::array<ResourceBinding, 5> resourceBindings;
-	std::array<std::function<void(const MaterialData&, GraphicsCommandList&)>, 5> resourceCallbacks;
+	std::array<ResourceTable<ID3D11ShaderResourceView>,  5>		srvTables;
+	std::array<ResourceTable<ID3D11UnorderedAccessView>, 5> 	uavTables;
+	std::array<ResourceTable<ID3D11SamplerState>,		 5>		samplerTables;
 };
 
-
-class MaterialParameterData
-{
-	friend class Material;
-public:
-	MaterialParameterData(std::shared_ptr<MaterialData> materialData);
-
-	void SetValue(bool value);
-	void SetValue(int32_t value);
-	void SetValue(DirectX::XMINT2 value);
-	void SetValue(DirectX::XMINT3 value);
-	void SetValue(DirectX::XMINT4 value);
-	void SetValue(uint32_t value);
-	void SetValue(DirectX::XMUINT2 value);
-	void SetValue(DirectX::XMUINT3 value);
-	void SetValue(DirectX::XMUINT4 value);
-	void SetValue(float value);
-	void SetValue(DirectX::XMFLOAT2 value);
-	void SetValue(DirectX::XMFLOAT3 value);
-	void SetValue(DirectX::XMFLOAT4 value);
-	void SetValue(DirectX::XMFLOAT4X4 value);
-
-private:
-	template <typename T>
-	void InternalSetValue(T value);
-
-private:
-	ShaderVariableType		m_type;
-	std::array<uint8_t, 64> m_data;
-
-	std::weak_ptr<MaterialData> m_materialData;
-	std::array<uint8_t*, 5>	m_bindings;
-	size_t					m_size{ 0 };
-	bool*					m_dirtyFlag{ nullptr };
-};
-
-
-class MaterialResourceData
-{
-	friend class Material;
-public:
-	MaterialResourceData(std::shared_ptr<MaterialData> materialData);
-
-	void SetResource(ID3D11ShaderResourceView* srv);
-	void BindDestination(uint32_t shaderIndex, uint32_t rangeIndex, uint32_t resourceIndex);
-
-private:
-	std::array<std::pair<uint32_t, uint32_t>, 5>		m_shaderSlots;
-	std::weak_ptr<MaterialData>							m_materialData;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
-};
 
 } // namespace RenderThread
 

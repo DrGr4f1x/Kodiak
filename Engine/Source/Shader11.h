@@ -10,7 +10,6 @@
 #pragma once
 
 #include "RenderEnums.h"
-#include "ShaderReflection.h"
 
 #include <ppltasks.h>
 
@@ -25,22 +24,86 @@ class Shader
 {
 public:
 	bool IsReady() const { return m_isReady; }
-
 	virtual ShaderType GetType() const = 0;
 
 	// Reflection info
-	size_t GetPerViewDataSize() const { return m_bindingDesc.perViewDataSize; }
-	size_t GetPerObjectDataSize() const { return m_bindingDesc.perObjectDataSize; }
-	const ShaderBindingDesc& GetSignature() const { return m_bindingDesc; }
-	const std::vector<ShaderVariableDesc>& GetVariables() const { return m_variables; }
+	struct Signature;
+	uint32_t GetPerViewDataSize() const { return m_signature.cbvPerViewData.sizeInBytes; }
+	uint32_t GetPerObjectDataSize() const { return m_signature.cbvPerObjectData.sizeInBytes; }
+	const struct Signature& GetSignature() const { return m_signature; }
 
 	concurrency::task<void> loadTask;
 
-protected:
-	ShaderBindingDesc								m_bindingDesc;
-	std::vector<ShaderVariableDesc>					m_variables;
+	struct CBVLayout
+	{
+		std::string		name;
+		uint32_t		byteOffset{ kInvalid };		// offset from start of large cbuffer (16-byte aligned)
+		uint32_t		sizeInBytes{ kInvalid };    // cbuffer size in bytes (multiple of 16)
+		uint32_t		shaderRegister{ kInvalid };
+	};
 
-	bool											m_isReady{ false };
+	struct TableLayout
+	{
+		uint32_t		shaderRegister;
+		uint32_t		numItems;
+	};
+
+	struct Parameter
+	{
+		std::string				name;
+		ShaderVariableType		type;
+		uint32_t				cbvShaderRegister{ kInvalid };
+		uint32_t				sizeInBytes{ 0 };
+		uint32_t				byteOffset{ kInvalid };
+	};
+
+	struct ResourceSRV
+	{
+		std::string				name;
+		ShaderResourceType		type;
+		ShaderResourceDimension dimension;
+		uint32_t				shaderRegister;
+		uint32_t				tableIndex;
+		uint32_t				tableSlot;
+	};
+
+	struct ResourceUAV
+	{
+		std::string				name;
+		ShaderResourceType		type;
+		uint32_t				shaderRegister;
+		uint32_t				tableIndex;
+		uint32_t				tableSlot;
+	};
+
+	struct Sampler
+	{
+		std::string				name;
+		uint32_t				shaderRegister;
+		uint32_t				tableIndex;
+		uint32_t				tableSlot;
+	};
+
+	struct Signature
+	{
+		// DX11 API inputs
+		CBVLayout					cbvPerViewData;
+		CBVLayout					cbvPerObjectData;
+		std::vector<CBVLayout>		cbvTable;
+		std::vector<TableLayout>	srvTable;
+		std::vector<TableLayout>	uavTable;
+		std::vector<TableLayout>	samplerTable;
+
+		// Application inputs
+		std::vector<Parameter>		parameters;
+		std::vector<ResourceSRV>	resources;
+		std::vector<ResourceUAV>	uavs;
+		std::vector<Sampler>		samplers;
+	};
+
+protected:
+	Signature	m_signature;
+	bool		m_isReady{ false };
 };
 
 
@@ -149,7 +212,7 @@ private:
 };
 
 
-void Introspect(ID3D11ShaderReflection* reflector, ShaderBindingDesc& bindingDesc, std::vector<ShaderVariableDesc>& variables);
+void Introspect(ID3D11ShaderReflection* reflector, Shader::Signature& signature);
 
 
 } // namespace Kodiak

@@ -21,6 +21,7 @@
 #include "Engine\Source\Format.h"
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Material.h"
+#include "Engine\Source\MaterialParameter.h"
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"

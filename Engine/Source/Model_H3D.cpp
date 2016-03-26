@@ -15,6 +15,8 @@
 #include "Defaults.h"
 #include "IndexBuffer.h"
 #include "Material.h"
+#include "MaterialParameter.h"
+#include "MaterialResource.h"
 #include "RenderEnums.h"
 #include "Texture.h"
 #include "VertexBuffer.h"
