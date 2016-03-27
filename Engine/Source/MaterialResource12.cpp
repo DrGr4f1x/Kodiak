@@ -110,8 +110,6 @@ void RenderThread::MaterialResourceData::SetResource(D3D12_CPU_DESCRIPTOR_HANDLE
 		{
 			m_srv = srv;
 
-			assert(m_srv.ptr);
-
 			for (uint32_t i = 0; i < 5; ++i)
 			{
 				if (m_shaderSlots[i].first != kInvalid)
