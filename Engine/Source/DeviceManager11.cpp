@@ -424,6 +424,7 @@ void DeviceManager::CreatePresentState()
 
 void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
 {
+	commandList.PIXBeginEvent("PreparePresent");
 	commandList.UnbindRenderTargets();
 
 	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -438,4 +439,5 @@ void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<
 	commandList.Draw(3);
 
 	commandList.SetPixelShaderResource(0, nullptr);
+	commandList.PIXEndEvent();
 }

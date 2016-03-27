@@ -94,6 +94,10 @@ public:
 	void SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, ID3D12DescriptorHeap* heapPtr);
 	void SetDescriptorHeaps(uint32_t heapCount, D3D12_DESCRIPTOR_HEAP_TYPE type[], ID3D12DescriptorHeap* heapPtrs[]);
 
+	void PIXBeginEvent(const std::string& label);
+	void PIXEndEvent();
+	void PIXSetMarker(const std::string& label);
+
 private:
 	uint64_t Finish(bool wait = false);
 	void Reset();

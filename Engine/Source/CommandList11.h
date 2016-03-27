@@ -48,10 +48,15 @@ public:
 		return reinterpret_cast<ComputeCommandList&>(*this);
 	}
 
+	void PIXBeginEvent(const std::string& label);
+	void PIXEndEvent();
+	void PIXSetMarker(const std::string& label);
+
 protected:
 	CommandListManager*			m_owner{ nullptr };
 	ID3D11DeviceContext*		m_context{ nullptr };
 	ID3D11DeviceContext1*		m_context1{ nullptr };
+	ID3DUserDefinedAnnotation*	m_annotation{ nullptr };
 
 	// Current state caching
 	uint32_t m_currentStencilRef{ 0 };

@@ -67,6 +67,22 @@ const DepthStencilStateDesc& CommonStates::DepthRead()
 }
 
 
+const DepthStencilStateDesc& CommonStates::DepthGreaterEqual()
+{
+	static DepthStencilStateDesc desc = DepthStencilStateDesc(true, true);
+	desc.depthFunc = ComparisonFunc::GreaterEqual;
+	return desc;
+}
+
+
+const DepthStencilStateDesc& CommonStates::DepthReadEqual()
+{
+	static DepthStencilStateDesc desc = DepthStencilStateDesc(true, false);
+	desc.depthFunc = ComparisonFunc::Equal;
+	return desc;
+}
+
+
 const RasterizerStateDesc& CommonStates::CullNone()
 {
 	static RasterizerStateDesc desc = RasterizerStateDesc(CullMode::None, FillMode::Solid);

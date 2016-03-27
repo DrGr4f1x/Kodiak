@@ -371,8 +371,8 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 
 		// Depth-only mesh part
 		StaticMeshPart depthPart{
-			vbufferDepth,
-			ibufferDepth,
+			vbuffer,
+			ibuffer,
 			depthMaterials[h3dMesh.materialIndex],
 			PrimitiveTopology::TriangleList,
 			h3dMesh.indexCount,

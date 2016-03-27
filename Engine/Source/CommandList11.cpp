@@ -22,6 +22,8 @@
 #include "VertexBuffer11.h"
 #include "Viewport.h"
 
+#include <locale>
+#include <codecvt>
 
 using namespace Kodiak;
 using namespace Microsoft::WRL;
@@ -79,6 +81,41 @@ void CommandList::Initialize(CommandListManager& manager)
 	m_owner = &manager;
 	m_owner->CreateNewDeferredContext(&m_context);
 	ThrowIfFailed(m_context->QueryInterface(__uuidof(ID3D11DeviceContext1), reinterpret_cast<void**>(&m_context1)));
+	ThrowIfFailed(m_context->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), reinterpret_cast<void**>(&m_annotation)));
+}
+
+
+void CommandList::PIXBeginEvent(const string& label)
+{
+#if defined(RELEASE)
+	(label)
+#else
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(label);
+
+	m_annotation->BeginEvent(wide.c_str());
+#endif
+}
+
+
+void CommandList::PIXEndEvent()
+{
+#if !defined(RELEASE)
+	m_annotation->EndEvent();
+#endif
+}
+
+
+void CommandList::PIXSetMarker(const string& label)
+{
+#if defined(RELEASE)
+	(label)
+#else
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(label);
+
+	m_annotation->SetMarker(wide.c_str());
+#endif
 }
 
 

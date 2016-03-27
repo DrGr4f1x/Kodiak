@@ -33,6 +33,7 @@ public:
 	void ClearDepth(std::shared_ptr<DepthBuffer> depthBuffer);
 
 	void SetRenderTarget(std::shared_ptr<ColorBuffer> colorBuffer, std::shared_ptr<DepthBuffer> depthBuffer);
+	void SetDepthStencilTarget(std::shared_ptr<DepthBuffer> depthBuffer);
 	void SetViewport(float topLeftX, float topLeftY, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height);
 
@@ -50,6 +51,16 @@ protected:
 	std::vector<std::function<void(GraphicsCommandList&)>>	m_renderOperations;
 
 	std::shared_ptr<ColorBuffer>	m_presentSource;
-};;
+};
+
+
+class ComputePipeline
+{
+public:
+	void SetName(const std::string& name);
+
+protected:
+	std::string m_name;
+};
 
 } // namespace Kodiak

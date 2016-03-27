@@ -106,7 +106,7 @@ void SponzaApplication::CreateEffects()
 	baseEffect->SetPixelShaderPath(ShaderPath("BasePS.cso"));
 	baseEffect->SetBlendState(CommonStates::Opaque());
 	baseEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
-	baseEffect->SetDepthStencilState(CommonStates::DepthDefault());
+	baseEffect->SetDepthStencilState(CommonStates::DepthReadEqual());
 	baseEffect->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
 	baseEffect->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
 	baseEffect->Finalize();
@@ -160,6 +160,11 @@ void SponzaApplication::SetupPipeline()
 	pipeline->ClearDepth(m_depthBuffer);
 
 	pipeline->UpdateScene(m_mainScene);
+
+	pipeline->SetDepthStencilTarget(m_depthBuffer);
+	pipeline->RenderScenePass(GetDefaultDepthPass(), m_mainScene);
+
+	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
 	pipeline->RenderScenePass(GetDefaultBasePass(), m_mainScene);
 
 	pipeline->Present(m_colorTarget);

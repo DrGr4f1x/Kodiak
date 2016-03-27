@@ -28,6 +28,8 @@
 #include "VertexBuffer12.h"
 #include "Viewport.h"
 
+#include <locale>
+#include <codecvt>
 
 using namespace Kodiak;
 using namespace DirectX;
@@ -322,6 +324,40 @@ void CommandList::FlushResourceBarriers()
 
 	m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
 	m_numBarriersToFlush = 0;
+}
+
+
+void CommandList::PIXBeginEvent(const string& label)
+{
+#if defined(RELEASE)
+	(label)
+#else
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(label);
+
+	::PIXBeginEvent(m_commandList, 0, wide.c_str());
+#endif
+}
+
+
+void CommandList::PIXEndEvent()
+{
+#if !defined(RELEASE)
+	::PIXEndEvent(m_commandList);
+#endif
+}
+
+
+void CommandList::PIXSetMarker(const string& label)
+{
+#if defined(RELEASE)
+	(label)
+#else
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(label);
+
+	::PIXSetMarker(m_commandList, 0, wide.c_str());
+#endif
 }
 
 

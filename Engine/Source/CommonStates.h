@@ -30,6 +30,8 @@ public:
 	static const DepthStencilStateDesc& DepthNone();
 	static const DepthStencilStateDesc& DepthDefault();
 	static const DepthStencilStateDesc& DepthRead();
+	static const DepthStencilStateDesc& DepthGreaterEqual();
+	static const DepthStencilStateDesc& DepthReadEqual();
 
 	// Rasterizer states
 	static const RasterizerStateDesc& CullNone();

@@ -66,6 +66,15 @@ void Pipeline::SetRenderTarget(std::shared_ptr<ColorBuffer> colorBuffer, std::sh
 }
 
 
+void Pipeline::SetDepthStencilTarget(shared_ptr<DepthBuffer> depthBuffer)
+{
+	m_renderOperations.push_back([depthBuffer](GraphicsCommandList& commandList)
+	{
+		commandList.SetDepthStencilTarget(*depthBuffer);
+	});
+}
+
+
 void Pipeline::SetViewport(float topLeftX, float topLeftY, float width, float height, float minDepth, float maxDepth)
 {
 	m_renderOperations.push_back([topLeftX, topLeftY, width, height, minDepth, maxDepth](GraphicsCommandList& commandList)
@@ -133,4 +142,10 @@ void Pipeline::Execute()
 	}
 
 	commandList.CloseAndExecute();
+}
+
+
+void ComputePipeline::SetName(const string& name)
+{
+	m_name = name;
 }

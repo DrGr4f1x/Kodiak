@@ -132,8 +132,11 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 {
 	PROFILE(scene_RenderPass);
 
+	commandList.PIXBeginEvent("Bind sampler states");
 	BindSamplerStates(commandList);
+	commandList.PIXEndEvent();
 
+	commandList.PIXBeginEvent(renderPass->GetName());
 	// Visit models
 	for (auto& model : m_staticModels)
 	{
@@ -166,6 +169,7 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 			}
 		}
 	}
+	commandList.PIXEndEvent();
 }
 
 
