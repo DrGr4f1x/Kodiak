@@ -245,18 +245,18 @@ void Material::CreateRenderThreadData()
 		{
 			shared_ptr<MaterialParameter> matParameter;
 			
-			auto it = m_parameters.find(parameter.name);
+			auto it = m_parameters.find(parameter.second.name);
 			if (end(m_parameters) != it)
 			{
 				matParameter = it->second;
 			}
 			else
 			{
-				matParameter = make_shared<MaterialParameter>(parameter.name);
-				m_parameters[parameter.name] = matParameter;
+				matParameter = make_shared<MaterialParameter>(parameter.second.name);
+				m_parameters[parameter.second.name] = matParameter;
 			}
 
-			matParameter->CreateRenderThreadData(m_renderThreadData, parameter);
+			matParameter->CreateRenderThreadData(m_renderThreadData, parameter.second);
 		}
 	}
 	
@@ -268,17 +268,17 @@ void Material::CreateRenderThreadData()
 		{
 			shared_ptr<MaterialResource> matResource;
 			
-			auto it = m_resources.find(resource.name);
+			auto it = m_resources.find(resource.second.name);
 			if (end(m_resources) != it)
 			{
 				matResource = it->second;
 			}
 			else
 			{
-				matResource = make_shared<MaterialResource>(resource.name);
+				matResource = make_shared<MaterialResource>(resource.second.name);
 			}
 
-			matResource->CreateRenderThreadData(m_renderThreadData, resource);
+			matResource->CreateRenderThreadData(m_renderThreadData, resource.second);
 		}
 	}
 

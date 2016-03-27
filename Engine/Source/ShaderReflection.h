@@ -74,15 +74,21 @@ struct Parameter : public BaseParameter
 		byteOffset.fill(kInvalid);
 	}
 
-	explicit Parameter(const BaseParameter& other) : BaseParameter(other)
+	Parameter(uint32_t slot, const Parameter<1>& other) : BaseParameter(other)
 	{
 		cbvShaderRegister.fill(kInvalid);
 		byteOffset.fill(kInvalid);
+
+		assert(slot < SlotCount);
+		cbvShaderRegister[slot] = other.cbvShaderRegister[0];
+		byteOffset[slot] = other.byteOffset[0];
 	}
 
 	void Assign(uint32_t slot, const Parameter<1>& other)
 	{
 		assert(slot < SlotCount);
+		assert(type == other.type);
+		assert(sizeInBytes == other.sizeInBytes);
 		cbvShaderRegister[slot] = other.cbvShaderRegister[0];
 		byteOffset[slot] = other.byteOffset[0];
 	}
@@ -111,14 +117,20 @@ struct ResourceSRV : public BaseResourceSRV
 		shaderRegister.fill(kInvalid);
 	}
 
-	explicit ResourceSRV(const BaseResourceSRV& other) : BaseResourceSRV(other)
+	ResourceSRV(uint32_t slot, const ResourceSRV<1>& other) : BaseResourceSRV(other)
 	{
 		shaderRegister.fill(kInvalid);
+
+		assert(slot < SlotCount);
+		binding[slot] = other.binding[0];
+		shaderRegister[slot] = other.shaderRegister[0];
 	}
 
 	void Assign(uint32_t slot, const ResourceSRV<1>& other)
 	{
 		assert(slot < SlotCount);
+		assert(type == other.type);
+		assert(dimension == other.dimension);
 		binding[slot] = other.binding[0];
 		shaderRegister[slot] = other.shaderRegister[0];
 	}
@@ -146,14 +158,19 @@ struct ResourceUAV : public BaseResourceUAV
 		shaderRegister.fill(kInvalid);
 	}
 
-	explicit ResourceUAV(const BaseResourceUAV& other) : BaseResourceUAV(other)
+	ResourceUAV(uint32_t slot, const ResourceUAV<1>& other) : BaseResourceUAV(other)
 	{
 		shaderRegister.fill(kInvalid);
+
+		assert(slot < SlotCount);
+		binding[slot] = other.binding[0];
+		shaderRegister[slot] = other.shaderRegister[0];
 	}
 
 	void Assign(uint32_t slot, const ResourceUAV<1>& other)
 	{
 		assert(slot < SlotCount);
+		assert(type == other.type);
 		binding[slot] = other.binding[0];
 		shaderRegister[slot] = other.shaderRegister[0];
 	}
@@ -178,9 +195,13 @@ struct Sampler : public BaseSampler
 		shaderRegister.fill(kInvalid);
 	}
 
-	explicit Sampler(const BaseSampler& other) : BaseSampler(other)
+	Sampler(uint32_t slot, const Sampler<1>& other) : BaseSampler(other)
 	{
 		shaderRegister.fill(kInvalid);
+
+		assert(slot < SlotCount);
+		binding[slot] = other.binding[0];
+		shaderRegister[slot] = other.shaderRegister[0];
 	}
 
 	void Assign(uint32_t slot, const Sampler<1>& other)

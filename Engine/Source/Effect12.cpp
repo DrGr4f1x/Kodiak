@@ -266,9 +266,9 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 		}
 	}
 
-	const bool useTables = shaderSig.numMaterialDescriptors > 6;
+	const bool useTable = shaderSig.numMaterialDescriptors > 6;
 
-	if (useTables)
+	if (useTable)
 	{
 		// TODO Setup descriptor tables here
 	}
@@ -276,8 +276,11 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 	// Constant buffers
 	for (const auto& cbv : shaderSig.cbvTable)
 	{
-		// Create root parameter
-		rootSig[rootIndex++].InitAsConstantBuffer(cbv.shaderRegister, s_shaderVisibility[shaderIndex]);
+		if (!useTable)
+		{
+			// Create root parameter
+			rootSig[rootIndex++].InitAsConstantBuffer(cbv.shaderRegister, s_shaderVisibility[shaderIndex]);
+		}
 
 		// Master descriptor array index
 		CBVData cbvData;
@@ -292,8 +295,11 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 	// SRVs
 	for (const auto& srv : shaderSig.resources)
 	{
-		// Create root parameter
-		rootSig[rootIndex++].InitAsBufferSRV(srv.shaderRegister[0], s_shaderVisibility[shaderIndex]);
+		if (!useTable)
+		{
+			// Create root parameter
+			rootSig[rootIndex++].InitAsBufferSRV(srv.shaderRegister[0], s_shaderVisibility[shaderIndex]);
+		}
 		const auto index = m_signature.totalDescriptors++;
 
 		// See if we already have this SRV resource from a previous shader stage
@@ -308,7 +314,7 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 				fxSrv.binding[shaderIndex].tableIndex = index;
 				fxSrv.binding[shaderIndex].tableSlot = kInvalid;
 
-				if (!useTables)
+				if (!useTable)
 				{
 					m_signature.rootParameters.push_back(DescriptorRange(index));
 				}
@@ -324,7 +330,7 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 
 			m_signature.srvs.push_back(fxSrv);
 
-			if (!useTables)
+			if (!useTable)
 			{
 				m_signature.rootParameters.push_back(DescriptorRange(index));
 			}
@@ -334,8 +340,11 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 	// UAVs
 	for (const auto& uav : shaderSig.uavs)
 	{
-		// Create root parameter
-		rootSig[rootIndex++].InitAsBufferUAV(uav.shaderRegister[0], s_shaderVisibility[shaderIndex]);
+		if (!useTable)
+		{
+			// Create root parameter
+			rootSig[rootIndex++].InitAsBufferUAV(uav.shaderRegister[0], s_shaderVisibility[shaderIndex]);
+		}
 		const auto index = m_signature.totalDescriptors++;
 
 		// See if we already have this SRV resource from a previous shader stage
@@ -349,7 +358,7 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 				fxUav.binding[shaderIndex].tableIndex = index;
 				fxUav.binding[shaderIndex].tableSlot = kInvalid;
 
-				if (!useTables)
+				if (!useTable)
 				{
 					m_signature.rootParameters.push_back(DescriptorRange(index));
 				}
@@ -365,7 +374,7 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 
 			m_signature.uavs.push_back(fxUav);
 
-			if (!useTables)
+			if (!useTable)
 			{
 				m_signature.rootParameters.push_back(DescriptorRange(index));
 			}

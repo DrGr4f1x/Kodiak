@@ -82,21 +82,21 @@ void Effect::BuildEffectSignature()
 	{
 		for (uint32_t i = 0; i < 5; ++i)
 		{
-			if (parameter.byteOffset[i] != kInvalid)
+			if (parameter.second.byteOffset[i] != kInvalid)
 			{
-				const auto cbvShaderRegister = parameter.cbvShaderRegister[i];
+				const auto cbvShaderRegister = parameter.second.cbvShaderRegister[i];
 
 				for (const auto& cbvBinding : m_signature.cbvBindings[i])
 				{
 					if (cbvBinding.shaderRegister == cbvShaderRegister)
 					{
 						assert(cbvBinding.byteOffset != kInvalid);
-						parameter.byteOffset[i] += cbvBinding.byteOffset;
+						parameter.second.byteOffset[i] += cbvBinding.byteOffset;
 						break;
 					}
 				}
 
-				assert(parameter.byteOffset[i] != kInvalid);
+				assert(parameter.second.byteOffset[i] != kInvalid);
 			}
 		}
 	}
@@ -141,6 +141,8 @@ void Effect::BuildPSO()
 
 void Effect::ProcessShaderBindings(Shader* shader)
 {
+	using namespace ShaderReflection;
+
 	if (!shader)
 	{
 		return;
@@ -186,113 +188,56 @@ void Effect::ProcessShaderBindings(Shader* shader)
 	// Parameters
 	for (const auto& parameter : shaderSig.parameters)
 	{
-		// See if we already have this parameter from a previous shader stage
-		bool newParameter = true;
-		for (auto& fxParameter : m_signature.parameters)
+		auto it = m_signature.parameters.find(parameter.name);
+		if (end(m_signature.parameters) == it)
 		{
-			if (fxParameter.name == parameter.name)
-			{
-				// Confirm that the pre-existing parameter matches the new one
-				assert(fxParameter.type == parameter.type);
-				assert(fxParameter.sizeInBytes == parameter.sizeInBytes);
-				fxParameter.Assign(shaderIndex, parameter);
-				
-				newParameter = false;
-				break;
-			}
+			m_signature.parameters[parameter.name] = Parameter<5>(shaderIndex, parameter);
 		}
-
-		// Create new parameter, if necessary
-		if (newParameter)
+		else
 		{
-			ShaderReflection::Parameter<5> fxParameter(parameter);
-			fxParameter.Assign(shaderIndex, parameter);
-			
-			m_signature.parameters.push_back(fxParameter);
+			it->second.Assign(shaderIndex, parameter);
 		}
 	}
 
 	// SRV resources
 	for (const auto& srv : shaderSig.resources)
 	{
-		// See if we already have this SRV resource from a previous shader stage
-		bool newResource = true;
-		for (auto& fxSrv : m_signature.srvs)
+		auto it = m_signature.srvs.find(srv.name);
+		if (end(m_signature.srvs) == it)
 		{
-			if (fxSrv.name == srv.name)
-			{
-				// Confirm that the pre-existing SRV resource matches the new one
-				assert(fxSrv.type == srv.type);
-				assert(fxSrv.dimension == srv.dimension);
-				fxSrv.Assign(shaderIndex, srv);
-
-				newResource = false;
-				break;
-			}
+			m_signature.srvs[srv.name] = ResourceSRV<5>(shaderIndex, srv);
 		}
-
-		// Create new SRV resource, if necessary
-		if (newResource)
+		else
 		{
-			ShaderReflection::ResourceSRV<5> fxSrv(srv);
-			fxSrv.Assign(shaderIndex, srv);
-			
-			m_signature.srvs.push_back(fxSrv);
+			it->second.Assign(shaderIndex, srv);
 		}
 	}
 
 	// UAV resources
 	for (const auto& uav : shaderSig.uavs)
 	{
-		// See if we already have this UAV resource from a previous shader stage
-		bool newResource = true;
-		for (auto& fxUav : m_signature.uavs)
+		auto it = m_signature.uavs.find(uav.name);
+		if (end(m_signature.uavs) == it)
 		{
-			if (fxUav.name == uav.name)
-			{
-				// Confirm that the pre-existing UAV resource matches the new one
-				assert(fxUav.type == uav.type);
-				fxUav.Assign(shaderIndex, uav);
-				
-				newResource = false;
-				break;
-			}
+			m_signature.uavs[uav.name] = ResourceUAV<5>(shaderIndex, uav);
 		}
-
-		// Create new UAV resource, if necessary
-		if (newResource)
+		else
 		{
-			ShaderReflection::ResourceUAV<5> fxUav(uav);
-			fxUav.Assign(shaderIndex, uav);
-			
-			m_signature.uavs.push_back(fxUav);
+			it->second.Assign(shaderIndex, uav);
 		}
 	}
 
 	// Samplers
 	for (const auto& sampler : shaderSig.samplers)
 	{
-		// See if we already have this sampler from a previous shader stage
-		bool newSampler = true;
-		for (auto& fxSampler : m_signature.samplers)
+		auto it = m_signature.samplers.find(sampler.name);
+		if (end(m_signature.samplers) == it)
 		{
-			if (fxSampler.name == sampler.name)
-			{
-				// Nothing to validate for samplers
-				fxSampler.Assign(shaderIndex, sampler);
-				
-				newSampler = false;
-				break;
-			}
+			m_signature.samplers[sampler.name] = Sampler<5>(shaderIndex, sampler);
 		}
-
-		// Create new sampler, if necessary
-		if (newSampler)
+		else
 		{
-			ShaderReflection::Sampler<5> fxSampler(sampler);
-			fxSampler.Assign(shaderIndex, sampler);
-			
-			m_signature.samplers.push_back(fxSampler);
+			it->second.Assign(shaderIndex, sampler);
 		}
 	}
 }
