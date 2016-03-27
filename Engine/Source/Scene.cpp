@@ -143,13 +143,13 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 			// Visit mesh parts
 			for (const auto& meshPart : mesh->meshParts)
 			{
-				if (meshPart.material->renderPass == renderPass)
+				if (meshPart.material->renderPass == renderPass && meshPart.material->IsReady())
 				{
 					meshPart.material->Commit(commandList);
 
 					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
 #if defined(DX12)
-					commandList.SetRootSignature(*m_rootSignature);
+					//commandList.SetRootSignature(*m_rootSignature);
 					commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
 					commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
 #elif defined(DX11)

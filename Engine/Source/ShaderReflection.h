@@ -20,15 +20,6 @@ enum class ShaderVariableType;
 namespace ShaderReflection
 {
 
-struct CBVLayout
-{
-	std::string		name;
-	uint32_t		byteOffset{ kInvalid };		// offset from start of large cbuffer (16-byte aligned)
-	uint32_t		sizeInBytes{ kInvalid };    // cbuffer size in bytes (multiple of 16)
-	uint32_t		shaderRegister{ kInvalid };
-};
-
-
 struct TableLayout
 {
 	uint32_t		shaderRegister{ kInvalid };
@@ -43,12 +34,27 @@ struct TableEntry
 };
 
 
+struct CBVLayout
+{
+	std::string		name;
+	uint32_t		byteOffset{ kInvalid };		// offset from start of large cbuffer (16-byte aligned)
+	uint32_t		sizeInBytes{ kInvalid };    // cbuffer size in bytes (multiple of 16)
+	uint32_t		shaderRegister{ kInvalid };
+	TableEntry		binding;
+};
+
+
 struct DescriptorRange
 {
 	DescriptorRange() {}
-	explicit DescriptorRange(uint32_t _startSlot) : startSlot(_startSlot) {}
-	DescriptorRange(uint32_t _startSlot, uint32_t _numElements) : startSlot(_startSlot), numElements(_numElements) {}
+	explicit DescriptorRange(uint32_t _rootIndex, uint32_t _startSlot) : rootIndex(_rootIndex), startSlot(_startSlot) {}
+	DescriptorRange(uint32_t _rootIndex, uint32_t _startSlot, uint32_t _numElements) 
+		: rootIndex(_rootIndex)
+		, startSlot(_startSlot)
+		, numElements(_numElements)
+	{}
 
+	uint32_t		rootIndex{ kInvalid };
 	uint32_t		startSlot{ kInvalid };
 	uint32_t		numElements{ kInvalid };
 };

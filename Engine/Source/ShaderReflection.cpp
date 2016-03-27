@@ -14,6 +14,7 @@
 #include "DebugUtility.h"
 #include "Log.h"
 #include "Material.h"
+#include "MathUtil.h"
 #include "RenderEnums.h"
 #include "RenderUtils.h"
 
@@ -149,7 +150,7 @@ void IntrospectCBuffer(ID3DShaderReflection* reflector, const D3D_SHADER_INPUT_B
 	ShaderReflection::CBVLayout cbvLayout;
 	cbvLayout.name = cbufferName;
 	cbvLayout.byteOffset = 0;
-	cbvLayout.sizeInBytes = bufferDesc.Size;
+	cbvLayout.sizeInBytes = Math::AlignUp(bufferDesc.Size, 256);
 	cbvLayout.shaderRegister = inputDesc.BindPoint;
 
 	signature.cbvTable.push_back(cbvLayout);

@@ -109,7 +109,7 @@ RasterizerStateDesc::RasterizerStateDesc()
 RasterizerStateDesc::RasterizerStateDesc(CullMode cullMode, FillMode fillMode)
 	: cullMode(cullMode)
 	, fillMode(fillMode)
-	, frontCounterClockwise(false)
+	, frontCounterClockwise(true)
 	, depthBias(0)
 	, slopeScaledDepthBias(0.0f)
 	, depthBiasClamp(0.0f)
@@ -292,31 +292,46 @@ void GraphicsPSO::SetPrimitiveRestart(IndexBufferStripCutValue ibProps)
 
 void GraphicsPSO::SetVertexShader(VertexShader* vertexShader)
 {
-	m_psoDesc.VS = CD3D12_SHADER_BYTECODE(vertexShader->GetByteCode(), vertexShader->GetByteCodeSize());
+	if (vertexShader)
+	{
+		m_psoDesc.VS = CD3D12_SHADER_BYTECODE(vertexShader->GetByteCode(), vertexShader->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetPixelShader(PixelShader* pixelShader)
 {
-	m_psoDesc.PS = CD3D12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
+	if (pixelShader)
+	{
+		m_psoDesc.PS = CD3D12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetGeometryShader(GeometryShader* geometryShader)
 {
-	m_psoDesc.GS = CD3D12_SHADER_BYTECODE(geometryShader->GetByteCode(), geometryShader->GetByteCodeSize());
+	if (geometryShader)
+	{
+		m_psoDesc.GS = CD3D12_SHADER_BYTECODE(geometryShader->GetByteCode(), geometryShader->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetDomainShader(DomainShader* domainShader)
 {
-	m_psoDesc.DS = CD3D12_SHADER_BYTECODE(domainShader->GetByteCode(), domainShader->GetByteCodeSize());
+	if (domainShader)
+	{
+		m_psoDesc.DS = CD3D12_SHADER_BYTECODE(domainShader->GetByteCode(), domainShader->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetHullShader(HullShader* hullShader)
 {
-	m_psoDesc.HS = CD3D12_SHADER_BYTECODE(hullShader->GetByteCode(), hullShader->GetByteCodeSize());
+	if (hullShader)
+	{
+		m_psoDesc.HS = CD3D12_SHADER_BYTECODE(hullShader->GetByteCode(), hullShader->GetByteCodeSize());
+	}
 }
 
 

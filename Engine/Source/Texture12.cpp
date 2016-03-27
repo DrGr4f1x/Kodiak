@@ -86,6 +86,9 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 {
 	TextureFormat format = TextureFormat::None;
 
+	string extension;
+	bool appendExtension = false;
+
 	auto sepIndex = path.rfind('.');
 	if (sepIndex != string::npos)
 	{
@@ -100,26 +103,37 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 				break;
 			}
 		}
+	}
+	else
+	{
+		// Assume .dds if there is no extension
+		format = TextureFormat::DDS;
+		extension = ".dds";
+		appendExtension = true;
+	}
 
-		if (format != TextureFormat::None)
+	if (format != TextureFormat::None)
+	{
+		string fullPath = Paths::GetInstance().TextureDir() + path;
+		if (appendExtension)
 		{
-			string fullPath = Paths::GetInstance().TextureDir() + path;
-			auto deviceManager = Renderer::GetInstance().GetDeviceManager();
+			fullPath += extension;
+		}
 
-			switch (format)
-			{
-			case TextureFormat::DDS:
+		switch (format)
+		{
+		case TextureFormat::DDS:
 				
-				texture->m_cpuDescriptorHandle = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			auto deviceManager = Renderer::GetInstance().GetDeviceManager();
+			texture->m_cpuDescriptorHandle = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-				ThrowIfFailed(CreateDDSTextureFromFile(g_device,
-					fullPath,
-					0, // maxsize
-					sRGB,
-					texture->m_resource.GetAddressOf(),
-					texture->m_cpuDescriptorHandle));
-				break;
-			}
+			ThrowIfFailed(CreateDDSTextureFromFile(g_device,
+				fullPath,
+				0, // maxsize
+				sRGB,
+				texture->m_resource.GetAddressOf(),
+				texture->m_cpuDescriptorHandle));
+			break;
 		}
 	}
 }

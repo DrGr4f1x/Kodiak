@@ -276,8 +276,9 @@ void MaterialParameter::CreateRenderThreadData(std::shared_ptr<RenderThread::Mat
 	{
 		if (parameter.byteOffset[i] != kInvalid)
 		{
-			// TODO hook up write destination to location in materialData
-			assert(false);
+			m_renderThreadData->m_bindings[i] = materialData->cbufferData + parameter.byteOffset[i];
+
+			memcpy(m_renderThreadData->m_bindings[i], &m_data[0], parameter.sizeInBytes);
 		}
 		else
 		{
@@ -311,7 +312,6 @@ void RenderThread::MaterialParameterData::SetValue(bool value)
 				memcpy(m_bindings[i], &m_data[0], sizeof(bool));
 			}
 		}
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -322,7 +322,6 @@ void RenderThread::MaterialParameterData::SetValue(int32_t value)
 	{
 		assert(m_type == ShaderVariableType::Int);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -333,7 +332,6 @@ void RenderThread::MaterialParameterData::SetValue(XMINT2 value)
 	{
 		assert(m_type == ShaderVariableType::Int2);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -344,7 +342,6 @@ void RenderThread::MaterialParameterData::SetValue(XMINT3 value)
 	{
 		assert(m_type == ShaderVariableType::Int3);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -355,7 +352,6 @@ void RenderThread::MaterialParameterData::SetValue(XMINT4 value)
 	{
 		assert(m_type == ShaderVariableType::Int4);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -366,7 +362,6 @@ void RenderThread::MaterialParameterData::SetValue(uint32_t value)
 	{
 		assert(m_type == ShaderVariableType::UInt);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -377,7 +372,6 @@ void RenderThread::MaterialParameterData::SetValue(XMUINT2 value)
 	{
 		assert(m_type == ShaderVariableType::UInt2);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -388,7 +382,6 @@ void RenderThread::MaterialParameterData::SetValue(XMUINT3 value)
 	{
 		assert(m_type == ShaderVariableType::UInt3);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -399,7 +392,6 @@ void RenderThread::MaterialParameterData::SetValue(XMUINT4 value)
 	{
 		assert(m_type == ShaderVariableType::UInt4);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -410,7 +402,6 @@ void RenderThread::MaterialParameterData::SetValue(float value)
 	{
 		assert(m_type == ShaderVariableType::Float);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -421,7 +412,6 @@ void RenderThread::MaterialParameterData::SetValue(XMFLOAT2 value)
 	{
 		assert(m_type == ShaderVariableType::Float2);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -432,7 +422,6 @@ void RenderThread::MaterialParameterData::SetValue(XMFLOAT3 value)
 	{
 		assert(m_type == ShaderVariableType::Float3);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -443,7 +432,6 @@ void RenderThread::MaterialParameterData::SetValue(XMFLOAT4 value)
 	{
 		assert(m_type == ShaderVariableType::Float4);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -454,7 +442,6 @@ void RenderThread::MaterialParameterData::SetValue(XMFLOAT4X4 value)
 	{
 		assert(m_type == ShaderVariableType::Float4x4);
 		InternalSetValue(value);
-		//materialData->cbufferDirty = true;
 	}
 }
 
@@ -466,7 +453,9 @@ void RenderThread::MaterialParameterData::InternalSetValue(T value)
 
 	for (uint32_t i = 0; i < 5; ++i)
 	{
-		// TODO copy data to destination in materialData
-		assert(false);
+		if (m_bindings[i])
+		{
+			memcpy(m_bindings[i], &m_data[0], sizeof(T));
+		}
 	}
 }

@@ -22,6 +22,7 @@
 #include "Profile.h"
 #include "RenderPipeline.h"
 #include "RenderUtils.h"
+#include "SamplerManager.h"
 #include "Scene.h"
 
 using namespace Kodiak;
@@ -48,6 +49,8 @@ void Renderer::Initialize()
 
 	m_rootPipeline->SetName("Root Pipeline");
 
+	SamplerManager::GetInstance().Initialize();
+
 	StartRenderTask();
 }
 
@@ -55,6 +58,8 @@ void Renderer::Initialize()
 void Renderer::Finalize()
 {
 	StopRenderTask();
+
+	SamplerManager::GetInstance().Shutdown();
 
 	m_deviceManager->Finalize();
 }

@@ -168,8 +168,15 @@ void RootSignature::Finalize(D3D12_ROOT_SIGNATURE_FLAGS flags)
 	{
 		ComPtr<ID3DBlob> pOutBlob, pErrorBlob;
 
-		ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-			pOutBlob.GetAddressOf(), pErrorBlob.GetAddressOf()));
+		HRESULT hr = D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+			pOutBlob.GetAddressOf(), pErrorBlob.GetAddressOf());
+		if(FAILED(hr))
+		{ 
+			if (pErrorBlob)
+			{
+				OutputDebugStringA((char*)pErrorBlob->GetBufferPointer());
+			}
+		}
 
 		ThrowIfFailed(g_device->CreateRootSignature(1, pOutBlob->GetBufferPointer(), pOutBlob->GetBufferSize(),
 			IID_PPV_ARGS(&m_signature)));

@@ -5,11 +5,11 @@ struct PixelShaderInput
 };
 
 Texture2D<float4> texDiffuse : register(t0);
-SamplerState sampler0 : register(s0);
+SamplerState AnisotropicWrap : register(s0);
 
 void main(PixelShaderInput input)
 {
-	if (texDiffuse.Sample(sampler0, input.texcoord).a < 0.5f)
+	if (texDiffuse.Sample(AnisotropicWrap, input.texcoord).a < 0.5f)
 	{
 		discard;
 	}

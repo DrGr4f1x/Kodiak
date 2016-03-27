@@ -88,6 +88,7 @@ struct MaterialData
 
 	void Update(GraphicsCommandList& commandList);
 	void Commit(GraphicsCommandList& commandList);
+	bool IsReady() { return true; }
 
 	// Render pass
 	std::shared_ptr<RenderPass>		renderPass;

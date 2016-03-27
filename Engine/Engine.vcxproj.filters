@@ -314,6 +314,18 @@
     <ClInclude Include="Source\MaterialResource12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SamplerManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sampler.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sampler11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sampler12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -494,6 +506,15 @@
     </ClCompile>
     <ClCompile Include="Source\MaterialResource12.cpp">
       <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SamplerManager.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sampler12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sampler11.cpp">
+      <Filter>Rendering\DX11</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

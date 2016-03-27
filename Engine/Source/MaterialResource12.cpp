@@ -110,8 +110,15 @@ void RenderThread::MaterialResourceData::SetResource(D3D12_CPU_DESCRIPTOR_HANDLE
 		{
 			m_srv = srv;
 
-			// TODO: DX12 assign cpu descriptor handle to table in materialData
-			assert(false);
+			assert(m_srv.ptr);
+
+			for (uint32_t i = 0; i < 5; ++i)
+			{
+				if (m_shaderSlots[i].first != kInvalid)
+				{
+					materialData->cpuHandles[m_shaderSlots[i].first] = m_srv;
+				}
+			}
 		}
 	}
 }

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "GpuBuffer12.h"
+#include "ShaderReflection.h"
 #include <ppltasks.h>
 
 namespace Kodiak
@@ -78,6 +80,7 @@ struct MaterialData
 {
 	void Update(GraphicsCommandList& commandList);
 	void Commit(GraphicsCommandList& commandList);
+	bool IsReady();
 
 	// Render pass
 	std::shared_ptr<RenderPass>		renderPass;
@@ -87,6 +90,17 @@ struct MaterialData
 
 	// Root signature
 	std::shared_ptr<RootSignature>	rootSignature;
+
+	// Master list of CPU handles
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> cpuHandles;
+
+	// Root parameters
+	std::vector<ShaderReflection::DescriptorRange> rootParameters;
+	
+	// Constant buffer
+	MappedConstantBuffer			cbuffer;
+	uint32_t						constantDataSize{ 0 };
+	uint8_t*						cbufferData{ nullptr };
 };
 
 } // namespace RenderThread
