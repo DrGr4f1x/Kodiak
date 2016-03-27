@@ -171,10 +171,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\BasicApplication.h" />
+    <ClInclude Include="Source\CameraController.h" />
     <ClInclude Include="Source\Stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\BasicApplication.cpp" />
+    <ClCompile Include="Source\CameraController.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\Stdafx.cpp" />
   </ItemGroup>

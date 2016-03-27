@@ -11,6 +11,7 @@
 
 #include "BasicApplication.h"
 
+#include "CameraController.h"
 #include "Engine\Source\Camera.h"
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
@@ -68,7 +69,8 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		PostQuitMessage(0);
 	}
 
-#if 0
+	m_cameraController->Update(static_cast<float>(timer->GetElapsedSeconds()));
+
 	auto seconds = static_cast<float>(timer->GetTotalSeconds());
 	seconds *= 0.5f;
 
@@ -139,7 +141,6 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 		auto v = 0.5f * sinf(seconds - 3.0f) + 0.5f;
 	}
-#endif
 }
 
 
@@ -147,36 +148,6 @@ void BasicApplication::OnDestroy()
 {
 	Renderer::GetInstance().Finalize();
 	LOG_INFO << "BasicApplication finalize";
-}
-
-
-void BasicApplication::OnMouseDown(WPARAM btnState, int x, int y)
-{
-	m_isTracking = true;
-	m_mouseX = x;
-	m_mouseY = y;
-}
-
-
-void BasicApplication::OnMouseMove(WPARAM btnState, int x, int y)
-{
-	if (m_isTracking)
-	{
-		int deltaMouseX = x - m_mouseX;
-		m_deltaRadians = XM_2PI * 2.0f * static_cast<float>(deltaMouseX) / static_cast<float>(m_width);
-		
-		XMFLOAT4X4 matrix;
-		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationY(m_radians + m_deltaRadians)));
-
-		m_boxModel->SetMatrix(matrix);
-	}
-}
-
-
-void BasicApplication::OnMouseUp(WPARAM btnState, int x, int y)
-{
-	m_isTracking = false;
-	m_radians += m_deltaRadians;
 }
 
 
@@ -204,6 +175,8 @@ void BasicApplication::CreateMaterials()
 	effect->SetBlendState(CommonStates::Opaque());
 	effect->SetDepthStencilState(CommonStates::DepthDefault());
 	effect->SetRasterizerState(CommonStates::CullClockwise());
+	effect->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
+	effect->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
 	effect->Finalize();
 	SetDefaultBaseEffect(effect);
 }
@@ -273,13 +246,13 @@ void BasicApplication::SetupScene()
 	m_camera->LookAt(XMFLOAT3(0.0f, -0.1f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_camera->SetPerspective(70.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 100.0f);
 
+	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, XMFLOAT3(0.0f, 1.0f, 0.0f));
+
 	m_mainScene = make_shared<Scene>();
 
 	// Add camera and model to scene
 	m_mainScene->SetCamera(m_camera);
-#if 0
 	m_mainScene->AddStaticModel(m_boxModel);
-#endif
 }
 
 

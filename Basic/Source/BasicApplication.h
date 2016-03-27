@@ -17,6 +17,7 @@ namespace Kodiak
 
 // Forward declarations
 class Camera;
+class CameraController;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
@@ -34,10 +35,6 @@ protected:
 	void OnInit() override;
 	void OnUpdate(StepTimer* timer) override;
 	void OnDestroy() override;
-	
-	void OnMouseDown(WPARAM btnState, int x, int y) override;
-	void OnMouseUp(WPARAM btnState, int x, int y) override;
-	void OnMouseMove(WPARAM btnState, int x, int y) override;
 
 private:
 	// Creation/setup helpers
@@ -53,12 +50,7 @@ private:
 	std::shared_ptr<StaticModel>	m_boxModel;
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
-
-	bool	m_isTracking{ false };
-	int		m_mouseX{ 0 };
-	int		m_mouseY{ 0 };
-	float	m_radians{ 0.0f };
-	float	m_deltaRadians{ 0.0f };
+	std::shared_ptr<CameraController>	m_cameraController;
 
 	float	m_meshRadians[4];
 };

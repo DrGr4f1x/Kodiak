@@ -57,7 +57,6 @@ void RootSignature::InitStaticSampler(
 		staticSamplerDesc.AddressV == D3D12_TEXTURE_ADDRESS_MODE_BORDER ||
 		staticSamplerDesc.AddressW == D3D12_TEXTURE_ADDRESS_MODE_BORDER)
 	{
-		// TODO: implement this macro
 		warn_once_if_not(
 			// Transparent Black
 			nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
