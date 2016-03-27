@@ -74,7 +74,7 @@ BlendStateDesc::BlendStateDesc(Blend srcBlend, Blend dstBlend)
 RasterizerStateDesc::RasterizerStateDesc()
 	: cullMode(CullMode::Back)
 	, fillMode(FillMode::Solid)
-	, frontCounterClockwise(false)
+	, frontCounterClockwise(true)
 	, depthBias(0)
 	, slopeScaledDepthBias(0.0f)
 	, depthBiasClamp(0.0f)
@@ -192,11 +192,10 @@ void GraphicsPSO::SetDepthStencilState(const DepthStencilStateDesc& depthStencil
 }
 
 
-void GraphicsPSO::SetInputLayout(const InputLayout& inputLayout)
+void GraphicsPSO::SetInputLayout(ID3D11InputLayout* inputLayout)
 {
-	auto d3dIL = inputLayout.inputLayout;
-	m_desc.inputLayout = d3dIL.Get();
-	m_inputLayout = d3dIL;
+	m_desc.inputLayout = inputLayout;
+	m_inputLayout = inputLayout;
 }
 
 

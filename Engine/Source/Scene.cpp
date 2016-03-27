@@ -190,8 +190,8 @@ void Scene::Initialize()
 	RasterizerStateDesc rasterizerState(CullMode::Back, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "SimpleVertexShader.cso"));
-	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "SimplePixelShader.cso"));
+	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "SimpleVertexShader.cso"), false);
+	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "SimplePixelShader.cso"), false);
 	(vs->loadTask && ps->loadTask).wait();
 
 #if defined(DX12)
@@ -214,7 +214,7 @@ void Scene::Initialize()
 	m_pso->SetBlendState(defaultBlendState);
 	m_pso->SetRasterizerState(rasterizerState);
 	m_pso->SetDepthStencilState(depthStencilState);
-	m_pso->SetInputLayout(*vs->GetInputLayout());
+	m_pso->SetInputLayout(vs->GetInputLayout());
 #if defined(DX12)
 	m_pso->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
 	m_pso->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);

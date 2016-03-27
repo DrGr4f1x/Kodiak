@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "InputLayout12.h"
 #include "RenderEnums.h"
 #include "ShaderReflection.h"
 
@@ -55,7 +56,7 @@ class VertexShader : public Shader
 	friend class ShaderManager;
 
 public:
-	std::shared_ptr<InputLayout> GetInputLayout() { return m_inputLayout; }
+	const InputLayout& GetInputLayout() const { return m_inputLayout; }
 
 	ShaderType GetType() const override { return ShaderType::Vertex; }
 
@@ -64,7 +65,7 @@ private:
 	void CreateInputLayout(ID3D12ShaderReflection* reflector);
 
 private:
-	std::shared_ptr<InputLayout>			m_inputLayout;
+	InputLayout			m_inputLayout;
 };
 
 

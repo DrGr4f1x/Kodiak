@@ -19,6 +19,7 @@
 #include "Engine\Source\DepthBuffer.h"
 #include "Engine\Source\Effect.h"
 #include "Engine\Source\Format.h"
+#include "Engine\Source\InputState.h"
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Material.h"
 #include "Engine\Source\MaterialParameter.h"
@@ -55,11 +56,6 @@ void BasicApplication::OnInit()
 	CreateMaterials();
 	CreateModel();
 
-#if 0
-	auto idx = m_boxModel.AddMaterial(m_baseMaterial);
-	m_boxModel.GetMesh(0)->SetMaterialIndex(idx);
-#endif
-
 	SetupScene();
 	SetupPipeline();
 }
@@ -67,6 +63,12 @@ void BasicApplication::OnInit()
 
 void BasicApplication::OnUpdate(StepTimer* timer)
 {
+	if (m_inputState->IsFirstPressed(InputState::kKey_escape))
+	{
+		PostQuitMessage(0);
+	}
+
+#if 0
 	auto seconds = static_cast<float>(timer->GetTotalSeconds());
 	seconds *= 0.5f;
 
@@ -85,7 +87,6 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		}
 
 		auto v = 0.5f * sinf(seconds) + 0.5f;
-		m_parameters[0]->SetValue(XMFLOAT3(v, v, v));
 	}
 
 	{
@@ -103,7 +104,6 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		}
 
 		auto v = 0.5f * sinf(seconds - 1.0f) + 0.5f;
-		m_parameters[1]->SetValue(XMFLOAT3(v, v, v));
 	}
 
 	{
@@ -121,7 +121,6 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		}
 
 		auto v = 0.5f * sinf(seconds - 2.0f) + 0.5f;
-		m_parameters[2]->SetValue(XMFLOAT3(v, v, v));
 	}
 
 	{
@@ -139,8 +138,8 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		}
 
 		auto v = 0.5f * sinf(seconds - 3.0f) + 0.5f;
-		m_parameters[3]->SetValue(XMFLOAT3(v, v, v));
 	}
+#endif
 }
 
 
@@ -204,7 +203,7 @@ void BasicApplication::CreateMaterials()
 	effect->SetPixelShaderPath("Engine", "SimplePixelShader.cso");
 	effect->SetBlendState(CommonStates::Opaque());
 	effect->SetDepthStencilState(CommonStates::DepthDefault());
-	effect->SetRasterizerState(CommonStates::CullCounterClockwise());
+	effect->SetRasterizerState(CommonStates::CullClockwise());
 	effect->Finalize();
 	SetDefaultBaseEffect(effect);
 }
@@ -225,20 +224,11 @@ void BasicApplication::CreateModel()
 	meshDesc.genColors = true;
 
 	auto mesh = MakeBoxMesh(meshDesc);
-	auto material = mesh->GetMaterial(0);
-	auto parameter = material->GetParameter("tint");
-	parameter->SetValue(XMFLOAT3(1.0f, 1.0f, 1.0f));
-	m_parameters[0] = parameter;
-	
+		
 	m_boxModel->AddMesh(mesh);
 
 	{
 		auto mesh2 = mesh->Clone();
-
-		auto material = mesh2->GetMaterial(0);
-		auto parameter = material->GetParameter("tint");
-		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
-		m_parameters[1] = parameter;
 
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(3.0f, 0.0f, 0.0f)));
@@ -249,11 +239,6 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
-		auto material = mesh2->GetMaterial(0);
-		auto parameter = material->GetParameter("tint");
-		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
-		m_parameters[2] = parameter;
-
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f)));
 		mesh2->SetMatrix(matrix);
@@ -263,11 +248,6 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
-		auto material = mesh2->GetMaterial(0);
-		auto parameter = material->GetParameter("tint");
-		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
-		m_parameters[3] = parameter;
-
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 3.0f)));
 		mesh2->SetMatrix(matrix);
@@ -276,11 +256,6 @@ void BasicApplication::CreateModel()
 	
 	{
 		auto mesh2 = mesh->Clone();
-
-		auto material = mesh2->GetMaterial(0);
-		auto parameter = material->GetParameter("tint");
-		parameter->SetValue(XMFLOAT3(0.5f, 0.5f, 0.5f));
-		m_parameters[4] = parameter;
 
 		XMFLOAT4X4 matrix;
 		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -3.0f)));
@@ -301,10 +276,10 @@ void BasicApplication::SetupScene()
 	m_mainScene = make_shared<Scene>();
 
 	// Add camera and model to scene
-	// TODO: decide on Renderer or RenderThread namespace
-	//RenderThread::SetSceneCamera(m_mainScene, m_camera);
 	m_mainScene->SetCamera(m_camera);
+#if 0
 	m_mainScene->AddStaticModel(m_boxModel);
+#endif
 }
 
 

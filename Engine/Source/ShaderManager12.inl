@@ -38,6 +38,9 @@ void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const 
 	shader->m_byteCode.reset();
 	shader->m_isReady = false;
 
+	using namespace concurrency;
+	shader->loadTask = create_task([] {});
+
 	// Load the compiled shader file
 	ThrowIfFailed(BinaryReader::ReadEntireFile(fullPathToShader, shader->m_byteCode, &shader->m_byteCodeSize));
 

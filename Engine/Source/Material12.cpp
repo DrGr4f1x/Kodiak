@@ -11,9 +11,9 @@
 
 #include "Material.h"
 
-#if 0
 #include "Effect.h"
-#endif
+#include "MaterialParameter12.h"
+#include "MaterialResource12.h"
 #include "RenderPass.h"
 #include "RootSignature12.h"
 
@@ -23,49 +23,93 @@ using namespace std;
 
 
 Material::Material()
-{
-	loadTask = concurrency::create_task([] {});
-}
+{}
 
 
-#if 0
+Material::Material(const string& name)
+	: m_name(name)
+{}
+
+
 void Material::SetEffect(shared_ptr<Effect> effect)
 {
-	// TODO: This should happen on the render thread, always
+	assert(effect);
 
 	m_effect = effect;
-	
-	if (m_effect)
+
+	auto thisMaterial = shared_from_this();
+
+	prepareTask = effect->loadTask.then([thisMaterial, effect]
 	{
-		loadTask = concurrency::create_task([this]
-		{
-			// Wait on the effect to finish loading
-			m_effect->loadTask.wait();
-
-			// Create constant buffers, resources, and parameters
-			const auto& effectSig = m_effect->GetSignature();
-
-			m_usesPerViewData = effectSig.perViewDataSize != 0;
-			m_usesPerObjectData = effectSig.perObjectDataSize != 0;
+		thisMaterial->CreateRenderThreadData();
+	});
+}
 
 
-		});
-	}
-	else
+void Material::SetRenderPass(shared_ptr<RenderPass> pass)
+{
+	m_renderPass = pass;
+}
+
+
+shared_ptr<MaterialParameter> Material::GetParameter(const string& name)
+{
+	lock_guard<mutex> CS(m_parameterLock);
+
+	auto it = m_parameters.find(name);
+	if (end(m_parameters) != it)
 	{
-		// Null effect, so clear old constant buffers, resources, and parameters
+		return it->second;
 	}
+
+	auto parameter = make_shared<MaterialParameter>(name);
+	m_parameters[name] = parameter;
+
+	return parameter;
 }
-#endif
 
 
-void Material::SetRenderPass(shared_ptr<RenderPass> renderPass)
+shared_ptr<MaterialResource> Material::GetResource(const string& name)
 {
-	m_renderPass = renderPass;
+	lock_guard<mutex> CS(m_resourceLock);
+
+	auto it = m_resources.find(name);
+	if (end(m_resources) != it)
+	{
+		return it->second;
+	}
+
+	auto resource = make_shared<MaterialResource>(name);
+	m_resources[name] = resource;
+
+	return resource;
 }
 
 
-shared_ptr<RenderPass> Material::GetRenderPass()
+shared_ptr<Material> Material::Clone()
 {
-	return m_renderPass;
+	auto clone = make_shared<Material>();
+
+	clone->SetName(m_name);
+	clone->SetEffect(m_effect);
+	clone->SetRenderPass(m_renderPass);
+
+	return clone;
 }
+
+
+void Material::CreateRenderThreadData()
+{
+	m_renderThreadData = make_shared<RenderThread::MaterialData>();
+	m_renderThreadData->renderPass = m_renderPass;
+	m_renderThreadData->pso = m_effect->GetPSO();
+	m_renderThreadData->rootSignature = m_effect->GetRootSignature();
+}
+
+
+void RenderThread::MaterialData::Update(GraphicsCommandList& commandList)
+{}
+
+
+void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
+{}

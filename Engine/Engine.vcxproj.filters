@@ -308,6 +308,12 @@
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\DebugUtility.h" />
+    <ClInclude Include="Source\MaterialParameter12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialResource12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -482,6 +488,12 @@
     </ClCompile>
     <ClCompile Include="Source\ShaderReflection.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialParameter12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialResource12.cpp">
+      <Filter>Rendering\DX12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

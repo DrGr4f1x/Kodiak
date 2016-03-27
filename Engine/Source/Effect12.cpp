@@ -9,8 +9,6 @@
 
 #include "Stdafx.h"
 
-#if 0
-
 #include "Effect.h"
 
 #include "InputLayout12.h"
@@ -28,8 +26,8 @@ namespace
 	const D3D12_SHADER_VISIBILITY s_shaderVisibility[] =
 	{
 		D3D12_SHADER_VISIBILITY_VERTEX,
-		D3D12_SHADER_VISIBILITY_DOMAIN,
 		D3D12_SHADER_VISIBILITY_HULL,
+		D3D12_SHADER_VISIBILITY_DOMAIN,
 		D3D12_SHADER_VISIBILITY_GEOMETRY,
 		D3D12_SHADER_VISIBILITY_PIXEL
 	};
@@ -37,8 +35,8 @@ namespace
 	const Kodiak::ShaderType s_shaderStage[] =
 	{
 		ShaderType::Vertex,
-		ShaderType::Domain,
 		ShaderType::Hull,
+		ShaderType::Domain,
 		ShaderType::Geometry,
 		ShaderType::Pixel
 	};
@@ -46,19 +44,47 @@ namespace
 } // anonymous namespace
 
 
+Effect::Effect() : BaseEffect() {}
+
+
+Effect::Effect(const string& name) : BaseEffect(name) {}
+
+
 void Effect::Finalize()
 {
 	loadTask = loadTask.then([this]
 	{
 		BuildEffectSignature();
-		BuildRootSignature();
 		BuildPSO();
 	});
 }
 
 
+static void whoa() {}
 void Effect::BuildEffectSignature()
 {
+	// Clear out old effect signature data (shouldn't have any, but just to be safe...)
+	m_signature.perViewDataSize = 0;
+	m_signature.perObjectDataSize = 0;
+	m_signature.perViewDataIndex = kInvalid;
+	m_signature.perObjectDataIndex = kInvalid;
+
+	// Create the root signature.  We'll populate the root parameters as we go through the shaders.
+	CreateRootSignature();
+
+	// Process shaders
+	uint32_t rootIndex = 0;
+	ProcessShaderBindings(rootIndex, m_vertexShader.get());
+	ProcessShaderBindings(rootIndex, m_hullShader.get());
+	ProcessShaderBindings(rootIndex, m_domainShader.get());
+	ProcessShaderBindings(rootIndex, m_geometryShader.get());
+	ProcessShaderBindings(rootIndex, m_pixelShader.get());
+
+	whoa();
+
+	// Finalize root signature
+	m_rootSig->Finalize();
+#if 0
 	// Clear out old effect signature data (shouldn't have any, but just to be safe...)
 	m_signature.perViewDataSize = 0;
 	m_signature.perObjectDataSize = 0;
@@ -82,120 +108,13 @@ void Effect::BuildEffectSignature()
 	}
 
 	// TODO: static samplers
-}
-
-
-void Effect::BuildRootSignature()
-{
-	m_rootSig = make_shared<RootSignature>(m_signature.numRootParameters, m_signature.numStaticSamplers);
-	auto& rootSig = *m_rootSig;
-
-	uint32_t currentParameter = 0;
-
-	// Build a list of the shader descriptors, so we can pull cbuffer and SRV binding information
-	vector<ShaderBindingDesc> shaderBindings(5);
-	static const ShaderBindingDesc dummyDesc;
-	shaderBindings.emplace_back(m_vertexShader   ? m_vertexShader->GetBindingSignature()   : dummyDesc);
-	shaderBindings.emplace_back(m_domainShader   ? m_domainShader->GetBindingSignature()   : dummyDesc);
-	shaderBindings.emplace_back(m_hullShader     ? m_hullShader->GetBindingSignature()     : dummyDesc);
-	shaderBindings.emplace_back(m_geometryShader ? m_geometryShader->GetBindingSignature() : dummyDesc);
-	shaderBindings.emplace_back(m_pixelShader    ? m_pixelShader->GetBindingSignature()    : dummyDesc);
-
-
-	// Reserve a slot for the per-view data
-	if (m_signature.perViewDataSize > 0)
-	{
-		rootSig[currentParameter++].InitAsConstantBuffer(GetPerViewConstantsSlot());
-	}
-
-	// Reserve a slot for the per-object data
-	if (m_signature.perObjectDataSize > 0)
-	{
-		rootSig[currentParameter++].InitAsConstantBuffer(GetPerObjectConstantsSlot());
-	}
-
-	// Reserve slots for the material data and SRVs used by the shaders
-	for (uint32_t i = 0; i < 5; ++i)
-	{
-		if (m_signature.perShaderDescriptorCount[i] > 0)
-		{
-			// If we have more than one parameter, use a descriptor table
-			if (m_signature.perShaderDescriptorCount[i] > 1)
-			{
-				const auto numCBuffers = shaderBindings[i].cbuffers.size();
-				const auto numResources = shaderBindings[i].resources.size();
-
-				const auto numTableSlots = numCBuffers + numResources;
-				rootSig[currentParameter].InitAsDescriptorTable(static_cast<uint32_t>(numTableSlots), s_shaderVisibility[i]);
-
-				// Setup cbuffers in the descriptor table, and build cbuffer descriptions for the effect
-				for (size_t j = 0; j < numCBuffers; ++j)
-				{
-					const auto& desc = shaderBindings[i].cbuffers[j];
-					
-					rootSig[currentParameter].SetTableRange(j, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, desc.registerSlot, 0);
-
-					BuildConstantBufferDesc(desc, currentParameter, j, s_shaderStage[i]);
-				}
-
-				// Setup resources in the descriptor table, and build resource descriptions for the effect
-				for (size_t j = 0; j < numResources; ++j)
-				{
-					const auto& desc = shaderBindings[i].resources[j];
-
-					if (desc.type == ShaderResourceType::Texture || desc.type == ShaderResourceType::TBuffer)
-					{
-						rootSig[currentParameter].SetTableRange(j, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, desc.registerSlot, 0);
-					}
-					else
-					{
-						rootSig[currentParameter].SetTableRange(j, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, desc.registerSlot, 0);
-					}
-
-					BuildResourceDesc(desc, currentParameter, j, i);
-				}
-			}
-			else
-			{
-				// Constant buffer
-				if (shaderBindings[i].cbuffers.size() > 0)
-				{
-					const auto& desc = shaderBindings[i].cbuffers[0];
-					rootSig[currentParameter].InitAsConstantBuffer(desc.registerSlot, s_shaderVisibility[i]);
-
-					BuildConstantBufferDesc(desc, currentParameter, 0xFFFFFFFF, s_shaderStage[i]);
-				}
-				// Resource (SRV/UAV)
-				else
-				{
-					assert(shaderBindings[i].resources.size() == 1);
-
-					const auto& desc = shaderBindings[i].resources[0];
-					
-					// TBuffers and textures
-					if (desc.type == ShaderResourceType::TBuffer || desc.type == ShaderResourceType::Texture)
-					{
-						rootSig[currentParameter].InitAsBufferSRV(desc.registerSlot, s_shaderVisibility[i]);
-					}
-					// UAVs
-					else
-					{
-						rootSig[currentParameter].InitAsBufferUAV(desc.registerSlot, s_shaderVisibility[i]);
-					}
-
-					BuildResourceDesc(desc, currentParameter, 0xFFFFFFFF, i);
-				}
-			}
-			++currentParameter;
-		}
-	}
-
-	rootSig.Finalize();
+#endif
 }
 
 
 void Effect::BuildPSO()
 {
+#if 0
 	m_pso = make_shared<GraphicsPSO>();
 
 	m_pso->SetRootSignature(*m_rootSig);
@@ -218,9 +137,246 @@ void Effect::BuildPSO()
 	m_pso->SetPixelShader(m_pixelShader.get());
 
 	m_pso->Finalize();
+#endif
 }
 
 
+void Effect::CreateRootSignature()
+{
+	uint32_t numRootParameters = 0;
+	uint32_t numRootSamplers = 0;
+	bool usePerViewData = false;
+	bool usePerObjectData = false;
+
+	if (m_vertexShader)
+	{
+		const auto& sig = m_vertexShader->GetSignature();
+		auto vsDescriptors = sig.numMaterialDescriptors;
+		numRootParameters += (vsDescriptors > 6) ? 1 : vsDescriptors;
+		numRootSamplers += sig.numSamplers;
+
+		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
+		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+	}
+
+	if (m_hullShader)
+	{
+		const auto& sig = m_hullShader->GetSignature();
+		auto hsDescriptors = sig.numMaterialDescriptors;
+		numRootParameters += (hsDescriptors > 6) ? 1 : hsDescriptors;
+		numRootSamplers += sig.numSamplers;
+
+		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
+		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+	}
+
+	if (m_domainShader)
+	{
+		const auto& sig = m_domainShader->GetSignature();
+		auto dsDescriptors = sig.numMaterialDescriptors;
+		numRootParameters += (dsDescriptors > 6) ? 1 : dsDescriptors;
+		numRootSamplers += sig.numSamplers;
+
+		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
+		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+	}
+
+	if (m_geometryShader)
+	{
+		const auto& sig = m_geometryShader->GetSignature();
+		auto gsDescriptors = sig.numMaterialDescriptors;
+		numRootParameters += (gsDescriptors > 6) ? 1 : gsDescriptors;
+		numRootSamplers += sig.numSamplers;
+
+		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
+		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+	}
+
+	if (m_pixelShader)
+	{
+		const auto& sig = m_pixelShader->GetSignature();
+		auto psDescriptors = sig.numMaterialDescriptors;
+		numRootParameters += (psDescriptors > 6) ? 1 : psDescriptors;
+		numRootSamplers += sig.numSamplers;
+
+		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
+		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+	}
+
+	if (usePerViewData)
+	{
+		numRootParameters++;
+	}
+
+	if (usePerObjectData)
+	{
+		numRootParameters++;
+	}
+
+	m_rootSig = make_shared<RootSignature>(numRootParameters, numRootSamplers);
+}
+
+
+void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
+{
+	using namespace ShaderReflection;
+
+	if (!shader)
+	{
+		return;
+	}
+
+	const auto& shaderSig = shader->GetSignature();
+	const auto shaderType = shader->GetType();
+	const uint32_t shaderIndex = static_cast<uint32_t>(shaderType);
+
+	auto& rootSig = *m_rootSig;
+
+	// Validate per-view data size - must be zero or the same as the other shaders in the effect
+	auto perViewDataSize = shader->GetPerViewDataSize();
+	if (perViewDataSize > 0 && perViewDataSize != kInvalid)
+	{
+		assert((m_signature.perViewDataSize == 0) || (m_signature.perViewDataSize == perViewDataSize));
+		m_signature.perViewDataSize = perViewDataSize;
+
+		if (m_signature.perViewDataIndex == kInvalid)
+		{
+			m_signature.perViewDataIndex = m_signature.totalDescriptors++;
+
+			// Setup root parameter
+			rootSig[rootIndex++].InitAsConstantBuffer(GetPerViewConstantsSlot());
+			m_signature.rootParameters.push_back(DescriptorRange(m_signature.perViewDataIndex));
+		}
+	}
+
+	// Validate per-object data size - must be zero or the same as the other shaders in the effect
+	auto perObjectDataSize = shader->GetPerObjectDataSize();
+	if (perObjectDataSize > 0 && perObjectDataSize != kInvalid)
+	{
+		assert((m_signature.perObjectDataSize == 0) || (m_signature.perObjectDataSize == perObjectDataSize));
+		m_signature.perObjectDataSize = perObjectDataSize;
+
+		if (m_signature.perObjectDataIndex == kInvalid)
+		{
+			m_signature.perObjectDataIndex = m_signature.totalDescriptors++;
+
+			// Setup root parameter
+			rootSig[rootIndex++].InitAsConstantBuffer(GetPerObjectConstantsSlot());
+			m_signature.rootParameters.push_back(DescriptorRange(m_signature.perObjectDataIndex));
+		}
+	}
+
+	const bool useTables = shaderSig.numMaterialDescriptors > 6;
+
+	if (useTables)
+	{
+		// TODO Setup descriptor tables here
+	}
+
+	// Constant buffers
+	for (const auto& cbv : shaderSig.cbvTable)
+	{
+		// Create root parameter
+		rootSig[rootIndex++].InitAsConstantBuffer(cbv.shaderRegister, s_shaderVisibility[shaderIndex]);
+
+		// Master descriptor array index
+		CBVData cbvData;
+		cbvData.descriptorTableSlot = m_signature.totalDescriptors++;
+
+		// TODO: memory mapping
+
+		m_signature.cbvMappingData.push_back(cbvData);
+		m_signature.rootParameters.push_back(DescriptorRange(cbvData.descriptorTableSlot));
+	}
+
+	// SRVs
+	for (const auto& srv : shaderSig.resources)
+	{
+		// Create root parameter
+		rootSig[rootIndex++].InitAsBufferSRV(srv.shaderRegister[0], s_shaderVisibility[shaderIndex]);
+		const auto index = m_signature.totalDescriptors++;
+
+		// See if we already have this SRV resource from a previous shader stage
+		bool newResource = true;
+		for (auto& fxSrv : m_signature.srvs)
+		{
+			if (fxSrv.name == srv.name)
+			{
+				// Confirm that the pre-existing SRV resource matches the new one
+				assert(fxSrv.type == srv.type);
+				assert(fxSrv.dimension == srv.dimension);
+				fxSrv.binding[shaderIndex].tableIndex = index;
+				fxSrv.binding[shaderIndex].tableSlot = kInvalid;
+
+				if (!useTables)
+				{
+					m_signature.rootParameters.push_back(DescriptorRange(index));
+				}
+			}
+		}
+
+		// Create new SRV resource
+		if (newResource)
+		{
+			ShaderReflection::ResourceSRV<5> fxSrv(srv);
+			fxSrv.binding[shaderIndex].tableIndex = index;
+			fxSrv.binding[shaderIndex].tableSlot = kInvalid;
+
+			m_signature.srvs.push_back(fxSrv);
+
+			if (!useTables)
+			{
+				m_signature.rootParameters.push_back(DescriptorRange(index));
+			}
+		}
+	}
+
+	// UAVs
+	for (const auto& uav : shaderSig.uavs)
+	{
+		// Create root parameter
+		rootSig[rootIndex++].InitAsBufferUAV(uav.shaderRegister[0], s_shaderVisibility[shaderIndex]);
+		const auto index = m_signature.totalDescriptors++;
+
+		// See if we already have this SRV resource from a previous shader stage
+		bool newResource = true;
+		for (auto& fxUav : m_signature.uavs)
+		{
+			if (fxUav.name == uav.name)
+			{
+				// Confirm that the pre-existing SRV resource matches the new one
+				assert(fxUav.type == uav.type);
+				fxUav.binding[shaderIndex].tableIndex = index;
+				fxUav.binding[shaderIndex].tableSlot = kInvalid;
+
+				if (!useTables)
+				{
+					m_signature.rootParameters.push_back(DescriptorRange(index));
+				}
+			}
+		}
+
+		// Create new UAV resource
+		if (newResource)
+		{
+			ShaderReflection::ResourceUAV<5> fxUav(uav);
+			fxUav.binding[shaderIndex].tableIndex = index;
+			fxUav.binding[shaderIndex].tableSlot = kInvalid;
+
+			m_signature.uavs.push_back(fxUav);
+
+			if (!useTables)
+			{
+				m_signature.rootParameters.push_back(DescriptorRange(index));
+			}
+		}
+	}
+
+	// TODO samplers
+}
+
+
+#if 0
 void Effect::BuildConstantBufferDesc(const ShaderConstantBufferDesc& desc, uint32_t rootParameterIndex, uint32_t rootTableOffset,
 	ShaderType shaderType)
 {
@@ -285,5 +441,4 @@ void Effect::ProcessShaderBindings(uint32_t index, Shader* shader)
 		m_signature.perShaderDescriptorCount[index] = descriptorCount;
 	}
 }
-
 #endif

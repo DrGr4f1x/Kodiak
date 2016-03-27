@@ -26,8 +26,6 @@
 
 using namespace Kodiak;
 using namespace std;
-using namespace DirectX;
-
 
 Material::Material() 
 {}

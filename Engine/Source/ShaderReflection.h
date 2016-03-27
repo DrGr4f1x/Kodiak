@@ -43,49 +43,159 @@ struct TableEntry
 };
 
 
+struct DescriptorRange
+{
+	DescriptorRange() {}
+	explicit DescriptorRange(uint32_t _startSlot) : startSlot(_startSlot) {}
+	DescriptorRange(uint32_t _startSlot, uint32_t _numElements) : startSlot(_startSlot), numElements(_numElements) {}
+
+	uint32_t		startSlot{ kInvalid };
+	uint32_t		numElements{ kInvalid };
+};
+
+
+struct BaseParameter
+{
+	BaseParameter() = default;
+	BaseParameter(const BaseParameter& other) : name(other.name), type(other.type), sizeInBytes(other.sizeInBytes) {}
+
+	std::string							name;
+	Kodiak::ShaderVariableType			type;
+	uint32_t							sizeInBytes{ 0 };
+};
+
+
 template <uint32_t SlotCount = 1>
-struct Parameter
+struct Parameter : public BaseParameter
 {
 	Parameter()
 	{
 		cbvShaderRegister.fill(kInvalid);
 		byteOffset.fill(kInvalid);
 	}
-	std::string							name;
-	Kodiak::ShaderVariableType			type;
-	uint32_t							sizeInBytes{ 0 }; 
+
+	explicit Parameter(const BaseParameter& other) : BaseParameter(other)
+	{
+		cbvShaderRegister.fill(kInvalid);
+		byteOffset.fill(kInvalid);
+	}
+
+	void Assign(uint32_t slot, const Parameter<1>& other)
+	{
+		assert(slot < SlotCount);
+		cbvShaderRegister[slot] = other.cbvShaderRegister[0];
+		byteOffset[slot] = other.byteOffset[0];
+	}
+
 	std::array<uint32_t, SlotCount>		cbvShaderRegister;
 	std::array<uint32_t, SlotCount>		byteOffset;
 };
 
 
-template <uint32_t SlotCount = 1>
-struct ResourceSRV
+struct BaseResourceSRV
 {
+	BaseResourceSRV() = default;
+	BaseResourceSRV(const BaseResourceSRV& other) : name(other.name), type(other.type), dimension(other.dimension) {}
+
 	std::string							name;
 	Kodiak::ShaderResourceType			type;
 	Kodiak::ShaderResourceDimension		dimension;
-	std::array<TableEntry, SlotCount>	binding;
 };
 
 
 template <uint32_t SlotCount = 1>
-struct ResourceUAV
+struct ResourceSRV : public BaseResourceSRV
 {
+	ResourceSRV()
+	{
+		shaderRegister.fill(kInvalid);
+	}
+
+	explicit ResourceSRV(const BaseResourceSRV& other) : BaseResourceSRV(other)
+	{
+		shaderRegister.fill(kInvalid);
+	}
+
+	void Assign(uint32_t slot, const ResourceSRV<1>& other)
+	{
+		assert(slot < SlotCount);
+		binding[slot] = other.binding[0];
+		shaderRegister[slot] = other.shaderRegister[0];
+	}
+
+	std::array<TableEntry, SlotCount>	binding;
+	std::array<uint32_t, SlotCount>		shaderRegister;
+};
+
+
+struct BaseResourceUAV
+{
+	BaseResourceUAV() = default;
+	BaseResourceUAV(const BaseResourceUAV& other) : name(other.name), type(other.type) {}
+
 	std::string							name;
 	Kodiak::ShaderResourceType			type;
-	std::array<TableEntry, SlotCount>	binding;
 };
 
 
 template <uint32_t SlotCount = 1>
-struct Sampler
+struct ResourceUAV : public BaseResourceUAV
 {
-	std::string							name;
+	ResourceUAV()
+	{
+		shaderRegister.fill(kInvalid);
+	}
+
+	explicit ResourceUAV(const BaseResourceUAV& other) : BaseResourceUAV(other)
+	{
+		shaderRegister.fill(kInvalid);
+	}
+
+	void Assign(uint32_t slot, const ResourceUAV<1>& other)
+	{
+		assert(slot < SlotCount);
+		binding[slot] = other.binding[0];
+		shaderRegister[slot] = other.shaderRegister[0];
+	}
+
 	std::array<TableEntry, SlotCount>	binding;
+	std::array<uint32_t, SlotCount>		shaderRegister;
 };
 
 
+struct BaseSampler
+{
+	BaseSampler() = default;
+	BaseSampler(const BaseSampler& other) : name(other.name) {}
+	std::string							name;
+};
+
+template <uint32_t SlotCount = 1>
+struct Sampler : public BaseSampler
+{
+	Sampler()
+	{
+		shaderRegister.fill(kInvalid);
+	}
+
+	explicit Sampler(const BaseSampler& other) : BaseSampler(other)
+	{
+		shaderRegister.fill(kInvalid);
+	}
+
+	void Assign(uint32_t slot, const Sampler<1>& other)
+	{
+		assert(slot < SlotCount);
+		binding[slot] = other.binding[0];
+		shaderRegister[slot] = other.shaderRegister[0];
+	}
+
+	std::array<TableEntry, SlotCount>	binding;
+	std::array<uint32_t, SlotCount>		shaderRegister;
+};
+
+
+// Signature of a single shader
 struct Signature
 {
 	// DX API inputs
@@ -101,6 +211,11 @@ struct Signature
 	std::vector<ShaderReflection::ResourceSRV<1>>	resources;
 	std::vector<ShaderReflection::ResourceUAV<1>>	uavs;
 	std::vector<ShaderReflection::Sampler<1>>		samplers;
+
+	// Additional data
+	uint32_t										numDescriptors{ 0 };
+	uint32_t										numMaterialDescriptors{ 0 };
+	uint32_t										numSamplers{ 0 };
 };
 
 

@@ -9,56 +9,87 @@
 
 #pragma once
 
-#include "ConstantBuffer12.h"
-#include "PipelineState12.h"
-#include "Shader.h"
-
 #include <ppltasks.h>
 
 namespace Kodiak
 {
 
 // Forward declarations
-class ConstantBuffer;
-#if 0
 class Effect;
-#endif
+class GraphicsCommandList;
+class GraphicsPSO;
+class MaterialParameter;
+class MaterialResource;
 class RenderPass;
 class RootSignature;
 struct ShaderConstantBufferDesc;
 
-
-class Material
+namespace RenderThread
 {
-	friend class MaterialManager;
+struct MaterialData;
+}
 
-public:
-	concurrency::task<void> loadTask;
+
+class Material : public std::enable_shared_from_this<Material>
+{
 
 public:
 	Material();
+	Material(const std::string& name);
 
 	void SetName(const std::string& name) { m_name = name; }
 	const std::string& GetName() const { return m_name; }
 
-#if 0
 	void SetEffect(std::shared_ptr<Effect> effect);
-#endif
+	void SetRenderPass(std::shared_ptr<RenderPass> pass);
 
-	void SetRenderPass(std::shared_ptr<RenderPass> renderPass);
-	std::shared_ptr<RenderPass> GetRenderPass();
+	std::shared_ptr<MaterialParameter> GetParameter(const std::string& name);
+	std::shared_ptr<MaterialResource> GetResource(const std::string& name);
+
+	std::shared_ptr<RenderThread::MaterialData> GetRenderThreadData() { return m_renderThreadData; }
+
+	std::shared_ptr<Material> Clone();
+
+	concurrency::task<void> prepareTask;
+
+private:
+	void CreateRenderThreadData();
 
 private:
 	std::string						m_name;
 
-#if 0
 	std::shared_ptr<Effect>			m_effect;
-#endif
 	std::shared_ptr<RenderPass>		m_renderPass;
 
-	bool							m_usesPerViewData{ false };
-	bool							m_usesPerObjectData{ false };
+	std::mutex													m_parameterLock;
+	std::map<std::string, std::shared_ptr<MaterialParameter>>	m_parameters;
+
+	std::mutex													m_resourceLock;
+	std::map<std::string, std::shared_ptr<MaterialResource>>	m_resources;
+
+	std::shared_ptr<RenderThread::MaterialData>					m_renderThreadData;
 };
+
+
+namespace RenderThread
+{
+
+struct MaterialData
+{
+	void Update(GraphicsCommandList& commandList);
+	void Commit(GraphicsCommandList& commandList);
+
+	// Render pass
+	std::shared_ptr<RenderPass>		renderPass;
+
+	// PSO
+	std::shared_ptr<GraphicsPSO>	pso;
+
+	// Root signature
+	std::shared_ptr<RootSignature>	rootSignature;
+};
+
+} // namespace RenderThread
 
 
 } // namespace Kodiak

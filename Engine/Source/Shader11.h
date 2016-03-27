@@ -46,7 +46,7 @@ class VertexShader : public Shader
 
 public:
 	ID3D11VertexShader* GetShader() { return m_shader.Get(); }
-	std::shared_ptr<InputLayout> GetInputLayout();
+	ID3D11InputLayout* GetInputLayout() { return m_inputLayout.Get(); }
 
 	ShaderType GetType() const override { return ShaderType::Vertex; }
 
@@ -56,7 +56,7 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>		m_shader;
-	std::shared_ptr<InputLayout>					m_inputLayout;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout>		m_inputLayout;
 };
 
 

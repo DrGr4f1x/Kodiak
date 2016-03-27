@@ -12,7 +12,6 @@
 #include "Shader.h"
 
 #include "DeviceManager11.h"
-#include "InputLayout11.h"
 #include "Log.h"
 #include "Material.h"
 #include "MathUtil.h"
@@ -43,12 +42,6 @@ ShaderPath::ShaderPath(const string& shaderPath, const string& shaderFile)
 	, m_shaderFullPath()
 {
 	m_shaderFullPath = Paths::GetInstance().ShaderDir() + m_shaderPath + "\\SM5\\" + m_shaderFile;
-}
-
-
-shared_ptr<InputLayout> VertexShader::GetInputLayout()
-{
-	return m_inputLayout;
 }
 
 
@@ -169,14 +162,12 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 	// Try to create input layout
 	if (!inputLayoutDesc.empty())
 	{
-		m_inputLayout = make_shared<InputLayout>();
-
 		ThrowIfFailed(g_device->CreateInputLayout(
 			&inputLayoutDesc[0],
 			static_cast<UINT>(inputLayoutDesc.size()),
 			data.get(),
 			dataSize,
-			&m_inputLayout->inputLayout));
+			&m_inputLayout));
 	}
 }
 

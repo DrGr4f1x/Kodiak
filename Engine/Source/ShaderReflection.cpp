@@ -11,6 +11,7 @@
 
 #include "ShaderReflection.h"
 
+#include "DebugUtility.h"
 #include "Log.h"
 #include "Material.h"
 #include "RenderEnums.h"
@@ -121,14 +122,26 @@ void IntrospectCBuffer(ID3DShaderReflection* reflector, const D3D_SHADER_INPUT_B
 	// If this cbuffer holds per-view or per-object constants, record the size for validation against other shaders
 	if (cbufferName == GetPerViewConstantsName())
 	{
+		assert(inputDesc.BindPoint == GetPerViewConstantsSlot());
+
 		signature.cbvPerViewData.sizeInBytes = bufferDesc.Size;
 		signature.cbvPerViewData.shaderRegister = inputDesc.BindPoint;
+
+		// Increment descriptor total to account for per-view CBV
+		++signature.numDescriptors;
+
 		return; // Don't create a record for per-view constant buffer
 	}
 	else if (cbufferName == GetPerObjectConstantsName())
 	{
+		assert(inputDesc.BindPoint == GetPerObjectConstantsSlot());
+
 		signature.cbvPerObjectData.sizeInBytes = bufferDesc.Size;
 		signature.cbvPerObjectData.shaderRegister = inputDesc.BindPoint;
+
+		// Increment descriptor total to account for per-object CBV
+		++signature.numDescriptors;
+
 		return; // Don't create a record for per-object constant buffer
 	}
 
@@ -164,6 +177,10 @@ void IntrospectCBuffer(ID3DShaderReflection* reflector, const D3D_SHADER_INPUT_B
 
 		signature.parameters.push_back(parameter);
 	}
+
+	// Increment descriptor total for material CBVs
+	++signature.numDescriptors;
+	++signature.numMaterialDescriptors;
 }
 
 void IntrospectResourceSRV(ShaderResourceType type, const D3D_SHADER_INPUT_BIND_DESC& inputDesc, Signature& signature)
@@ -172,8 +189,12 @@ void IntrospectResourceSRV(ShaderResourceType type, const D3D_SHADER_INPUT_BIND_
 	resourceSRV.name = inputDesc.Name;
 	resourceSRV.type = type;
 	resourceSRV.dimension = ConvertToEngine(inputDesc.Dimension);
-	resourceSRV.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
+	resourceSRV.shaderRegister[0] = inputDesc.BindPoint;
 	signature.resources.push_back(resourceSRV);
+
+	// Increment descriptor total for material SRVs
+	++signature.numDescriptors;
+	++signature.numMaterialDescriptors;
 }
 
 
@@ -182,8 +203,12 @@ void IntrospectResourceUAV(ShaderResourceType type, const D3D_SHADER_INPUT_BIND_
 	ShaderReflection::ResourceUAV<1> resourceUAV;
 	resourceUAV.name = inputDesc.Name;
 	resourceUAV.type = type;
-	resourceUAV.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
+	resourceUAV.shaderRegister[0] = inputDesc.BindPoint;
 	signature.uavs.push_back(resourceUAV);
+
+	// Increment descriptor total for material UAVs
+	++signature.numDescriptors;
+	++signature.numMaterialDescriptors;
 }
 
 
@@ -191,8 +216,11 @@ void IntrospectSampler(const D3D_SHADER_INPUT_BIND_DESC& inputDesc, Signature& s
 {
 	ShaderReflection::Sampler<1> sampler;
 	sampler.name = inputDesc.Name;
-	sampler.binding[0].tableIndex = inputDesc.BindPoint; // Overload binding[0].tableIndex to temporarily hold the shader register
+	sampler.shaderRegister[0] = inputDesc.BindPoint;
 	signature.samplers.push_back(sampler);
+
+	// Increment descriptor total for samplers
+	++signature.numSamplers;
 }
 
 
@@ -218,6 +246,11 @@ void ResetSignature(Signature& signature)
 	signature.resources.clear();
 	signature.uavs.clear();
 	signature.samplers.clear();
+
+	// Reset additional data
+	signature.numDescriptors = 0;
+	signature.numMaterialDescriptors = 0;
+	signature.numSamplers = 0;
 }
 
 
@@ -306,13 +339,13 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 	if (!signature.resources.empty())
 	{
 		ShaderReflection::TableLayout currentLayout;
-		currentLayout.shaderRegister = signature.resources[0].binding[0].tableIndex;
+		currentLayout.shaderRegister = signature.resources[0].shaderRegister[0];
 		currentLayout.numItems = 1;
 
 		const uint32_t numSRVs = static_cast<uint32_t>(signature.resources.size());
 		for (uint32_t i = 1; i < numSRVs; ++i)
 		{
-			const auto shaderRegister = signature.resources[i].binding[0].tableIndex;
+			const auto shaderRegister = signature.resources[i].shaderRegister[0];
 			if (shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
 			{
 				++currentLayout.numItems;
@@ -331,13 +364,13 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 	if (!signature.uavs.empty())
 	{
 		ShaderReflection::TableLayout currentLayout;
-		currentLayout.shaderRegister = signature.uavs[0].binding[0].tableIndex;
+		currentLayout.shaderRegister = signature.uavs[0].shaderRegister[0];
 		currentLayout.numItems = 1;
 
 		const uint32_t numUAVs = static_cast<uint32_t>(signature.uavs.size());
 		for (uint32_t i = 1; i < numUAVs; ++i)
 		{
-			const auto shaderRegister = signature.uavs[i].binding[0].tableIndex;
+			const auto shaderRegister = signature.uavs[i].shaderRegister[0];
 			if (shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
 			{
 				++currentLayout.numItems;
@@ -356,13 +389,13 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 	if (!signature.samplers.empty())
 	{
 		ShaderReflection::TableLayout currentLayout;
-		currentLayout.shaderRegister = signature.samplers[0].binding[0].tableIndex;
+		currentLayout.shaderRegister = signature.samplers[0].shaderRegister[0];
 		currentLayout.numItems = 1;
 
 		const uint32_t numSamplers = static_cast<uint32_t>(signature.samplers.size());
 		for (uint32_t i = 1; i < numSamplers; ++i)
 		{
-			const auto shaderRegister = signature.samplers[i].binding[0].tableIndex;
+			const auto shaderRegister = signature.samplers[i].shaderRegister[0];
 			if (shaderRegister == currentLayout.shaderRegister + currentLayout.numItems)
 			{
 				++currentLayout.numItems;
@@ -382,7 +415,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 	{
 		bool found = false;
 		uint32_t tableIndex = 0;
-		const uint32_t shaderRegister = resource.binding[0].tableIndex;
+		const uint32_t shaderRegister = resource.shaderRegister[0];
 		for (const auto& table : signature.srvTable)
 		{
 			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
@@ -395,7 +428,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 			}
 			++tableIndex;
 		}
-		assert(found);
+		assert_msg(found, "Did not find a table for this resource!");
 	}
 
 	// Remap UAVs into table ranges
@@ -403,7 +436,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 	{
 		bool found = false;
 		uint32_t tableIndex = 0;
-		const uint32_t shaderRegister = uav.binding[0].tableIndex;
+		const uint32_t shaderRegister = uav.shaderRegister[0];
 		for (const auto& table : signature.srvTable)
 		{
 			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
@@ -416,7 +449,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 			}
 			++tableIndex;
 		}
-		assert(found);
+		assert_msg(found, "Did not find a table for this uav!");
 	}
 
 	// Remap samplers into table ranges
@@ -424,7 +457,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 	{
 		bool found = false;
 		uint32_t tableIndex = 0;
-		const uint32_t shaderRegister = sampler.binding[0].tableIndex;
+		const uint32_t shaderRegister = sampler.shaderRegister[0];
 		for (const auto& table : signature.srvTable)
 		{
 			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
@@ -437,7 +470,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 			}
 			++tableIndex;
 		}
-		assert(found);
+		assert_msg(found, "Did not find a table for this sampler!");
 	}
 }
 

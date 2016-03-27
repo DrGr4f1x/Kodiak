@@ -127,7 +127,7 @@ public:
 	void SetRasterizerState(const RasterizerStateDesc& rasterizerDesc);
 	void SetDepthStencilState(const DepthStencilStateDesc& depthStencilDesc);
 
-	void SetInputLayout(const InputLayout& inputLayout);
+	void SetInputLayout(ID3D11InputLayout* inputLayout);
 
 	void SetVertexShader(VertexShader* vertexShader);
 	void SetHullShader(HullShader* hullShader);

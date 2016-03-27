@@ -5,13 +5,8 @@ struct PixelShaderInput
 	float3 color : COLOR0;
 };
 
-cbuffer PerMaterialData
-{
-	float3 tint;
-};
-
 // A pass-through function for the (interpolated) color data.
 float4 main(PixelShaderInput input) : SV_TARGET
 {
-	return float4(tint * input.color, 1.0f);
+	return float4(input.color, 1.0f);
 }

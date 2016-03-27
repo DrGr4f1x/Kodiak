@@ -109,7 +109,7 @@ void Effect::BuildPSO()
 
 	assert(m_vertexShader.get()); // Vertex shader is mandatory
 	m_pso->SetVertexShader(m_vertexShader.get());
-	m_pso->SetInputLayout(*m_vertexShader->GetInputLayout());
+	m_pso->SetInputLayout(m_vertexShader->GetInputLayout());
 
 	if (m_domainShader)
 	{
@@ -170,42 +170,18 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		m_signature.perObjectDataBindings[shaderIndex] = shaderSig.cbvPerObjectData.shaderRegister;
 	}
 
-	// Constant buffers
-	for (const auto& cbv : shaderSig.cbvTable)
-	{
-		ShaderReflection::CBVLayout binding;
-		binding.byteOffset = 0;
-		binding.sizeInBytes = cbv.sizeInBytes;
-		binding.shaderRegister = cbv.shaderRegister;
-		m_signature.cbvBindings[shaderIndex].push_back(binding);
-	}
-
+	// Copy CBV tables
+	m_signature.cbvBindings[shaderIndex] = shaderSig.cbvTable;
+	
 	// Copy SRV tables
-	for (const auto& table : shaderSig.srvTable)
-	{
-		ShaderReflection::TableLayout layout;
-		layout.shaderRegister = table.shaderRegister;
-		layout.numItems = table.numItems;;
-		m_signature.srvBindings[shaderIndex].push_back(layout);
-	}
-
+	m_signature.srvBindings[shaderIndex] = shaderSig.srvTable;
+	
 	// Copy UAV tables
-	for (const auto& table : shaderSig.uavTable)
-	{
-		ShaderReflection::TableLayout layout;
-		layout.shaderRegister = table.shaderRegister;
-		layout.numItems = table.numItems; 
-		m_signature.uavBindings[shaderIndex].push_back(layout);
-	}
-
+	m_signature.uavBindings[shaderIndex] = shaderSig.uavTable;
+	
 	// Copy sampler tables
-	for (const auto& table : shaderSig.samplerTable)
-	{
-		ShaderReflection::TableLayout layout;
-		layout.shaderRegister = table.shaderRegister;
-		layout.numItems = table.numItems;
-		m_signature.samplerBindings[shaderIndex].push_back(layout);
-	}
+	m_signature.samplerBindings[shaderIndex] = shaderSig.samplerTable;
+	
 
 	// Parameters
 	for (const auto& parameter : shaderSig.parameters)
@@ -219,9 +195,8 @@ void Effect::ProcessShaderBindings(Shader* shader)
 				// Confirm that the pre-existing parameter matches the new one
 				assert(fxParameter.type == parameter.type);
 				assert(fxParameter.sizeInBytes == parameter.sizeInBytes);
-				fxParameter.byteOffset[shaderIndex] = parameter.byteOffset[0]; // Will be patched after all shaders are processed
-				fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister[0];
-
+				fxParameter.Assign(shaderIndex, parameter);
+				
 				newParameter = false;
 				break;
 			}
@@ -230,13 +205,9 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new parameter, if necessary
 		if (newParameter)
 		{
-			ShaderReflection::Parameter<5> fxParameter;
-			fxParameter.name = parameter.name;
-			fxParameter.type = parameter.type;
-			fxParameter.sizeInBytes = parameter.sizeInBytes;
-			fxParameter.byteOffset[shaderIndex] = parameter.byteOffset[0]; // Will be patched after all shaders are processed
-			fxParameter.cbvShaderRegister[shaderIndex] = parameter.cbvShaderRegister[0];
-
+			ShaderReflection::Parameter<5> fxParameter(parameter);
+			fxParameter.Assign(shaderIndex, parameter);
+			
 			m_signature.parameters.push_back(fxParameter);
 		}
 	}
@@ -253,8 +224,7 @@ void Effect::ProcessShaderBindings(Shader* shader)
 				// Confirm that the pre-existing SRV resource matches the new one
 				assert(fxSrv.type == srv.type);
 				assert(fxSrv.dimension == srv.dimension);
-				fxSrv.binding[shaderIndex].tableIndex = srv.binding[0].tableIndex;
-				fxSrv.binding[shaderIndex].tableSlot = srv.binding[0].tableSlot;
+				fxSrv.Assign(shaderIndex, srv);
 
 				newResource = false;
 				break;
@@ -264,13 +234,9 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new SRV resource, if necessary
 		if (newResource)
 		{
-			ShaderReflection::ResourceSRV<5> fxSrv;
-			fxSrv.name = srv.name;
-			fxSrv.type = srv.type;
-			fxSrv.dimension = srv.dimension;
-			fxSrv.binding[shaderIndex].tableIndex = srv.binding[0].tableIndex;
-			fxSrv.binding[shaderIndex].tableSlot = srv.binding[0].tableSlot;
-
+			ShaderReflection::ResourceSRV<5> fxSrv(srv);
+			fxSrv.Assign(shaderIndex, srv);
+			
 			m_signature.srvs.push_back(fxSrv);
 		}
 	}
@@ -286,9 +252,8 @@ void Effect::ProcessShaderBindings(Shader* shader)
 			{
 				// Confirm that the pre-existing UAV resource matches the new one
 				assert(fxUav.type == uav.type);
-				fxUav.binding[shaderIndex].tableIndex = uav.binding[0].tableIndex;
-				fxUav.binding[shaderIndex].tableSlot = uav.binding[0].tableSlot;
-
+				fxUav.Assign(shaderIndex, uav);
+				
 				newResource = false;
 				break;
 			}
@@ -297,12 +262,9 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new UAV resource, if necessary
 		if (newResource)
 		{
-			ShaderReflection::ResourceUAV<5> fxUav;
-			fxUav.name = uav.name;
-			fxUav.type = uav.type;
-			fxUav.binding[shaderIndex].tableIndex = uav.binding[0].tableIndex;
-			fxUav.binding[shaderIndex].tableSlot = uav.binding[0].tableSlot;
-
+			ShaderReflection::ResourceUAV<5> fxUav(uav);
+			fxUav.Assign(shaderIndex, uav);
+			
 			m_signature.uavs.push_back(fxUav);
 		}
 	}
@@ -317,9 +279,8 @@ void Effect::ProcessShaderBindings(Shader* shader)
 			if (fxSampler.name == sampler.name)
 			{
 				// Nothing to validate for samplers
-				fxSampler.binding[shaderIndex].tableIndex = sampler.binding[0].tableIndex;
-				fxSampler.binding[shaderIndex].tableSlot = sampler.binding[0].tableSlot;
-
+				fxSampler.Assign(shaderIndex, sampler);
+				
 				newSampler = false;
 				break;
 			}
@@ -328,11 +289,9 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		// Create new sampler, if necessary
 		if (newSampler)
 		{
-			ShaderReflection::Sampler<5> fxSampler;
-			fxSampler.name = sampler.name;
-			fxSampler.binding[shaderIndex].tableIndex = sampler.binding[0].tableIndex;
-			fxSampler.binding[shaderIndex].tableSlot = sampler.binding[0].tableSlot;
-
+			ShaderReflection::Sampler<5> fxSampler(sampler);
+			fxSampler.Assign(shaderIndex, sampler);
+			
 			m_signature.samplers.push_back(fxSampler);
 		}
 	}

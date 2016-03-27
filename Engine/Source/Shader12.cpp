@@ -65,15 +65,14 @@ void VertexShader::Finalize()
 
 void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 {
-	m_inputLayout = make_shared<InputLayout>();
-
 	uint32_t byteOffset = 0;
 	
 	// Get shader info
 	D3D12_SHADER_DESC shaderDesc;
 	reflector->GetDesc(&shaderDesc);
 
-	m_inputLayout->elements.reserve(shaderDesc.InputParameters);
+	m_inputLayout.elements.reserve(shaderDesc.InputParameters);
+	m_inputLayout.semantics.reserve(shaderDesc.InputParameters);
 
 	for (uint32_t i = 0; i < shaderDesc.InputParameters; ++i)
 	{
@@ -82,7 +81,16 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 
 		// Fill out input element desc
 		D3D12_INPUT_ELEMENT_DESC elementDesc;
-		elementDesc.SemanticName = paramDesc.SemanticName;
+		
+		// NOTE: if we simply do:
+		//   elementDesc.SemanticName = paramDesc.SemanticName;
+		// then we have a lifetime problem with the string on elementDesc.  Store a copy of the string
+		// and point elementDesc.SemanticName to c_str().  This is not in general safe, but we know
+		// our list of strings has the correct size, so it won't reallocate/move the strings out
+		// from under us.
+		m_inputLayout.semantics.push_back(string(paramDesc.SemanticName));
+		elementDesc.SemanticName = m_inputLayout.semantics.back().c_str();
+
 		elementDesc.SemanticIndex = paramDesc.SemanticIndex;
 		elementDesc.InputSlot = 0;
 		elementDesc.AlignedByteOffset = byteOffset;
@@ -165,8 +173,6 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 		}
 
 		// Save element desc
-		m_inputLayout->elements.emplace_back(elementDesc);
+		m_inputLayout.elements.push_back(elementDesc);
 	}
 }
-
-} // namespace Kodiak
