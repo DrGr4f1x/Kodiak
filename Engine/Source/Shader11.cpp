@@ -59,7 +59,6 @@ void VertexShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 
 void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_ptr<uint8_t[]>& data, size_t dataSize)
 {
-	uint32_t byteOffset = 0;
 	std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
 
 	// Get shader info
@@ -76,7 +75,7 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 		elementDesc.SemanticName = paramDesc.SemanticName;
 		elementDesc.SemanticIndex = paramDesc.SemanticIndex;
 		elementDesc.InputSlot = 0;
-		elementDesc.AlignedByteOffset = byteOffset;
+		elementDesc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 		elementDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 		elementDesc.InstanceDataStepRate = 0;
 
@@ -104,7 +103,6 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 			{
 				elementDesc.Format = DXGI_FORMAT_R32_FLOAT;
 			}
-			byteOffset += 4;
 		}
 		else if (paramDesc.Mask <= 3)
 		{
@@ -120,7 +118,6 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 			{
 				elementDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
 			}
-			byteOffset += 8;
 		}
 		else if (paramDesc.Mask <= 7)
 		{
@@ -136,7 +133,6 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 			{
 				elementDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
 			}
-			byteOffset += 12;
 		}
 		else if (paramDesc.Mask <= 15)
 		{
@@ -152,7 +148,6 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 			{
 				elementDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			}
-			byteOffset += 16;
 		}
 
 		// Save element desc

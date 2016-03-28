@@ -214,25 +214,6 @@ bool Application::OnEvent(MSG msg)
 		((MINMAXINFO*)msg.lParam)->ptMinTrackSize.y = 200;
 		return true;
 		break;
-
-	case WM_LBUTTONDOWN:
-	case WM_MBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		OnMouseDown(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
-		return true;
-		break;
-
-	case WM_LBUTTONUP:
-	case WM_MBUTTONUP:
-	case WM_RBUTTONUP:
-		OnMouseUp(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
-		return true;
-		break;
-
-	case WM_MOUSEMOVE:
-		OnMouseMove(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
-		return true;
-		break;
 	}
 	return false;
 }

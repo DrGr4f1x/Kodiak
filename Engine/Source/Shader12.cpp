@@ -65,8 +65,6 @@ void VertexShader::Finalize()
 
 void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 {
-	uint32_t byteOffset = 0;
-	
 	// Get shader info
 	D3D12_SHADER_DESC shaderDesc;
 	reflector->GetDesc(&shaderDesc);
@@ -93,7 +91,7 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 
 		elementDesc.SemanticIndex = paramDesc.SemanticIndex;
 		elementDesc.InputSlot = 0;
-		elementDesc.AlignedByteOffset = byteOffset;
+		elementDesc.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 		elementDesc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		elementDesc.InstanceDataStepRate = 0;
 
@@ -121,7 +119,6 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 			{
 				elementDesc.Format = DXGI_FORMAT_R32_FLOAT;
 			}
-			byteOffset += 4;
 		}
 		else if (paramDesc.Mask <= 3)
 		{
@@ -137,7 +134,6 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 			{
 				elementDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
 			}
-			byteOffset += 8;
 		}
 		else if (paramDesc.Mask <= 7)
 		{
@@ -153,7 +149,6 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 			{
 				elementDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
 			}
-			byteOffset += 12;
 		}
 		else if (paramDesc.Mask <= 15)
 		{
@@ -169,7 +164,6 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 			{
 				elementDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			}
-			byteOffset += 16;
 		}
 
 		// Save element desc
