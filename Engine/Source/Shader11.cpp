@@ -12,9 +12,7 @@
 #include "Shader.h"
 
 #include "DeviceManager11.h"
-#include "Log.h"
 #include "Material.h"
-#include "MathUtil.h"
 #include "Paths.h"
 #include "RenderEnums.h"
 #include "RenderUtils.h"

@@ -14,7 +14,6 @@
 #include "CommandList12.h"
 #include "CommandListManager12.h"
 #include "Format.h"
-#include "Log.h"
 #include "RenderEnums12.h"
 #include "RenderUtils.h"
 #include "Shader.h"

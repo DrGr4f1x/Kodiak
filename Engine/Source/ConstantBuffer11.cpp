@@ -12,7 +12,6 @@
 #include "ConstantBuffer11.h"
 
 #include "DeviceManager11.h"
-#include "MathUtil.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
 

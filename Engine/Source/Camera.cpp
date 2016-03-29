@@ -11,7 +11,6 @@
 
 #include "Camera.h"
 
-#include "MathUtil.h"
 #include "Renderer.h"
 #include "Scene.h"
 
@@ -20,6 +19,17 @@ using namespace Kodiak;
 using namespace Math;
 using namespace std;
 using namespace DirectX;
+
+
+static bool Compare(const XMFLOAT3& a, const XMFLOAT3& b)
+{
+	return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+static bool Compare(const XMFLOAT4& a, const XMFLOAT4& b)
+{
+	return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w;
+}
 
 
 Camera::Camera()
@@ -63,7 +73,7 @@ Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation, float fov,
 
 void Camera::SetPosition(const XMFLOAT3& position)
 {
-	if (m_position != position)
+	if (!Compare(m_position, position))
 	{
 		m_position = position;
 		RenderThreadSetCameraPositionAndOrientation();
@@ -73,7 +83,7 @@ void Camera::SetPosition(const XMFLOAT3& position)
 
 void Camera::SetOrientation(const XMFLOAT4& orientation)
 {
-	if (m_orientation != orientation)
+	if (!Compare(m_orientation, orientation))
 	{
 		m_orientation = orientation;
 
@@ -89,13 +99,13 @@ void Camera::SetPositionAndOrientation(const DirectX::XMFLOAT3& position, const 
 {
 	bool update = false;
 
-	if (m_position != position)
+	if (!Compare(m_position, position))
 	{
 		m_position = position;
 		update = true;
 	}
 
-	if (m_orientation != orientation)
+	if (!Compare(m_orientation, orientation))
 	{
 		m_orientation = orientation;
 

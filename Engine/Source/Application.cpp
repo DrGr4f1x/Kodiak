@@ -14,7 +14,6 @@
 #include "CommandList.h"
 #include "DeviceManager.h"
 #include "InputState.h"
-#include "Log.h"
 #include "Profile.h"
 #include "Renderer.h"
 #include "StepTimer.h"

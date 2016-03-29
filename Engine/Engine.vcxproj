@@ -198,6 +198,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\CommonMath.h" />
     <ClInclude Include="Source\CommonStates.h" />
     <ClInclude Include="Source\ConstantBuffer.h" />
     <ClInclude Include="Source\ConstantBuffer11.h">
@@ -328,7 +329,8 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Source\MathUtil.h" />
+    <ClInclude Include="Source\Matrix3.h" />
+    <ClInclude Include="Source\Matrix4.h" />
     <ClInclude Include="Source\Model.h" />
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\PipelineState.h" />
@@ -350,6 +352,8 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\Profile.h" />
+    <ClInclude Include="Source\Quaternion.h" />
+    <ClInclude Include="Source\Random.h" />
     <ClInclude Include="Source\Rectangle.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">false</ExcludedFromBuild>
@@ -381,6 +385,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Source\SamplerManager.h" />
+    <ClInclude Include="Source\Scalar.h" />
     <ClInclude Include="Source\Scene.h" />
     <ClCompile Include="..\External\Remotery\lib\Remotery.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">NotUsing</PrecompiledHeader>
@@ -445,6 +450,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClCompile>
     <ClCompile Include="Source\Model_H3D.cpp" />
     <ClCompile Include="Source\Profile.cpp" />
+    <ClCompile Include="Source\Random.cpp" />
     <ClCompile Include="Source\RenderPass.cpp" />
     <ClInclude Include="Source\Shader.h" />
     <ClInclude Include="Source\Shader11.h">
@@ -468,7 +474,10 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\Transform.h" />
     <ClInclude Include="Source\Utility.h" />
+    <ClInclude Include="Source\Vector.h" />
+    <ClInclude Include="Source\VectorMath.h" />
     <ClInclude Include="Source\VertexBuffer.h" />
     <ClInclude Include="Source\VertexBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -694,6 +703,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Source\Functions.inl" />
     <None Include="Source\Shaders\Common\PerViewData.hlsli" />
     <None Include="Source\Shaders\Common\StaticMeshPerObjectData.hlsli" />
   </ItemGroup>

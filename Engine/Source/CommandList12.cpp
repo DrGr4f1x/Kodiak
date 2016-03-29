@@ -19,7 +19,6 @@
 #include "DeviceManager12.h"
 #include "GpuResource12.h"
 #include "IndexBuffer12.h"
-#include "MathUtil.h"
 #include "PipelineState12.h"
 #include "Rectangle.h"
 #include "RenderUtils.h"

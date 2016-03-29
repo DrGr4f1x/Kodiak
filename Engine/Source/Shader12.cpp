@@ -12,7 +12,6 @@
 #include "Shader.h"
 
 #include "InputLayout12.h"
-#include "Log.h"
 #include "Material.h"
 #include "Paths.h"
 #include "RenderEnums.h"

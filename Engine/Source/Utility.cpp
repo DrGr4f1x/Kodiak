@@ -12,8 +12,6 @@
 
 #include "Utility.h"
 
-#include "MathUtil.h"
-
 
 namespace Kodiak
 {

@@ -14,7 +14,6 @@
 
 #include "CommandList12.h"
 #include "DeviceManager12.h"
-#include "MathUtil.h"
 #include "Renderer.h"
 #include "RenderUtils.h"
 

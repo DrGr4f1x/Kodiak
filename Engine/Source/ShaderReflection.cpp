@@ -12,9 +12,7 @@
 #include "ShaderReflection.h"
 
 #include "DebugUtility.h"
-#include "Log.h"
 #include "Material.h"
-#include "MathUtil.h"
 #include "RenderEnums.h"
 #include "RenderUtils.h"
 
