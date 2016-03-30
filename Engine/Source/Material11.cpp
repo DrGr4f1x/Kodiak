@@ -16,7 +16,6 @@
 #include "Effect.h"
 #include "MaterialParameter11.h"
 #include "MaterialResource11.h"
-#include "MathUtil.h"
 #include "PipelineState.h"
 #include "Renderer.h"
 #include "RenderEnums.h"
