@@ -11,7 +11,6 @@
 
 #include "Effect.h"
 
-#include "MathUtil.h"
 #include "PipelineState11.h"
 #include "Shader11.h"
 
