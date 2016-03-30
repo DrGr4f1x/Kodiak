@@ -34,6 +34,7 @@
 
 using namespace Kodiak;
 using namespace DirectX;
+using namespace Math;
 using namespace std;
 
 
@@ -82,8 +83,7 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		{
 			m_meshRadians[0] += deltaRadians;
 
-			XMFLOAT4X4 matrix;
-			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationZ(deltaRadians)));
+			auto matrix = Matrix4::RotationZ(deltaRadians);
 
 			mesh->ConcatenateMatrix(matrix);
 		}
@@ -99,8 +99,7 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		{
 			m_meshRadians[1] += deltaRadians;
 
-			XMFLOAT4X4 matrix;
-			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationZ(-deltaRadians)));
+			Matrix4 matrix = Matrix4::RotationZ(-deltaRadians);
 
 			mesh->ConcatenateMatrix(matrix);
 		}
@@ -116,8 +115,7 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		{
 			m_meshRadians[2] += deltaRadians;
 
-			XMFLOAT4X4 matrix;
-			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationX(deltaRadians)));
+			Matrix4 matrix = Matrix4::RotationX(deltaRadians);
 
 			mesh->ConcatenateMatrix(matrix);
 		}
@@ -133,10 +131,10 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 		{
 			m_meshRadians[3] += deltaRadians;
 
-			XMFLOAT4X4 matrix;
-			XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixRotationX(-deltaRadians)));
+			Matrix4 matrix = Matrix4::RotationX(-deltaRadians);
 
 			mesh->ConcatenateMatrix(matrix);
+
 		}
 
 		auto v = 0.5f * sinf(seconds - 3.0f) + 0.5f;
@@ -186,14 +184,14 @@ void BasicApplication::CreateModel()
 {
 	m_boxModel = make_shared<StaticModel>();
 	BoxMeshDesc meshDesc;
-	meshDesc.colors[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	meshDesc.colors[1] = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	meshDesc.colors[2] = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	meshDesc.colors[3] = XMFLOAT3(0.0f, 1.0f, 1.0f);
-	meshDesc.colors[4] = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	meshDesc.colors[5] = XMFLOAT3(1.0f, 0.0f, 1.0f);
-	meshDesc.colors[6] = XMFLOAT3(1.0f, 1.0f, 0.0f);
-	meshDesc.colors[7] = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	meshDesc.colors[0] = Vector3(0.0f, 0.0f, 0.0f);
+	meshDesc.colors[1] = Vector3(0.0f, 0.0f, 1.0f);
+	meshDesc.colors[2] = Vector3(0.0f, 1.0f, 0.0f);
+	meshDesc.colors[3] = Vector3(0.0f, 1.0f, 1.0f);
+	meshDesc.colors[4] = Vector3(1.0f, 0.0f, 0.0f);
+	meshDesc.colors[5] = Vector3(1.0f, 0.0f, 1.0f);
+	meshDesc.colors[6] = Vector3(1.0f, 1.0f, 0.0f);
+	meshDesc.colors[7] = Vector3(1.0f, 1.0f, 1.0f);
 	meshDesc.genColors = true;
 
 	auto mesh = MakeBoxMesh(meshDesc);
@@ -203,8 +201,8 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
-		XMFLOAT4X4 matrix;
-		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(3.0f, 0.0f, 0.0f)));
+		auto matrix = Matrix4::Translation(3.0f, 0.0f, 0.0f);
+
 		mesh2->SetMatrix(matrix);
 		m_boxModel->AddMesh(mesh2);
 	}
@@ -212,8 +210,8 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
-		XMFLOAT4X4 matrix;
-		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f)));
+		auto matrix = Matrix4::Translation(-3.0f, 0.0f, 0.0f);
+
 		mesh2->SetMatrix(matrix);
 		m_boxModel->AddMesh(mesh2);
 	}
@@ -221,8 +219,8 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
-		XMFLOAT4X4 matrix;
-		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 3.0f)));
+		auto matrix = Matrix4::Translation(0.0f, 0.0f, 3.0f);
+
 		mesh2->SetMatrix(matrix);
 		m_boxModel->AddMesh(mesh2);
 	}
@@ -230,8 +228,7 @@ void BasicApplication::CreateModel()
 	{
 		auto mesh2 = mesh->Clone();
 
-		XMFLOAT4X4 matrix;
-		XMStoreFloat4x4(&matrix, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -3.0f)));
+		auto matrix = Matrix4::Translation(0.0f, 0.0f, -3.0f);
 		mesh2->SetMatrix(matrix);
 		m_boxModel->AddMesh(mesh2);
 	}

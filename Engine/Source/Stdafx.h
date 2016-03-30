@@ -66,3 +66,5 @@
 #include "Constants.h"
 #include "Log.h"
 #include "VectorMath.h"
+
+#define NEW_MATH 1

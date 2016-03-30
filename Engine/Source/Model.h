@@ -45,7 +45,7 @@ struct StaticMeshPartData
 struct StaticMeshData
 {
 	std::vector<StaticMeshPartData>		meshParts;
-	DirectX::XMFLOAT4X4					matrix;
+	Math::Matrix4						matrix;
 
 	std::shared_ptr<ConstantBuffer>		perObjectConstants;
 	bool								isDirty{ true };
@@ -54,14 +54,14 @@ struct StaticMeshData
 
 struct StaticMeshPerObjectData
 {
-	DirectX::XMMATRIX	matrix;
+	Math::Matrix4 matrix;
 };
 
 
 struct StaticModelData
 {
 	std::vector<std::shared_ptr<StaticMeshData>>	meshes;
-	DirectX::XMFLOAT4X4								matrix;
+	Math::Matrix4									matrix;
 
 	bool											isDirty{ true };
 
@@ -97,9 +97,9 @@ public:
 	void AddMeshPart(StaticMeshPart part);
 	size_t GetNumMeshParts() const { return m_meshParts.size(); }
 
-	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);
-	void ConcatenateMatrix(const DirectX::XMFLOAT4X4& matrix);
-	const DirectX::XMFLOAT4X4& GetMatrix() const { return m_matrix; }
+	void SetMatrix(const Math::Matrix4& matrix);
+	void ConcatenateMatrix(const Math::Matrix4& matrix);
+	const Math::Matrix4& GetMatrix() const { return m_matrix; }
 
 	std::shared_ptr<Material> GetMaterial(uint32_t meshPartIndex)
 	{
@@ -113,7 +113,7 @@ private:
 
 private:
 	std::vector<StaticMeshPart>	m_meshParts;
-	DirectX::XMFLOAT4X4			m_matrix;
+	Math::Matrix4				m_matrix;
 
 	std::shared_ptr<RenderThread::StaticMeshData>	m_renderThreadData;
 };
@@ -130,8 +130,8 @@ public:
 	std::shared_ptr<StaticMesh> GetMesh(uint32_t index);
 	size_t GetNumMeshes() const { return m_meshes.size(); }
 
-	void SetMatrix(const DirectX::XMFLOAT4X4& matrix);
-	const DirectX::XMFLOAT4X4& GetMatrix() const { return m_matrix; }
+	void SetMatrix(const Math::Matrix4& matrix);
+	const Math::Matrix4& GetMatrix() const { return m_matrix; }
 
 private:
 	void CreateRenderThreadData();
@@ -139,7 +139,7 @@ private:
 private:
 	std::mutex									m_meshMutex;
 	std::vector<std::shared_ptr<StaticMesh>>	m_meshes;
-	DirectX::XMFLOAT4X4							m_matrix;
+	Math::Matrix4								m_matrix;
 
 	std::shared_ptr<RenderThread::StaticModelData>	m_renderThreadData;
 };
@@ -151,7 +151,7 @@ struct BoxMeshDesc
 	float sizeX{ 1.0f };
 	float sizeY{ 1.0f };
 	float sizeZ{ 1.0f };
-	DirectX::XMFLOAT3 colors[8];
+	Math::Vector3 colors[8];
 	bool genColors{ false };
 	bool genNormals{ false };
 	bool facesIn{ false };

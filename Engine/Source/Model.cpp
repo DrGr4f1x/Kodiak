@@ -25,14 +25,13 @@
 
 
 using namespace Kodiak;
-using namespace DirectX;
+using namespace Math;
 using namespace std;
 
 
 void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& commandList)
 {
 	PROFILE(staticModel_UpdateConstants);
-	const XMMATRIX modelToWorld = XMLoadFloat4x4(&matrix);
 	
 	for (auto& mesh : meshes)
 	{
@@ -41,7 +40,8 @@ void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& command
 #endif
 		{
 			StaticMeshPerObjectData perObjectData;
-			perObjectData.matrix = XMMatrixMultiply(modelToWorld, XMLoadFloat4x4(&mesh->matrix));
+			// TODO: Remove this Transpose once the camera view and projection matrices are fixed up
+			perObjectData.matrix = Transpose(matrix * mesh->matrix);
 
 			auto dest = commandList.MapConstants(*mesh->perObjectConstants);
 			memcpy(dest, &perObjectData, sizeof(perObjectData));
@@ -56,8 +56,8 @@ void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& command
 
 
 StaticMesh::StaticMesh()
+	: m_matrix(kIdentity)
 {
-	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
 	CreateRenderThreadData();
 }
 
@@ -79,32 +79,35 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 }
 
 
-void StaticMesh::SetMatrix(const XMFLOAT4X4& matrix)
+void StaticMesh::SetMatrix(const Matrix4& matrix)
 {
 	m_matrix = matrix;
 
+	DirectX::XMFLOAT4X4 matrixNonAligned;
+	DirectX::XMStoreFloat4x4(&matrixNonAligned, m_matrix);
+
 	auto staticMeshData = m_renderThreadData;
-	Renderer::GetInstance().EnqueueTask([staticMeshData, matrix](RenderTaskEnvironment& rte)
+	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
 	{
 		PROFILE(staticMesh_setMatrix_RT);
-		staticMeshData->matrix = matrix;
+		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
 		staticMeshData->isDirty = true;
 	});
 }
 
 
-void StaticMesh::ConcatenateMatrix(const XMFLOAT4X4& matrix)
+void StaticMesh::ConcatenateMatrix(const Matrix4& matrix)
 {
-	XMMATRIX xmMatrix = XMLoadFloat4x4(&m_matrix);
-	XMStoreFloat4x4(&m_matrix, XMMatrixMultiply(xmMatrix, XMLoadFloat4x4(&matrix)));
+	m_matrix = m_matrix * matrix;
 
-	auto matrix2 = m_matrix;
+	DirectX::XMFLOAT4X4 matrixNonAligned;
+	DirectX::XMStoreFloat4x4(&matrixNonAligned, m_matrix);
 
 	auto staticMeshData = m_renderThreadData;
-	Renderer::GetInstance().EnqueueTask([staticMeshData, matrix2](RenderTaskEnvironment& rte)
+	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
 	{
 		PROFILE(staticMesh_concatenateMatrix_RT);
-		staticMeshData->matrix = matrix2;
+		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
 		staticMeshData->isDirty = true;
 	});
 }
@@ -137,8 +140,8 @@ void StaticMesh::CreateRenderThreadData()
 
 
 StaticModel::StaticModel()
+	: m_matrix(kIdentity)
 {
-	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
 	CreateRenderThreadData();
 }
 
@@ -165,7 +168,7 @@ shared_ptr<StaticMesh> StaticModel::GetMesh(uint32_t index)
 }
 
 
-void StaticModel::SetMatrix(const XMFLOAT4X4& matrix)
+void StaticModel::SetMatrix(const Matrix4& matrix)
 {
 	m_matrix = matrix;
 	auto thisModel = shared_from_this();
@@ -205,36 +208,35 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 		vdata.reset(new VertexBufferData<VertexPositionNormalColor>(
 		{
 			// -X face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[0]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[7]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[6]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[1]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[0]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[7]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[6]) },
 			// +X face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[5]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[4]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[2]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[5]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[4]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[2]) },
 			// -Y face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[7]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[5]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[1]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[7]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[5]) },
 			// +Y face
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[2]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[4]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[0]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[6]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[2]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[4]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[0]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[6]) },
 			// -Z face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[2]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[0]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[2]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[1]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[0]) },
 			// +Z face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[7]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[6]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[5]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[4]) }
-
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[7]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[6]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[5]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[4]) }
 		}
 		));
 	}
@@ -243,36 +245,35 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 		vdata.reset(new VertexBufferData<VertexPositionNormal>(
 		{
 			// -X face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
 			// +X face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
 			// -Y face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
 			// +Y face
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
 			// -Z face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
 			// +Z face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) }
-
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) }
 		}
 		));
 	}
@@ -280,14 +281,14 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 	{
 		vdata.reset(new VertexBufferData<VertexPositionColor>(
 		{
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[0]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[2]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[4]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[5]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[6]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[7]) }
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[0]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[1]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[2]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[4]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[5]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[6]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[7]) }
 		}
 		));
 	}
@@ -295,14 +296,14 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 	{
 		vdata.reset(new VertexBufferData<VertexPosition>(
 		{
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) }
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) }
 		}
 		));
 	}

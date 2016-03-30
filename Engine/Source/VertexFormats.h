@@ -14,26 +14,26 @@ namespace Kodiak
 
 struct VertexPosition
 {
-	DirectX::XMFLOAT3 pos;
+	Math::Vector3 pos;
 };
 
 struct VertexPositionNormal
 {
-	DirectX::XMFLOAT3 pos;
-	DirectX::XMFLOAT3 normal;
+	Math::Vector3 pos;
+	Math::Vector3 normal;
 };
 
 struct VertexPositionColor
 {
-	DirectX::XMFLOAT3 pos;
-	DirectX::XMFLOAT3 color;
+	Math::Vector3 pos;
+	Math::Vector3 color;
 };
 
 struct VertexPositionNormalColor
 {
-	DirectX::XMFLOAT3 pos;
-	DirectX::XMFLOAT3 normal;
-	DirectX::XMFLOAT3 color;
+	Math::Vector3 pos;
+	Math::Vector3 normal;
+	Math::Vector3 color;
 };
 
 } // namespace Kodiak
