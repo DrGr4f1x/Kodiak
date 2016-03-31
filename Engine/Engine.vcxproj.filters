@@ -353,6 +353,9 @@
     <ClInclude Include="Source\Random.h">
       <Filter>Rendering\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Source\CameraController.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -545,6 +548,9 @@
     </ClCompile>
     <ClCompile Include="Source\Random.cpp">
       <Filter>Rendering\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CameraController.cpp">
+      <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

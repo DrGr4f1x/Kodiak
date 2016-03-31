@@ -171,6 +171,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     <ClInclude Include="Source\Batch.h" />
     <ClInclude Include="Source\BinaryReader.h" />
     <ClInclude Include="Source\Camera.h" />
+    <ClInclude Include="Source\CameraController.h" />
     <ClInclude Include="Source\ColorBuffer.h" />
     <ClInclude Include="Source\ColorBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -394,6 +395,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Source\Camera.cpp" />
+    <ClCompile Include="Source\CameraController.cpp" />
     <ClCompile Include="Source\CommonStates.cpp" />
     <ClCompile Include="Source\ConstantBuffer12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>

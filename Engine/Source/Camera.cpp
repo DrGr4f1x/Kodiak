@@ -230,9 +230,19 @@ void Camera::CreateCameraProxy()
 {
 	if (!m_cameraProxy)
 	{
-		m_cameraProxy = make_shared<RenderThread::Camera>();
+		auto cameraProxy = (RenderThread::Camera*)_aligned_malloc(sizeof(RenderThread::Camera), alignof(RenderThread::Camera));
 
-		m_cameraProxy->SetPositionAndOrientation(m_position, m_orientation);
+		m_cameraProxy = shared_ptr<RenderThread::Camera>(cameraProxy, [=](RenderThread::Camera* camera) { _aligned_free(camera); });
+
+		// TODO get rid of this
+		DirectX::XMVECTOR xmPosition, xmOrientation;
+		xmPosition = DirectX::XMLoadFloat3(&m_position);
+		xmOrientation = DirectX::XMLoadFloat4(&m_orientation);
+
+		auto position = Vector3(xmPosition);
+		auto orientation = Quaternion(xmOrientation);
+
+		m_cameraProxy->SetPositionAndOrientation(position, orientation);
 		m_cameraProxy->SetPerspective(m_fov, m_aspect, m_zNear, m_zFar);
 	}
 }
@@ -253,30 +263,34 @@ void Camera::RenderThreadSetCameraPositionAndOrientation()
 	auto camera = shared_from_this();
 	Renderer::GetInstance().EnqueueTask([camera](RenderTaskEnvironment& rte)
 	{
-		camera->m_cameraProxy->SetPositionAndOrientation(camera->m_position, camera->m_orientation);
+		// TODO get rid of this
+		DirectX::XMVECTOR xmPosition, xmOrientation;
+		xmPosition = DirectX::XMLoadFloat3(&camera->m_position);
+		xmOrientation = DirectX::XMLoadFloat4(&camera->m_orientation);
+
+		auto position = Vector3(xmPosition);
+		auto orientation = Quaternion(xmOrientation);
+
+		camera->m_cameraProxy->SetPositionAndOrientation(position, orientation);
 	});
 }
 
 
 
 Kodiak::RenderThread::Camera::Camera()
-	: m_projectionMatrix()
-	, m_viewMatrix()
-	, m_prevViewMatrix()
-	, m_position(0.0f, 0.0f, 0.0f)
-	, m_orientation(0.0f, 0.0f, 0.0f, 1.0f)
+	: m_projectionMatrix(kIdentity)
+	, m_viewMatrix(kIdentity)
+	, m_prevViewMatrix(kIdentity)
+	, m_position(kZero)
+	, m_orientation(kIdentity)
 	, m_fov(60.0f)
 	, m_aspect(1.0f)
 	, m_zNear(0.1f)
 	, m_zFar(10.0f)
-{
-	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixIdentity());
-	XMStoreFloat4x4(&m_viewMatrix, XMMatrixIdentity());
-	XMStoreFloat4x4(&m_prevViewMatrix, XMMatrixIdentity());
-}
+{}
 
 
-void Kodiak::RenderThread::Camera::SetPositionAndOrientation(const XMFLOAT3& position, const XMFLOAT4& orientation)
+void Kodiak::RenderThread::Camera::SetPositionAndOrientation(const Vector3& position, const Quaternion& orientation)
 {
 	m_position = position;
 	m_orientation = orientation;
@@ -291,7 +305,7 @@ void Kodiak::RenderThread::Camera::SetPerspective(float fov, float aspect, float
 	m_zNear = zNear;
 	m_zFar = zFar;
 
-	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovRH(XMConvertToRadians(m_fov), m_aspect, m_zNear, m_zFar));
+	m_projectionMatrix = Matrix4::PerspectiveFovRH(ConvertToRadians(m_fov), m_aspect, m_zNear, m_zFar);
 }
 
 
@@ -299,13 +313,5 @@ void Kodiak::RenderThread::Camera::UpdateViewMatrix()
 {
 	m_prevViewMatrix = m_viewMatrix;
 
-	XMVECTOR dummy;
-	XMStoreFloat4x4(&m_viewMatrix,
-		XMMatrixInverse(&dummy,
-			XMMatrixMultiply(
-				XMMatrixRotationQuaternion(XMLoadFloat4(&m_orientation)),
-				XMMatrixTranslationFromVector(XMLoadFloat3(&m_position))
-				)
-			)
-		);
+	m_viewMatrix = Invert(Matrix4(AffineTransform(m_orientation, m_position)));
 }

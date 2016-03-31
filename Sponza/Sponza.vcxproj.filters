@@ -12,13 +12,11 @@
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\SponzaApplication.h" />
-    <ClInclude Include="Source\CameraController.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\SponzaApplication.cpp" />
-    <ClCompile Include="Source\CameraController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\BaseVS.hlsl">

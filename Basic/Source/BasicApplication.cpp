@@ -11,8 +11,8 @@
 
 #include "BasicApplication.h"
 
-#include "CameraController.h"
 #include "Engine\Source\Camera.h"
+#include "Engine\Source\CameraController.h"
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\CommonStates.h"
@@ -242,7 +242,9 @@ void BasicApplication::SetupScene()
 	m_camera->LookAt(DirectX::XMFLOAT3(0.0f, -0.1f, 0.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_camera->SetPerspective(70.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 100.0f);
 
-	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
+	m_cameraController->SetMoveSpeed(10.0f);
+	m_cameraController->SetStrafeSpeed(10.0f);
 
 	m_mainScene = make_shared<Scene>();
 

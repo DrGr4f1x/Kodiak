@@ -12,37 +12,31 @@
 
 #include "CameraController.h"
 
-#include "Engine\Source\Camera.h"
-#include "Engine\Source\InputState.h"
+#include "Camera.h"
+#include "InputState.h"
 
 
 using namespace Kodiak;
-using namespace DirectX;
+using namespace Math;
 using namespace std;
 
 
-CameraController::CameraController(shared_ptr<Camera> camera, shared_ptr<InputState> inputState, const XMFLOAT3& worldUp)
+CameraController::CameraController(shared_ptr<Camera> camera, shared_ptr<InputState> inputState, const Vector3& worldUp)
 	: m_camera(camera)
 	, m_inputState(inputState)
 	, m_worldUp(worldUp)
 {
-	auto xmWorldUp = XMVector3Normalize(XMLoadFloat3(&worldUp));
-	auto xmWorldNorth = XMVector3Normalize(XMVector3Cross(xmWorldUp, XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f)));
-	auto xmWorldEast = XMVector3Cross(xmWorldNorth, xmWorldUp);
 
-	XMStoreFloat3(&m_worldUp, xmWorldUp);
-	XMStoreFloat3(&m_worldNorth, xmWorldNorth);
-	XMStoreFloat3(&m_worldEast, xmWorldEast);
+	m_worldUp = Normalize(worldUp);
+	m_worldNorth = Normalize(Cross(m_worldUp, Vector3(kXUnitVector)));
+	m_worldEast = Cross(m_worldNorth, m_worldUp);
 
-	XMVECTOR xmForward = XMLoadFloat3(&m_camera->GetForwardVector());
-	m_currentPitch = sinf(XMVectorGetX(XMVector3Dot(xmForward, xmWorldUp)));
+	Vector3 tempForward(DirectX::XMLoadFloat3(&camera->GetForwardVector())); // TODO get rid of this
+	m_currentPitch = Sin(Dot(tempForward, m_worldUp));
 
-	XMVECTOR xmRight = XMLoadFloat3(&m_camera->GetRightVector());
-
-	xmForward = XMVector3Normalize(XMVector3Cross(xmWorldUp, xmRight));
-	m_currentHeading = atan2f(
-		-XMVectorGetX(XMVector3Dot(xmForward, xmWorldEast)),
-		XMVectorGetX(XMVector3Dot(xmForward, xmWorldNorth)));
+	Vector3 tempRight(DirectX::XMLoadFloat3(&camera->GetRightVector())); // TODO get rid of this
+	Vector3 forward = Normalize(Cross(m_worldUp, tempRight));
+	m_currentHeading = ATan2(-Dot(forward, m_worldEast), Dot(forward, m_worldNorth));
 }
 
 
@@ -95,58 +89,49 @@ void CameraController::Update(float deltaTime)
 	pitch += m_inputState->GetAnalogInput(InputState::kAnalogMouseY) * m_mouseSensitivityY;
 
 	m_currentPitch += pitch;
-	m_currentPitch = XMMin(XM_PIDIV2, m_currentPitch);
-	m_currentPitch = XMMax(-XM_PIDIV2, m_currentPitch);
+	m_currentPitch = DirectX::XMMin(DirectX::XM_PIDIV2, m_currentPitch);
+	m_currentPitch = DirectX::XMMax(-DirectX::XM_PIDIV2, m_currentPitch);
 
 	m_currentHeading -= yaw;
-	if (m_currentHeading > XM_PI)
+	if (m_currentHeading > DirectX::XM_PI)
 	{
-		m_currentHeading -= XM_2PI;
+		m_currentHeading -= DirectX::XM_2PI;
 	}
-	else if (m_currentHeading <= -XM_PI)
+	else if (m_currentHeading <= -DirectX::XM_PI)
 	{
-		m_currentHeading += XM_2PI;
+		m_currentHeading += DirectX::XM_2PI;
 	}
 
-	auto xmWorldNorth = XMLoadFloat3(&m_worldNorth);
-	auto xmWorldEast = XMLoadFloat3(&m_worldEast);
-	auto xmWorldUp = XMLoadFloat3(&m_worldUp);
-	XMMATRIX xmTemp{ xmWorldEast, xmWorldUp, XMVectorNegate(xmWorldNorth), XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f) };
-	XMMATRIX rotY = XMMatrixRotationY(m_currentHeading);
-	XMMATRIX rotX = XMMatrixRotationX(m_currentPitch);
-	XMMATRIX xmOrientation = XMMatrixMultiply(XMMatrixMultiply(rotX, rotY), xmTemp);
-	auto xmPosition = XMVectorAdd(XMVector3Transform(XMVectorSet(strafe, ascent, -forward, 0.0f), xmOrientation), XMLoadFloat3(&m_camera->GetPosition()));
+	Matrix3 temp = Matrix3(m_worldEast, m_worldUp, -m_worldNorth);
+	Matrix3 rotY = Matrix3::MakeYRotation(m_currentHeading);
+	Matrix3 rotX = Matrix3::MakeXRotation(m_currentPitch);
+	Matrix3 temp_orientation = temp * rotY * rotX;
+	Vector3 tempPosition(DirectX::XMLoadFloat3(&m_camera->GetPosition())); // TODO get rid of this
+	Vector3 temp_position = temp_orientation * Vector3(strafe, ascent, -forward) + tempPosition;
 
-	XMFLOAT3 position;
-	XMStoreFloat3(&position, xmPosition);
+	DirectX::XMFLOAT3 position;
+	DirectX::XMStoreFloat3(&position, temp_position);
 
-	XMFLOAT4 orientation;
-	XMStoreFloat4(&orientation, XMQuaternionRotationMatrix(xmOrientation));
+	DirectX::XMFLOAT4 orientation;
+	DirectX::XMStoreFloat4(&orientation, DirectX::XMQuaternionRotationMatrix(temp_orientation));
 
 	m_camera->SetPositionAndOrientation(position, orientation);
-}
-
-
-// TODO: Move this to the math library
-// TODO: Write a math library
-namespace
-{
-inline float Lerp(float a, float b, float s)
-{
-	return (1.0f - s) * a + s * b;
-}
 }
 
 
 void CameraController::ApplyMomentum(float& oldValue, float& newValue, float deltaTime)
 {
 	float blendedValue;
-	if (fabsf(newValue) > fabsf(oldValue))
+
+	if (Abs(newValue) > Abs(oldValue))
 	{
-		blendedValue = Lerp(newValue, oldValue, powf(0.6f, deltaTime * 60.0f));
+		blendedValue = Lerp(newValue, oldValue, Pow(0.6f, deltaTime * 60.0f));
 	}
 	else
-		blendedValue = Lerp(newValue, oldValue, powf(0.8f, deltaTime * 60.0f));
+	{
+		blendedValue = Lerp(newValue, oldValue, Pow(0.8f, deltaTime * 60.0f));
+	}
+
 	oldValue = blendedValue;
 	newValue = blendedValue;
 }
