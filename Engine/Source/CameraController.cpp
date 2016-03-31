@@ -31,11 +31,9 @@ CameraController::CameraController(shared_ptr<Camera> camera, shared_ptr<InputSt
 	m_worldNorth = Normalize(Cross(m_worldUp, Vector3(kXUnitVector)));
 	m_worldEast = Cross(m_worldNorth, m_worldUp);
 
-	Vector3 tempForward(DirectX::XMLoadFloat3(&camera->GetForwardVector())); // TODO get rid of this
-	m_currentPitch = Sin(Dot(tempForward, m_worldUp));
+	m_currentPitch = Sin(Dot(m_camera->GetForwardVector(), m_worldUp));
+	auto forward = Normalize(Cross(m_worldUp, m_camera->GetRightVector()));
 
-	Vector3 tempRight(DirectX::XMLoadFloat3(&camera->GetRightVector())); // TODO get rid of this
-	Vector3 forward = Normalize(Cross(m_worldUp, tempRight));
 	m_currentHeading = ATan2(-Dot(forward, m_worldEast), Dot(forward, m_worldNorth));
 }
 
@@ -105,15 +103,10 @@ void CameraController::Update(float deltaTime)
 	Matrix3 temp = Matrix3(m_worldEast, m_worldUp, -m_worldNorth);
 	Matrix3 rotY = Matrix3::MakeYRotation(m_currentHeading);
 	Matrix3 rotX = Matrix3::MakeXRotation(m_currentPitch);
-	Matrix3 temp_orientation = temp * rotY * rotX;
-	Vector3 tempPosition(DirectX::XMLoadFloat3(&m_camera->GetPosition())); // TODO get rid of this
-	Vector3 temp_position = temp_orientation * Vector3(strafe, ascent, -forward) + tempPosition;
 
-	DirectX::XMFLOAT3 position;
-	DirectX::XMStoreFloat3(&position, temp_position);
-
-	DirectX::XMFLOAT4 orientation;
-	DirectX::XMStoreFloat4(&orientation, DirectX::XMQuaternionRotationMatrix(temp_orientation));
+	Matrix3 orientationMatrix = temp * rotY * rotX;
+	Vector3 position = orientationMatrix * Vector3(strafe, ascent, -forward) + m_camera->GetPosition();
+	Quaternion orientation(orientationMatrix);
 
 	m_camera->SetPositionAndOrientation(position, orientation);
 }

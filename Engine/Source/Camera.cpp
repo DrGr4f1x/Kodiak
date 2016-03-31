@@ -33,8 +33,8 @@ static bool Compare(const XMFLOAT4& a, const XMFLOAT4& b)
 
 
 Camera::Camera()
-	: m_position(0.0f, 0.0f, 0.0f)
-	, m_orientation(0.0f, 0.0f, 0.0f, 1.0f)
+	: m_position(kZero)
+	, m_orientation(kIdentity)
 	, m_fov(60.0f)
 	, m_aspect(1.0f)
 	, m_zNear(0.1f)
@@ -45,7 +45,7 @@ Camera::Camera()
 }
 
 
-Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation)
+Camera::Camera(const Vector3& position, const Quaternion& orientation)
 	: m_position(position)
 	, m_orientation(orientation)
 	, m_fov(60.0f)
@@ -58,7 +58,8 @@ Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation)
 }
 
 
-Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation, float fov, float aspect, float zNear, float zFar)
+
+Camera::Camera(const Vector3& position, const Quaternion& orientation, float fov, float aspect, float zNear, float zFar)
 	: m_position(position)
 	, m_orientation(orientation)
 	, m_fov(fov)
@@ -71,9 +72,9 @@ Camera::Camera(const XMFLOAT3& position, const XMFLOAT4& orientation, float fov,
 }
 
 
-void Camera::SetPosition(const XMFLOAT3& position)
+void Camera::SetPosition(const Vector3& position)
 {
-	if (!Compare(m_position, position))
+	if (m_position.NotEqual(position))
 	{
 		m_position = position;
 		RenderThreadSetCameraPositionAndOrientation();
@@ -81,36 +82,34 @@ void Camera::SetPosition(const XMFLOAT3& position)
 }
 
 
-void Camera::SetOrientation(const XMFLOAT4& orientation)
+void Camera::SetOrientation(const Quaternion& orientation)
 {
-	if (!Compare(m_orientation, orientation))
+	if (m_orientation.NotEqual(orientation))
 	{
 		m_orientation = orientation;
 
-		XMVECTOR xmOrientation = XMLoadFloat4(&m_orientation);
-		XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
+		m_forward = m_orientation * Vector3(kNegZUnitVector);
 
 		RenderThreadSetCameraPositionAndOrientation();
 	}
 }
 
 
-void Camera::SetPositionAndOrientation(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation)
+void Camera::SetPositionAndOrientation(const Vector3& position, const Quaternion& orientation)
 {
 	bool update = false;
 
-	if (!Compare(m_position, position))
+	if (m_position.NotEqual(position))
 	{
 		m_position = position;
 		update = true;
 	}
 
-	if (!Compare(m_orientation, orientation))
+	if (m_orientation.NotEqual(orientation))
 	{
 		m_orientation = orientation;
 
-		XMVECTOR xmOrientation = XMLoadFloat4(&m_orientation);
-		XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
+		m_forward = m_orientation * Vector3(kNegZUnitVector);
 
 		update = true;
 	}
@@ -155,52 +154,38 @@ void Camera::SetFOV(float fov)
 }
 
 
-void Camera::LookAt(const XMFLOAT3& target, const XMFLOAT3& up)
+void Camera::LookAt(const Vector3& target, const Vector3& up)
 {
-	XMMATRIX temp = XMMatrixLookAtRH(XMLoadFloat3(&m_position), XMLoadFloat3(&target), XMLoadFloat3(&up));
-	XMVECTOR dummy;
-	XMVECTOR xmOrientation = XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp)));
-	XMStoreFloat4(&m_orientation, xmOrientation);
+	m_orientation = Normalize(Quaternion(Invert(Matrix4::LookAtRH(m_position, target, up))));
 
-	XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
-	XMStoreFloat3(&m_right, XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), xmOrientation));
+	m_forward = m_orientation * Vector3(kNegZUnitVector);
+	m_right = m_orientation * Vector3(kXUnitVector);
 
 	RenderThreadSetCameraPositionAndOrientation();
 }
 
 
-void Camera::LookIn(const XMFLOAT3& dir, const XMFLOAT3& up)
+void Camera::LookIn(const Vector3& dir, const Vector3& up)
 {
-	XMVECTOR pos = XMLoadFloat3(&m_position);
-	XMVECTOR dummy;
-	XMMATRIX temp = XMMatrixLookAtRH(pos, XMVectorAdd(pos, XMLoadFloat3(&dir)), XMLoadFloat3(&up));
-	XMVECTOR xmOrientation = XMQuaternionNormalize(XMQuaternionRotationMatrix(XMMatrixInverse(&dummy, temp)));
-	XMStoreFloat4(&m_orientation, xmOrientation);
+	m_orientation = Normalize(Quaternion(Invert(Matrix4::LookToRH(m_position, dir, up))));
 
-	XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
-	XMStoreFloat3(&m_right, XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), xmOrientation));
+	m_forward = m_orientation * Vector3(kNegZUnitVector);
+	m_right = m_orientation * Vector3(kXUnitVector);
 
 	RenderThreadSetCameraPositionAndOrientation();
 }
 
 
-void Camera::Orbit(float deltaPitch, float deltaYaw, const XMFLOAT3& target, const XMFLOAT3& up)
+void Camera::Orbit(float deltaPitch, float deltaYaw, const Vector3& target, const Vector3& up)
 {
-	XMVECTOR xmPosition = XMLoadFloat3(&m_position);
-	XMVECTOR xmOrientation = XMLoadFloat4(&m_orientation);
-	XMVECTOR xmTarget = XMLoadFloat3(&target);
-	
-	xmOrientation = XMQuaternionMultiply(XMQuaternionRotationRollPitchYaw(0.0f, deltaPitch, deltaYaw), xmOrientation);
-	XMVECTOR xmZAxis = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	xmZAxis = XMVector3TransformNormal(xmZAxis, XMMatrixRotationQuaternion(xmOrientation));
-	XMVECTOR xmDeltaPosition = XMVectorSubtract(xmTarget, xmPosition);
-	xmPosition = XMVectorAdd(xmTarget, XMVectorScale(xmZAxis, XMVectorGetX(XMVector3Length(xmDeltaPosition))));
+	m_orientation = m_orientation * Quaternion(deltaPitch, deltaYaw, 0.0f);
 
-	XMStoreFloat3(&m_position, xmPosition);
-	XMStoreFloat4(&m_orientation, xmOrientation);
+	auto zAxis = m_orientation * Vector3(kZUnitVector);
+	auto deltaPosition = target - m_position;
+	m_position = target + zAxis * Length(deltaPosition);
 
-	XMStoreFloat3(&m_forward, XMVector3Rotate(XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f), xmOrientation));
-	XMStoreFloat3(&m_right, XMVector3Rotate(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), xmOrientation));
+	m_forward = m_orientation * Vector3(kNegZUnitVector);
+	m_right = m_orientation * Vector3(kXUnitVector);
 
 	LookAt(target, up);
 }
@@ -212,16 +197,9 @@ void Camera::Rotate(float deltaPitch, float deltaYaw)
 }
 
 
-void Camera::Strafe(const XMFLOAT3& strafe)
+void Camera::Strafe(const Vector3& strafe)
 {
-	XMVECTOR xmPosition = XMLoadFloat3(&m_position);
-	XMVECTOR xmOrientation = XMLoadFloat4(&m_orientation);
-	XMVECTOR xmStrafe = XMLoadFloat3(&strafe);
-
-	xmPosition = XMVectorAdd(xmPosition, XMVector3Rotate(xmStrafe, xmOrientation));
-
-	XMStoreFloat3(&m_position, xmPosition);
-
+	m_position = m_position + m_orientation * strafe;
 	RenderThreadSetCameraPositionAndOrientation();
 }
 
@@ -234,15 +212,7 @@ void Camera::CreateCameraProxy()
 
 		m_cameraProxy = shared_ptr<RenderThread::Camera>(cameraProxy, [=](RenderThread::Camera* camera) { _aligned_free(camera); });
 
-		// TODO get rid of this
-		DirectX::XMVECTOR xmPosition, xmOrientation;
-		xmPosition = DirectX::XMLoadFloat3(&m_position);
-		xmOrientation = DirectX::XMLoadFloat4(&m_orientation);
-
-		auto position = Vector3(xmPosition);
-		auto orientation = Quaternion(xmOrientation);
-
-		m_cameraProxy->SetPositionAndOrientation(position, orientation);
+		m_cameraProxy->SetPositionAndOrientation(m_position, m_orientation);
 		m_cameraProxy->SetPerspective(m_fov, m_aspect, m_zNear, m_zFar);
 	}
 }
@@ -263,15 +233,7 @@ void Camera::RenderThreadSetCameraPositionAndOrientation()
 	auto camera = shared_from_this();
 	Renderer::GetInstance().EnqueueTask([camera](RenderTaskEnvironment& rte)
 	{
-		// TODO get rid of this
-		DirectX::XMVECTOR xmPosition, xmOrientation;
-		xmPosition = DirectX::XMLoadFloat3(&camera->m_position);
-		xmOrientation = DirectX::XMLoadFloat4(&camera->m_orientation);
-
-		auto position = Vector3(xmPosition);
-		auto orientation = Quaternion(xmOrientation);
-
-		camera->m_cameraProxy->SetPositionAndOrientation(position, orientation);
+		camera->m_cameraProxy->SetPositionAndOrientation(camera->m_position, camera->m_orientation);
 	});
 }
 
