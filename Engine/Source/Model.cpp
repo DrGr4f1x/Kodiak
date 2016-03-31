@@ -40,8 +40,8 @@ void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& command
 #endif
 		{
 			StaticMeshPerObjectData perObjectData;
-			// TODO: Remove this Transpose once the camera view and projection matrices are fixed up
-			perObjectData.matrix = Transpose(matrix * mesh->matrix);
+			
+			perObjectData.matrix = matrix * mesh->matrix;
 
 			auto dest = commandList.MapConstants(*mesh->perObjectConstants);
 			memcpy(dest, &perObjectData, sizeof(perObjectData));
