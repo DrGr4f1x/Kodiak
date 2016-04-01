@@ -18,14 +18,10 @@ namespace Kodiak
 class Texture;
 enum class ShaderResourceType;
 enum class ShaderResourceDimension;
-namespace RenderThread
-{
-struct MaterialData;
-class MaterialResourceData;
-}
+namespace RenderThread { struct MaterialData; }
 
 
-class MaterialResource
+class MaterialResource : public std::enable_shared_from_this<MaterialResource>
 {
 public:
 	MaterialResource(const std::string& name);
@@ -34,7 +30,10 @@ public:
 
 	void SetResource(std::shared_ptr<Texture> texture);
 
-	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource);;
+	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource);
+
+private:
+	void UpdateResourceOnRenderThread(RenderThread::MaterialData* materialData, ID3D11ShaderResourceView* srv);
 
 private:
 	const std::string m_name;
@@ -43,27 +42,9 @@ private:
 
 	std::shared_ptr<Texture>	m_texture;
 
-	std::shared_ptr<RenderThread::MaterialResourceData>	m_renderThreadData;
-};
-
-
-namespace RenderThread
-{
-
-class MaterialResourceData
-{
-	friend class MaterialResource;
-public:
-	MaterialResourceData(std::shared_ptr<MaterialData> materialData);
-
-	void SetResource(ID3D11ShaderResourceView* srv);
-	
-private:
+	// Render thread data
 	std::array<std::pair<uint32_t, uint32_t>, 5>		m_shaderSlots;
-	std::weak_ptr<MaterialData>							m_materialData;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
+	std::weak_ptr<RenderThread::MaterialData>			m_renderThreadData;
 };
-
-} // namespace RenderThread
 
 } // namespace Kodiak
