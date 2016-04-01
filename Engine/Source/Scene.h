@@ -43,7 +43,6 @@ public:
 	void AddStaticModel(std::shared_ptr<StaticModel> model);
 
 	void Update(GraphicsCommandList& commandList);
-	void Render(GraphicsCommandList& commandList);
 	void Render(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList);
 
 	void SetCamera(std::shared_ptr<Camera> camera);

@@ -38,7 +38,6 @@ public:
 	void SetScissor(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height);
 
 	void UpdateScene(std::shared_ptr<Scene> scene);
-	void RenderScene(std::shared_ptr<Scene> scene);
 	void RenderScenePass(std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Scene> scene);
 
 	void Present(std::shared_ptr<ColorBuffer> colorBuffer);

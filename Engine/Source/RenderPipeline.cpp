@@ -102,15 +102,6 @@ void Pipeline::UpdateScene(shared_ptr<Scene> scene)
 }
 
 
-void Pipeline::RenderScene(shared_ptr<Scene> scene)
-{
-	m_renderOperations.push_back([scene](GraphicsCommandList& commandList)
-	{
-		scene->Render(commandList);
-	});
-}
-
-
 void Pipeline::RenderScenePass(shared_ptr<RenderPass> renderPass, shared_ptr<Scene> scene)
 {
 	m_renderOperations.push_back([renderPass, scene](GraphicsCommandList& commandList)

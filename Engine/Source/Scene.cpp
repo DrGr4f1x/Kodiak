@@ -90,39 +90,6 @@ void Scene::Update(GraphicsCommandList& commandList)
 }
 
 
-void Scene::Render(GraphicsCommandList& commandList)
-{
-	PROFILE(scene_Render);
-
-	// Visit models
-	for (auto& model : m_staticModels)
-	{
-		// Visit meshes
-		for (const auto& mesh : model->meshes)
-		{
-			// Visit mesh parts
-			for (const auto& meshPart : mesh->meshParts)
-			{
-				commandList.SetPipelineState(*m_pso);
-#if defined(DX12)
-				commandList.SetRootSignature(*m_rootSignature);
-				commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
-				commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
-#elif defined(DX11)
-				commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
-				commandList.SetVertexShaderConstants(1, *mesh->perObjectConstants);
-#endif
-
-				commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
-				commandList.SetIndexBuffer(*meshPart.indexBuffer);
-				commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-
-				commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
-			}
-		}
-	}
-}
-
 
 void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList)
 {
@@ -148,7 +115,6 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 
 					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
 #if defined(DX12)
-					//commandList.SetRootSignature(*m_rootSignature);
 					commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
 					commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
 #elif defined(DX11)
@@ -178,63 +144,7 @@ void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
 
 void Scene::Initialize()
 {
-	using namespace DirectX;
-
-	// Default blend state - no blend
-	BlendStateDesc defaultBlendState;
-
-	// Depth-stencil state - normal depth testing
-	DepthStencilStateDesc depthStencilState(true, true);
-
-	// Rasterizer state - two-sided
-	RasterizerStateDesc rasterizerState(CullMode::Back, FillMode::Solid);
-
-	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "SimpleVertexShader.cso"), false);
-	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "SimplePixelShader.cso"), false);
-	(vs->loadTask && ps->loadTask).wait();
-
-#if defined(DX12)
-	// Configure root signature
-	m_rootSignature = make_shared<RootSignature>(2);
-	(*m_rootSignature)[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_VERTEX);
-	(*m_rootSignature)[1].InitAsConstantBuffer(1, D3D12_SHADER_VISIBILITY_VERTEX);
-	m_rootSignature->Finalize(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // Only the input assembler stage needs access to the constant buffer.
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS);
-#endif
-
-	// Configure PSO
-	m_pso = make_shared<GraphicsPSO>();
-#if defined(DX12)
-	m_pso->SetRootSignature(*m_rootSignature);
-#endif
-	m_pso->SetBlendState(defaultBlendState);
-	m_pso->SetRasterizerState(rasterizerState);
-	m_pso->SetDepthStencilState(depthStencilState);
-	m_pso->SetInputLayout(vs->GetInputLayout());
-#if defined(DX12)
-	m_pso->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
-	m_pso->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
-#endif
-	m_pso->SetVertexShader(vs.get());
-	m_pso->SetPixelShader(ps.get());
-
-	m_pso->Finalize();
-
-	// TODO: Remove this and handle sampler state in a non-stupid way
-#if defined(DX11)
-	auto samplerDesc = CD3D11_SAMPLER_DESC(D3D11_DEFAULT);
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.MaxAnisotropy = 8;
-
-	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf()));
-#endif
-
-	// Create constant buffers
+	// Create per-view constant buffer
 	m_perViewConstantBuffer = make_shared<ConstantBuffer>();
 	m_perViewConstantBuffer->Create(sizeof(PerViewConstants), Usage::Dynamic);
 }
