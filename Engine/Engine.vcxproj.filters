@@ -300,9 +300,6 @@
     </ClInclude>
     <ClInclude Include="Source\InputState.h" />
     <ClInclude Include="Source\Constants.h" />
-    <ClInclude Include="Source\MaterialParameter11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\MaterialResource11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
@@ -310,9 +307,6 @@
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\DebugUtility.h" />
-    <ClInclude Include="Source\MaterialParameter12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Source\MaterialResource12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
@@ -522,17 +516,11 @@
     </ClCompile>
     <ClCompile Include="Source\InputState.cpp" />
     <ClCompile Include="Source\Constants.cpp" />
-    <ClCompile Include="Source\MaterialParameter11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
     <ClCompile Include="Source\MaterialResource11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\ShaderReflection.cpp">
       <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\MaterialParameter12.cpp">
-      <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\MaterialResource12.cpp">
       <Filter>Rendering\DX12</Filter>
@@ -550,6 +538,9 @@
       <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="Source\CameraController.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialParameter.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>

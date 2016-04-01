@@ -9,15 +9,15 @@
 
 #include "Stdafx.h"
 
-#include "MaterialParameter11.h"
+#include "MaterialParameter.h"
 
-#include "Material11.h"
+#include "Material.h"
 #include "RenderEnums.h"
 #include "Renderer.h"
 
 using namespace Kodiak;
-using namespace DirectX;
 using namespace Math;
+using namespace DirectX;
 using namespace std;
 
 
@@ -26,7 +26,7 @@ MaterialParameter::MaterialParameter(const string& name)
 	, m_type(ShaderVariableType::Unsupported)
 	, m_size(kInvalid)
 	, m_renderThreadData()
-	, m_bindings({nullptr, nullptr, nullptr, nullptr, nullptr})
+	, m_bindings({ nullptr, nullptr, nullptr, nullptr, nullptr })
 {
 	ZeroMemory(&m_data[0], 64);
 }

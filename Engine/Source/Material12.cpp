@@ -13,7 +13,7 @@
 
 #include "Effect.h"
 #include "CommandList12.h"
-#include "MaterialParameter12.h"
+#include "MaterialParameter.h"
 #include "MaterialResource12.h"
 #include "RenderPass.h"
 #include "RootSignature12.h"

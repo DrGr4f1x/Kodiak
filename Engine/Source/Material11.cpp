@@ -14,7 +14,7 @@
 #include "ConstantBuffer.h"
 #include "CommandList.h"
 #include "Effect.h"
-#include "MaterialParameter11.h"
+#include "MaterialParameter.h"
 #include "MaterialResource11.h"
 #include "PipelineState.h"
 #include "Renderer.h"
