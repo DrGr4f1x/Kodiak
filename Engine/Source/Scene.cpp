@@ -147,6 +147,16 @@ void Scene::Initialize()
 	// Create per-view constant buffer
 	m_perViewConstantBuffer = make_shared<ConstantBuffer>();
 	m_perViewConstantBuffer->Create(sizeof(PerViewConstants), Usage::Dynamic);
+
+	// TODO: Remove this and handle sampler state in a non-stupid way
+#if defined(DX11)
+	auto samplerDesc = CD3D11_SAMPLER_DESC(D3D11_DEFAULT);
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MaxAnisotropy = 8;
+	
+	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf()));
+#endif
 }
 
 

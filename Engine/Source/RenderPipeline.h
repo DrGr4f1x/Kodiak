@@ -17,7 +17,6 @@ namespace Kodiak
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
-class DeviceResources;
 class GraphicsCommandList;
 class RenderPass;
 class Scene;

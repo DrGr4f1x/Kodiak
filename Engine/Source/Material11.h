@@ -31,8 +31,6 @@ enum class ShaderVariableType;
 namespace RenderThread
 {
 struct MaterialData;
-class MaterialParameterData;
-class MaterialResourceData;
 } // namespace RenderThread
 
 

@@ -17,11 +17,16 @@
 
 using namespace Kodiak;
 using namespace DirectX;
+using namespace Math;
 using namespace std;
 
 
 MaterialParameter::MaterialParameter(const string& name)
 	: m_name(name)
+	, m_type(ShaderVariableType::Unsupported)
+	, m_size(kInvalid)
+	, m_renderThreadData()
+	, m_bindings({nullptr, nullptr, nullptr, nullptr, nullptr})
 {
 	ZeroMemory(&m_data[0], 64);
 }
@@ -31,16 +36,7 @@ void MaterialParameter::SetValue(bool value)
 {
 	memcpy(&m_data[0], &value, sizeof(bool));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -48,16 +44,7 @@ void MaterialParameter::SetValue(int32_t value)
 {
 	memcpy(&m_data[0], &value, sizeof(int32_t));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -65,16 +52,7 @@ void MaterialParameter::SetValue(XMINT2 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMINT2));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -82,16 +60,7 @@ void MaterialParameter::SetValue(XMINT3 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMINT3));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -99,16 +68,7 @@ void MaterialParameter::SetValue(XMINT4 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMINT4));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -116,16 +76,7 @@ void MaterialParameter::SetValue(uint32_t value)
 {
 	memcpy(&m_data[0], &value, sizeof(uint32_t));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -133,16 +84,7 @@ void MaterialParameter::SetValue(XMUINT2 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMUINT2));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -150,16 +92,7 @@ void MaterialParameter::SetValue(XMUINT3 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMUINT3));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -167,16 +100,7 @@ void MaterialParameter::SetValue(XMUINT4 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMUINT4));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -184,16 +108,7 @@ void MaterialParameter::SetValue(float value)
 {
 	memcpy(&m_data[0], &value, sizeof(float));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
@@ -201,276 +116,79 @@ void MaterialParameter::SetValue(XMFLOAT2 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT2));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
-void MaterialParameter::SetValue(XMFLOAT3 value)
+void MaterialParameter::SetValue(Vector3 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT3));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
-void MaterialParameter::SetValue(XMFLOAT4 value)
+void MaterialParameter::SetValue(Vector4 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT4));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
-void MaterialParameter::SetValue(XMFLOAT4X4 value)
+void MaterialParameter::SetValue(const Matrix4& value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT4X4));
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
-	{
-		auto renderThreadData = m_renderThreadData;
-		Renderer::GetInstance().EnqueueTask([renderThreadData, value](RenderTaskEnvironment& rte)
-		{
-			renderThreadData->SetValue(value);
-		});
-	}
+	SubmitToRenderThread();
 }
 
 
 void MaterialParameter::CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::Parameter<5>& parameter)
 {
-	m_renderThreadData = make_shared<RenderThread::MaterialParameterData>(materialData);
+	m_renderThreadData = materialData;
 
-	m_renderThreadData->m_type = parameter.type;
-	m_renderThreadData->m_data = m_data;
+	m_type = parameter.type;
+	m_size = parameter.sizeInBytes;
 
 	for (uint32_t i = 0; i < 5; ++i)
 	{
 		if (parameter.byteOffset[i] != kInvalid)
 		{
-			m_renderThreadData->m_bindings[i] = materialData->cbufferData + parameter.byteOffset[i];
-
-			memcpy(m_renderThreadData->m_bindings[i], &m_data[0], parameter.sizeInBytes);
-			materialData->cbufferDirty = true;
-		}
-		else
-		{
-			m_renderThreadData->m_bindings[i] = nullptr;
+			m_bindings[i] = materialData->cbufferData + parameter.byteOffset[i];
 		}
 	}
+
+	UpdateParameterOnRenderThread(materialData.get(), m_data);
 }
 
 
-RenderThread::MaterialParameterData::MaterialParameterData(shared_ptr<RenderThread::MaterialData> materialData)
-	: m_data()
-	, m_type(ShaderVariableType::Unsupported)
-	, m_materialData(materialData)
-	, m_bindings({ nullptr, nullptr, nullptr, nullptr, nullptr })
+void MaterialParameter::UpdateParameterOnRenderThread(RenderThread::MaterialData* materialData, const array<byte, 64>& data)
 {
-	ZeroMemory(&m_data[0], 64);
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(bool value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Bool);
-		memcpy(&m_data[0], &value, sizeof(bool));
-
-		for (uint32_t i = 0; i < 5; ++i)
-		{
-			if (m_bindings[i])
-			{
-				memcpy(m_bindings[i], &m_data[0], sizeof(bool));
-			}
-		}
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(int32_t value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Int);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMINT2 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Int2);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMINT3 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Int3);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMINT4 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Int4);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(uint32_t value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::UInt);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMUINT2 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::UInt2);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMUINT3 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::UInt3);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMUINT4 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::UInt4);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(float value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Float);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMFLOAT2 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Float2);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMFLOAT3 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Float3);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMFLOAT4 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Float4);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-void RenderThread::MaterialParameterData::SetValue(XMFLOAT4X4 value)
-{
-	if (auto materialData = m_materialData.lock())
-	{
-		assert(m_type == ShaderVariableType::Float4x4);
-		InternalSetValue(value);
-		materialData->cbufferDirty = true;
-	}
-}
-
-
-template <typename T>
-void RenderThread::MaterialParameterData::InternalSetValue(T value)
-{
-	memcpy(&m_data[0], &value, sizeof(T));
-
 	for (uint32_t i = 0; i < 5; ++i)
 	{
 		if (m_bindings[i])
 		{
-			memcpy(m_bindings[i], &m_data[0], sizeof(T));
+			memcpy(m_bindings[i], &data[0], m_size);
 		}
+	}
+}
+
+
+void MaterialParameter::SubmitToRenderThread()
+{
+	if (m_size == kInvalid || m_type == ShaderVariableType::Unsupported)
+	{
+		return;
+	}
+
+	if (auto materialData = m_renderThreadData.lock())
+	{
+		auto thisParameter = shared_from_this();
+		auto thisData = m_data;
+		Renderer::GetInstance().EnqueueTask([materialData, thisParameter, thisData](RenderTaskEnvironment& rte)
+		{
+			thisParameter->UpdateParameterOnRenderThread(materialData.get(), thisData);
+		});
 	}
 }

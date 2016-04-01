@@ -31,7 +31,7 @@
     <Filter Include="External\Remotery">
       <UniqueIdentifier>{3000e89b-ca1c-44e9-8f08-4c287b2e6aeb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Rendering\Math">
+    <Filter Include="Math">
       <UniqueIdentifier>{de54e161-9360-47a5-99c2-ca9c917cb901}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -329,29 +329,29 @@
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\Vector.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scalar.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\CommonMath.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\VectorMath.h" />
     <ClInclude Include="Source\Matrix3.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\Quaternion.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\Matrix4.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\Transform.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\Random.h">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Source\CameraController.h">
       <Filter>Rendering</Filter>
@@ -547,7 +547,7 @@
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
     <ClCompile Include="Source\Random.cpp">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="Source\CameraController.cpp">
       <Filter>Rendering</Filter>
@@ -575,7 +575,7 @@
       <Filter>Shaders\Common</Filter>
     </None>
     <None Include="Source\Functions.inl">
-      <Filter>Rendering\Math</Filter>
+      <Filter>Math</Filter>
     </None>
   </ItemGroup>
 </Project>

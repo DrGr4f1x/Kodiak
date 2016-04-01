@@ -23,6 +23,7 @@
 
 
 using namespace Kodiak;
+using namespace Math;
 using namespace std;
 
 
@@ -339,9 +340,9 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 
 		// TODO move this stuff to per-view data
 		using namespace DirectX;
-		opaqueMaterial->GetParameter("sunDirection")->SetValue(XMFLOAT3(0.336f, 0.924f, -0.183f));
-		opaqueMaterial->GetParameter("sunColor")->SetValue(XMFLOAT3(4.0f, 4.0f, 4.0f));
-		opaqueMaterial->GetParameter("ambientColor")->SetValue(XMFLOAT3(0.2f, 0.2f, 0.2f));
+		opaqueMaterial->GetParameter("sunDirection")->SetValue(Vector3(0.336f, 0.924f, -0.183f));
+		opaqueMaterial->GetParameter("sunColor")->SetValue(Vector3(4.0f, 4.0f, 4.0f));
+		opaqueMaterial->GetParameter("ambientColor")->SetValue(Vector3(0.2f, 0.2f, 0.2f));
 
 		// Setup depth material
 		auto depthMaterial = depthMaterials[i] = make_shared<Material>();
