@@ -36,7 +36,7 @@
 
 using namespace Kodiak;
 using namespace std;
-using namespace DirectX;
+using namespace Math;
 using namespace RenderThread;
 
 
@@ -63,12 +63,8 @@ void Scene::Update(GraphicsCommandList& commandList)
 	PROFILE(scene_Update);
 
 	// Update per-view constants
-	XMMATRIX xmProjection = XMLoadFloat4x4(&m_camera->GetProjectionMatrix());
-	XMStoreFloat4x4(&m_perViewConstants.projection, XMMatrixTranspose(xmProjection));
-
-	XMMATRIX xmView = XMLoadFloat4x4(&m_camera->GetViewMatrix());
-	XMStoreFloat4x4(&m_perViewConstants.view, XMMatrixTranspose(xmView));
-
+	m_perViewConstants.projection = m_camera->GetProjectionMatrix();
+	m_perViewConstants.view = m_camera->GetViewMatrix();
 	m_perViewConstants.viewPosition = m_camera->GetPosition();
 
 	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);

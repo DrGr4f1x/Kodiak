@@ -67,11 +67,12 @@ private:
 	std::shared_ptr<RootSignature>		m_rootSignature;
 #endif
 
+	// TODO allocation/alignment problem with this struct
 	struct PerViewConstants
 	{
-		DirectX::XMFLOAT4X4 view;
-		DirectX::XMFLOAT4X4 projection;
-		DirectX::XMFLOAT3 viewPosition;
+		Math::Matrix4 view;
+		Math::Matrix4 projection;
+		Math::Vector3 viewPosition;
 	} m_perViewConstants;
 
 	// Scene camera

@@ -21,28 +21,6 @@ using namespace Kodiak;
 using namespace std;
 
 
-namespace
-{
-
-void SetResourceRenderThread(std::shared_ptr<RenderThread::MaterialResourceData> renderThreadData, std::shared_ptr<Texture> texture)
-{
-	Renderer::GetInstance().EnqueueTask([renderThreadData, texture](RenderTaskEnvironment& rte)
-	{
-		if (texture)
-		{
-			renderThreadData->SetResource(texture->GetSRV());
-		}
-		else
-		{
-			CD3DX12_CPU_DESCRIPTOR_HANDLE handle(D3D12_DEFAULT);
-			renderThreadData->SetResource(handle);
-		}
-	});
-}
-
-} // anonymous namespace
-
-
 MaterialResource::MaterialResource(const string& name)
 	: m_name(name)
 	, m_type(ShaderResourceType::Unsupported)
@@ -55,26 +33,38 @@ void MaterialResource::SetResource(shared_ptr<Texture> texture)
 {
 	m_texture = texture;
 
-	_ReadWriteBarrier();
-
-	if (m_renderThreadData)
+	if (auto renderThreadData = m_renderThreadData.lock())
 	{
-		auto renderThreadData = m_renderThreadData;
+		// Locals for lambda capture
+		auto thisResource = shared_from_this();
+		shared_ptr<Texture> thisTexture = m_texture;
 
-		if (m_texture)
+		if (thisTexture && !thisTexture->loadTask.is_done())
 		{
-			if (m_texture->loadTask.is_done())
+			// Wait until the texture loads before updating the material on the render thread
+			m_texture->loadTask.then([renderThreadData, thisResource, thisTexture]
 			{
-				SetResourceRenderThread(renderThreadData, texture);
-			}
-			else
-			{
-				m_texture->loadTask.then([renderThreadData, texture] { SetResourceRenderThread(renderThreadData, texture); });
-			}
+				// Update material on render thread
+				Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisTexture](RenderTaskEnvironment& rte)
+				{
+					auto srv = thisTexture->GetSRV();
+					thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+				});
+			});
 		}
 		else
 		{
-			SetResourceRenderThread(renderThreadData, texture);
+			// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisTexture](RenderTaskEnvironment& rte)
+			{
+				D3D12_CPU_DESCRIPTOR_HANDLE srv;
+				if (thisTexture)
+				{
+					// TODO properly handle null srv here
+					srv = thisTexture->GetSRV();
+				}
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+			});
 		}
 	}
 }
@@ -82,41 +72,27 @@ void MaterialResource::SetResource(shared_ptr<Texture> texture)
 
 void MaterialResource::CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource)
 {
-	m_renderThreadData = make_shared<RenderThread::MaterialResourceData>(materialData);
+	m_renderThreadData = materialData;
 
 	for (uint32_t i = 0; i < 5; ++i)
 	{
 		const auto& binding = resource.binding[i];
-		m_renderThreadData->m_shaderSlots[i].first = binding.tableIndex;
-		m_renderThreadData->m_shaderSlots[i].second = binding.tableSlot;
+		m_shaderSlots[i].first = binding.tableIndex;
+		m_shaderSlots[i].second = binding.tableSlot;
 	}
 
 	SetResource(m_texture);
 }
 
 
-RenderThread::MaterialResourceData::MaterialResourceData(shared_ptr<RenderThread::MaterialData> materialData)
-	: m_materialData(materialData)
+void MaterialResource::UpdateResourceOnRenderThread(RenderThread::MaterialData* materialData, D3D12_CPU_DESCRIPTOR_HANDLE srv)
 {
-	m_srv.ptr = ~0ull;
-}
-
-
-void RenderThread::MaterialResourceData::SetResource(D3D12_CPU_DESCRIPTOR_HANDLE srv)
-{
-	if (auto materialData = m_materialData.lock())
+	// Loop over the shader stages
+	for (uint32_t i = 0; i < 5; ++i)
 	{
-		if (m_srv.ptr != srv.ptr)
+		if (m_shaderSlots[i].first != kInvalid)
 		{
-			m_srv = srv;
-
-			for (uint32_t i = 0; i < 5; ++i)
-			{
-				if (m_shaderSlots[i].first != kInvalid)
-				{
-					materialData->cpuHandles[m_shaderSlots[i].first] = m_srv;
-				}
-			}
+			materialData->cpuHandles[m_shaderSlots[i].first] = srv;
 		}
 	}
 }

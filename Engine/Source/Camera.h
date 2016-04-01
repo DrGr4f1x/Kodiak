@@ -24,18 +24,19 @@ class Camera : public std::enable_shared_from_this<Camera>
 
 public:
 	Camera();
-	Camera(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation);
-	Camera(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation, float fov, float aspect,
+	
+	Camera(const Math::Vector3& position, const Math::Quaternion& orientation);
+	Camera(const Math::Vector3& position, const Math::Quaternion& orientation, float fov, float aspect,
 		float zNear = 0.1f, float zFar = 10.0f);
 
-	void SetPosition(const DirectX::XMFLOAT3& position);
-	void SetOrientation(const DirectX::XMFLOAT4& orientation);
-	void SetPositionAndOrientation(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation);
+	void SetPosition(const Math::Vector3& position);
+	void SetOrientation(const Math::Quaternion& orientation);
+	void SetPositionAndOrientation(const Math::Vector3& position, const Math::Quaternion& orientation);
 
-	const DirectX::XMFLOAT3& GetPosition() const { return m_position; }
-	const DirectX::XMFLOAT4& GetOrientation() const { return m_orientation; }
-	const DirectX::XMFLOAT3& GetForwardVector() const { return m_forward; }
-	const DirectX::XMFLOAT3& GetRightVector() const { return m_right; }
+	const Math::Vector3& GetPosition() const { return m_position; }
+	const Math::Quaternion& GetOrientation() const { return m_orientation; }
+	const Math::Vector3& GetForwardVector() const { return m_forward; }
+	const Math::Vector3& GetRightVector() const { return m_right; }
 
 	void SetPerspective(float fov, float aspect, float zNear, float zFar);
 	void SetAspectRatio(float aspect);
@@ -49,12 +50,13 @@ public:
 		zFar = m_zFar;
 	}
 	
-	void LookAt(const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
-	void LookIn(const DirectX::XMFLOAT3& dir, const DirectX::XMFLOAT3& up);
+	void LookAt(const Math::Vector3& target, const Math::Vector3& up);
+	void LookIn(const Math::Vector3& dir, const Math::Vector3& up);
 
-	void Orbit(float deltaPitch, float deltaYaw, const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
+	void Orbit(float deltaPitch, float deltaYaw, const Math::Vector3& target, const Math::Vector3& up);
+	void Strafe(const Math::Vector3& strafe);
+
 	void Rotate(float deltaPitch, float deltaYaw);
-	void Strafe(const DirectX::XMFLOAT3& strafe);
 
 private:
 	void RenderThreadSetCameraPerspective();
@@ -62,10 +64,10 @@ private:
 	void CreateCameraProxy();
 
 private:
-	DirectX::XMFLOAT3	m_position;
-	DirectX::XMFLOAT4	m_orientation;
-	DirectX::XMFLOAT3	m_forward;
-	DirectX::XMFLOAT3	m_right;
+	Math::Vector3		m_position;
+	Math::Quaternion	m_orientation;
+	Math::Vector3		m_forward;
+	Math::Vector3		m_right;
 	float				m_fov;
 	float				m_aspect;
 	float				m_zNear;
@@ -84,23 +86,24 @@ class Camera
 public:
 	Camera();
 
-	void SetPositionAndOrientation(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT4& orientation);
+	void SetPositionAndOrientation(const Math::Vector3& position, const Math::Quaternion& orientation);
 	void SetPerspective(float fov, float aspect, float zNear, float zFar);
 
-	const DirectX::XMFLOAT4X4& GetProjectionMatrix() const { return m_projectionMatrix; }
-	const DirectX::XMFLOAT4X4& GetViewMatrix() const { return m_viewMatrix; }
-	const DirectX::XMFLOAT4X4& GetPrevViewMatrix() const { return m_prevViewMatrix; }
-	const DirectX::XMFLOAT3& GetPosition() const { return m_position; }
+	const Math::Matrix4& GetProjectionMatrix() const { return m_projectionMatrix; }
+	const Math::Matrix4& GetViewMatrix() const { return m_viewMatrix; }
+	const Math::Matrix4& GetPrevViewMatrix() const { return m_prevViewMatrix; }
+	const Math::Vector3& GetPosition() const { return m_position; }
 
 private:
 	void UpdateViewMatrix();
 
 private:
-	DirectX::XMFLOAT4X4		m_projectionMatrix;
-	DirectX::XMFLOAT4X4		m_viewMatrix;
-	DirectX::XMFLOAT4X4		m_prevViewMatrix;
-	DirectX::XMFLOAT3		m_position;
-	DirectX::XMFLOAT4		m_orientation;
+	Math::Matrix4			m_projectionMatrix;
+	Math::Matrix4			m_viewMatrix;
+	Math::Matrix4			m_prevViewMatrix;
+	Math::Vector3			m_position;
+	Math::Quaternion		m_orientation;
+
 	float					m_fov;
 	float					m_aspect;
 	float					m_zNear;

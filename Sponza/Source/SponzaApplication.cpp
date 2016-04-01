@@ -11,8 +11,8 @@
 
 #include "SponzaApplication.h"
 
-#include "CameraController.h"
 #include "Engine\Source\Camera.h"
+#include "Engine\Source\CameraController.h"
 #include "Engine\Source\ColorBuffer.h"
 #include "Engine\Source\CommandList.h"
 #include "Engine\Source\CommonStates.h"
@@ -32,7 +32,7 @@
 
 
 using namespace Kodiak;
-using namespace DirectX;
+using namespace Math;
 using namespace std;
 
 
@@ -135,11 +135,11 @@ void SponzaApplication::SetupScene()
 {
 	// Setup scene camera
 	m_camera = make_shared<Camera>();
-	m_camera->SetPosition(XMFLOAT3(1099.0f, 652.0f, -39.0f));
-	m_camera->LookAt(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_camera->SetPosition(Vector3(1099.0f, 652.0f, -39.0f));
+	m_camera->LookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(kYUnitVector));
 	m_camera->SetPerspective(45.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 1.0f, 10000.0f);
 
-	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
 
 	m_mainScene = make_shared<Scene>();
 
