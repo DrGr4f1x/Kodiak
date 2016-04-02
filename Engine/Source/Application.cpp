@@ -280,7 +280,8 @@ bool Application::Render()
 		return false;
 	}
 
-	Renderer::GetInstance().Render();
+	// Subclasses implement OnRender to supply their own scene render logic
+	OnRender();
 
 	return true;
 }

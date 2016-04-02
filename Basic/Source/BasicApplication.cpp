@@ -141,6 +141,12 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 }
 
 
+void BasicApplication::OnRender()
+{
+	Renderer::GetInstance().Render();
+}
+
+
 void BasicApplication::OnDestroy()
 {
 	Renderer::GetInstance().Finalize();

@@ -33,6 +33,7 @@ public:
 protected:
 	void OnInit() override;
 	void OnUpdate(StepTimer* timer) override;
+	void OnRender() override;
 	void OnDestroy() override;
 
 private:

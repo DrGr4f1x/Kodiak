@@ -67,6 +67,12 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 }
 
 
+void SponzaApplication::OnRender()
+{
+	Renderer::GetInstance().Render();
+}
+
+
 void SponzaApplication::OnDestroy()
 {
 	SetDefaultBasePass(nullptr);

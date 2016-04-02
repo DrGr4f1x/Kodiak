@@ -30,6 +30,7 @@ protected:
 	// Application event handlers
 	virtual void OnInit() = 0;
 	virtual void OnUpdate(StepTimer* timer) = 0;
+	virtual void OnRender() = 0;
 	virtual void OnDestroy() = 0;
 	virtual void OnCommandlineArgument(const wchar_t* argv, size_t length) {}
 
