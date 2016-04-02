@@ -73,11 +73,12 @@ void DeviceManager::Finalize()
 
 void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 {
-	auto& commandList = GraphicsCommandList::Begin();
+	auto commandList = GraphicsCommandList::Begin();
 
 	PreparePresent(commandList, presentSource);
 
-	commandList.CloseAndExecute();
+	commandList->CloseAndExecute();
+	commandList = nullptr;
 
 	// TODO: better vsync logic here
 	m_swapChain->Present(1, 0);
@@ -343,23 +344,23 @@ void DeviceManager::CreatePresentState()
 }
 
 
-void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::PreparePresent(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource)
 {
 	// Transition the present source so we can read from it
-	commandList.TransitionResource(*presentSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandList->TransitionResource(*presentSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	commandList.SetRootSignature(m_presentRS);
-	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->SetRootSignature(m_presentRS);
+	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Copy and convert the LDR present source to the current back buffer
-	commandList.SetRenderTarget(m_backbuffers[g_currentFrame]);
-	commandList.SetDynamicDescriptor(0, 0, presentSource->GetSRV());
+	commandList->SetRenderTarget(m_backbuffers[g_currentFrame]);
+	commandList->SetDynamicDescriptor(0, 0, presentSource->GetSRV());
 
-	commandList.SetPipelineState(m_convertLDRToDisplayPSO);
-	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
+	commandList->SetPipelineState(m_convertLDRToDisplayPSO);
+	commandList->SetViewportAndScissor(0, 0, m_width, m_height);
 
-	commandList.Draw(3);
+	commandList->Draw(3);
 
 	// Transition the current back buffer to present mode
-	commandList.TransitionResource(m_backbuffers[g_currentFrame], D3D12_RESOURCE_STATE_PRESENT);
+	commandList->TransitionResource(m_backbuffers[g_currentFrame], D3D12_RESOURCE_STATE_PRESENT);
 }

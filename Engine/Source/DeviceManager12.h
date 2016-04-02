@@ -43,7 +43,7 @@ private:
 	void CreateWindowSizeDependentResources();
 	void CreatePresentState();
 
-	void PreparePresent(GraphicsCommandList& commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresent(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource);
 
 private:
 	// Direct3D objects

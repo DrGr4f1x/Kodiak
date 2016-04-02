@@ -190,14 +190,14 @@ void Material::CreateRenderThreadData()
 }
 
 
-void RenderThread::MaterialData::Update(GraphicsCommandList& commandList)
+void RenderThread::MaterialData::Update(GraphicsCommandList* commandList)
 {}
 
 
-void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
+void RenderThread::MaterialData::Commit(GraphicsCommandList* commandList)
 {
-	commandList.SetRootSignature(*rootSignature);
-	commandList.SetPipelineState(*pso);
+	commandList->SetRootSignature(*rootSignature);
+	commandList->SetPipelineState(*pso);
 
 	const uint32_t numParams = static_cast<uint32_t>(rootParameters.size());
 	// TODO: hack, skipping first 2 slots (per-view and per-object data)
@@ -215,11 +215,11 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 
 		if (rootParam.numElements == kInvalid)
 		{
-			commandList.SetDynamicDescriptor(rootParam.rootIndex, 0, cpuHandles[rootParam.startSlot]);
+			commandList->SetDynamicDescriptor(rootParam.rootIndex, 0, cpuHandles[rootParam.startSlot]);
 		}
 		else
 		{
-			commandList.SetDynamicDescriptors(rootParam.rootIndex, offset, rootParam.numElements, &cpuHandles[rootParam.startSlot]);
+			commandList->SetDynamicDescriptors(rootParam.rootIndex, offset, rootParam.numElements, &cpuHandles[rootParam.startSlot]);
 			offset += rootParam.numElements;
 		}
 	}

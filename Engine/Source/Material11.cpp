@@ -286,23 +286,23 @@ void Material::CreateRenderThreadData()
 }
 
 
-void RenderThread::MaterialData::Update(GraphicsCommandList& commandList)
+void RenderThread::MaterialData::Update(GraphicsCommandList* commandList)
 {
 	if (cbufferDirty && cbufferSize > 0)
 	{
-		auto dest = commandList.MapConstants(*cbuffer);
+		auto dest = commandList->MapConstants(*cbuffer);
 		memcpy(dest, cbufferData, cbufferSize);
-		commandList.UnmapConstants(*cbuffer);
+		commandList->UnmapConstants(*cbuffer);
 
 		cbufferDirty = false;
 	}
 }
 
 
-void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
+void RenderThread::MaterialData::Commit(GraphicsCommandList* commandList)
 {
 	// Set the PSO for this material
-	commandList.SetPipelineState(*pso);
+	commandList->SetPipelineState(*pso);
 
 	const auto& materialData = *this;
 
@@ -310,7 +310,7 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 	uint32_t shaderIndex = static_cast<uint32_t>(ShaderType::Vertex);
 	if (cbufferBindings[shaderIndex].numBuffers > 0)
 	{
-		commandList.SetVertexShaderConstants(
+		commandList->SetVertexShaderConstants(
 			cbufferBindings[shaderIndex].startSlot,
 			cbufferBindings[shaderIndex].numBuffers,
 			&cbufferBindings[shaderIndex].cbuffers[0],
@@ -322,7 +322,7 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 	shaderIndex = static_cast<uint32_t>(ShaderType::Hull);
 	if (cbufferBindings[shaderIndex].numBuffers > 0)
 	{
-		commandList.SetHullShaderConstants(
+		commandList->SetHullShaderConstants(
 			cbufferBindings[shaderIndex].startSlot,
 			cbufferBindings[shaderIndex].numBuffers,
 			&cbufferBindings[shaderIndex].cbuffers[0],
@@ -334,7 +334,7 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 	shaderIndex = static_cast<uint32_t>(ShaderType::Domain);
 	if (cbufferBindings[shaderIndex].numBuffers > 0)
 	{
-		commandList.SetDomainShaderConstants(
+		commandList->SetDomainShaderConstants(
 			cbufferBindings[shaderIndex].startSlot,
 			cbufferBindings[shaderIndex].numBuffers,
 			&cbufferBindings[shaderIndex].cbuffers[0],
@@ -346,7 +346,7 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 	shaderIndex = static_cast<uint32_t>(ShaderType::Geometry);
 	if (cbufferBindings[shaderIndex].numBuffers > 0)
 	{
-		commandList.SetGeometryShaderConstants(
+		commandList->SetGeometryShaderConstants(
 			cbufferBindings[shaderIndex].startSlot,
 			cbufferBindings[shaderIndex].numBuffers,
 			&cbufferBindings[shaderIndex].cbuffers[0],
@@ -358,7 +358,7 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 	shaderIndex = static_cast<uint32_t>(ShaderType::Pixel);
 	if (cbufferBindings[shaderIndex].numBuffers > 0)
 	{
-		commandList.SetPixelShaderConstants(
+		commandList->SetPixelShaderConstants(
 			cbufferBindings[shaderIndex].startSlot,
 			cbufferBindings[shaderIndex].numBuffers,
 			&cbufferBindings[shaderIndex].cbuffers[0],
@@ -370,34 +370,34 @@ void RenderThread::MaterialData::Commit(GraphicsCommandList& commandList)
 	shaderIndex = static_cast<uint32_t>(ShaderType::Vertex);
 	for (const auto& layout : srvTables[shaderIndex].layouts)
 	{
-		commandList.SetVertexShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList->SetVertexShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 
 	// HS
 	shaderIndex = static_cast<uint32_t>(ShaderType::Hull);
 	for (const auto& layout : srvTables[shaderIndex].layouts)
 	{
-		commandList.SetHullShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList->SetHullShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 
 	// DS
 	shaderIndex = static_cast<uint32_t>(ShaderType::Domain);
 	for (const auto& layout : srvTables[shaderIndex].layouts)
 	{
-		commandList.SetDomainShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList->SetDomainShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 
 	// GS
 	shaderIndex = static_cast<uint32_t>(ShaderType::Geometry);
 	for (const auto& layout : srvTables[shaderIndex].layouts)
 	{
-		commandList.SetGeometryShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList->SetGeometryShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 
 	// PS
 	shaderIndex = static_cast<uint32_t>(ShaderType::Pixel);
 	for (const auto& layout : srvTables[shaderIndex].layouts)
 	{
-		commandList.SetPixelShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList->SetPixelShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 }

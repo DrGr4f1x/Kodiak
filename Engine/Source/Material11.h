@@ -84,8 +84,8 @@ struct MaterialData
 		_aligned_free(cbufferData); 
 	}
 
-	void Update(GraphicsCommandList& commandList);
-	void Commit(GraphicsCommandList& commandList);
+	void Update(GraphicsCommandList* commandList);
+	void Commit(GraphicsCommandList* commandList);
 	bool IsReady() { return true; }
 
 	// Render pass

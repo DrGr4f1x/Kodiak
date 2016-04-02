@@ -58,7 +58,7 @@ void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 }
 
 
-void Scene::Update(GraphicsCommandList& commandList)
+void Scene::Update(GraphicsCommandList* commandList)
 {
 	PROFILE(scene_Update);
 
@@ -67,9 +67,9 @@ void Scene::Update(GraphicsCommandList& commandList)
 	m_perViewConstants.view = m_camera->GetViewMatrix();
 	m_perViewConstants.viewPosition = m_camera->GetPosition();
 
-	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);
+	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
-	commandList.UnmapConstants(*m_perViewConstantBuffer);
+	commandList->UnmapConstants(*m_perViewConstantBuffer);
 
 	// Visit static models
 	// TODO: go wide, update 32 per task or something
@@ -91,15 +91,15 @@ void Scene::Update(GraphicsCommandList& commandList)
 
 
 
-void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList)
+void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList)
 {
 	PROFILE(scene_RenderPass);
 
-	commandList.PIXBeginEvent("Bind sampler states");
+	commandList->PIXBeginEvent("Bind sampler states");
 	BindSamplerStates(commandList);
-	commandList.PIXEndEvent();
+	commandList->PIXEndEvent();
 
-	commandList.PIXBeginEvent(renderPass->GetName());
+	commandList->PIXBeginEvent(renderPass->GetName());
 	// Visit models
 	for (auto& model : m_staticModels)
 	{
@@ -115,23 +115,23 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 
 					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
 #if defined(DX12)
-					commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
-					commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
+					commandList->SetConstantBuffer(0, *m_perViewConstantBuffer);
+					commandList->SetConstantBuffer(1, *mesh->perObjectConstants);
 #elif defined(DX11)
-					commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
-					commandList.SetVertexShaderConstants(1, *mesh->perObjectConstants);
+					commandList->SetVertexShaderConstants(0, *m_perViewConstantBuffer);
+					commandList->SetVertexShaderConstants(1, *mesh->perObjectConstants);
 #endif
 					
-					commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
-					commandList.SetIndexBuffer(*meshPart.indexBuffer);
-					commandList.SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);
+					commandList->SetVertexBuffer(0, *meshPart.vertexBuffer);
+					commandList->SetIndexBuffer(*meshPart.indexBuffer);
+					commandList->SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);
 
-					commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
+					commandList->DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
 				}
 			}
 		}
 	}
-	commandList.PIXEndEvent();
+	commandList->PIXEndEvent();
 }
 
 
@@ -213,9 +213,9 @@ void Scene::RemoveStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> 
 }
 
 
-void Scene::BindSamplerStates(GraphicsCommandList& commandList)
+void Scene::BindSamplerStates(GraphicsCommandList* commandList)
 {
 #if defined(DX11)
-	commandList.SetPixelShaderSampler(0, m_samplerState.Get());
+	commandList->SetPixelShaderSampler(0, m_samplerState.Get());
 #endif
 }

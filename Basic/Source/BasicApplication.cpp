@@ -27,7 +27,7 @@
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
-#include "Engine\Source\RenderPipeline.h"
+#include "Engine\Source\RenderTask.h"
 #include "Engine\Source\Scene.h"
 #include "Engine\Source\StepTimer.h"
 
@@ -262,16 +262,16 @@ void BasicApplication::SetupScene()
 
 void BasicApplication::SetupPipeline()
 {
-	auto pipeline = Renderer::GetInstance().GetRootPipeline();
+	auto rootTask = Renderer::GetInstance().GetRootRenderTask();
 
-	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
-	pipeline->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-	pipeline->SetScissor(0, 0, m_width, m_height);
-	pipeline->ClearColor(m_colorTarget);
-	pipeline->ClearDepth(m_depthBuffer);
+	rootTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
+	rootTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+	rootTask->SetScissor(0, 0, m_width, m_height);
+	rootTask->ClearColor(m_colorTarget);
+	rootTask->ClearDepth(m_depthBuffer);
 
-	pipeline->UpdateScene(m_mainScene);
-	pipeline->RenderScenePass(GetDefaultBasePass(), m_mainScene);
+	rootTask->UpdateScene(m_mainScene);
+	rootTask->RenderScenePass(GetDefaultBasePass(), m_mainScene);
 
-	pipeline->Present(m_colorTarget);
+	rootTask->Present(m_colorTarget);
 }

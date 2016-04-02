@@ -363,7 +363,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\RenderPass.h" />
     <ClInclude Include="Source\RenderUtils.h" />
-    <ClInclude Include="Source\RenderPipeline.h" />
+    <ClInclude Include="Source\RenderTask.h" />
     <ClInclude Include="Source\RootSignature12.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
@@ -569,7 +569,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\Renderer.cpp" />
-    <ClCompile Include="Source\RenderPipeline.cpp" />
+    <ClCompile Include="Source\RenderTask.cpp" />
     <ClCompile Include="Source\RootSignature12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>

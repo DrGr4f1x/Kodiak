@@ -105,11 +105,12 @@ void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 {
 	PROFILE(deviceManager_Present);
 
-	auto& commandList = GraphicsCommandList::Begin();
+	auto commandList = GraphicsCommandList::Begin();
 
 	PreparePresent(commandList, presentSource);
 
-	commandList.CloseAndExecute();
+	commandList->CloseAndExecute();
+	commandList = nullptr;
 
 	// The first argument instructs DXGI to block until VSync, putting the application
 	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
@@ -422,22 +423,22 @@ void DeviceManager::CreatePresentState()
 }
 
 
-void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::PreparePresent(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource)
 {
-	commandList.PIXBeginEvent("PreparePresent");
-	commandList.UnbindRenderTargets();
+	commandList->PIXBeginEvent("PreparePresent");
+	commandList->UnbindRenderTargets();
 
-	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList.SetPipelineState(m_convertLDRToDisplayPSO);
+	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->SetPipelineState(m_convertLDRToDisplayPSO);
 
 	// Copy and convert the LDR present source to the current back buffer
-	commandList.SetRenderTarget(*m_backBuffer);
-	commandList.SetPixelShaderResource(0, presentSource->GetSRV());
+	commandList->SetRenderTarget(*m_backBuffer);
+	commandList->SetPixelShaderResource(0, presentSource->GetSRV());
 
-	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
+	commandList->SetViewportAndScissor(0, 0, m_width, m_height);
 
-	commandList.Draw(3);
+	commandList->Draw(3);
 
-	commandList.SetPixelShaderResource(0, nullptr);
-	commandList.PIXEndEvent();
+	commandList->SetPixelShaderResource(0, nullptr);
+	commandList->PIXEndEvent();
 }

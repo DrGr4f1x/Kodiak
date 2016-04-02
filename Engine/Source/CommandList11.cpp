@@ -56,10 +56,10 @@ void CommandList::DestroyAllCommandLists()
 }
 
 
-CommandList& CommandList::Begin()
+CommandList* CommandList::Begin()
 {
 	CommandList* newCommandList = CommandList::AllocateCommandList();
-	return *newCommandList;
+	return newCommandList;
 }
 
 

@@ -22,7 +22,7 @@ class RenderPass;
 class Scene;
 
 
-class Pipeline
+class RenderTask : public std::enable_shared_from_this<RenderTask>
 {
 public:
 	void SetName(const std::string& name);
@@ -39,26 +39,38 @@ public:
 	void UpdateScene(std::shared_ptr<Scene> scene);
 	void RenderScenePass(std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Scene> scene);
 
-	void Present(std::shared_ptr<ColorBuffer> colorBuffer);
-	std::shared_ptr<ColorBuffer> GetPresentSource();
+	//void BeginGraphics();
+	//void EndGraphics();
 
-	void Execute();
+	void Continue(const std::shared_ptr<RenderTask> nextPipeline);
+	void Start(Concurrency::task<void>& currentTask);
+	
+protected:
+	void Run();
 
 protected:
 	std::string m_name;
-	std::vector<std::function<void(GraphicsCommandList&)>>	m_renderOperations;
+	std::vector<std::function<void(GraphicsCommandList*)>>	m_renderSteps;
 
-	std::shared_ptr<ColorBuffer>	m_presentSource;
+	std::vector<std::shared_ptr<RenderTask>> m_antecedents;
+	std::vector<std::shared_ptr<RenderTask>> m_predecessors;
+	std::vector<concurrency::task<void>> m_predecessorTasks;
 };
 
 
-class ComputePipeline
+class RootRenderTask : public RenderTask
 {
 public:
-	void SetName(const std::string& name);
+	void Start();
+	void Wait();
 
-protected:
-	std::string m_name;
+	void Present(std::shared_ptr<ColorBuffer> colorBuffer);
+	std::shared_ptr<ColorBuffer> GetPresentSource();
+
+private:
+	Concurrency::task<void> m_rootTask;
+
+	std::shared_ptr<ColorBuffer>	m_presentSource;
 };
 
 } // namespace Kodiak

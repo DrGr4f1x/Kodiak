@@ -26,7 +26,7 @@
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
-#include "Engine\Source\RenderPipeline.h"
+#include "Engine\Source\RenderTask.h"
 #include "Engine\Source\Scene.h"
 #include "Engine\Source\StepTimer.h"
 
@@ -157,21 +157,31 @@ void SponzaApplication::SetupScene()
 
 void SponzaApplication::SetupPipeline()
 {
-	auto pipeline = Renderer::GetInstance().GetRootPipeline();
+	auto rootTask = Renderer::GetInstance().GetRootRenderTask();
 
-	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
-	pipeline->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-	pipeline->SetScissor(0, 0, m_width, m_height);
-	pipeline->ClearColor(m_colorTarget);
-	pipeline->ClearDepth(m_depthBuffer);
+	rootTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
+	rootTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+	rootTask->SetScissor(0, 0, m_width, m_height);
+	rootTask->ClearColor(m_colorTarget);
+	rootTask->ClearDepth(m_depthBuffer);
 
-	pipeline->UpdateScene(m_mainScene);
+	auto depthTask = make_shared<RenderTask>();
+	depthTask->SetName("Depth prepass");
+	depthTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+	depthTask->SetScissor(0, 0, m_width, m_height);
+	depthTask->UpdateScene(m_mainScene);
+	depthTask->SetDepthStencilTarget(m_depthBuffer);
+	depthTask->RenderScenePass(GetDefaultDepthPass(), m_mainScene);
+	rootTask->Continue(depthTask);
 
-	pipeline->SetDepthStencilTarget(m_depthBuffer);
-	pipeline->RenderScenePass(GetDefaultDepthPass(), m_mainScene);
+	auto opaqueTask = make_shared<RenderTask>();
+	opaqueTask->SetName("Opaque pass");
+	opaqueTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+	opaqueTask->SetScissor(0, 0, m_width, m_height);
+	opaqueTask->UpdateScene(m_mainScene);
+	opaqueTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
+	opaqueTask->RenderScenePass(GetDefaultBasePass(), m_mainScene);
+	depthTask->Continue(opaqueTask);
 
-	pipeline->SetRenderTarget(m_colorTarget, m_depthBuffer);
-	pipeline->RenderScenePass(GetDefaultBasePass(), m_mainScene);
-
-	pipeline->Present(m_colorTarget);
+	rootTask->Present(m_colorTarget);
 }

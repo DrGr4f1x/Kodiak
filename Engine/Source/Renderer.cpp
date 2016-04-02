@@ -20,7 +20,7 @@
 #include "IndexBuffer.h"
 #include "Model.h"
 #include "Profile.h"
-#include "RenderPipeline.h"
+#include "RenderTask.h"
 #include "RenderUtils.h"
 #include "SamplerManager.h"
 #include "Scene.h"
@@ -41,13 +41,13 @@ Renderer& Renderer::GetInstance()
 
 void Renderer::Initialize()
 {
-	m_rootPipeline = make_shared<Pipeline>();
+	m_rootRenderTask = make_shared<RootRenderTask>();
 	m_deviceManager = make_unique<DeviceManager>();
 
 	m_renderTaskEnvironment.deviceManager = m_deviceManager.get();
-	m_renderTaskEnvironment.rootPipeline = m_rootPipeline;
+	m_renderTaskEnvironment.rootTask = m_rootRenderTask;
 
-	m_rootPipeline->SetName("Root Pipeline");
+	m_rootRenderTask->SetName("Root Task");
 
 	SamplerManager::GetInstance().Initialize();
 
@@ -58,6 +58,8 @@ void Renderer::Initialize()
 void Renderer::Finalize()
 {
 	StopRenderTask();
+
+	m_rootRenderTask = nullptr;
 
 	SamplerManager::GetInstance().Shutdown();
 
@@ -102,13 +104,15 @@ void Renderer::Render()
 	EnqueueTask([](RenderTaskEnvironment& rte) { rte.deviceManager->BeginFrame(); });
 	
 	// Kick off rendering of root pipeline
-	EnqueueTask([](RenderTaskEnvironment& rte) { rte.rootPipeline->Execute(); });
+	EnqueueTask([](RenderTaskEnvironment& rte) { rte.rootTask->Start(); });
 
 	// Signal end of frame
-	auto presentSource = m_rootPipeline->GetPresentSource();
-	EnqueueTask([presentSource](RenderTaskEnvironment& rte)
+	EnqueueTask([](RenderTaskEnvironment& rte)
 	{
-		rte.deviceManager->Present(presentSource);
+		rte.rootTask->Wait();
+
+		rte.deviceManager->Present(rte.rootTask->GetPresentSource());
+
 		rte.currentFrame += 1;
 		rte.frameCompleted = true;
 	});

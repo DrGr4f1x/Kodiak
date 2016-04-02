@@ -33,19 +33,19 @@ public:
 	virtual ~CommandList();
 
 	static void DestroyAllCommandLists();
-	static CommandList& Begin();
+	static CommandList* Begin();
 	uint64_t CloseAndExecute(bool waitForCompletion = false);
 
 	void Initialize(CommandListManager& manager);
 
-	GraphicsCommandList& GetGraphicsCommandList()
+	GraphicsCommandList* GetGraphicsCommandList()
 	{
-		return reinterpret_cast<GraphicsCommandList&>(*this);
+		return reinterpret_cast<GraphicsCommandList*>(this);
 	}
 
-	ComputeCommandList& GetComputeCommandList()
+	ComputeCommandList* GetComputeCommandList()
 	{
-		return reinterpret_cast<ComputeCommandList&>(*this);
+		return reinterpret_cast<ComputeCommandList*>(this);
 	}
 
 	void PIXBeginEvent(const std::string& label);
@@ -81,9 +81,9 @@ class GraphicsCommandList : public CommandList
 {
 public:
 
-	static GraphicsCommandList& Begin()
+	static GraphicsCommandList* Begin()
 	{
-		return CommandList::Begin().GetGraphicsCommandList();
+		return CommandList::Begin()->GetGraphicsCommandList();
 	}
 
 	void ClearUAV(ColorBuffer& target);
@@ -174,9 +174,9 @@ class ComputeCommandList : public CommandList
 {
 public:
 
-	static ComputeCommandList& Begin()
+	static ComputeCommandList* Begin()
 	{
-		return CommandList::Begin().GetComputeCommandList();
+		return CommandList::Begin()->GetComputeCommandList();
 	}
 };
 

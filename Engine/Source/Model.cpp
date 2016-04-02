@@ -29,7 +29,7 @@ using namespace Math;
 using namespace std;
 
 
-void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& commandList)
+void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList* commandList)
 {
 	PROFILE(staticModel_UpdateConstants);
 	
@@ -43,9 +43,9 @@ void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& command
 			
 			perObjectData.matrix = matrix * mesh->matrix;
 
-			auto dest = commandList.MapConstants(*mesh->perObjectConstants);
+			auto dest = commandList->MapConstants(*mesh->perObjectConstants);
 			memcpy(dest, &perObjectData, sizeof(perObjectData));
-			commandList.UnmapConstants(*mesh->perObjectConstants);
+			commandList->UnmapConstants(*mesh->perObjectConstants);
 
 			mesh->isDirty = false;
 		}

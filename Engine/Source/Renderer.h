@@ -20,7 +20,7 @@ class ColorBuffer;
 class CommandList;
 class DepthBuffer;
 class DeviceManager;
-class Pipeline;
+class RootRenderTask;
 class Scene;
 class StaticModel;
 
@@ -32,7 +32,7 @@ enum class Usage;
 struct RenderTaskEnvironment
 {
 	DeviceManager* deviceManager;
-	std::shared_ptr<Pipeline> rootPipeline;
+	std::shared_ptr<RootRenderTask> rootTask;
 	std::atomic<uint64_t> currentFrame{ 0 };
 	std::atomic<bool> stopRenderTask{ false };
 	std::atomic<bool> frameCompleted{ true };
@@ -61,7 +61,7 @@ public:
 
 	void Render();
 
-	std::shared_ptr<Kodiak::Pipeline> GetRootPipeline() { return m_rootPipeline; }
+	std::shared_ptr<Kodiak::RootRenderTask> GetRootRenderTask() { return m_rootRenderTask; }
 	DeviceManager* GetDeviceManager() { return m_deviceManager.get(); }
 
 private:
@@ -71,7 +71,7 @@ private:
 	void UpdateStaticModels();
 
 private:
-	std::shared_ptr<Pipeline>			m_rootPipeline{ nullptr };
+	std::shared_ptr<RootRenderTask>		m_rootRenderTask{ nullptr };
 	RenderTaskEnvironment				m_renderTaskEnvironment;
 	bool								m_renderTaskStarted{ false };
 	Concurrency::task<void>				m_renderTask;

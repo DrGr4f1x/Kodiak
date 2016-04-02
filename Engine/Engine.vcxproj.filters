@@ -34,6 +34,12 @@
     <Filter Include="Math">
       <UniqueIdentifier>{de54e161-9360-47a5-99c2-ca9c917cb901}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Rendering\Techniques">
+      <UniqueIdentifier>{80aa177c-d0a7-47e5-b495-86a44b697afd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Techniques\SSAO">
+      <UniqueIdentifier>{e616f374-cc3a-49c5-ab61-3db6f2620ee8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -55,9 +61,6 @@
     </ClInclude>
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\Log.h" />
-    <ClInclude Include="Source\RenderPipeline.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Model.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -350,6 +353,9 @@
     <ClInclude Include="Source\CameraController.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderTask.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -363,9 +369,6 @@
     <ClCompile Include="Source\Paths.cpp" />
     <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\Renderer.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderPipeline.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\Model.cpp">
@@ -541,6 +544,9 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\MaterialParameter.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderTask.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>

@@ -65,10 +65,10 @@ void CommandList::DestroyAllCommandLists()
 }
 
 
-CommandList& CommandList::Begin()
+CommandList* CommandList::Begin()
 {
 	CommandList* newCommandList = CommandList::AllocateCommandList();
-	return *newCommandList;
+	return newCommandList;
 }
 
 
@@ -93,7 +93,7 @@ void CommandList::InitializeTexture(GpuResource& dest, UINT numSubresources, D3D
 
 	UINT64 uploadBufferSize = GetRequiredIntermediateSize(dest.GetResource(), 0, numSubresources);
 
-	auto& commandList = CommandList::Begin();
+	auto commandList = CommandList::Begin();
 
 	D3D12_HEAP_PROPERTIES heapProps;
 	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -124,12 +124,12 @@ void CommandList::InitializeTexture(GpuResource& dest, UINT numSubresources, D3D
 		IID_PPV_ARGS(&uploadBuffer)));
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
-	commandList.TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
-	UpdateSubresources(commandList.m_commandList, dest.GetResource(), uploadBuffer, 0, 0, numSubresources, subData);
-	commandList.TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+	commandList->TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+	UpdateSubresources(commandList->m_commandList, dest.GetResource(), uploadBuffer, 0, 0, numSubresources, subData);
+	commandList->TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
 
 	// Execute the command list and wait for it to finish so we can release the upload buffer
-	commandList.Finish(true);
+	commandList->Finish(true);
 
 	uploadBuffer->Release();
 }
@@ -139,7 +139,7 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 {
 	ID3D12Resource* uploadBuffer = nullptr;
 
-	auto& initContext = CommandList::Begin();
+	auto initContext = CommandList::Begin();
 
 	D3D12_HEAP_PROPERTIES heapProps;
 	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -175,12 +175,12 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 	uploadBuffer->Unmap(0, nullptr);
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
-	initContext.TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
-	initContext.m_commandList->CopyResource(dest.GetResource(), uploadBuffer);
-	initContext.TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+	initContext->TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+	initContext->m_commandList->CopyResource(dest.GetResource(), uploadBuffer);
+	initContext->TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
 
 	// Execute the command list and wait for it to finish so we can release the upload buffer
-	initContext.CloseAndExecute(true);
+	initContext->CloseAndExecute(true);
 
 	uploadBuffer->Release();
 }

@@ -65,7 +65,7 @@ struct StaticModelData
 
 	bool											isDirty{ true };
 
-	void UpdateConstants(GraphicsCommandList& commandList);
+	void UpdateConstants(GraphicsCommandList* commandList);
 };
 
 

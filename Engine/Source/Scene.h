@@ -42,8 +42,8 @@ public:
 
 	void AddStaticModel(std::shared_ptr<StaticModel> model);
 
-	void Update(GraphicsCommandList& commandList);
-	void Render(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList);
+	void Update(GraphicsCommandList* commandList);
+	void Render(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList);
 
 	void SetCamera(std::shared_ptr<Camera> camera);
 
@@ -53,7 +53,7 @@ public:
 	void RemoveStaticModelDeferred(std::shared_ptr<RenderThread::StaticModelData> model);
 
 	// TODO: Super-hacky way to ram sampler states into the engine
-	void BindSamplerStates(GraphicsCommandList& commandList);
+	void BindSamplerStates(GraphicsCommandList* commandList);
 
 private:
 	void Initialize();
