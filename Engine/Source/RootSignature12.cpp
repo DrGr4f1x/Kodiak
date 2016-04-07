@@ -12,7 +12,6 @@
 
 #include "RootSignature12.h"
 
-#include "DebugUtility.h"
 #include "DeviceManager12.h"
 #include "RenderUtils.h"
 

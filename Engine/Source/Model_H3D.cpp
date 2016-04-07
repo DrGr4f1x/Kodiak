@@ -334,9 +334,9 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 			normalTexture = Texture::Load(materials[i].texNormalPath, true);
 		}
 
-		opaqueMaterial->GetResource("texDiffuse")->SetResource(diffuseTexture);
-		opaqueMaterial->GetResource("texSpecular")->SetResource(specularTexture);
-		opaqueMaterial->GetResource("texNormal")->SetResource(normalTexture);
+		opaqueMaterial->GetResource("texDiffuse")->SetTexture(diffuseTexture);
+		opaqueMaterial->GetResource("texSpecular")->SetTexture(specularTexture);
+		opaqueMaterial->GetResource("texNormal")->SetTexture(normalTexture);
 
 		// TODO move this stuff to per-view data
 		using namespace DirectX;
@@ -349,7 +349,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		depthMaterial->SetEffect(GetDefaultDepthEffect());
 		depthMaterial->SetRenderPass(GetDefaultDepthPass());
 
-		depthMaterial->GetResource("texDiffuse")->SetResource(diffuseTexture);
+		depthMaterial->GetResource("texDiffuse")->SetTexture(diffuseTexture);
 	}
 
 	// Create meshes

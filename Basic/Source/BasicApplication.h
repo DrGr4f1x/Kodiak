@@ -19,9 +19,8 @@ namespace Kodiak
 class Camera;
 class CameraController;
 class ColorBuffer;
-class CommandList;
 class DepthBuffer;
-class RenderPass;
+class RootRenderTask;
 class Scene;
 class StaticModel;
 
@@ -43,14 +42,14 @@ private:
 	void CreateMaterials();
 	void CreateModel();
 	void SetupScene();
-	void SetupPipeline();
+	std::shared_ptr<RootRenderTask> SetupFrame();
 
 private:
-	std::shared_ptr<ColorBuffer>	m_colorTarget;
-	std::shared_ptr<DepthBuffer>	m_depthBuffer;
-	std::shared_ptr<StaticModel>	m_boxModel;
-	std::shared_ptr<Scene>			m_mainScene;
-	std::shared_ptr<Camera>			m_camera;
+	std::shared_ptr<ColorBuffer>		m_colorTarget;
+	std::shared_ptr<DepthBuffer>		m_depthBuffer;
+	std::shared_ptr<StaticModel>		m_boxModel;
+	std::shared_ptr<Scene>				m_mainScene;
+	std::shared_ptr<Camera>				m_camera;
 	std::shared_ptr<CameraController>	m_cameraController;
 
 	float	m_meshRadians[4];

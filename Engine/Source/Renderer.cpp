@@ -41,13 +41,10 @@ Renderer& Renderer::GetInstance()
 
 void Renderer::Initialize()
 {
-	m_rootRenderTask = make_shared<RootRenderTask>();
 	m_deviceManager = make_unique<DeviceManager>();
 
 	m_renderTaskEnvironment.deviceManager = m_deviceManager.get();
-	m_renderTaskEnvironment.rootTask = m_rootRenderTask;
-
-	m_rootRenderTask->SetName("Root Task");
+	m_renderTaskEnvironment.rootTask = nullptr;
 
 	SamplerManager::GetInstance().Initialize();
 
@@ -59,7 +56,7 @@ void Renderer::Finalize()
 {
 	StopRenderTask();
 
-	m_rootRenderTask = nullptr;
+	m_renderTaskEnvironment.rootTask = nullptr;
 
 	SamplerManager::GetInstance().Shutdown();
 
@@ -88,7 +85,7 @@ void Renderer::SetWindowSize(uint32_t width, uint32_t height)
 }
 
 
-void Renderer::Render()
+void Renderer::Render(shared_ptr<RootRenderTask> rootTask)
 {
 	PROFILE(renderer_Render);
 
@@ -99,6 +96,7 @@ void Renderer::Render()
 	}
 
 	m_renderTaskEnvironment.frameCompleted = false;
+	m_renderTaskEnvironment.rootTask = rootTask;
 
 	// Start new frame
 	EnqueueTask([](RenderTaskEnvironment& rte) { rte.deviceManager->BeginFrame(); });

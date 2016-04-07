@@ -59,9 +59,8 @@ public:
 	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
 	void SetWindowSize(uint32_t width, uint32_t height);
 
-	void Render();
+	void Render(std::shared_ptr<RootRenderTask> rootTask);
 
-	std::shared_ptr<Kodiak::RootRenderTask> GetRootRenderTask() { return m_rootRenderTask; }
 	DeviceManager* GetDeviceManager() { return m_deviceManager.get(); }
 
 private:
@@ -71,7 +70,6 @@ private:
 	void UpdateStaticModels();
 
 private:
-	std::shared_ptr<RootRenderTask>		m_rootRenderTask{ nullptr };
 	RenderTaskEnvironment				m_renderTaskEnvironment;
 	bool								m_renderTaskStarted{ false };
 	Concurrency::task<void>				m_renderTask;

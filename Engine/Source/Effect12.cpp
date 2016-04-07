@@ -51,14 +51,12 @@ Effect::Effect() : BaseEffect() {}
 Effect::Effect(const string& name) : BaseEffect(name) {}
 
 
-static void whoa() {}
 void Effect::Finalize()
 {
 	loadTask = loadTask.then([this]
 	{
 		BuildEffectSignature();
 		BuildPSO();
-		whoa();
 	});
 }
 

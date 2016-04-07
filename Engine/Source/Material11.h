@@ -96,7 +96,7 @@ struct MaterialData
 
 	// We're using a single cbuffer for all shader stages, via the DX11.1 large cbuffer feature
 	std::shared_ptr<ConstantBuffer> cbuffer;
-	uint8_t*						cbufferData{ nullptr };
+	byte*							cbufferData{ nullptr };
 	bool							cbufferDirty{ true };
 	size_t							cbufferSize{ 0 };
 

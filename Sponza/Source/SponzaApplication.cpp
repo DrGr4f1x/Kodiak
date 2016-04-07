@@ -27,6 +27,7 @@
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
 #include "Engine\Source\RenderTask.h"
+#include "Engine\Source\SSAO.h"
 #include "Engine\Source\Scene.h"
 #include "Engine\Source\StepTimer.h"
 
@@ -52,7 +53,6 @@ void SponzaApplication::OnInit()
 	CreateModel();
 
 	SetupScene();
-	SetupPipeline();
 }
 
 
@@ -69,7 +69,8 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 
 void SponzaApplication::OnRender()
 {
-	Renderer::GetInstance().Render();
+	auto rootTask = SetupFrame();
+	Renderer::GetInstance().Render(rootTask);
 }
 
 
@@ -92,6 +93,9 @@ void SponzaApplication::CreateResources()
 		DirectX::Colors::CornflowerBlue);
 
 	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
+
+	m_ssao = make_shared<SSAO>();
+	m_ssao->Initialize();
 }
 
 
@@ -155,9 +159,10 @@ void SponzaApplication::SetupScene()
 }
 
 
-void SponzaApplication::SetupPipeline()
+shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 {
-	auto rootTask = Renderer::GetInstance().GetRootRenderTask();
+	auto rootTask = make_shared<RootRenderTask>();
+	rootTask->SetName("Root task");
 
 	rootTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
 	rootTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
@@ -184,4 +189,6 @@ void SponzaApplication::SetupPipeline()
 	depthTask->Continue(opaqueTask);
 
 	rootTask->Present(m_colorTarget);
+
+	return rootTask;
 }

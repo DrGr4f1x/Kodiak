@@ -141,51 +141,26 @@ void Material::CreateRenderThreadData()
 	}
 
 	// Parameters
+	for (const auto& parameter : effectSig.parameters)
 	{
-		lock_guard<mutex> CS(m_parameterLock);
-
-		for (const auto& parameter : effectSig.parameters)
-		{
-			shared_ptr<MaterialParameter> matParameter;
-
-			auto it = m_parameters.find(parameter.second.name);
-			if (end(m_parameters) != it)
-			{
-				matParameter = it->second;
-			}
-			else
-			{
-				matParameter = make_shared<MaterialParameter>(parameter.second.name);
-				m_parameters[parameter.second.name] = matParameter;
-			}
-
-			matParameter->CreateRenderThreadData(m_renderThreadData, parameter.second);
-		}
+		auto materialParameter = GetParameter(parameter.second.name);
+		materialParameter->CreateRenderThreadData(m_renderThreadData, parameter.second);
 	}
 
-	// Resources
+	// Resource SRVs
+	for (const auto& resource : effectSig.srvs)
 	{
-		lock_guard<mutex> CS(m_resourceLock);
-
-		for (const auto& resource : effectSig.srvs)
-		{
-			shared_ptr<MaterialResource> matResource;
-
-			auto it = m_resources.find(resource.second.name);
-			if (end(m_resources) != it)
-			{
-				matResource = it->second;
-			}
-			else
-			{
-				matResource = make_shared<MaterialResource>(resource.second.name);
-			}
-
-			matResource->CreateRenderThreadData(m_renderThreadData, resource.second);
-		}
+		auto materialResource = GetResource(resource.second.name);
+		materialResource->CreateRenderThreadData(m_renderThreadData, resource.second);
 	}
 
-	// TODO: UAVs
+	// Resource UAVs
+	for (const auto& uav : effectSig.uavs)
+	{
+		auto materialUAV = GetResource(uav.second.name);
+		materialUAV->CreateRenderThreadData(m_renderThreadData, uav.second);
+	}
+
 	// TODO: Samplers
 }
 

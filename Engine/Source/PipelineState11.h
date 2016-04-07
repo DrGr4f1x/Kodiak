@@ -160,7 +160,15 @@ private:
 
 class ComputePSO
 {
+	friend class ComputeCommandList;
 
+public:
+	void SetComputeShader(ComputeShader* computeShader);
+
+	void Finalize() {} // Provided for API symmetry
+
+private:
+	Microsoft::WRL::ComPtr<ID3D11ComputeShader>		m_computeShader;
 };
 
 

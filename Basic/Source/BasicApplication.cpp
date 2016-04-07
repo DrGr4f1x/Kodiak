@@ -58,7 +58,6 @@ void BasicApplication::OnInit()
 	CreateModel();
 
 	SetupScene();
-	SetupPipeline();
 }
 
 
@@ -143,7 +142,8 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 void BasicApplication::OnRender()
 {
-	Renderer::GetInstance().Render();
+	auto rootTask = SetupFrame();
+	Renderer::GetInstance().Render(rootTask);
 }
 
 
@@ -260,9 +260,10 @@ void BasicApplication::SetupScene()
 }
 
 
-void BasicApplication::SetupPipeline()
+shared_ptr<RootRenderTask> BasicApplication::SetupFrame()
 {
-	auto rootTask = Renderer::GetInstance().GetRootRenderTask();
+	auto rootTask = make_shared<RootRenderTask>();
+	rootTask->SetName("Root task");
 
 	rootTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
 	rootTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
@@ -274,4 +275,6 @@ void BasicApplication::SetupPipeline()
 	rootTask->RenderScenePass(GetDefaultBasePass(), m_mainScene);
 
 	rootTask->Present(m_colorTarget);
+
+	return rootTask;
 }

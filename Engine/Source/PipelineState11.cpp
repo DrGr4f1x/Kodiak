@@ -369,3 +369,9 @@ void GraphicsPSO::CompileDepthStencilState()
 		m_depthStencilState = *depthStencilStateRef;
 	}
 }
+
+
+void ComputePSO::SetComputeShader(ComputeShader* computeShader)
+{
+	m_computeShader = computeShader->GetShader();
+}

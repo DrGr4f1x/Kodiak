@@ -9,10 +9,10 @@
 
 #include "Stdafx.h"
 
-#include "MaterialResource11.h"
+#include "ComputeResource11.h"
 
 #include "ColorBuffer11.h"
-#include "Material11.h"
+#include "ComputeKernel11.h"
 #include "RenderEnums.h"
 #include "Renderer.h"
 #include "Texture11.h"
@@ -22,7 +22,7 @@ using namespace Kodiak;
 using namespace std;
 
 
-MaterialResource::MaterialResource(const string& name)
+ComputeResource::ComputeResource(const string& name)
 	: m_name(name)
 	, m_type(ShaderResourceType::Unsupported)
 	, m_dimension(ShaderResourceDimension::Unsupported)
@@ -30,13 +30,13 @@ MaterialResource::MaterialResource(const string& name)
 {}
 
 
-void MaterialResource::SetTexture(shared_ptr<Texture> texture)
+void ComputeResource::SetTexture(shared_ptr<Texture> texture)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
 	{
 		assert_msg(m_type == ShaderResourceType::Texture || m_type == ShaderResourceType::TBuffer,
-			"MaterialResource is bound to a UAV, but a Texture is being assigned (should be a ColorBuffer).");
+			"ComputeResource is bound to a UAV, but a Texture is being assigned (should be a ColorBuffer).");
 	}
 
 	m_texture = texture;
@@ -49,7 +49,7 @@ void MaterialResource::SetTexture(shared_ptr<Texture> texture)
 
 		if (thisTexture && !thisTexture->loadTask.is_done())
 		{
-			// Wait until the texture loads before updating the material on the render thread
+			// Wait until the texture loads before updating the compute kernel on the render thread
 			m_texture->loadTask.then([renderThreadData, thisResource, thisTexture]
 			{
 				// Update material on render thread
@@ -62,10 +62,15 @@ void MaterialResource::SetTexture(shared_ptr<Texture> texture)
 		}
 		else
 		{
-			// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
+			// Texture is either null or fully loaded.  Either way, we can update the compute kernel on the render thread now
 			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisTexture](RenderTaskEnvironment& rte)
 			{
-				ID3D11ShaderResourceView* srv = thisTexture ? thisTexture->GetSRV() : nullptr;
+				ID3D11ShaderResourceView* srv{ nullptr };
+				if (thisTexture)
+				{
+					// TODO properly handle null SRV here
+					srv = thisTexture->GetSRV();
+				}
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
 			});
 		}
@@ -73,7 +78,7 @@ void MaterialResource::SetTexture(shared_ptr<Texture> texture)
 }
 
 
-void MaterialResource::SetUAV(shared_ptr<ColorBuffer> buffer)
+void ComputeResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -105,64 +110,52 @@ void MaterialResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 }
 
 
-void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource)
+void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData,
+	const ShaderReflection::ResourceSRV<1>& resource)
 {
-	m_renderThreadData = materialData;
+	assert_msg(!m_buffer, "ComputeResource is bound to an SRV, but has a ColorBuffer assigned (should be a Texture).");
+
+	m_renderThreadData = computeData;
 
 	m_type = resource.type;
 	m_dimension = resource.dimension;
 
-	for (uint32_t i = 0; i < 5; ++i)
-	{
-		const auto& binding = resource.binding[i];
-		m_shaderSlots[i].first = binding.tableIndex;
-		m_shaderSlots[i].second = binding.tableSlot;
-	}
+	m_bindingTable = resource.binding[0].tableIndex;
+	m_bindingSlot = resource.binding[0].tableSlot;
 
 	SetTexture(m_texture);
 }
 
 
-void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceUAV<5>& resource)
+void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData,
+	const ShaderReflection::ResourceUAV<1>& resource)
 {
-	m_renderThreadData = materialData;
+	assert_msg(!m_buffer, "ComputeResource is bound to a UAV, but has a Texture assigned (should be a ColorBuffer).");
+
+	m_renderThreadData = computeData;
 
 	m_type = resource.type;
 
-	for (uint32_t i = 0; i < 5; ++i)
-	{
-		const auto& binding = resource.binding[i];
-		m_shaderSlots[i].first = binding.tableIndex;
-		m_shaderSlots[i].second = binding.tableSlot;
-	}
+	m_bindingTable = resource.binding[0].tableIndex;
+	m_bindingSlot = resource.binding[0].tableSlot;
 
 	SetUAV(m_buffer);
 }
 
 
-void MaterialResource::UpdateResourceOnRenderThread(RenderThread::MaterialData* materialData, ID3D11ShaderResourceView* srv)
+void ComputeResource::UpdateResourceOnRenderThread(RenderThread::ComputeData* computeData, ID3D11ShaderResourceView* srv)
 {
-	// Loop over the shader stages
-	for (uint32_t i = 0; i < 5; ++i)
+	if (m_bindingTable != kInvalid)
 	{
-		const auto& range = m_shaderSlots[i];
-		if (range.first != kInvalid)
-		{
-			materialData->srvTables[i].layouts[range.first].resources[range.second] = srv;
-		}
+		computeData->srvTables.layouts[m_bindingTable].resources[m_bindingSlot] = srv;
 	}
 }
 
 
-void MaterialResource::UpdateResourceOnRenderThread(RenderThread::MaterialData* materialData, ID3D11UnorderedAccessView* uav)
+void ComputeResource::UpdateResourceOnRenderThread(RenderThread::ComputeData* computeData, ID3D11UnorderedAccessView* uav)
 {
-	// Loop over the shader stages
-	for (uint32_t i = 0; i < 5; ++i)
+	if (m_bindingTable != kInvalid)
 	{
-		const auto& range = m_shaderSlots[i];
-		if (range.first != kInvalid)
-		{
-			materialData->uavTables[i].layouts[range.first].resources[range.second] = uav;
-		}
+		computeData->uavTables.layouts[m_bindingTable].resources[m_bindingSlot] = uav;
 	}
 }

@@ -119,7 +119,7 @@ void SetupCBuffer(RenderThread::MaterialData& materialData, size_t cbufferSizeIn
 		_aligned_free(materialData.cbufferData);
 		materialData.cbufferData = nullptr;
 	}
-	materialData.cbufferData = (uint8_t*)_aligned_malloc(cbufferSizeInBytes, 16);
+	materialData.cbufferData = (byte*)_aligned_malloc(cbufferSizeInBytes, 16);
 }
 
 

@@ -21,6 +21,8 @@ class CameraController;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
+class RootRenderTask;
+class SSAO;
 class Scene;
 class StaticModel;
 
@@ -42,7 +44,7 @@ private:
 	void CreateEffects();
 	void CreateModel();
 	void SetupScene();
-	void SetupPipeline();
+	std::shared_ptr<RootRenderTask> SetupFrame();
 
 private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
@@ -51,6 +53,7 @@ private:
 	std::shared_ptr<Camera>			m_camera;
 	std::shared_ptr<CameraController>	m_cameraController;
 	std::shared_ptr<StaticModel>	m_sponzaModel;
+	std::shared_ptr<SSAO>			m_ssao;
 };
 
 } // namespace Kodiak

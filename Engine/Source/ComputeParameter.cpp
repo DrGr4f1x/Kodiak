@@ -9,9 +9,9 @@
 
 #include "Stdafx.h"
 
-#include "MaterialParameter.h"
+#include "ComputeParameter.h"
 
-#include "Material.h"
+#include "ComputeKernel.h"
 #include "RenderEnums.h"
 #include "Renderer.h"
 
@@ -21,18 +21,16 @@ using namespace DirectX;
 using namespace std;
 
 
-MaterialParameter::MaterialParameter(const string& name)
+ComputeParameter::ComputeParameter(const string& name)
 	: m_name(name)
 	, m_type(ShaderVariableType::Unsupported)
-	, m_size(kInvalid)
 	, m_renderThreadData()
-	, m_bindings({ nullptr, nullptr, nullptr, nullptr, nullptr })
 {
 	ZeroMemory(&m_data[0], 64);
 }
 
 
-void MaterialParameter::SetValue(bool value)
+void ComputeParameter::SetValue(bool value)
 {
 	memcpy(&m_data[0], &value, sizeof(bool));
 
@@ -40,7 +38,7 @@ void MaterialParameter::SetValue(bool value)
 }
 
 
-void MaterialParameter::SetValue(int32_t value)
+void ComputeParameter::SetValue(int32_t value)
 {
 	memcpy(&m_data[0], &value, sizeof(int32_t));
 
@@ -48,7 +46,7 @@ void MaterialParameter::SetValue(int32_t value)
 }
 
 
-void MaterialParameter::SetValue(XMINT2 value)
+void ComputeParameter::SetValue(XMINT2 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMINT2));
 
@@ -56,7 +54,7 @@ void MaterialParameter::SetValue(XMINT2 value)
 }
 
 
-void MaterialParameter::SetValue(XMINT3 value)
+void ComputeParameter::SetValue(XMINT3 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMINT3));
 
@@ -64,7 +62,7 @@ void MaterialParameter::SetValue(XMINT3 value)
 }
 
 
-void MaterialParameter::SetValue(XMINT4 value)
+void ComputeParameter::SetValue(XMINT4 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMINT4));
 
@@ -72,7 +70,7 @@ void MaterialParameter::SetValue(XMINT4 value)
 }
 
 
-void MaterialParameter::SetValue(uint32_t value)
+void ComputeParameter::SetValue(uint32_t value)
 {
 	memcpy(&m_data[0], &value, sizeof(uint32_t));
 
@@ -80,7 +78,7 @@ void MaterialParameter::SetValue(uint32_t value)
 }
 
 
-void MaterialParameter::SetValue(XMUINT2 value)
+void ComputeParameter::SetValue(XMUINT2 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMUINT2));
 
@@ -88,7 +86,7 @@ void MaterialParameter::SetValue(XMUINT2 value)
 }
 
 
-void MaterialParameter::SetValue(XMUINT3 value)
+void ComputeParameter::SetValue(XMUINT3 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMUINT3));
 
@@ -96,7 +94,7 @@ void MaterialParameter::SetValue(XMUINT3 value)
 }
 
 
-void MaterialParameter::SetValue(XMUINT4 value)
+void ComputeParameter::SetValue(XMUINT4 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMUINT4));
 
@@ -104,7 +102,7 @@ void MaterialParameter::SetValue(XMUINT4 value)
 }
 
 
-void MaterialParameter::SetValue(float value)
+void ComputeParameter::SetValue(float value)
 {
 	memcpy(&m_data[0], &value, sizeof(float));
 
@@ -112,7 +110,7 @@ void MaterialParameter::SetValue(float value)
 }
 
 
-void MaterialParameter::SetValue(XMFLOAT2 value)
+void ComputeParameter::SetValue(XMFLOAT2 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT2));
 
@@ -120,7 +118,7 @@ void MaterialParameter::SetValue(XMFLOAT2 value)
 }
 
 
-void MaterialParameter::SetValue(Vector3 value)
+void ComputeParameter::SetValue(Vector3 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT3));
 
@@ -128,7 +126,7 @@ void MaterialParameter::SetValue(Vector3 value)
 }
 
 
-void MaterialParameter::SetValue(Vector4 value)
+void ComputeParameter::SetValue(Vector4 value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT4));
 
@@ -136,7 +134,7 @@ void MaterialParameter::SetValue(Vector4 value)
 }
 
 
-void MaterialParameter::SetValue(const Matrix4& value)
+void ComputeParameter::SetValue(const Matrix4& value)
 {
 	memcpy(&m_data[0], &value, sizeof(XMFLOAT4X4));
 
@@ -144,49 +142,43 @@ void MaterialParameter::SetValue(const Matrix4& value)
 }
 
 
-void MaterialParameter::CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::Parameter<5>& parameter)
+void ComputeParameter::CreateRenderThreadData(shared_ptr<RenderThread::ComputeData> computeData, const ShaderReflection::Parameter<1>& parameter)
 {
-	m_renderThreadData = materialData;
+	m_renderThreadData = computeData;
 
 	m_type = parameter.type;
 	m_size = parameter.sizeInBytes;
 
-	for (uint32_t i = 0; i < 5; ++i)
+	if (parameter.byteOffset[0] != kInvalid)
 	{
-		if (parameter.byteOffset[i] != kInvalid)
-		{
-			m_bindings[i] = materialData->cbufferData + parameter.byteOffset[i];
-		}
+		m_binding = computeData->cbufferData + parameter.byteOffset[0];
 	}
-
+	
 	UpdateParameterOnRenderThread(m_data);
 }
 
 
-void MaterialParameter::UpdateParameterOnRenderThread(const array<byte, 64>& data)
+void ComputeParameter::UpdateParameterOnRenderThread(const array<byte, 64>& data)
 {
-	for (uint32_t i = 0; i < 5; ++i)
+	if (m_binding)
 	{
-		if (m_bindings[i])
-		{
-			memcpy(m_bindings[i], &data[0], m_size);
-		}
+		memcpy(m_binding, &data[0], m_size);
 	}
 }
 
 
-void MaterialParameter::SubmitToRenderThread()
+void ComputeParameter::SubmitToRenderThread()
 {
 	if (m_size == kInvalid || m_type == ShaderVariableType::Unsupported)
 	{
 		return;
 	}
 
-	if (auto materialData = m_renderThreadData.lock())
+	if (auto computeData = m_renderThreadData.lock())
 	{
 		auto thisParameter = shared_from_this();
 		auto thisData = m_data;
-		Renderer::GetInstance().EnqueueTask([materialData, thisParameter, thisData](RenderTaskEnvironment& rte)
+		Renderer::GetInstance().EnqueueTask([computeData, thisParameter, thisData](RenderTaskEnvironment& rte)
 		{
 			thisParameter->UpdateParameterOnRenderThread(thisData);
 		});

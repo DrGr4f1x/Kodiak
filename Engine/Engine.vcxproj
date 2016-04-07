@@ -201,6 +201,25 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClInclude>
     <ClInclude Include="Source\CommonMath.h" />
     <ClInclude Include="Source\CommonStates.h" />
+    <ClInclude Include="Source\ComputeKernel.h" />
+    <ClInclude Include="Source\ComputeKernel11.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeKernel12.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeParameter.h" />
+    <ClInclude Include="Source\ComputeResource.h" />
+    <ClInclude Include="Source\ComputeResource11.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeResource12.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Source\ConstantBuffer.h" />
     <ClInclude Include="Source\ConstantBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -389,6 +408,23 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\CameraController.cpp" />
     <ClCompile Include="Source\CommonStates.cpp" />
+    <ClCompile Include="Source\ComputeKernel11.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeKernel12.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeParameter.cpp" />
+    <ClCompile Include="Source\ComputeResource11.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeResource12.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Source\ConstantBuffer12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
@@ -450,6 +486,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClInclude>
     <ClInclude Include="Source\ShaderManager.h" />
     <ClInclude Include="Source\ShaderReflection.h" />
+    <ClInclude Include="Source\SSAO.h" />
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\StepTimer.h" />
     <ClInclude Include="Source\Texture.h" />
@@ -594,6 +631,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClCompile>
     <ClCompile Include="Source\ShaderManager.cpp" />
     <ClCompile Include="Source\ShaderReflection.cpp" />
+    <ClCompile Include="Source\SSAO.cpp" />
     <ClCompile Include="Source\Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Create</PrecompiledHeader>
@@ -620,6 +658,118 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsampleBlendOutCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsampleCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsamplePreMinBlendOutCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsamplePreMinCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoPrepareDepthBuffers1CS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoPrepareDepthBuffers2CS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoRender1CS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoRender2CS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
     <FxCompile Include="Source\Shaders\Common\BufferCopyPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Pixel</ShaderType>
@@ -633,6 +783,34 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugSSAOCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\LinearizeDepthCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\SM5\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\SM5.1\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Vertex</ShaderType>
@@ -691,6 +869,8 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Functions.inl" />
+    <None Include="Source\Shaders\Common\AoBlurAndUpsampleCS.hlsli" />
+    <None Include="Source\Shaders\Common\AoRenderCS.hlsli" />
     <None Include="Source\Shaders\Common\PerViewData.hlsli" />
     <None Include="Source\Shaders\Common\StaticMeshPerObjectData.hlsli" />
   </ItemGroup>

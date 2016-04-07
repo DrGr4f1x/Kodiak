@@ -15,6 +15,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class ColorBuffer;
 class Texture;
 enum class ShaderResourceType;
 enum class ShaderResourceDimension;
@@ -28,19 +29,22 @@ public:
 
 	const std::string& GetName() const { return m_name; }
 
-	void SetResource(std::shared_ptr<Texture> texture);
+	void SetTexture(std::shared_ptr<Texture> texture);
+	void SetUAV(std::shared_ptr<ColorBuffer> buffer);
 
-	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource);;
+	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource);
+	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceUAV<5>& resource);
 
 private:
 	void UpdateResourceOnRenderThread(RenderThread::MaterialData* materialData, D3D12_CPU_DESCRIPTOR_HANDLE srv);
 
 private:
-	const std::string			m_name;
-	ShaderResourceType			m_type;
-	ShaderResourceDimension		m_dimension;
+	const std::string				m_name;
+	ShaderResourceType				m_type;
+	ShaderResourceDimension			m_dimension;
 
-	std::shared_ptr<Texture>	m_texture;
+	std::shared_ptr<Texture>		m_texture;
+	std::shared_ptr<ColorBuffer>	m_buffer;
 
 	// Render thread data
 	std::array<std::pair<uint32_t, uint32_t>, 5>		m_shaderSlots;

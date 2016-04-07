@@ -11,7 +11,6 @@
 
 #include "ShaderReflection.h"
 
-#include "DebugUtility.h"
 #include "Material.h"
 #include "RenderEnums.h"
 #include "RenderUtils.h"
@@ -436,7 +435,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 		bool found = false;
 		uint32_t tableIndex = 0;
 		const uint32_t shaderRegister = uav.shaderRegister[0];
-		for (const auto& table : signature.srvTable)
+		for (const auto& table : signature.uavTable)
 		{
 			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
 			{

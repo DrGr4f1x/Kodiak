@@ -12,8 +12,6 @@
 
 #include "InputState.h"
 
-#include "DebugUtility.h"
-
 using namespace Kodiak;
 
 #include <XInput.h>

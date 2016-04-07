@@ -64,6 +64,7 @@
 
 // Engine headers
 #include "Constants.h"
+#include "DebugUtility.h"
 #include "Log.h"
 #include "VectorMath.h"
 
