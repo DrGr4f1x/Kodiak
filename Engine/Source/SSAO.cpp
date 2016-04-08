@@ -12,7 +12,11 @@
 
 #include "SSAO.h"
 
+#include "ColorBuffer.h"
 #include "ComputeKernel.h"
+#include "ComputeParameter.h"
+#include "ComputeResource.h"
+#include "DepthBuffer.h"
 #include "Renderer.h"
 #include "RenderTask.h"
 
@@ -73,6 +77,20 @@ shared_ptr<RenderTask> SSAO::GetRenderTask()
 	auto renderTask = make_shared<RenderTask>();
 	renderTask->SetName("SSAO");
 
+	if (!m_enabled)
+	{
+		renderTask->ClearColor(m_ssaoFullscreen);
+		renderTask->TransitionResource(m_ssaoFullscreen, ResourceState::NonPixelShaderResource);
+
+		if (!m_computeLinearZ)
+		{
+			return renderTask;
+		}
+
+		renderTask->TransitionResource(m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
+		renderTask->TransitionResource(m_linearDepth, ResourceState::UnorderedAccess);
+	}
+
 	return renderTask;
 }
 
@@ -93,5 +111,49 @@ void SSAO::SetDebugDraw(bool enabled)
 	Renderer::GetInstance().EnqueueTask([thisSSAO, enabled](RenderTaskEnvironment& rte)
 	{
 		thisSSAO->m_debugDraw = enabled;
+	});
+}
+
+
+void SSAO::SetComputeLinearZ(bool enabled)
+{
+	auto thisSSAO = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisSSAO, enabled](RenderTaskEnvironment& rte)
+	{
+		thisSSAO->m_computeLinearZ = enabled;
+	});
+}
+
+
+void SSAO::SetSSAOFullscreen(shared_ptr<ColorBuffer> ssaoFullscreen)
+{
+	auto thisSSAO = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisSSAO, ssaoFullscreen](RenderTaskEnvironment& rte)
+	{
+		thisSSAO->m_ssaoFullscreen = ssaoFullscreen;
+	});
+}
+
+
+void SSAO::SetSceneDepthBuffer(shared_ptr<DepthBuffer> sceneDepth)
+{
+	auto thisSSAO = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisSSAO, sceneDepth](RenderTaskEnvironment& rte)
+	{
+		thisSSAO->m_sceneDepthBuffer = sceneDepth;
+
+		thisSSAO->m_linearizeDepthCs->GetResource("Depth")->SetSRV(sceneDepth);
+	});
+}
+
+
+void SSAO::SetLinearDepth(shared_ptr<ColorBuffer> linearDepth)
+{
+	auto thisSSAO = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisSSAO, linearDepth](RenderTaskEnvironment& rte)
+	{
+		thisSSAO->m_linearDepth = linearDepth;
+
+		thisSSAO->m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(linearDepth);
 	});
 }

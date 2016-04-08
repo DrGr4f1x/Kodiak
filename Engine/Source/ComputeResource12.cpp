@@ -13,6 +13,7 @@
 
 #include "ColorBuffer12.h"
 #include "ComputeKernel12.h"
+#include "DepthBuffer12.h"
 #include "RenderEnums.h"
 #include "Renderer.h"
 #include "Texture12.h"
@@ -36,10 +37,12 @@ void ComputeResource::SetTexture(shared_ptr<Texture> texture)
 	if (m_type != ShaderResourceType::Unsupported)
 	{
 		assert_msg(m_type == ShaderResourceType::Texture || m_type == ShaderResourceType::TBuffer,
-			"ComputeResource is bound to a UAV, but a Texture is being assigned (should be a ColorBuffer).");
+			"ComputeResource is bound to a UAV, but a Texture is being assigned.");
 	}
 
 	m_texture = texture;
+	m_colorBuffer = nullptr;
+	m_depthBuffer = nullptr;
 
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
@@ -78,22 +81,92 @@ void ComputeResource::SetTexture(shared_ptr<Texture> texture)
 }
 
 
+void ComputeResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
+{
+	// Validate type
+	if (m_type != ShaderResourceType::Unsupported)
+	{
+		assert_msg(m_type != ShaderResourceType::Texture && m_type != ShaderResourceType::TBuffer,
+			"ComputeResource is bound to a UAV, but an SRV is being assigned.");
+	}
+
+	m_depthBuffer = buffer;
+	m_stencil = stencil;
+	m_texture = nullptr;
+	m_colorBuffer = nullptr;
+
+	if (auto renderThreadData = m_renderThreadData.lock())
+	{
+		// Locals for lambda capture
+		auto thisResource = shared_from_this();
+		auto thisBuffer = m_depthBuffer;
+		auto thisStencil = m_stencil;
+
+		// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
+		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer, thisStencil](RenderTaskEnvironment& rte)
+		{
+			CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
+			if (thisBuffer)
+			{
+				// TODO properly handle null SRV here
+				srv = thisStencil ? thisBuffer->GetStencilSRV() : thisBuffer->GetDepthSRV();
+			}
+			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+		});
+	}
+}
+
+
+void ComputeResource::SetSRV(shared_ptr<ColorBuffer> buffer)
+{
+	// Validate type
+	if (m_type != ShaderResourceType::Unsupported)
+	{
+		assert_msg(m_type != ShaderResourceType::Texture && m_type != ShaderResourceType::TBuffer,
+			"ComputeResource is bound to a UAV, but an SRV is being assigned.");
+	}
+
+	m_colorBuffer = buffer;
+	m_texture = nullptr;
+	m_depthBuffer = nullptr;
+
+	if (auto renderThreadData = m_renderThreadData.lock())
+	{
+		// Locals for lambda capture
+		auto thisResource = shared_from_this();
+		auto thisBuffer = m_colorBuffer;
+		
+		// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
+		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer](RenderTaskEnvironment& rte)
+		{
+			CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
+			if (thisBuffer)
+			{
+				// TODO properly handle null SRV here
+				srv = thisBuffer->GetSRV();
+			}
+			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+		});
+	}
+}
+
+
 void ComputeResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
 	{
 		assert_msg(m_type != ShaderResourceType::Texture && m_type != ShaderResourceType::TBuffer,
-			"ComputeResource is bound to a UAV, but a Texture is being assigned (should be a ColorBuffer).");
+			"ComputeResource is bound to an SRV, but a UAV is being assigned.");
 	}
 
-	m_buffer = buffer;
+	m_colorBuffer = buffer;
 
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
 		// Locals for lambda capture
 		auto thisResource = shared_from_this();
-		shared_ptr<ColorBuffer> thisBuffer = m_buffer;
+		shared_ptr<ColorBuffer> thisBuffer = m_colorBuffer;
 
 		// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
 		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer](RenderTaskEnvironment& rte)
@@ -113,8 +186,6 @@ void ComputeResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData, \
 	const ShaderReflection::ResourceSRV<1>& resource, uint32_t destCpuHandleSlot)
 {
-	assert_msg(!m_buffer, "ComputeResource is bound to an SRV, but has a ColorBuffer assigned (should be a Texture).");
-
 	m_renderThreadData = computeData;
 
 	m_type = resource.type;
@@ -122,22 +193,31 @@ void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::Compu
 
 	m_binding = destCpuHandleSlot;
 
-	SetTexture(m_texture);
+	if (m_texture)
+	{
+		SetTexture(m_texture);
+	}
+	else if (m_colorBuffer)
+	{
+		SetSRV(m_colorBuffer);
+	}
+	else if (m_depthBuffer)
+	{
+		SetSRV(m_depthBuffer, m_stencil);
+	}
 }
 
 
 void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData, \
 	const ShaderReflection::ResourceUAV<1>& resource, uint32_t destCpuHandleSlot)
 {
-	assert_msg(!m_buffer, "ComputeResource is bound to a UAV, but has a Texture assigned (should be a ColorBuffer).");
-
 	m_renderThreadData = computeData;
 
 	m_type = resource.type;
 
 	m_binding = destCpuHandleSlot;
 
-	SetUAV(m_buffer);
+	SetUAV(m_colorBuffer);
 }
 
 

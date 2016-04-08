@@ -18,6 +18,7 @@
 #include "IndexBuffer11.h"
 #include "PipelineState11.h"
 #include "Rectangle.h"
+#include "RenderEnums11.h"
 #include "RenderUtils.h"
 #include "VertexBuffer11.h"
 #include "Viewport.h"

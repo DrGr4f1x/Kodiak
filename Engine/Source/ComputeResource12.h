@@ -16,6 +16,7 @@ namespace Kodiak
 
 // Forward declarations
 class ColorBuffer;
+class DepthBuffer;
 class Texture;
 enum class ShaderResourceType;
 enum class ShaderResourceDimension;
@@ -30,6 +31,9 @@ public:
 	const std::string& GetName() const { return m_name; }
 
 	void SetTexture(std::shared_ptr<Texture> texture);
+	void SetSRV(std::shared_ptr<Texture> texture) { SetTexture(texture); }
+	void SetSRV(std::shared_ptr<DepthBuffer> buffer, bool stencil = false);
+	void SetSRV(std::shared_ptr<ColorBuffer> buffer);
 	void SetUAV(std::shared_ptr<ColorBuffer> buffer);
 
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData, const ShaderReflection::ResourceSRV<1>& resource,
@@ -46,8 +50,10 @@ private:
 	ShaderResourceType				m_type;
 	ShaderResourceDimension			m_dimension;
 
-	std::shared_ptr<Texture>		m_texture;  // For SRV resource
-	std::shared_ptr<ColorBuffer>	m_buffer;	// For UAV resource
+	std::shared_ptr<Texture>		m_texture;
+	std::shared_ptr<ColorBuffer>	m_colorBuffer;
+	std::shared_ptr<DepthBuffer>	m_depthBuffer;
+	bool							m_stencil{ false };
 
 	// Render thread data
 	std::weak_ptr<RenderThread::ComputeData>	m_renderThreadData;

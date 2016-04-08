@@ -233,14 +233,14 @@ void ByteAddressBuffer::CreateDerivedViews()
 
 const D3D12_CPU_DESCRIPTOR_HANDLE& StructuredBuffer::GetCounterSRV(CommandList& commandList)
 {
-	commandList.TransitionResource(m_counterBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
+	commandList.TransitionResource(m_counterBuffer, ResourceState::GenericRead);
 	return m_counterBuffer.GetSRV();
 }
 
 
 const D3D12_CPU_DESCRIPTOR_HANDLE& StructuredBuffer::GetCounterUAV(CommandList& commandList)
 {
-	commandList.TransitionResource(m_counterBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandList.TransitionResource(m_counterBuffer, ResourceState::UnorderedAccess);
 	return m_counterBuffer.GetUAV();
 }
 

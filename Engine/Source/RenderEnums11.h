@@ -121,4 +121,26 @@ enum class PrimitiveTopologyType
 };
 
 
+enum class ResourceState
+{
+	Common,
+	VertexAndConstantBuffer,
+	IndexBuffer,
+	RenderTarget,
+	UnorderedAccess,
+	DepthWrite,
+	DepthRead,
+	NonPixelShaderResource,
+	PixelShaderResource,
+	StreamOut,
+	IndirectArgument,
+	CopyDest,
+	CopySource,
+	ResolveDest,
+	ResolveSource,
+	GenericRead,
+	Present,
+	Predication
+};
+
 } // namespace Kodiak

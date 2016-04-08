@@ -15,6 +15,7 @@
 #include "CommandList.h"
 #include "DepthBuffer.h"
 #include "DeviceManager.h"
+#include "RenderEnums.h"
 #include "Renderer.h"
 #include "Scene.h"
 
@@ -107,6 +108,24 @@ void RenderTask::RenderScenePass(shared_ptr<RenderPass> renderPass, shared_ptr<S
 	m_renderSteps.push_back([renderPass, scene](GraphicsCommandList* commandList)
 	{
 		scene->Render(renderPass, commandList);
+	});
+}
+
+
+void RenderTask::TransitionResource(std::shared_ptr<ColorBuffer> resource, ResourceState newState, bool flushImmediate)
+{
+	m_renderSteps.push_back([resource, newState, flushImmediate](GraphicsCommandList* commandList)
+	{
+		commandList->TransitionResource(*resource, newState, flushImmediate);
+	});
+}
+
+
+void RenderTask::TransitionResource(std::shared_ptr<DepthBuffer> resource, ResourceState newState, bool flushImmediate)
+{
+	m_renderSteps.push_back([resource, newState, flushImmediate](GraphicsCommandList* commandList)
+	{
+		commandList->TransitionResource(*resource, newState, flushImmediate);
 	});
 }
 

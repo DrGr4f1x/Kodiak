@@ -14,7 +14,9 @@ namespace Kodiak
 {
 
 // Forward declarations
+class ColorBuffer;
 class ComputeKernel;
+class DepthBuffer;
 class RenderTask;
 
 
@@ -33,6 +35,20 @@ public:
 	bool GetDebugDraw() const { return m_debugDraw; }
 	void SetDebugDraw(bool enabled);
 
+	// Enable/disable linearize Z step
+	bool GetComputeLinearZ() const { return m_computeLinearZ; }
+	void SetComputeLinearZ(bool enabled);
+
+	// Set render targets and buffers
+	void SetSSAOFullscreen(std::shared_ptr<ColorBuffer> ssaoFullscreen);
+	void SetSceneDepthBuffer(std::shared_ptr<DepthBuffer> sceneDepthBuffer);
+	void SetLinearDepth(std::shared_ptr<ColorBuffer> linearDepth);
+
+private:
+	// Render thread callbacks
+	void InternalSetSSAOFullscreen(std::shared_ptr<ColorBuffer> ssaoFullscreen);
+	void InternalSetSceneDepthBuffer(std::shared_ptr<DepthBuffer> sceneDepthBuffer);
+	void InternalSetLinearDepth(std::shared_ptr<ColorBuffer> linearDepth);
 
 private:
 	// Compute shader kernels
@@ -44,6 +60,11 @@ private:
 	std::shared_ptr<ComputeKernel>	m_blurUpsampleFinal[2];
 	std::shared_ptr<ComputeKernel>	m_linearizeDepthCs;
 	std::shared_ptr<ComputeKernel>	m_debugSsaoCs;
+
+	// Render targets and UAV buffers
+	std::shared_ptr<ColorBuffer>	m_ssaoFullscreen;
+	std::shared_ptr<DepthBuffer>	m_sceneDepthBuffer;
+	std::shared_ptr<ColorBuffer>	m_linearDepth;
 
 	// Parameters
 	enum QualityLevel { kSsaoQualityLow, kSsaoQualityMedium, kSsaoQualityHigh, kSsaoQualityVeryHigh, kNumSsaoQualitySettings};
@@ -61,6 +82,7 @@ private:
 	// Feature toggles
 	bool			m_enabled{ true };
 	bool			m_debugDraw{ false };
+	bool			m_computeLinearZ{ true };
 };
 
 } // namespace Kodiak

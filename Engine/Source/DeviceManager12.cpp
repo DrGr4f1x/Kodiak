@@ -347,7 +347,7 @@ void DeviceManager::CreatePresentState()
 void DeviceManager::PreparePresent(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource)
 {
 	// Transition the present source so we can read from it
-	commandList->TransitionResource(*presentSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandList->TransitionResource(*presentSource, ResourceState::PixelShaderResource);
 
 	commandList->SetRootSignature(m_presentRS);
 	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -362,5 +362,5 @@ void DeviceManager::PreparePresent(GraphicsCommandList* commandList, shared_ptr<
 	commandList->Draw(3);
 
 	// Transition the current back buffer to present mode
-	commandList->TransitionResource(m_backbuffers[g_currentFrame], D3D12_RESOURCE_STATE_PRESENT);
+	commandList->TransitionResource(m_backbuffers[g_currentFrame], ResourceState::Present);
 }

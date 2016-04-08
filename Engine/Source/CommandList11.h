@@ -18,6 +18,7 @@ class CommandListManager;
 class ComputeCommandList;
 class ConstantBuffer;
 class DepthBuffer;
+class GpuResource;
 class GraphicsCommandList;
 class GraphicsPSO;
 class IndexBuffer;
@@ -25,6 +26,7 @@ class RenderTargetView;
 class VertexBuffer;
 struct Rectangle;
 struct Viewport;
+enum class ResourceState;
 
 class CommandList
 {
@@ -47,6 +49,10 @@ public:
 	{
 		return reinterpret_cast<ComputeCommandList*>(this);
 	}
+
+	// TODO: See if we can handle resource transitions in the ComputeKernel and Material such that DX11 doesn't need to know
+	void TransitionResource(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
+	void BeginResourceTransition(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
 
 	void PIXBeginEvent(const std::string& label);
 	void PIXEndEvent();

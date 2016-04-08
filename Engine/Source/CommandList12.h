@@ -12,6 +12,7 @@
 
 #include "DynamicDescriptorHeap12.h"
 #include "LinearAllocator12.h"
+#include "RenderEnums12.h"
 #include "RootSignature12.h"
 
 namespace Kodiak
@@ -85,8 +86,8 @@ public:
 	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
 	void FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes);
 
-	void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
-	void BeginResourceTransition(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
+	void TransitionResource(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false);
+	void BeginResourceTransition(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false);
 	void InsertUAVBarrier(GpuResource& Resource, bool FlushImmediate = false);
 	void InsertAliasBarrier(GpuResource& Before, GpuResource& After, bool FlushImmediate = false);
 	void FlushResourceBarriers();
@@ -214,8 +215,8 @@ public:
 
 inline void CommandList::CopyBuffer(GpuResource& dest, GpuResource& src)
 {
-	TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST);
-	TransitionResource(src, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	TransitionResource(dest, ResourceState::CopyDest);
+	TransitionResource(src, ResourceState::CopySource);
 	FlushResourceBarriers();
 	m_commandList->CopyResource(dest.GetResource(), src.GetResource());
 }
@@ -223,8 +224,8 @@ inline void CommandList::CopyBuffer(GpuResource& dest, GpuResource& src)
 
 inline void CommandList::CopyBufferRegion(GpuResource& dest, size_t destOffset, GpuResource& src, size_t srcOffset, size_t numBytes)
 {
-	TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST);
-	TransitionResource(src, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	TransitionResource(dest, ResourceState::CopyDest);
+	TransitionResource(src, ResourceState::CopySource);
 	FlushResourceBarriers();
 	m_commandList->CopyBufferRegion(dest.GetResource(), destOffset, src.GetResource(), srcOffset, numBytes);
 }

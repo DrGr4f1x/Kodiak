@@ -20,6 +20,7 @@ class DepthBuffer;
 class GraphicsCommandList;
 class RenderPass;
 class Scene;
+enum class ResourceState;
 
 
 class RenderTask : public std::enable_shared_from_this<RenderTask>
@@ -38,6 +39,9 @@ public:
 
 	void UpdateScene(std::shared_ptr<Scene> scene);
 	void RenderScenePass(std::shared_ptr<RenderPass> renderPass, std::shared_ptr<Scene> scene);
+
+	void TransitionResource(std::shared_ptr<ColorBuffer> resource, ResourceState newState, bool flushImmediate = false);
+	void TransitionResource(std::shared_ptr<DepthBuffer> resource, ResourceState newState, bool flushImmediate = false);
 
 	//void BeginGraphics();
 	//void EndGraphics();

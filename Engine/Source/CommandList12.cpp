@@ -124,9 +124,9 @@ void CommandList::InitializeTexture(GpuResource& dest, UINT numSubresources, D3D
 		IID_PPV_ARGS(&uploadBuffer)));
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
-	commandList->TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+	commandList->TransitionResource(dest, ResourceState::CopyDest, true);
 	UpdateSubresources(commandList->m_commandList, dest.GetResource(), uploadBuffer, 0, 0, numSubresources, subData);
-	commandList->TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+	commandList->TransitionResource(dest, ResourceState::GenericRead, true);
 
 	// Execute the command list and wait for it to finish so we can release the upload buffer
 	commandList->Finish(true);
@@ -175,9 +175,9 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 	uploadBuffer->Unmap(0, nullptr);
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
-	initContext->TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+	initContext->TransitionResource(dest, ResourceState::CopyDest, true);
 	initContext->m_commandList->CopyResource(dest.GetResource(), uploadBuffer);
-	initContext->TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+	initContext->TransitionResource(dest, ResourceState::GenericRead, true);
 
 	// Execute the command list and wait for it to finish so we can release the upload buffer
 	initContext->CloseAndExecute(true);
@@ -204,11 +204,12 @@ void CommandList::FillBuffer(GpuResource& dest, size_t destOffset, DWParam value
 }
 
 
-void CommandList::TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
+void CommandList::TransitionResource(GpuResource& resource, ResourceState newState, bool flushImmediate)
 {
+	D3D12_RESOURCE_STATES newStateDx12 = static_cast<D3D12_RESOURCE_STATES>(newState);
 	D3D12_RESOURCE_STATES oldState = resource.m_usageState;
 
-	if (oldState != newState)
+	if (oldState != newStateDx12)
 	{
 		assert(m_numBarriersToFlush < 16);
 		D3D12_RESOURCE_BARRIER& BarrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
@@ -217,10 +218,10 @@ void CommandList::TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATE
 		BarrierDesc.Transition.pResource = resource.GetResource();
 		BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		BarrierDesc.Transition.StateBefore = oldState;
-		BarrierDesc.Transition.StateAfter = newState;
+		BarrierDesc.Transition.StateAfter = newStateDx12;
 
 		// Check to see if we already started the transition
-		if (newState == resource.m_transitioningState)
+		if (newStateDx12 == resource.m_transitioningState)
 		{
 			BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
 			resource.m_transitioningState = (D3D12_RESOURCE_STATES)-1;
@@ -230,9 +231,9 @@ void CommandList::TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATE
 			BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		}
 
-		resource.m_usageState = newState;
+		resource.m_usageState = newStateDx12;
 	}
-	else if (newState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+	else if (newStateDx12 == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
 	{
 		InsertUAVBarrier(resource, flushImmediate);
 	}
@@ -245,17 +246,19 @@ void CommandList::TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATE
 }
 
 
-void CommandList::BeginResourceTransition(GpuResource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
+void CommandList::BeginResourceTransition(GpuResource& resource, ResourceState newState, bool flushImmediate)
 {
+	D3D12_RESOURCE_STATES newStateDx12 = static_cast<D3D12_RESOURCE_STATES>(newState);
+
 	// If it's already transitioning, finish that transition
 	if (resource.m_transitioningState != (D3D12_RESOURCE_STATES)-1)
 	{
-		TransitionResource(resource, resource.m_transitioningState);
+		TransitionResource(resource, static_cast<ResourceState>(resource.m_transitioningState));
 	}
 
 	D3D12_RESOURCE_STATES oldState = resource.m_usageState;
 
-	if (oldState != newState)
+	if (oldState != newStateDx12)
 	{
 		assert(m_numBarriersToFlush < 16);
 		D3D12_RESOURCE_BARRIER& BarrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
@@ -264,11 +267,11 @@ void CommandList::BeginResourceTransition(GpuResource& resource, D3D12_RESOURCE_
 		BarrierDesc.Transition.pResource = resource.GetResource();
 		BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		BarrierDesc.Transition.StateBefore = oldState;
-		BarrierDesc.Transition.StateAfter = newState;
+		BarrierDesc.Transition.StateAfter = newStateDx12;
 
 		BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
 
-		resource.m_transitioningState = newState;
+		resource.m_transitioningState = newStateDx12;
 	}
 
 	if (flushImmediate || m_numBarriersToFlush == 16)
@@ -454,7 +457,7 @@ void CommandList::FreeCommandList(CommandList* commandList)
 
 void GraphicsCommandList::ClearUAV(ColorBuffer& target)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+	TransitionResource(target, ResourceState::UnorderedAccess, true);
 
 	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
 	// a shader to set all of the values).
@@ -474,7 +477,7 @@ void GraphicsCommandList::ClearUAV(ColorBuffer& target)
 
 void GraphicsCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+	TransitionResource(target, ResourceState::UnorderedAccess, true);
 
 	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
 	// a shader to set all of the values).
@@ -494,7 +497,7 @@ void GraphicsCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF
 
 void GraphicsCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+	TransitionResource(target, ResourceState::UnorderedAccess, true);
 
 	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
 	// a shader to set all of the values).
@@ -514,21 +517,21 @@ void GraphicsCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU
 
 void GraphicsCommandList::ClearColor(ColorBuffer& target)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+	TransitionResource(target, ResourceState::RenderTarget, true);
 	m_commandList->ClearRenderTargetView(target.GetRTV(), target.GetClearColor(), 0, nullptr);
 }
 
 
 void GraphicsCommandList::ClearColor(ColorBuffer& target, const XMVECTORF32& clearColor)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+	TransitionResource(target, ResourceState::RenderTarget, true);
 	m_commandList->ClearRenderTargetView(target.GetRTV(), clearColor, 0, nullptr);
 }
 
 
 void GraphicsCommandList::ClearDepth(DepthBuffer& target)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
+	TransitionResource(target, ResourceState::DepthWrite, true);
 	m_commandList->ClearDepthStencilView(
 		target.GetDSV(), 
 		D3D12_CLEAR_FLAG_DEPTH, 
@@ -541,7 +544,7 @@ void GraphicsCommandList::ClearDepth(DepthBuffer& target)
 
 void GraphicsCommandList::ClearDepth(DepthBuffer& target, float clearDepth)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
+	TransitionResource(target, ResourceState::DepthWrite, true);
 	m_commandList->ClearDepthStencilView(
 		target.GetDSV(),
 		D3D12_CLEAR_FLAG_DEPTH,
@@ -554,7 +557,7 @@ void GraphicsCommandList::ClearDepth(DepthBuffer& target, float clearDepth)
 
 void GraphicsCommandList::ClearStencil(DepthBuffer& target)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
+	TransitionResource(target, ResourceState::DepthWrite, true);
 	m_commandList->ClearDepthStencilView(
 		target.GetDSV(), 
 		D3D12_CLEAR_FLAG_STENCIL, 
@@ -567,7 +570,7 @@ void GraphicsCommandList::ClearStencil(DepthBuffer& target)
 
 void GraphicsCommandList::ClearStencil(DepthBuffer& target, uint32_t clearStencil)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
+	TransitionResource(target, ResourceState::DepthWrite, true);
 	m_commandList->ClearDepthStencilView(
 		target.GetDSV(),
 		D3D12_CLEAR_FLAG_STENCIL,
@@ -580,7 +583,7 @@ void GraphicsCommandList::ClearStencil(DepthBuffer& target, uint32_t clearStenci
 
 void GraphicsCommandList::ClearDepthAndStencil(DepthBuffer& target)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
+	TransitionResource(target, ResourceState::DepthWrite, true);
 	m_commandList->ClearDepthStencilView(
 		target.GetDSV(), 
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 
@@ -593,7 +596,7 @@ void GraphicsCommandList::ClearDepthAndStencil(DepthBuffer& target)
 
 void GraphicsCommandList::ClearDepthAndStencil(DepthBuffer& target, float clearDepth, uint32_t clearStencil)
 {
-	TransitionResource(target, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
+	TransitionResource(target, ResourceState::DepthWrite, true);
 	m_commandList->ClearDepthStencilView(
 		target.GetDSV(),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
@@ -610,7 +613,7 @@ void GraphicsCommandList::SetRenderTargets(uint32_t numRTVs, ColorBuffer* rtvs, 
 
 	for(uint32_t i = 0; i < numRTVs; ++i)
 	{
-		TransitionResource(rtvs[i], D3D12_RESOURCE_STATE_RENDER_TARGET);
+		TransitionResource(rtvs[i], ResourceState::RenderTarget);
 		rtvHandles[i] = rtvs[i].GetRTV();
 	}
 
@@ -618,12 +621,12 @@ void GraphicsCommandList::SetRenderTargets(uint32_t numRTVs, ColorBuffer* rtvs, 
 	{
 		if(readOnlyDepth)
 		{
-			TransitionResource(*dsv, D3D12_RESOURCE_STATE_DEPTH_READ);
+			TransitionResource(*dsv, ResourceState::DepthRead);
 			m_commandList->OMSetRenderTargets(numRTVs, rtvHandles, FALSE, &dsv->GetDSVReadOnlyDepth());
 		}
 		else
 		{
-			TransitionResource(*dsv, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+			TransitionResource(*dsv, ResourceState::DepthWrite);
 			m_commandList->OMSetRenderTargets(numRTVs, rtvHandles, FALSE, &dsv->GetDSV());
 		}
 	}
