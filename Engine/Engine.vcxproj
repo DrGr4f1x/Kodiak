@@ -381,6 +381,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClInclude>
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\RenderPass.h" />
+    <ClInclude Include="Source\RenderThread.h" />
     <ClInclude Include="Source\RenderUtils.h" />
     <ClInclude Include="Source\RenderTask.h" />
     <ClInclude Include="Source\RootSignature12.h">

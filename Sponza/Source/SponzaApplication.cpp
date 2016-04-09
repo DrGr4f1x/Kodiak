@@ -96,6 +96,7 @@ void SponzaApplication::CreateResources()
 
 	m_ssao = make_shared<SSAO>();
 	m_ssao->Initialize();
+	m_ssao->SceneDepthBuffer = m_depthBuffer;
 }
 
 

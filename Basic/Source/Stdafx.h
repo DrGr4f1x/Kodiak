@@ -58,6 +58,5 @@
 // Engine headers
 #include "Engine\Source\Constants.h"
 #include "Engine\Source\Log.h"
+#include "Engine\Source\Utility.h"
 #include "Engine\Source\VectorMath.h"
-
-#define NEW_MATH 1

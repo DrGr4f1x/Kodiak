@@ -17,6 +17,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class ComputeCommandList;
 class ComputeParameter;
 class ComputePSO;
 class ComputeResource;
@@ -43,6 +44,12 @@ public:
 
 	std::shared_ptr<ComputeParameter> GetParameter(const std::string& name);
 	std::shared_ptr<ComputeResource> GetResource(const std::string& name);
+
+	void Dispatch(ComputeCommandList* commandList, size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
+	void Dispatch1D(ComputeCommandList* commandList, size_t threadCountX, size_t groupSizeX = 64);
+	void Dispatch2D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
+	void Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, 
+		size_t groupSizeY, size_t groupSizeZ);
 
 private:
 	void SetupKernel();
@@ -72,6 +79,8 @@ struct ComputeData
 	{
 		_aligned_free(cbufferData);
 	}
+
+	void Commit(ComputeCommandList* commandList);
 
 	std::shared_ptr<ComputePSO>		pso;
 

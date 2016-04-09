@@ -25,6 +25,19 @@ using namespace Kodiak;
 using namespace std;
 
 
+SSAO::SSAO()
+	: Enable(m_enabled)
+	, DebugDraw(m_debugDraw)
+	, ComputeLinearDepth(m_computeLinearZ)
+	, SsaoFullscreen(m_ssaoFullscreen)
+	, SceneDepthBuffer(m_sceneDepthBuffer)
+	, LinearDepthBuffer(m_linearDepth)
+{
+	SceneDepthBuffer.postAssignment = [this] { OnSetSceneDepthBuffer(); };
+	LinearDepthBuffer.postAssignment = [this] { OnSetLinearDepthBuffer(); };
+}
+
+
 void SSAO::Initialize()
 {
 	m_sampleThickness[0]	= sqrt(1.0f - 0.2f * 0.2f);
@@ -89,71 +102,20 @@ shared_ptr<RenderTask> SSAO::GetRenderTask()
 
 		renderTask->TransitionResource(m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
 		renderTask->TransitionResource(m_linearDepth, ResourceState::UnorderedAccess);
+		renderTask->Dispatch2D(m_linearizeDepthCs, m_linearDepth->GetWidth(), m_linearDepth->GetHeight(), 16, 16);
 	}
 
 	return renderTask;
 }
 
 
-void SSAO::SetEnabled(bool enabled)
+void SSAO::OnSetSceneDepthBuffer()
 {
-	auto thisSSAO = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisSSAO, enabled](RenderTaskEnvironment& rte)
-	{
-		thisSSAO->m_enabled = enabled;
-	});
+	m_linearizeDepthCs->GetResource("Depth")->SetSRV(m_sceneDepthBuffer);
 }
 
 
-void SSAO::SetDebugDraw(bool enabled)
+void SSAO::OnSetLinearDepthBuffer()
 {
-	auto thisSSAO = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisSSAO, enabled](RenderTaskEnvironment& rte)
-	{
-		thisSSAO->m_debugDraw = enabled;
-	});
-}
-
-
-void SSAO::SetComputeLinearZ(bool enabled)
-{
-	auto thisSSAO = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisSSAO, enabled](RenderTaskEnvironment& rte)
-	{
-		thisSSAO->m_computeLinearZ = enabled;
-	});
-}
-
-
-void SSAO::SetSSAOFullscreen(shared_ptr<ColorBuffer> ssaoFullscreen)
-{
-	auto thisSSAO = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisSSAO, ssaoFullscreen](RenderTaskEnvironment& rte)
-	{
-		thisSSAO->m_ssaoFullscreen = ssaoFullscreen;
-	});
-}
-
-
-void SSAO::SetSceneDepthBuffer(shared_ptr<DepthBuffer> sceneDepth)
-{
-	auto thisSSAO = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisSSAO, sceneDepth](RenderTaskEnvironment& rte)
-	{
-		thisSSAO->m_sceneDepthBuffer = sceneDepth;
-
-		thisSSAO->m_linearizeDepthCs->GetResource("Depth")->SetSRV(sceneDepth);
-	});
-}
-
-
-void SSAO::SetLinearDepth(shared_ptr<ColorBuffer> linearDepth)
-{
-	auto thisSSAO = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisSSAO, linearDepth](RenderTaskEnvironment& rte)
-	{
-		thisSSAO->m_linearDepth = linearDepth;
-
-		thisSSAO->m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(linearDepth);
-	});
+	m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(m_linearDepth);
 }

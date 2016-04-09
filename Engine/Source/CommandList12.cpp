@@ -23,7 +23,6 @@
 #include "Rectangle.h"
 #include "RenderUtils.h"
 #include "RootSignature12.h"
-#include "Utility.h"
 #include "VertexBuffer12.h"
 #include "Viewport.h"
 
@@ -727,4 +726,77 @@ void GraphicsCommandList::SetVertexBuffers(uint32_t numVBs, uint32_t startSlot, 
 		d3dVBVs[i] = vertexBuffers[i].GetVBV();
 	}
 	m_commandList->IASetVertexBuffers(startSlot, numVBs, d3dVBVs);
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target)
+{
+	TransitionResource(target, ResourceState::UnorderedAccess, true);
+
+	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
+	// a shader to set all of the values).
+	D3D12_GPU_DESCRIPTOR_HANDLE GpuVisibleHandle = m_dynamicDescriptorHeap.UploadDirect(target.GetUAV());
+	CD3DX12_RECT ClearRect(0, 0, (LONG)target.GetWidth(), (LONG)target.GetHeight());
+
+	//TODO: My Nvidia card is not clearing UAVs with either Float or Uint variants.
+	m_commandList->ClearUnorderedAccessViewFloat(
+		GpuVisibleHandle,
+		target.GetUAV(),
+		target.GetResource(),
+		target.GetClearColor(),
+		1,
+		&ClearRect);
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor)
+{
+	TransitionResource(target, ResourceState::UnorderedAccess, true);
+
+	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
+	// a shader to set all of the values).
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuVisibleHandle = m_dynamicDescriptorHeap.UploadDirect(target.GetUAV());
+	CD3DX12_RECT clearRect(0, 0, (LONG)target.GetWidth(), (LONG)target.GetHeight());
+
+	//TODO: My Nvidia card is not clearing UAVs with either Float or Uint variants.
+	m_commandList->ClearUnorderedAccessViewFloat(
+		gpuVisibleHandle,
+		target.GetUAV(),
+		target.GetResource(),
+		clearColor,
+		1,
+		&clearRect);
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue)
+{
+	TransitionResource(target, ResourceState::UnorderedAccess, true);
+
+	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
+	// a shader to set all of the values).
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuVisibleHandle = m_dynamicDescriptorHeap.UploadDirect(target.GetUAV());
+	CD3DX12_RECT clearRect(0, 0, (LONG)target.GetWidth(), (LONG)target.GetHeight());
+
+	//TODO: My Nvidia card is not clearing UAVs with either Float or Uint variants.
+	m_commandList->ClearUnorderedAccessViewUint(
+		gpuVisibleHandle,
+		target.GetUAV(),
+		target.GetResource(),
+		clearValue.u,
+		1,
+		&clearRect);
+}
+
+
+void ComputeCommandList::SetPipelineState(const ComputePSO& pso)
+{
+	ID3D12PipelineState* pipelineState = pso.GetPipelineStateObject();
+	if (pipelineState == m_currentComputePSO)
+	{
+		return;
+	}
+
+	m_commandList->SetPipelineState(pipelineState);
+	m_currentComputePSO = pipelineState;
 }

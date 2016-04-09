@@ -275,11 +275,11 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 			break;
 
 		case D3D_SIT_TBUFFER:
-			IntrospectResourceSRV(ShaderResourceType::Texture, inputDesc, signature);
+			IntrospectResourceSRV(ShaderResourceType::TBuffer, inputDesc, signature);
 			break;
 
 		case D3D_SIT_TEXTURE:
-			IntrospectResourceSRV(ShaderResourceType::TBuffer, inputDesc, signature);
+			IntrospectResourceSRV(ShaderResourceType::Texture, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWTYPED:
@@ -456,7 +456,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 		bool found = false;
 		uint32_t tableIndex = 0;
 		const uint32_t shaderRegister = sampler.shaderRegister[0];
-		for (const auto& table : signature.srvTable)
+		for (const auto& table : signature.samplerTable)
 		{
 			if (shaderRegister >= table.shaderRegister && shaderRegister < (table.shaderRegister + table.numItems))
 			{

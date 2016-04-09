@@ -66,6 +66,5 @@
 #include "Constants.h"
 #include "DebugUtility.h"
 #include "Log.h"
+#include "Utility.h"
 #include "VectorMath.h"
-
-#define NEW_MATH 1

@@ -16,6 +16,7 @@ namespace Kodiak
 class ColorBuffer;
 class CommandListManager;
 class ComputeCommandList;
+class ComputePSO;
 class ConstantBuffer;
 class DepthBuffer;
 class GpuResource;
@@ -184,6 +185,29 @@ public:
 	{
 		return CommandList::Begin()->GetComputeCommandList();
 	}
+
+	void ClearUAV(ColorBuffer& target);
+	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor);
+	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue);
+
+	void SetPipelineState(ComputePSO& PSO);
+
+	byte* MapConstants(const ConstantBuffer& cbuffer);
+	void UnmapConstants(const ConstantBuffer& cbuffer);
+
+	void Dispatch(size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
+	void Dispatch1D(size_t threadCountX, size_t groupSizeX = 64);
+	void Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
+	void Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ);
+
+	void SetShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
+	void SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav);
+	void SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs);
+	void SetShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+	void SetShaderSampler(uint32_t slot, ID3D11SamplerState* state);
 };
 
 
@@ -283,5 +307,60 @@ inline void GraphicsCommandList::SetPixelShaderSampler(uint32_t slot, ID3D11Samp
 	m_context->PSSetSamplers(slot, 1, &state);
 }
 
+
+inline void ComputeCommandList::Dispatch(size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+{
+	m_context->Dispatch((UINT)groupCountX, (UINT)groupCountY, (UINT)groupCountZ);
+}
+
+inline void ComputeCommandList::Dispatch1D(size_t threadCountX, size_t groupSizeX)
+{
+	Dispatch(Math::DivideByMultiple(threadCountX, groupSizeX), 1, 1);
+}
+
+inline void ComputeCommandList::Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY), 1);
+}
+
+inline void ComputeCommandList::Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY),
+		Math::DivideByMultiple(threadCountZ, groupSizeZ));
+}
+
+
+inline void ComputeCommandList::SetShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv)
+{
+	m_context->CSSetShaderResources(slot, 1, &srv);
+}
+
+
+inline void ComputeCommandList::SetShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->CSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
+inline void ComputeCommandList::SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav)
+{
+	m_context->CSSetUnorderedAccessViews(slot, 1, &uav, nullptr);
+}
+
+
+inline void ComputeCommandList::SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs)
+{
+	m_context->CSSetUnorderedAccessViews(startSlot, numResources, uavs, nullptr);
+}
+
+
+inline void ComputeCommandList::SetShaderSampler(uint32_t slot, ID3D11SamplerState* state)
+{
+	m_context->CSSetSamplers(slot, 1, &state);
+}
 
 } // namespace Kodiak

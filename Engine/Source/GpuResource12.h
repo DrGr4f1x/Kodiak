@@ -19,6 +19,8 @@ namespace Kodiak
 class GpuResource
 {
 	friend class CommandList;
+	friend class GraphicsCommandList;
+	friend class ComputeCommandList;
 
 public:
 	GpuResource() :

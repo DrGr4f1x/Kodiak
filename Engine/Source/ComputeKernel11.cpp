@@ -11,6 +11,7 @@
 
 #include "ComputeKernel11.h"
 
+#include "CommandList11.h"
 #include "ComputeParameter.h"
 #include "ComputeResource11.h"
 #include "ConstantBuffer11.h"
@@ -76,6 +77,43 @@ shared_ptr<ComputeResource> ComputeKernel::GetResource(const string& name)
 	m_resources[name] = resource;
 
 	return resource;
+}
+
+
+void ComputeKernel::Dispatch(ComputeCommandList* commandList, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+}
+
+
+void ComputeKernel::Dispatch1D(ComputeCommandList* commandList, size_t threadCountX, size_t groupSizeX)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch1D(threadCountX, groupSizeX);
+}
+
+
+void ComputeKernel::Dispatch2D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch2D(threadCountX, threadCountY, groupSizeX, groupSizeY);
+}
+
+
+void ComputeKernel::Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
+	size_t groupSizeY, size_t groupSizeZ)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
 }
 
 
@@ -218,4 +256,44 @@ void ComputeKernel::SetupKernel()
 	computeData.pso = make_shared<ComputePSO>();
 	computeData.pso->SetComputeShader(m_computeShader.get());
 	computeData.pso->Finalize();
+}
+
+
+void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
+{
+	// Update the cbuffer
+	if (cbufferDirty && cbufferSize > 0)
+	{
+		auto dest = commandList->MapConstants(*cbuffer);
+		memcpy(dest, cbufferData, cbufferSize);
+		commandList->UnmapConstants(*cbuffer);
+
+		cbufferDirty = false;
+	}
+
+	// Set the PSO for this kernel
+	commandList->SetPipelineState(*pso);
+
+	// Bind cbuffers
+	if (cbufferBinding.numBuffers > 0)
+	{
+		commandList->SetShaderConstants(
+			cbufferBinding.startSlot,
+			cbufferBinding.numBuffers,
+			&cbufferBinding.cbuffers[0],
+			&cbufferBinding.firstConstant[0],
+			&cbufferBinding.numConstants[0]);
+	}
+
+	// Bind SRVs
+	for (const auto& layout : srvTables.layouts)
+	{
+		commandList->SetShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+	}
+
+	// Bind UAVs
+	for (const auto& layout : uavTables.layouts)
+	{
+		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+	}
 }

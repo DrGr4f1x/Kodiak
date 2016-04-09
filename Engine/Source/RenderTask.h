@@ -16,6 +16,7 @@ namespace Kodiak
 // Forward declarations
 class ColorBuffer;
 class CommandList;
+class ComputeKernel;
 class DepthBuffer;
 class GraphicsCommandList;
 class RenderPass;
@@ -42,6 +43,11 @@ public:
 
 	void TransitionResource(std::shared_ptr<ColorBuffer> resource, ResourceState newState, bool flushImmediate = false);
 	void TransitionResource(std::shared_ptr<DepthBuffer> resource, ResourceState newState, bool flushImmediate = false);
+
+	void Dispatch(std::shared_ptr<ComputeKernel> kernel, size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
+	void Dispatch1D(std::shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t groupSizeX = 64);
+	void Dispatch2D(std::shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
+	void Dispatch3D(std::shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ);
 
 	//void BeginGraphics();
 	//void EndGraphics();

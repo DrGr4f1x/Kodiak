@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "RenderThread.h"
+
 namespace Kodiak
 {
 
@@ -23,32 +25,26 @@ class RenderTask;
 class SSAO : public std::enable_shared_from_this<SSAO>
 {
 public:
+	SSAO();
+
 	void Initialize();
 
 	std::shared_ptr<RenderTask> GetRenderTask();
 
-	// Enable/disable SSAO
-	bool GetEnabled() const { return m_enabled; }
-	void SetEnabled(bool enabled);
+	// Feature toggles
+	ThreadParameter<bool> Enable;
+	ThreadParameter<bool> DebugDraw;
+	ThreadParameter<bool> ComputeLinearDepth;
 
-	// Enable/disable debug mode
-	bool GetDebugDraw() const { return m_debugDraw; }
-	void SetDebugDraw(bool enabled);
-
-	// Enable/disable linearize Z step
-	bool GetComputeLinearZ() const { return m_computeLinearZ; }
-	void SetComputeLinearZ(bool enabled);
-
-	// Set render targets and buffers
-	void SetSSAOFullscreen(std::shared_ptr<ColorBuffer> ssaoFullscreen);
-	void SetSceneDepthBuffer(std::shared_ptr<DepthBuffer> sceneDepthBuffer);
-	void SetLinearDepth(std::shared_ptr<ColorBuffer> linearDepth);
+	// Render targets and buffers
+	ThreadParameter<std::shared_ptr<ColorBuffer>> SsaoFullscreen;
+	ThreadParameter<std::shared_ptr<DepthBuffer>> SceneDepthBuffer;
+	ThreadParameter<std::shared_ptr<ColorBuffer>> LinearDepthBuffer;
 
 private:
 	// Render thread callbacks
-	void InternalSetSSAOFullscreen(std::shared_ptr<ColorBuffer> ssaoFullscreen);
-	void InternalSetSceneDepthBuffer(std::shared_ptr<DepthBuffer> sceneDepthBuffer);
-	void InternalSetLinearDepth(std::shared_ptr<ColorBuffer> linearDepth);
+	void OnSetSceneDepthBuffer();
+	void OnSetLinearDepthBuffer();
 
 private:
 	// Compute shader kernels

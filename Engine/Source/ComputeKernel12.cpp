@@ -11,6 +11,7 @@
 
 #include "ComputeKernel12.h"
 
+#include "CommandList12.h"
 #include "ComputeParameter.h"
 #include "ComputeResource12.h"
 #include "PipelineState12.h"
@@ -77,6 +78,43 @@ shared_ptr<ComputeResource> ComputeKernel::GetResource(const string& name)
 }
 
 
+void ComputeKernel::Dispatch(ComputeCommandList* commandList, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+}
+
+
+void ComputeKernel::Dispatch1D(ComputeCommandList* commandList, size_t threadCountX, size_t groupSizeX)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch1D(threadCountX, groupSizeX);
+}
+
+
+void ComputeKernel::Dispatch2D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch2D(threadCountX, threadCountY, groupSizeX, groupSizeY);
+}
+
+
+void ComputeKernel::Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
+	size_t groupSizeY, size_t groupSizeZ)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
+}
+
+
 void ComputeKernel::SetupKernel()
 {
 	using namespace ShaderReflection;
@@ -94,8 +132,8 @@ void ComputeKernel::SetupKernel()
 	numRootParameters += !shaderSig.uavTable.empty() ? 1 : 0;				// One root param for UAV table (holds all UAVs)
 
 	// Setup root signature
-	m_rootSignature = make_shared<RootSignature>(numRootParameters, shaderSig.numSamplers);
-	auto& rootSig = *m_rootSignature;
+	computeData.rootSignature = make_shared<RootSignature>(numRootParameters, shaderSig.numSamplers);
+	auto& rootSig = *computeData.rootSignature;
 	uint32_t rootIndex = 0;
 
 
@@ -300,8 +338,39 @@ void ComputeKernel::SetupKernel()
 	rootSig.Finalize();
 
 	// Setup the PSO
-	m_pso = make_shared<ComputePSO>();
-	m_pso->SetComputeShader(m_computeShader.get());
-	m_pso->SetRootSignature(*m_rootSignature);
-	m_pso->Finalize();
+	computeData.pso = make_shared<ComputePSO>();
+	computeData.pso->SetComputeShader(m_computeShader.get());
+	computeData.pso->SetRootSignature(*computeData.rootSignature);
+	computeData.pso->Finalize();
+}
+
+
+void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
+{
+	commandList->SetRootSignature(*rootSignature);
+	commandList->SetPipelineState(*pso);
+
+	const uint32_t numParams = static_cast<uint32_t>(rootParameters.size());
+	uint32_t rootIndex = kInvalid;
+	uint32_t offset = 0;
+	for (uint32_t i = 0; i < numParams; ++i)
+	{
+		const auto& rootParam = rootParameters[i];
+
+		if (rootIndex != rootParam.rootIndex)
+		{
+			rootIndex = rootParam.rootIndex;
+			offset = 0;
+		}
+
+		if (rootParam.numElements == kInvalid)
+		{
+			commandList->SetDynamicDescriptor(rootParam.rootIndex, 0, cpuHandles[rootParam.startSlot]);
+		}
+		else
+		{
+			commandList->SetDynamicDescriptors(rootParam.rootIndex, offset, rootParam.numElements, &cpuHandles[rootParam.startSlot]);
+			offset += rootParam.numElements;
+		}
+	}
 }

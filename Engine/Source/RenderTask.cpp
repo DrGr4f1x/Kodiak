@@ -13,6 +13,7 @@
 
 #include "ColorBuffer.h"
 #include "CommandList.h"
+#include "ComputeKernel.h"
 #include "DepthBuffer.h"
 #include "DeviceManager.h"
 #include "RenderEnums.h"
@@ -112,7 +113,7 @@ void RenderTask::RenderScenePass(shared_ptr<RenderPass> renderPass, shared_ptr<S
 }
 
 
-void RenderTask::TransitionResource(std::shared_ptr<ColorBuffer> resource, ResourceState newState, bool flushImmediate)
+void RenderTask::TransitionResource(shared_ptr<ColorBuffer> resource, ResourceState newState, bool flushImmediate)
 {
 	m_renderSteps.push_back([resource, newState, flushImmediate](GraphicsCommandList* commandList)
 	{
@@ -121,13 +122,54 @@ void RenderTask::TransitionResource(std::shared_ptr<ColorBuffer> resource, Resou
 }
 
 
-void RenderTask::TransitionResource(std::shared_ptr<DepthBuffer> resource, ResourceState newState, bool flushImmediate)
+void RenderTask::TransitionResource(shared_ptr<DepthBuffer> resource, ResourceState newState, bool flushImmediate)
 {
 	m_renderSteps.push_back([resource, newState, flushImmediate](GraphicsCommandList* commandList)
 	{
 		commandList->TransitionResource(*resource, newState, flushImmediate);
 	});
 }
+
+
+void RenderTask::Dispatch(shared_ptr<ComputeKernel> kernel, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+{
+	m_renderSteps.push_back([kernel, groupCountX, groupCountY, groupCountZ](GraphicsCommandList* commandList)
+	{
+		auto computeCommandList = commandList->GetComputeCommandList();
+		kernel->Dispatch(computeCommandList, groupCountX, groupCountY, groupCountZ);
+	});
+}
+
+
+void RenderTask::Dispatch1D(shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t groupSizeX)
+{
+	m_renderSteps.push_back([kernel, threadCountX, groupSizeX](GraphicsCommandList* commandList)
+	{
+		auto computeCommandList = commandList->GetComputeCommandList();
+		kernel->Dispatch1D(computeCommandList, threadCountX, groupSizeX);
+	});
+}
+
+
+void RenderTask::Dispatch2D(shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+{
+	m_renderSteps.push_back([kernel, threadCountX, threadCountY, groupSizeX, groupSizeY](GraphicsCommandList* commandList)
+	{
+		auto computeCommandList = commandList->GetComputeCommandList();
+		kernel->Dispatch2D(computeCommandList, threadCountX, threadCountY, groupSizeX, groupSizeY);
+	});
+}
+
+
+void RenderTask::Dispatch3D(shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ)
+{
+	m_renderSteps.push_back([kernel, threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ](GraphicsCommandList* commandList)
+	{
+		auto computeCommandList = commandList->GetComputeCommandList();
+		kernel->Dispatch3D(computeCommandList, threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
+	});
+}
+
 
 
 void RenderTask::Continue(shared_ptr<RenderTask> antecedent)

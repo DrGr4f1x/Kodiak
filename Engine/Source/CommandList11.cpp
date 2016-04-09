@@ -491,3 +491,69 @@ void GraphicsCommandList::SetPixelShaderConstants(uint32_t startSlot, uint32_t n
 	assert(m_context1);
 	m_context1->PSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
 }
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		m_context->ClearUnorderedAccessViewFloat(uav, target.GetClearColor());
+	}
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		m_context->ClearUnorderedAccessViewFloat(uav, clearColor);
+	}
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		m_context->ClearUnorderedAccessViewUint(uav, clearValue.u);
+	}
+}
+
+
+void ComputeCommandList::SetPipelineState(ComputePSO& pso)
+{
+	m_context->CSSetShader(pso.m_computeShader.Get(), nullptr, 0);
+}
+
+
+byte* ComputeCommandList::MapConstants(const ConstantBuffer& cbuffer)
+{
+	D3D11_MAPPED_SUBRESOURCE subresource;
+	ThrowIfFailed(m_context->Map(cbuffer.constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subresource));
+
+	return reinterpret_cast<byte*>(subresource.pData);
+}
+
+
+void ComputeCommandList::UnmapConstants(const ConstantBuffer& cbuffer)
+{
+	m_context->Unmap(cbuffer.constantBuffer.Get(), 0);
+}
+
+
+void ComputeCommandList::SetShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->CSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->PSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}

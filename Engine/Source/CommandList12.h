@@ -11,6 +11,7 @@
 #pragma once
 
 #include "DynamicDescriptorHeap12.h"
+#include "GpuBuffer12.h"
 #include "LinearAllocator12.h"
 #include "RenderEnums12.h"
 #include "RootSignature12.h"
@@ -25,6 +26,7 @@ class ComputeCommandList;
 class ComputePSO;
 class ConstantBuffer;
 class DepthBuffer;
+class GpuBuffer;
 class GpuResource;
 class GraphicsCommandList;
 class GraphicsPSO;
@@ -113,6 +115,9 @@ protected:
 
 	ID3D12RootSignature*		m_currentGraphicsRootSignature{ nullptr };
 	ID3D12PipelineState*		m_currentGraphicsPSO{ nullptr };
+
+	ID3D12RootSignature*		m_currentComputeRootSignature{ nullptr };
+	ID3D12PipelineState*		m_currentComputePSO{ nullptr };
 
 	DynamicDescriptorHeap		m_dynamicDescriptorHeap;
 
@@ -210,6 +215,33 @@ public:
 	{
 		return CommandList::Begin()->GetComputeCommandList();
 	}
+
+	void ClearUAV(ColorBuffer& target);
+	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor);
+	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue);
+
+	void SetRootSignature(const RootSignature& rootSig);
+
+	void SetPipelineState(const ComputePSO& pso);
+	void SetConstants(uint32_t rootIndex, uint32_t numConstants, const void* constants);
+	void SetConstants(uint32_t rootIndex, DWParam x);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
+	void SetConstantBuffer(uint32_t rootIndex, D3D12_GPU_VIRTUAL_ADDRESS cbv);
+	void SetDynamicConstantBufferView(uint32_t rootIndex, size_t bufferSize, const void* bufferData);
+	void SetDynamicSRV(uint32_t rootIndex, size_t bufferSize, const void* bufferData);
+	void SetBufferSRV(uint32_t rootIndex, const GpuBuffer& srv);
+	void SetBufferUAV(uint32_t rootIndex, const GpuBuffer& uav);
+	void SetDescriptorTable(uint32_t rootIndex, D3D12_GPU_DESCRIPTOR_HANDLE firstHandle);
+
+	void SetDynamicDescriptor(uint32_t rootIndex, uint32_t offset, D3D12_CPU_DESCRIPTOR_HANDLE handle);
+	void SetDynamicDescriptors(uint32_t rootIndex, uint32_t offset, uint32_t count, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
+
+	void Dispatch(size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
+	void Dispatch1D(size_t threadCountX, size_t groupSizeX = 64);
+	void Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
+	void Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ);
 };
 
 
@@ -335,5 +367,141 @@ inline void GraphicsCommandList::DrawIndexedInstanced(uint32_t indexCountPerInst
 	m_commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
+
+inline void ComputeCommandList::SetRootSignature(const RootSignature& rootSig)
+{
+	if (rootSig.GetSignature() == m_currentComputeRootSignature)
+	{
+		return;
+	}
+
+	m_commandList->SetComputeRootSignature(m_currentComputeRootSignature = rootSig.GetSignature());
+
+	m_dynamicDescriptorHeap.ParseComputeRootSignature(rootSig);
+}
+
+
+inline void ComputeCommandList::SetConstants(uint32_t rootEntry, uint32_t numConstants, const void* constants)
+{
+	m_commandList->SetComputeRoot32BitConstants(rootEntry, numConstants, constants, 0);
+}
+
+
+inline void ComputeCommandList::SetConstants(uint32_t rootEntry, DWParam x)
+{
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, x.Uint, 0);
+}
+
+
+inline void ComputeCommandList::SetConstants(uint32_t rootEntry, DWParam x, DWParam y)
+{
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, x.Uint, 0);
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, y.Uint, 1);
+}
+
+
+inline void ComputeCommandList::SetConstants(uint32_t rootEntry, DWParam x, DWParam y, DWParam z)
+{
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, x.Uint, 0);
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, y.Uint, 1);
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, z.Uint, 2);
+}
+
+
+inline void ComputeCommandList::SetConstants(uint32_t rootEntry, DWParam x, DWParam y, DWParam z, DWParam w)
+{
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, x.Uint, 0);
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, y.Uint, 1);
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, z.Uint, 2);
+	m_commandList->SetComputeRoot32BitConstant(rootEntry, w.Uint, 3);
+}
+
+
+inline void ComputeCommandList::SetConstantBuffer(uint32_t rootIndex, D3D12_GPU_VIRTUAL_ADDRESS cbv)
+{
+	m_commandList->SetComputeRootConstantBufferView(rootIndex, cbv);
+}
+
+
+inline void ComputeCommandList::SetDynamicConstantBufferView(uint32_t rootIndex, size_t bufferSize, const void* bufferData)
+{
+	assert(bufferData != nullptr && Math::IsAligned(bufferData, 16));
+	DynAlloc cb = m_cpuLinearAllocator.Allocate(bufferSize);
+	//SIMDMemCopy(cb.DataPtr, BufferData, Math::AlignUp(BufferSize, 16) >> 4);
+	memcpy(cb.dataPtr, bufferData, bufferSize);
+	m_commandList->SetComputeRootConstantBufferView(rootIndex, cb.gpuAddress);
+}
+
+
+inline void ComputeCommandList::SetDynamicSRV(uint32_t rootIndex, size_t bufferSize, const void* bufferData)
+{
+	assert(bufferData != nullptr && Math::IsAligned(bufferData, 16));
+	DynAlloc cb = m_cpuLinearAllocator.Allocate(bufferSize);
+	SIMDMemCopy(cb.dataPtr, bufferData, Math::AlignUp(bufferSize, 16) >> 4);
+	m_commandList->SetComputeRootShaderResourceView(rootIndex, cb.gpuAddress);
+}
+
+
+inline void ComputeCommandList::SetBufferSRV(uint32_t rootIndex, const GpuBuffer& srv)
+{
+	assert((srv.m_usageState & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE) != 0);
+	m_commandList->SetComputeRootShaderResourceView(rootIndex, srv.GetGpuVirtualAddress());
+}
+
+
+inline void ComputeCommandList::SetBufferUAV(uint32_t rootIndex, const GpuBuffer& uav)
+{
+	assert((uav.m_usageState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) != 0);
+	m_commandList->SetComputeRootUnorderedAccessView(rootIndex, uav.GetGpuVirtualAddress());
+}
+
+
+inline void ComputeCommandList::SetDescriptorTable(uint32_t rootIndex, D3D12_GPU_DESCRIPTOR_HANDLE firstHandle)
+{
+	m_commandList->SetComputeRootDescriptorTable(rootIndex, firstHandle);
+}
+
+
+inline void ComputeCommandList::SetDynamicDescriptor(uint32_t rootIndex, uint32_t offset, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+{
+	SetDynamicDescriptors(rootIndex, offset, 1, &handle);
+}
+
+
+inline void ComputeCommandList::SetDynamicDescriptors(uint32_t rootIndex, uint32_t offset, uint32_t count, const D3D12_CPU_DESCRIPTOR_HANDLE handles[])
+{
+	m_dynamicDescriptorHeap.SetComputeDescriptorHandles(rootIndex, offset, count, handles);
+}
+
+
+inline void ComputeCommandList::Dispatch(size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+{
+	FlushResourceBarriers();
+	m_dynamicDescriptorHeap.CommitComputeRootDescriptorTables(m_commandList);
+	m_commandList->Dispatch((UINT)groupCountX, (UINT)groupCountY, (UINT)groupCountZ);
+}
+
+
+inline void ComputeCommandList::Dispatch1D(size_t threadCountX, size_t groupSizeX)
+{
+	Dispatch(Math::DivideByMultiple(threadCountX, groupSizeX), 1, 1);
+}
+
+
+inline void ComputeCommandList::Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY), 1);
+}
+
+
+inline void ComputeCommandList::Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY),
+		Math::DivideByMultiple(threadCountZ, groupSizeZ));
+}
 
 } // namespace Kodiak
