@@ -32,146 +32,6 @@ void RenderTask::SetName(const string& name)
 }
 
 
-void RenderTask::ClearColor(shared_ptr<ColorBuffer> colorBuffer)
-{
-	m_renderSteps.push_back([colorBuffer](GraphicsCommandList* commandList)
-	{
-		commandList->ClearColor(*colorBuffer, colorBuffer->GetClearColor());
-	});
-}
-
-
-void RenderTask::ClearColor(shared_ptr<ColorBuffer> colorBuffer, const XMVECTORF32& color)
-{
-	m_renderSteps.push_back([colorBuffer, color](GraphicsCommandList* commandList)
-	{
-		commandList->ClearColor(*colorBuffer, color);
-	});
-}
-
-
-void RenderTask::ClearDepth(shared_ptr<DepthBuffer> depthBuffer)
-{
-	m_renderSteps.push_back([depthBuffer](GraphicsCommandList* commandList)
-	{
-		commandList->ClearDepth(*depthBuffer, depthBuffer->GetClearDepth());
-	});
-}
-
-
-void RenderTask::SetRenderTarget(std::shared_ptr<ColorBuffer> colorBuffer, std::shared_ptr<DepthBuffer> depthBuffer)
-{
-	m_renderSteps.push_back([colorBuffer, depthBuffer](GraphicsCommandList* commandList)
-	{
-		commandList->SetRenderTarget(*colorBuffer, *depthBuffer);
-	});
-}
-
-
-void RenderTask::SetDepthStencilTarget(shared_ptr<DepthBuffer> depthBuffer)
-{
-	m_renderSteps.push_back([depthBuffer](GraphicsCommandList* commandList)
-	{
-		commandList->SetDepthStencilTarget(*depthBuffer);
-	});
-}
-
-
-void RenderTask::SetViewport(float topLeftX, float topLeftY, float width, float height, float minDepth, float maxDepth)
-{
-	m_renderSteps.push_back([topLeftX, topLeftY, width, height, minDepth, maxDepth](GraphicsCommandList* commandList)
-	{
-		commandList->SetViewport(topLeftX, topLeftY, width, height, minDepth, maxDepth);
-	});
-}
-
-
-void RenderTask::SetScissor(uint32_t topLeftX, uint32_t topLeftY, uint32_t width, uint32_t height)
-{
-	m_renderSteps.push_back([topLeftX, topLeftY, width, height](GraphicsCommandList* commandList)
-	{
-		commandList->SetScissor(topLeftX, topLeftY, width, height);
-	});
-}
-
-
-void RenderTask::UpdateScene(shared_ptr<Scene> scene)
-{
-	m_renderSteps.push_back([scene](GraphicsCommandList* commandList)
-	{
-		scene->Update(commandList);
-	});
-}
-
-
-void RenderTask::RenderScenePass(shared_ptr<RenderPass> renderPass, shared_ptr<Scene> scene)
-{
-	m_renderSteps.push_back([renderPass, scene](GraphicsCommandList* commandList)
-	{
-		scene->Render(renderPass, commandList);
-	});
-}
-
-
-void RenderTask::TransitionResource(shared_ptr<ColorBuffer> resource, ResourceState newState, bool flushImmediate)
-{
-	m_renderSteps.push_back([resource, newState, flushImmediate](GraphicsCommandList* commandList)
-	{
-		commandList->TransitionResource(*resource, newState, flushImmediate);
-	});
-}
-
-
-void RenderTask::TransitionResource(shared_ptr<DepthBuffer> resource, ResourceState newState, bool flushImmediate)
-{
-	m_renderSteps.push_back([resource, newState, flushImmediate](GraphicsCommandList* commandList)
-	{
-		commandList->TransitionResource(*resource, newState, flushImmediate);
-	});
-}
-
-
-void RenderTask::Dispatch(shared_ptr<ComputeKernel> kernel, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
-{
-	m_renderSteps.push_back([kernel, groupCountX, groupCountY, groupCountZ](GraphicsCommandList* commandList)
-	{
-		auto computeCommandList = commandList->GetComputeCommandList();
-		kernel->Dispatch(computeCommandList, groupCountX, groupCountY, groupCountZ);
-	});
-}
-
-
-void RenderTask::Dispatch1D(shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t groupSizeX)
-{
-	m_renderSteps.push_back([kernel, threadCountX, groupSizeX](GraphicsCommandList* commandList)
-	{
-		auto computeCommandList = commandList->GetComputeCommandList();
-		kernel->Dispatch1D(computeCommandList, threadCountX, groupSizeX);
-	});
-}
-
-
-void RenderTask::Dispatch2D(shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
-{
-	m_renderSteps.push_back([kernel, threadCountX, threadCountY, groupSizeX, groupSizeY](GraphicsCommandList* commandList)
-	{
-		auto computeCommandList = commandList->GetComputeCommandList();
-		kernel->Dispatch2D(computeCommandList, threadCountX, threadCountY, groupSizeX, groupSizeY);
-	});
-}
-
-
-void RenderTask::Dispatch3D(shared_ptr<ComputeKernel> kernel, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ)
-{
-	m_renderSteps.push_back([kernel, threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ](GraphicsCommandList* commandList)
-	{
-		auto computeCommandList = commandList->GetComputeCommandList();
-		kernel->Dispatch3D(computeCommandList, threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
-	});
-}
-
-
-
 void RenderTask::Continue(shared_ptr<RenderTask> antecedent)
 {
 	m_antecedents.push_back(antecedent);
@@ -186,7 +46,7 @@ void RenderTask::Start(Concurrency::task<void>& currentTask)
 	// If there's only one preceding task, run as a continuation of its task
 	if (m_predecessors.size() == 1)
 	{
-		currentTask = currentTask.then([this] { Run(); });
+		currentTask = currentTask.then([this] { Render(); });
 
 		for (auto antecedent : m_antecedents)
 		{
@@ -201,7 +61,7 @@ void RenderTask::Start(Concurrency::task<void>& currentTask)
 		// We have all the tasks necessary to wait-then-continue
 		if (m_predecessorTasks.size() == m_predecessors.size())
 		{
-			currentTask = Concurrency::when_all(begin(m_predecessorTasks), end(m_predecessorTasks)).then([this] { Run(); });
+			currentTask = Concurrency::when_all(begin(m_predecessorTasks), end(m_predecessorTasks)).then([this] { Render(); });
 
 			for (auto antecedent : m_antecedents)
 			{
@@ -214,23 +74,9 @@ void RenderTask::Start(Concurrency::task<void>& currentTask)
 }
 
 
-void RenderTask::Run()
-{
-	auto commandList = GraphicsCommandList::Begin();
-
-	for (const auto& operation : m_renderSteps)
-	{
-		operation(commandList);
-	}
-
-	commandList->CloseAndExecute(true);
-	commandList = nullptr;
-}
-
-
 void RootRenderTask::Start()
 {
-	m_rootTask = concurrency::create_task([this] { Run(); });
+	m_rootTask = concurrency::create_task([this] { Render(); });
 
 	for (auto antecendent : m_antecedents)
 	{

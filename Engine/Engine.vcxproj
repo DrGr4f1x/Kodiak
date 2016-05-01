@@ -487,7 +487,6 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClInclude>
     <ClInclude Include="Source\ShaderManager.h" />
     <ClInclude Include="Source\ShaderReflection.h" />
-    <ClInclude Include="Source\SSAO.h" />
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\StepTimer.h" />
     <ClInclude Include="Source\Texture.h" />
@@ -632,7 +631,6 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClCompile>
     <ClCompile Include="Source\ShaderManager.cpp" />
     <ClCompile Include="Source\ShaderReflection.cpp" />
-    <ClCompile Include="Source\SSAO.cpp" />
     <ClCompile Include="Source\Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Create</PrecompiledHeader>

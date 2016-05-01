@@ -76,13 +76,14 @@ void SponzaApplication::OnRender()
 
 void SponzaApplication::OnDestroy()
 {
+	Renderer::GetInstance().Finalize();
+
 	SetDefaultBasePass(nullptr);
 	SetDefaultDepthPass(nullptr);
 	
 	SetDefaultBaseEffect(nullptr);
 	SetDefaultDepthEffect(nullptr);
 
-	Renderer::GetInstance().Finalize();
 	LOG_INFO << "SponzaApplication finalize";
 }
 
@@ -94,9 +95,9 @@ void SponzaApplication::CreateResources()
 
 	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
 
-	m_ssao = make_shared<SSAO>();
-	m_ssao->Initialize();
-	m_ssao->SceneDepthBuffer = m_depthBuffer;
+	//m_ssao = make_shared<SSAO>();
+	//m_ssao->Initialize();
+	//m_ssao->SceneDepthBuffer = m_depthBuffer;
 }
 
 
@@ -164,29 +165,52 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 {
 	auto rootTask = make_shared<RootRenderTask>();
 	rootTask->SetName("Root task");
+	rootTask->Render = [this]
+	{
+		auto commandList = GraphicsCommandList::Begin();
 
-	rootTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
-	rootTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-	rootTask->SetScissor(0, 0, m_width, m_height);
-	rootTask->ClearColor(m_colorTarget);
-	rootTask->ClearDepth(m_depthBuffer);
+		commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+		commandList->SetScissor(0, 0, m_width, m_height);
+		commandList->ClearColor(*m_colorTarget);
+		commandList->ClearDepth(*m_depthBuffer);
+
+		commandList->CloseAndExecute();
+	};
+	
 
 	auto depthTask = make_shared<RenderTask>();
 	depthTask->SetName("Depth prepass");
-	depthTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-	depthTask->SetScissor(0, 0, m_width, m_height);
-	depthTask->UpdateScene(m_mainScene);
-	depthTask->SetDepthStencilTarget(m_depthBuffer);
-	depthTask->RenderScenePass(GetDefaultDepthPass(), m_mainScene);
+	depthTask->Render = [this]
+	{
+		auto commandList = GraphicsCommandList::Begin();
+
+		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+		commandList->SetScissor(0, 0, m_width, m_height);
+		commandList->SetDepthStencilTarget(*m_depthBuffer);
+
+		m_mainScene->Update(commandList);
+		m_mainScene->Render(GetDefaultDepthPass(), commandList);
+		
+		commandList->CloseAndExecute();
+	};
 	rootTask->Continue(depthTask);
 
 	auto opaqueTask = make_shared<RenderTask>();
 	opaqueTask->SetName("Opaque pass");
-	opaqueTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-	opaqueTask->SetScissor(0, 0, m_width, m_height);
-	opaqueTask->UpdateScene(m_mainScene);
-	opaqueTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
-	opaqueTask->RenderScenePass(GetDefaultBasePass(), m_mainScene);
+	opaqueTask->Render = [this]
+	{
+		auto commandList = GraphicsCommandList::Begin();
+
+		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+		commandList->SetScissor(0, 0, m_width, m_height);
+		commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+
+		m_mainScene->Update(commandList);
+		m_mainScene->Render(GetDefaultBasePass(), commandList);
+		
+		commandList->CloseAndExecute();
+	};
 	depthTask->Continue(opaqueTask);
 
 	rootTask->Present(m_colorTarget);

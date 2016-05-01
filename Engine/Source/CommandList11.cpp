@@ -551,9 +551,9 @@ void ComputeCommandList::SetShaderConstants(uint32_t slot, const ConstantBuffer&
 }
 
 
-void GraphicsCommandList::SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+void ComputeCommandList::SetShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
 	const uint32_t* firstConstant, const uint32_t* numConstants)
 {
 	assert(m_context1);
-	m_context1->PSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+	m_context1->CSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
 }

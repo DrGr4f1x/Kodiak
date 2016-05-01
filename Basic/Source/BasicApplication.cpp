@@ -150,6 +150,10 @@ void BasicApplication::OnRender()
 void BasicApplication::OnDestroy()
 {
 	Renderer::GetInstance().Finalize();
+
+	SetDefaultBasePass(nullptr);
+	SetDefaultBaseEffect(nullptr);
+
 	LOG_INFO << "BasicApplication finalize";
 }
 
@@ -264,15 +268,20 @@ shared_ptr<RootRenderTask> BasicApplication::SetupFrame()
 {
 	auto rootTask = make_shared<RootRenderTask>();
 	rootTask->SetName("Root task");
+	rootTask->Render = [this]
+	{
+		auto commandList = GraphicsCommandList::Begin();
 
-	rootTask->SetRenderTarget(m_colorTarget, m_depthBuffer);
-	rootTask->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-	rootTask->SetScissor(0, 0, m_width, m_height);
-	rootTask->ClearColor(m_colorTarget);
-	rootTask->ClearDepth(m_depthBuffer);
+		commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+		commandList->SetScissor(0, 0, m_width, m_height);
+		commandList->ClearColor(*m_colorTarget);
+		commandList->ClearDepth(*m_depthBuffer);
 
-	rootTask->UpdateScene(m_mainScene);
-	rootTask->RenderScenePass(GetDefaultBasePass(), m_mainScene);
+		m_mainScene->Update(commandList);
+		m_mainScene->Render(GetDefaultBasePass(), commandList);
+	};
+	
 
 	rootTask->Present(m_colorTarget);
 
