@@ -60,8 +60,7 @@ void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 
 void Scene::Update(GraphicsCommandList* commandList)
 {
-	PROFILE(scene_Update);
-
+	PROFILE_BEGIN(itt_scene_update);
 	// Update per-view constants
 	m_perViewConstants.projection = m_camera->GetProjectionMatrix();
 	m_perViewConstants.view = m_camera->GetViewMatrix();
@@ -87,14 +86,13 @@ void Scene::Update(GraphicsCommandList* commandList)
 			}
 		}
 	}
+	PROFILE_END();
 }
 
 
 
 void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList)
 {
-	PROFILE(scene_RenderPass);
-
 	commandList->PIXBeginEvent("Bind sampler states");
 	BindSamplerStates(commandList);
 	commandList->PIXEndEvent();
@@ -103,9 +101,11 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 	// Visit models
 	for (auto& model : m_staticModels)
 	{
+		PROFILE_BEGIN(itt_draw_model);
 		// Visit meshes
 		for (const auto& mesh : model->meshes)
 		{
+			PROFILE_BEGIN(itt_draw_mesh);
 			// Visit mesh parts
 			for (const auto& meshPart : mesh->meshParts)
 			{
@@ -129,7 +129,9 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 					commandList->DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
 				}
 			}
+			PROFILE_END();
 		}
+		PROFILE_END();
 	}
 	commandList->PIXEndEvent();
 }
@@ -162,7 +164,7 @@ void Scene::Initialize()
 
 void Scene::SetCameraDeferred(shared_ptr<Kodiak::Camera> camera)
 {
-	m_camera = camera->m_cameraProxy;
+	m_camera = camera->GetRenderThreadData();
 }
 
 

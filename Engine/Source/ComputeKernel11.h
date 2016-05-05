@@ -51,6 +51,8 @@ public:
 	void Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, 
 		size_t groupSizeY, size_t groupSizeZ);
 
+	void UnbindUAVs(ComputeCommandList* commandList);
+
 private:
 	void SetupKernel();
 
@@ -81,12 +83,13 @@ struct ComputeData
 	}
 
 	void Commit(ComputeCommandList* commandList);
+	void UnbindUAVs(ComputeCommandList* commandList);
 
 	std::shared_ptr<ComputePSO>		pso;
 
 	// We're using a single cbuffer for all shader stages, via the DX11.1 large cbuffer feature
 	std::shared_ptr<ConstantBuffer> cbuffer;
-	uint8_t*						cbufferData{ nullptr };
+	byte*							cbufferData{ nullptr };
 	bool							cbufferDirty{ true };
 	size_t							cbufferSize{ 0 };
 
@@ -116,6 +119,8 @@ struct ComputeData
 	ResourceTable<ID3D11ShaderResourceView>		srvTables;
 	ResourceTable<ID3D11UnorderedAccessView> 	uavTables;
 	ResourceTable<ID3D11SamplerState>			samplerTables;
+
+	ResourceTable<ID3D11UnorderedAccessView>	nullUAVTables;
 };
 
 } // namespace RenderThread

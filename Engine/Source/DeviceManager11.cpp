@@ -103,7 +103,7 @@ void DeviceManager::BeginFrame()
 
 void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 {
-	PROFILE(deviceManager_Present);
+	PROFILE_BEGIN(itt_present);
 
 	auto commandList = GraphicsCommandList::Begin();
 
@@ -127,6 +127,8 @@ void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 	{
 		ThrowIfFailed(hr);
 	}
+
+	PROFILE_END();
 }
 
 
@@ -366,6 +368,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	m_backBuffer = make_shared<ColorBuffer>();
 	m_backBuffer->CreateFromSwapChain(this, "BackBuffer", backBuffer.Get());
 
+#if 0
 	// Create a Direct2D target bitmap associated with the
 	// swap chain back buffer and set it as the current target.
 	D2D1_BITMAP_PROPERTIES1 bitmapProperties =
@@ -393,6 +396,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 	// Grayscale text anti-aliasing is recommended for all Windows Store apps.
 	m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+#endif
 }
 
 

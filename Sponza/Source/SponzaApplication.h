@@ -49,6 +49,9 @@ private:
 private:
 	std::shared_ptr<ColorBuffer>	m_colorTarget;
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
+	std::shared_ptr<ColorBuffer>	m_linearDepthBuffer;
+	std::shared_ptr<ColorBuffer>	m_ssaoFullscreen;
+
 	std::shared_ptr<Scene>			m_mainScene;
 	std::shared_ptr<Camera>			m_camera;
 	std::shared_ptr<CameraController>	m_cameraController;

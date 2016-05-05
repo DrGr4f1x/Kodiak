@@ -46,7 +46,10 @@ void RenderTask::Start(Concurrency::task<void>& currentTask)
 	// If there's only one preceding task, run as a continuation of its task
 	if (m_predecessors.size() == 1)
 	{
-		currentTask = currentTask.then([this] { Render(); });
+		if (m_enabled)
+		{
+			currentTask = currentTask.then([this] { Render(); });
+		}
 
 		for (auto antecedent : m_antecedents)
 		{
@@ -61,7 +64,15 @@ void RenderTask::Start(Concurrency::task<void>& currentTask)
 		// We have all the tasks necessary to wait-then-continue
 		if (m_predecessorTasks.size() == m_predecessors.size())
 		{
-			currentTask = Concurrency::when_all(begin(m_predecessorTasks), end(m_predecessorTasks)).then([this] { Render(); });
+			if (m_enabled)
+			{
+				currentTask = Concurrency::when_all(begin(m_predecessorTasks), end(m_predecessorTasks)).then([this] { Render(); });
+			}
+			else
+			{
+				// Still wait, even if we aren't enabled
+				currentTask = Concurrency::when_all(begin(m_predecessorTasks), end(m_predecessorTasks));
+			}
 
 			for (auto antecedent : m_antecedents)
 			{

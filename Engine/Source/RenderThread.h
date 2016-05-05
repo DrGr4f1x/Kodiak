@@ -19,7 +19,7 @@ public:
 	ThreadParameter(T& target);
 
 	operator const T&() const { return m_target; }
-	void operator=(T& other);
+	void operator=(T other);
 
 	std::function<void()> postAssignment;
 
@@ -37,9 +37,9 @@ ThreadParameter<T>::ThreadParameter(T& target)
 
 
 template <class T>
-void ThreadParameter<T>::operator=(T& other)
+void ThreadParameter<T>::operator=(T other)
 {
-	Renderer::GetInstance().EnqueueTask([this, &other](RenderTaskEnvironment& rte)
+	Renderer::GetInstance().EnqueueTask([this, other](RenderTaskEnvironment& rte)
 	{
 		m_target = other;
 		postAssignment();

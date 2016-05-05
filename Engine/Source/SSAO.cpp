@@ -12,7 +12,9 @@
 
 #include "SSAO.h"
 
+#include "Camera.h"
 #include "ColorBuffer.h"
+#include "CommandList.h"
 #include "ComputeKernel.h"
 #include "ComputeParameter.h"
 #include "ComputeResource.h"
@@ -30,12 +32,10 @@ SSAO::SSAO()
 	, DebugDraw(m_debugDraw)
 	, ComputeLinearDepth(m_computeLinearZ)
 	, SsaoFullscreen(m_ssaoFullscreen)
+	, SceneColorBuffer(m_sceneColorBuffer)
 	, SceneDepthBuffer(m_sceneDepthBuffer)
 	, LinearDepthBuffer(m_linearDepth)
-{
-	SceneDepthBuffer.postAssignment = [this] { OnSetSceneDepthBuffer(); };
-	LinearDepthBuffer.postAssignment = [this] { OnSetLinearDepthBuffer(); };
-}
+{}
 
 
 void SSAO::Initialize()
@@ -85,37 +85,57 @@ void SSAO::Initialize()
 }
 
 
-shared_ptr<RenderTask> SSAO::GetRenderTask()
+void SSAO::SetCamera(shared_ptr<Camera> camera)
 {
-	auto renderTask = make_shared<RenderTask>();
-	renderTask->SetName("SSAO");
+	m_camera = camera->GetRenderThreadData();
+}
+
+
+void SSAO::Render(GraphicsCommandList* commandList)
+{
+	const float zMagic = (m_camera->GetZFar() - m_camera->GetZNear()) / m_camera->GetZNear();
 
 	if (!m_enabled)
 	{
-		renderTask->ClearColor(m_ssaoFullscreen);
-		renderTask->TransitionResource(m_ssaoFullscreen, ResourceState::NonPixelShaderResource);
+		commandList->PIXBeginEvent("Generate SSAO");
+
+		commandList->ClearColor(*m_ssaoFullscreen);
+		commandList->TransitionResource(*m_ssaoFullscreen, ResourceState::PixelShaderResource);
 
 		if (!m_computeLinearZ)
 		{
-			return renderTask;
+			commandList->PIXEndEvent();
+			return;
 		}
 
-		renderTask->TransitionResource(m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
-		renderTask->TransitionResource(m_linearDepth, ResourceState::UnorderedAccess);
-		renderTask->Dispatch2D(m_linearizeDepthCs, m_linearDepth->GetWidth(), m_linearDepth->GetHeight(), 16, 16);
+		auto computeCommandList = commandList->GetComputeCommandList();
+
+		computeCommandList->TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
+
+		m_linearizeDepthCs->GetParameter("ZMagic")->SetValue(zMagic);
+		m_linearizeDepthCs->GetResource("Depth")->SetSRV(m_sceneDepthBuffer);
+		m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(m_linearDepth);
+		
+		m_linearizeDepthCs->Dispatch2D(computeCommandList, m_linearDepth->GetWidth(), m_linearDepth->GetHeight(), 16, 16);
+		m_linearizeDepthCs->UnbindUAVs(computeCommandList);
+
+		if (m_debugDraw)
+		{
+			computeCommandList->PIXBeginEvent("Debug draw");
+
+			computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+			computeCommandList->TransitionResource(*m_linearDepth, ResourceState::NonPixelShaderResource);
+
+			m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRV(m_linearDepth);
+			m_debugSsaoCs->GetResource("OutColor")->SetUAV(m_sceneColorBuffer);
+
+			m_debugSsaoCs->Dispatch2D(computeCommandList, m_ssaoFullscreen->GetWidth(), m_ssaoFullscreen->GetHeight());
+			m_debugSsaoCs->UnbindUAVs(computeCommandList);
+
+			computeCommandList->PIXEndEvent();
+		}
+
+		commandList->PIXEndEvent();
+		return;
 	}
-
-	return renderTask;
-}
-
-
-void SSAO::OnSetSceneDepthBuffer()
-{
-	m_linearizeDepthCs->GetResource("Depth")->SetSRV(m_sceneDepthBuffer);
-}
-
-
-void SSAO::OnSetLinearDepthBuffer()
-{
-	m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(m_linearDepth);
 }

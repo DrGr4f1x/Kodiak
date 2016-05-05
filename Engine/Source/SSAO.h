@@ -16,11 +16,13 @@ namespace Kodiak
 {
 
 // Forward declarations
+class Camera;
 class ColorBuffer;
 class ComputeKernel;
 class DepthBuffer;
+class GraphicsCommandList;
 class RenderTask;
-
+namespace RenderThread { class Camera; }
 
 class SSAO : public std::enable_shared_from_this<SSAO>
 {
@@ -29,8 +31,6 @@ public:
 
 	void Initialize();
 
-	std::shared_ptr<RenderTask> GetRenderTask();
-
 	// Feature toggles
 	ThreadParameter<bool> Enable;
 	ThreadParameter<bool> DebugDraw;
@@ -38,13 +38,15 @@ public:
 
 	// Render targets and buffers
 	ThreadParameter<std::shared_ptr<ColorBuffer>> SsaoFullscreen;
+	ThreadParameter<std::shared_ptr<ColorBuffer>> SceneColorBuffer;
 	ThreadParameter<std::shared_ptr<DepthBuffer>> SceneDepthBuffer;
 	ThreadParameter<std::shared_ptr<ColorBuffer>> LinearDepthBuffer;
 
-private:
-	// Render thread callbacks
-	void OnSetSceneDepthBuffer();
-	void OnSetLinearDepthBuffer();
+	// Camera
+	void SetCamera(std::shared_ptr<Camera> camera);
+
+	// Render AO
+	void Render(GraphicsCommandList* commandList);
 
 private:
 	// Compute shader kernels
@@ -59,8 +61,12 @@ private:
 
 	// Render targets and UAV buffers
 	std::shared_ptr<ColorBuffer>	m_ssaoFullscreen;
+	std::shared_ptr<ColorBuffer>	m_sceneColorBuffer;
 	std::shared_ptr<DepthBuffer>	m_sceneDepthBuffer;
 	std::shared_ptr<ColorBuffer>	m_linearDepth;
+
+	// Camera
+	std::shared_ptr<RenderThread::Camera> m_camera;
 
 	// Parameters
 	enum QualityLevel { kSsaoQualityLow, kSsaoQualityMedium, kSsaoQualityHigh, kSsaoQualityVeryHigh, kNumSsaoQualitySettings};

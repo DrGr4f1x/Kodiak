@@ -383,6 +383,9 @@
     <ClInclude Include="Source\RenderThread.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SSAO.h">
+      <Filter>Rendering\Techniques\SSAO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -590,6 +593,9 @@
     </ClCompile>
     <ClCompile Include="Source\ComputeKernel11.cpp">
       <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SSAO.cpp">
+      <Filter>Rendering\Techniques\SSAO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

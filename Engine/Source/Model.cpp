@@ -31,8 +31,6 @@ using namespace std;
 
 void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList* commandList)
 {
-	PROFILE(staticModel_UpdateConstants);
-	
 	for (auto& mesh : meshes)
 	{
 #if defined(DX11)
@@ -71,7 +69,6 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 	{
 		Renderer::GetInstance().EnqueueTask([thisMesh, part](RenderTaskEnvironment& rte)
 		{
-			PROFILE(staticMesh_addMeshPart_RT);
 			RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.material->GetRenderThreadData(), part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
 			thisMesh->m_renderThreadData->meshParts.emplace_back(data);
 		});
@@ -89,7 +86,6 @@ void StaticMesh::SetMatrix(const Matrix4& matrix)
 	auto staticMeshData = m_renderThreadData;
 	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
 	{
-		PROFILE(staticMesh_setMatrix_RT);
 		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
 		staticMeshData->isDirty = true;
 	});
@@ -106,7 +102,6 @@ void StaticMesh::ConcatenateMatrix(const Matrix4& matrix)
 	auto staticMeshData = m_renderThreadData;
 	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
 	{
-		PROFILE(staticMesh_concatenateMatrix_RT);
 		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
 		staticMeshData->isDirty = true;
 	});
@@ -182,8 +177,6 @@ void StaticModel::SetMatrix(const Matrix4& matrix)
 
 void StaticModel::CreateRenderThreadData()
 {
-	PROFILE(staticModel_CreateRenderThreadData);
-
 	const auto numMeshes = m_meshes.size();
 
 	m_renderThreadData = make_shared<RenderThread::StaticModelData>();

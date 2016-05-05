@@ -16,7 +16,9 @@ enum class ColorFormat
 {
 	Unknown,
 	R8G8B8A8,
-	R11G11B10_Float
+	R8_UNorm,
+	R11G11B10_Float,
+	R16_Float,
 };
 
 enum class DepthFormat

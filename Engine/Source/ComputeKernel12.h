@@ -53,6 +53,8 @@ public:
 	void Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
 		size_t groupSizeY, size_t groupSizeZ);
 
+	void UnbindUAVs(ComputeCommandList* commandList) {}
+
 private:
 	void SetupKernel();
 
@@ -90,6 +92,7 @@ struct ComputeData
 	// Constant buffer data
 	MappedConstantBuffer			cbuffer;
 	byte*							cbufferData{ nullptr };
+	bool							cbufferDirty{ true };
 	uint32_t						cbufferSize{ 0 };
 
 	std::vector<ShaderReflection::DescriptorRange> rootParameters;

@@ -170,6 +170,7 @@ public:
 		SetRenderTargets(1, &rtv, &dsv, readOnlyDepth);
 	}
 	void SetDepthStencilTarget(DepthBuffer& dsv) { SetRenderTargets(0, nullptr, &dsv); }
+	void UnbindRenderTargets() {}
 
 	void SetViewport(const Viewport& vp);
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);

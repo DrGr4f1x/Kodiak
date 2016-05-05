@@ -34,12 +34,16 @@ public:
 	void Continue(const std::shared_ptr<RenderTask> nextPipeline);
 	void Start(Concurrency::task<void>& currentTask);
 
+	void SetEnabled(bool enabled) { m_enabled = enabled; }
+
 protected:
 	std::string m_name;
 	
 	std::vector<std::shared_ptr<RenderTask>> m_antecedents;
 	std::vector<std::shared_ptr<RenderTask>> m_predecessors;
 	std::vector<concurrency::task<void>> m_predecessorTasks;
+
+	bool m_enabled{ true };
 };
 
 

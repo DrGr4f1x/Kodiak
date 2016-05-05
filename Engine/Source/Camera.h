@@ -20,8 +20,6 @@ class Scene;
 // Main thread view of the camera
 class Camera : public std::enable_shared_from_this<Camera>
 {
-	friend class Scene;
-
 public:
 	Camera();
 	
@@ -58,6 +56,8 @@ public:
 
 	void Rotate(float deltaPitch, float deltaYaw);
 
+	std::shared_ptr<RenderThread::Camera> GetRenderThreadData() { return m_cameraProxy; }
+
 private:
 	void RenderThreadSetCameraPerspective();
 	void RenderThreadSetCameraPositionAndOrientation();
@@ -93,6 +93,8 @@ public:
 	const Math::Matrix4& GetViewMatrix() const { return m_viewMatrix; }
 	const Math::Matrix4& GetPrevViewMatrix() const { return m_prevViewMatrix; }
 	const Math::Vector3& GetPosition() const { return m_position; }
+	const float GetZFar() const { return m_zFar; }
+	const float GetZNear() const { return m_zNear; }
 
 private:
 	void UpdateViewMatrix();

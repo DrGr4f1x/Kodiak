@@ -117,6 +117,14 @@ void ComputeKernel::Dispatch3D(ComputeCommandList* commandList, size_t threadCou
 }
 
 
+void ComputeKernel::UnbindUAVs(ComputeCommandList* commandList)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->UnbindUAVs(commandList);
+}
+
+
 void ComputeKernel::SetupKernel()
 {
 	using namespace ShaderReflection;
@@ -206,6 +214,7 @@ void ComputeKernel::SetupKernel()
 		layout.resources.insert(layout.resources.end(), layout.numItems, nullptr);
 
 		computeData.uavTables.layouts.push_back(layout);
+		computeData.nullUAVTables.layouts.push_back(layout);
 	}
 
 
@@ -293,6 +302,15 @@ void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
 
 	// Bind UAVs
 	for (const auto& layout : uavTables.layouts)
+	{
+		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+	}
+}
+
+
+void RenderThread::ComputeData::UnbindUAVs(ComputeCommandList* commandList)
+{
+	for (const auto& layout : nullUAVTables.layouts)
 	{
 		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}

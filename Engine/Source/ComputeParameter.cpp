@@ -181,6 +181,7 @@ void ComputeParameter::SubmitToRenderThread()
 		Renderer::GetInstance().EnqueueTask([computeData, thisParameter, thisData](RenderTaskEnvironment& rte)
 		{
 			thisParameter->UpdateParameterOnRenderThread(thisData);
+			computeData->cbufferDirty = true;
 		});
 	}
 }

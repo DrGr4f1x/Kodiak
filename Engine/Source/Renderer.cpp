@@ -87,7 +87,7 @@ void Renderer::SetWindowSize(uint32_t width, uint32_t height)
 
 void Renderer::Render(shared_ptr<RootRenderTask> rootTask)
 {
-	PROFILE(renderer_Render);
+	PROFILE_BEGIN(itt_render);
 
 	// Wait on the previous frame
 	while (!m_renderTaskEnvironment.frameCompleted)
@@ -114,6 +114,8 @@ void Renderer::Render(shared_ptr<RootRenderTask> rootTask)
 		rte.currentFrame += 1;
 		rte.frameCompleted = true;
 	});
+
+	PROFILE_END();
 }
 
 
@@ -163,8 +165,6 @@ void Renderer::StopRenderTask()
 
 void Renderer::UpdateStaticModels()
 {
-	PROFILE(renderer_UpdateStaticModels);
-
 	
 }
 

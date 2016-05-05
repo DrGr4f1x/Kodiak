@@ -256,7 +256,7 @@ void Application::ParseCommandLineArgs()
 
 void Application::Update()
 {
-	PROFILE(application_Update);
+	PROFILE_BEGIN(itt_update);
 
 	// Update scene objects
 	m_timer->Tick([this]()
@@ -267,13 +267,13 @@ void Application::Update()
 		// Subclasses implement OnUpdate to supply their own scene update logic
 		OnUpdate(m_timer.get());
 	});
+
+	PROFILE_END();
 }
 
 
 bool Application::Render()
 {
-	PROFILE(application_Render);
-
 	// Don't try to render until we've run one Update tick
 	if (m_timer->GetFrameCount() == 0)
 	{

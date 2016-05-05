@@ -13,21 +13,32 @@
 
 #if defined(PROFILING) && (PROFILING == 1)
 
+__itt_domain* domain = nullptr;
+__itt_string_handle* itt_update = nullptr;
+__itt_string_handle* itt_render = nullptr;
+__itt_string_handle* itt_draw_mesh = nullptr;
+__itt_string_handle* itt_draw_model = nullptr;
+__itt_string_handle* itt_scene_update = nullptr;
+__itt_string_handle* itt_present = nullptr;
+
 namespace Kodiak
 {
 
-static Remotery* s_rmt = nullptr;
-
 void InitializeProfiling()
 {
-	rmt_CreateGlobalInstance(&s_rmt);
+	domain = __itt_domain_create(L"GPA_DOMAIN");
+	itt_update = __itt_string_handle_create(L"Update");
+	itt_render = __itt_string_handle_create(L"Render");
+	itt_draw_mesh = __itt_string_handle_create(L"Draw mesh");
+	itt_draw_model = __itt_string_handle_create(L"Draw model");
+	itt_scene_update = __itt_string_handle_create(L"Scene update");
+	itt_present = __itt_string_handle_create(L"Present");
 }
 
 
 void ShutdownProfiling()
 {
-	rmt_DestroyGlobalInstance(s_rmt);
-	s_rmt = nullptr;
+	domain = nullptr;
 }
 
 } // namespace Kodiak

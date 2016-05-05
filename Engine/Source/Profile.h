@@ -11,10 +11,18 @@
 
 #if defined(PROFILING) && (PROFILING == 1)
 
-#define RMT_ENABLED 1
-#include "Remotery\lib\Remotery.h"
+#include "IntelITT\include\ittnotify.h"
 
-#define PROFILE(str) rmt_ScopedCPUSample(str)
+extern __itt_domain* domain;
+extern __itt_string_handle* itt_update;
+extern __itt_string_handle* itt_render;
+extern __itt_string_handle* itt_draw_mesh;
+extern __itt_string_handle* itt_draw_model;
+extern __itt_string_handle* itt_scene_update;
+extern __itt_string_handle* itt_present;
+
+#define PROFILE_BEGIN(name) __itt_task_begin(domain, __itt_null, __itt_null, name)
+#define PROFILE_END() __itt_task_end(domain)
 
 namespace Kodiak
 {
@@ -24,7 +32,8 @@ void ShutdownProfiling();
 
 #else
 
-#define PROFILE(str) __noop
+#define PROFILE_BEGIN(name) __noop
+#define PROFILE_END() __noop
 
 namespace Kodiak
 {

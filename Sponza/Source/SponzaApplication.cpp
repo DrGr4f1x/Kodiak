@@ -24,12 +24,21 @@
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Material.h"
 #include "Engine\Source\Model.h"
+#include "Engine\Source\Profile.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
 #include "Engine\Source\RenderTask.h"
 #include "Engine\Source\SSAO.h"
 #include "Engine\Source\Scene.h"
 #include "Engine\Source\StepTimer.h"
+
+#if defined(PROFILING) && (PROFILING == 1)
+#include "IntelITT\include\ittnotify.h"
+__itt_string_handle* itt_frame_setup = nullptr;
+__itt_string_handle* itt_depth_prepass = nullptr;
+__itt_string_handle* itt_ssao = nullptr;
+__itt_string_handle* itt_opaque_pass = nullptr;
+#endif
 
 
 using namespace Kodiak;
@@ -46,6 +55,13 @@ void SponzaApplication::OnInit()
 {
 	LOG_INFO << "SponzaApplication initialize";
 	Renderer::GetInstance().SetWindow(m_width, m_height, m_hwnd);
+
+#if defined(PROFILING) && (PROFILING == 1)
+	itt_frame_setup = __itt_string_handle_create("Frame setup");
+	itt_depth_prepass = __itt_string_handle_create("Depth prepass");
+	itt_ssao = __itt_string_handle_create("SSAO");
+	itt_opaque_pass = __itt_string_handle_create("Opaque pass");
+#endif
 
 	CreateResources();
 
@@ -95,9 +111,18 @@ void SponzaApplication::CreateResources()
 
 	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
 
-	//m_ssao = make_shared<SSAO>();
-	//m_ssao->Initialize();
-	//m_ssao->SceneDepthBuffer = m_depthBuffer;
+	m_linearDepthBuffer = CreateColorBuffer("Linear depth buffer", m_width, m_height, 1, ColorFormat::R16_Float, DirectX::Colors::Black);
+	m_ssaoFullscreen = CreateColorBuffer("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm, DirectX::Colors::Black);
+
+	m_ssao = make_shared<SSAO>();
+	m_ssao->Initialize();
+	m_ssao->SceneColorBuffer = m_colorTarget;
+	m_ssao->SceneDepthBuffer = m_depthBuffer;
+	m_ssao->LinearDepthBuffer = m_linearDepthBuffer;
+	m_ssao->SsaoFullscreen = m_ssaoFullscreen;
+
+	m_ssao->Enable = false;
+	m_ssao->DebugDraw = true;
 }
 
 
@@ -153,6 +178,8 @@ void SponzaApplication::SetupScene()
 
 	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
 
+	m_ssao->SetCamera(m_camera);
+
 	m_mainScene = make_shared<Scene>();
 
 	// Add camera and model to scene
@@ -167,6 +194,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	rootTask->SetName("Root task");
 	rootTask->Render = [this]
 	{
+		PROFILE_BEGIN(itt_frame_setup);
 		auto commandList = GraphicsCommandList::Begin();
 
 		commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
@@ -176,6 +204,49 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 		commandList->ClearDepth(*m_depthBuffer);
 
 		commandList->CloseAndExecute();
+		PROFILE_END();
+
+
+		/*PROFILE_BEGIN(itt_depth_prepass);
+		commandList = GraphicsCommandList::Begin();
+
+		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+		commandList->SetScissor(0, 0, m_width, m_height);
+		commandList->SetDepthStencilTarget(*m_depthBuffer);
+
+		m_mainScene->Update(commandList);
+		m_mainScene->Render(GetDefaultDepthPass(), commandList);
+
+		commandList->UnbindRenderTargets();
+
+		commandList->CloseAndExecute();
+		PROFILE_END();
+
+
+		PROFILE_BEGIN(itt_ssao);
+		commandList = GraphicsCommandList::Begin();
+
+		m_ssao->Render(commandList);
+
+		commandList->CloseAndExecute();
+		PROFILE_END();
+
+
+		if (!m_ssao->DebugDraw)
+		{
+			PROFILE_BEGIN(itt_opaque_pass);
+			commandList = GraphicsCommandList::Begin();
+
+			commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+			commandList->SetScissor(0, 0, m_width, m_height);
+			commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+
+			m_mainScene->Update(commandList);
+			m_mainScene->Render(GetDefaultBasePass(), commandList);
+
+			commandList->CloseAndExecute();
+			PROFILE_END();
+		}*/
 	};
 	
 
@@ -183,6 +254,8 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	depthTask->SetName("Depth prepass");
 	depthTask->Render = [this]
 	{
+		PROFILE_BEGIN(itt_depth_prepass);
+
 		auto commandList = GraphicsCommandList::Begin();
 
 		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
@@ -192,26 +265,54 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 		m_mainScene->Update(commandList);
 		m_mainScene->Render(GetDefaultDepthPass(), commandList);
 		
+		commandList->UnbindRenderTargets();
+
 		commandList->CloseAndExecute();
+
+		PROFILE_END();
 	};
 	rootTask->Continue(depthTask);
 
-	auto opaqueTask = make_shared<RenderTask>();
-	opaqueTask->SetName("Opaque pass");
-	opaqueTask->Render = [this]
+	bool ssaoEnabled = false;
+
+	auto ssaoTask = make_shared<RenderTask>();
+	ssaoTask->SetName("SSAO");
+	ssaoTask->SetEnabled(ssaoEnabled);
+	ssaoTask->Render = [this]
 	{
+		PROFILE_BEGIN(itt_ssao);
+
 		auto commandList = GraphicsCommandList::Begin();
 
-		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-		commandList->SetScissor(0, 0, m_width, m_height);
-		commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+		m_ssao->Render(commandList);
 
-		m_mainScene->Update(commandList);
-		m_mainScene->Render(GetDefaultBasePass(), commandList);
-		
 		commandList->CloseAndExecute();
+
+		PROFILE_END();
 	};
-	depthTask->Continue(opaqueTask);
+	depthTask->Continue(ssaoTask);
+
+	auto opaqueTask = make_shared<RenderTask>();
+	opaqueTask->SetName("Opaque pass");
+	opaqueTask->Render = [this, ssaoEnabled]
+	{
+		if (!m_ssao->DebugDraw || !ssaoEnabled)
+		{
+			PROFILE_BEGIN(itt_opaque_pass);
+			auto commandList = GraphicsCommandList::Begin();
+
+			commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+			commandList->SetScissor(0, 0, m_width, m_height);
+			commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+
+			m_mainScene->Update(commandList);
+			m_mainScene->Render(GetDefaultBasePass(), commandList);
+
+			commandList->CloseAndExecute();
+			PROFILE_END();
+		}
+	};
+	ssaoTask->Continue(opaqueTask);
 
 	rootTask->Present(m_colorTarget);
 
