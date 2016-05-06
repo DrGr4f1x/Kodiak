@@ -109,7 +109,7 @@ void SponzaApplication::CreateResources()
 	m_colorTarget = CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float,
 		DirectX::Colors::CornflowerBlue);
 
-	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
+	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32, 0.0f);
 
 	m_linearDepthBuffer = CreateColorBuffer("Linear depth buffer", m_width, m_height, 1, ColorFormat::R16_Float, DirectX::Colors::Black);
 	m_ssaoFullscreen = CreateColorBuffer("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm, DirectX::Colors::Black);
@@ -154,7 +154,7 @@ void SponzaApplication::CreateEffects()
 	depthEffect->SetPixelShaderPath(ShaderPath("DepthPS.cso"));
 	depthEffect->SetBlendState(CommonStates::Opaque());
 	depthEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
-	depthEffect->SetDepthStencilState(CommonStates::DepthDefault());
+	depthEffect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
 	depthEffect->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
 	depthEffect->SetRenderTargetFormats(0, nullptr, DepthFormat::D32);
 	depthEffect->Finalize();
@@ -175,6 +175,7 @@ void SponzaApplication::SetupScene()
 	m_camera->SetPosition(Vector3(1099.0f, 652.0f, -39.0f));
 	m_camera->LookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(kYUnitVector));
 	m_camera->SetPerspective(45.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 1.0f, 10000.0f);
+	m_camera->SetReverseZ(m_reverseZ);
 
 	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
 
@@ -273,7 +274,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	};
 	rootTask->Continue(depthTask);
 
-	bool ssaoEnabled = false;
+	bool ssaoEnabled = true;
 
 	auto ssaoTask = make_shared<RenderTask>();
 	ssaoTask->SetName("SSAO");

@@ -40,6 +40,8 @@ public:
 	void SetAspectRatio(float aspect);
 	void SetFOV(float fov);
 
+	void SetReverseZ(bool enable);
+
 	void GetPerspective(float& fov, float& aspect, float& zNear, float& zFar)
 	{
 		fov = m_fov;
@@ -61,6 +63,7 @@ public:
 private:
 	void RenderThreadSetCameraPerspective();
 	void RenderThreadSetCameraPositionAndOrientation();
+	void RenderThreadSetReverseZ();
 	void CreateCameraProxy();
 
 private:
@@ -72,6 +75,7 @@ private:
 	float				m_aspect;
 	float				m_zNear;
 	float				m_zFar;
+	bool				m_reverseZ;
 
 	std::shared_ptr<RenderThread::Camera> m_cameraProxy;
 };
@@ -88,6 +92,7 @@ public:
 
 	void SetPositionAndOrientation(const Math::Vector3& position, const Math::Quaternion& orientation);
 	void SetPerspective(float fov, float aspect, float zNear, float zFar);
+	void SetReverseZ(bool enable);
 
 	const Math::Matrix4& GetProjectionMatrix() const { return m_projectionMatrix; }
 	const Math::Matrix4& GetViewMatrix() const { return m_viewMatrix; }
@@ -110,6 +115,7 @@ private:
 	float					m_aspect;
 	float					m_zNear;
 	float					m_zFar;
+	bool					m_reverseZ;
 };
 
 } // namespace RenderThread

@@ -39,6 +39,7 @@ Camera::Camera()
 	, m_aspect(1.0f)
 	, m_zNear(0.1f)
 	, m_zFar(10.0f)
+	, m_reverseZ(false)
 	, m_cameraProxy()
 {
 	CreateCameraProxy();
@@ -52,6 +53,7 @@ Camera::Camera(const Vector3& position, const Quaternion& orientation)
 	, m_aspect(1.0f)
 	, m_zNear(0.1f)
 	, m_zFar(10.0f)
+	, m_reverseZ(false)
 	, m_cameraProxy()
 {
 	CreateCameraProxy();
@@ -153,6 +155,15 @@ void Camera::SetFOV(float fov)
 	}
 }
 
+void Camera::SetReverseZ(bool enable)
+{
+	if (m_reverseZ != enable)
+	{
+		m_reverseZ = enable;
+		RenderThreadSetReverseZ();
+	}
+}
+
 
 void Camera::LookAt(const Vector3& target, const Vector3& up)
 {
@@ -238,6 +249,16 @@ void Camera::RenderThreadSetCameraPositionAndOrientation()
 }
 
 
+void Camera::RenderThreadSetReverseZ()
+{
+	auto camera = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([camera](RenderTaskEnvironment& rte)
+	{
+		camera->m_cameraProxy->SetReverseZ(camera->m_reverseZ);
+	});
+}
+
+
 
 Kodiak::RenderThread::Camera::Camera()
 	: m_projectionMatrix(kIdentity)
@@ -249,6 +270,7 @@ Kodiak::RenderThread::Camera::Camera()
 	, m_aspect(1.0f)
 	, m_zNear(0.1f)
 	, m_zFar(10.0f)
+	, m_reverseZ(false)
 {}
 
 
@@ -268,6 +290,7 @@ void Kodiak::RenderThread::Camera::SetPerspective(float fov, float aspect, float
 	m_zFar = zFar;
 
 	m_projectionMatrix = Matrix4::PerspectiveFovRH(ConvertToRadians(m_fov), m_aspect, m_zNear, m_zFar);
+	SetReverseZ(m_reverseZ);
 }
 
 
@@ -276,4 +299,30 @@ void Kodiak::RenderThread::Camera::UpdateViewMatrix()
 	m_prevViewMatrix = m_viewMatrix;
 
 	m_viewMatrix = Invert(Matrix4(AffineTransform(m_orientation, m_position)));
+}
+
+
+void Kodiak::RenderThread::Camera::SetReverseZ(bool enable)
+{
+	m_reverseZ = enable;
+
+	float Q1, Q2;
+	if (m_reverseZ)
+	{
+		Q1 = m_zNear / (m_zFar - m_zNear);
+		Q2 = Q1 * m_zFar;
+	}
+	else
+	{
+		Q1 = m_zFar / (m_zNear - m_zFar);
+		Q2 = Q1 * m_zNear;
+	}
+
+	Vector4 rowZ = m_projectionMatrix.GetZ();
+	rowZ.SetZ(Q1);
+	m_projectionMatrix.SetZ(rowZ);
+
+	Vector4 rowW = m_projectionMatrix.GetW();
+	rowW.SetZ(Q2);
+	m_projectionMatrix.SetW(rowW);
 }

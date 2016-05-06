@@ -17,7 +17,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
-	Kodiak::SponzaApplication app(1280, 720, appname);
+	Kodiak::SponzaApplication app(1920, 1080, appname);
 	auto ret = app.Run(hInstance, nCmdShow);
 
 	return ret;

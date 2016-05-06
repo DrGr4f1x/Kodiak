@@ -57,6 +57,8 @@ private:
 	std::shared_ptr<CameraController>	m_cameraController;
 	std::shared_ptr<StaticModel>	m_sponzaModel;
 	std::shared_ptr<SSAO>			m_ssao;
+
+	bool							m_reverseZ{ true };
 };
 
 } // namespace Kodiak
