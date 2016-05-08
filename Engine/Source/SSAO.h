@@ -18,11 +18,13 @@ namespace Kodiak
 // Forward declarations
 class Camera;
 class ColorBuffer;
+class ComputeCommandList;
 class ComputeKernel;
 class DepthBuffer;
 class GraphicsCommandList;
 class RenderTask;
 namespace RenderThread { class Camera; }
+
 
 class SSAO : public std::enable_shared_from_this<SSAO>
 {
@@ -47,6 +49,10 @@ public:
 
 	// Render AO
 	void Render(GraphicsCommandList* commandList);
+
+private:
+	void ComputeAO(ComputeCommandList* commandList, std::shared_ptr<ComputeKernel> kernel, std::shared_ptr<ColorBuffer> destination,
+		std::shared_ptr<ColorBuffer> depthBuffer, const float tanHalfFovH);
 
 private:
 	// Compute shader kernels
@@ -82,6 +88,15 @@ private:
 	std::shared_ptr<ColorBuffer>	m_aoHighQuality2;
 	std::shared_ptr<ColorBuffer>	m_aoHighQuality3;
 	std::shared_ptr<ColorBuffer>	m_aoHighQuality4;
+	std::shared_ptr<ColorBuffer>	m_aoSmooth1;
+	std::shared_ptr<ColorBuffer>	m_aoSmooth2;
+	std::shared_ptr<ColorBuffer>	m_aoSmooth3;
+
+#if DX11
+	// Semi-hacky way to set samplers
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>	m_linearBorderSampler;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>	m_linearClampSampler;
+#endif
 
 	// Camera
 	std::shared_ptr<RenderThread::Camera> m_camera;

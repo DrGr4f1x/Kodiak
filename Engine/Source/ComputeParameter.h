@@ -25,52 +25,56 @@ public:
 
 	const std::string& GetName() const { return m_name; }
 
-	void SetValue(bool value);
-	void SetValue(int32_t value);
-	void SetValue(DirectX::XMINT2 value);
-	void SetValue(DirectX::XMINT3 value);
-	void SetValue(DirectX::XMINT4 value);
-	void SetValue(uint32_t value);
-	void SetValue(DirectX::XMUINT2 value);
-	void SetValue(DirectX::XMUINT3 value);
-	void SetValue(DirectX::XMUINT4 value);
-	void SetValue(float value);
-	void SetValue(DirectX::XMFLOAT2 value);
-	void SetValue(Math::Vector3 value);
-	void SetValue(Math::Vector4 value);
-	void SetValue(const Math::Matrix4& value);
+	void SetValue(bool value, int32_t index = 0);
+	void SetValue(int32_t value, int32_t index = 0);
+	void SetValue(DirectX::XMINT2 value, int32_t index = 0);
+	void SetValue(DirectX::XMINT3 value, int32_t index = 0);
+	void SetValue(DirectX::XMINT4 value, int32_t index = 0);
+	void SetValue(uint32_t value, int32_t index = 0);
+	void SetValue(DirectX::XMUINT2 value, int32_t index = 0);
+	void SetValue(DirectX::XMUINT3 value, int32_t index = 0);
+	void SetValue(DirectX::XMUINT4 value, int32_t index = 0);
+	void SetValue(float value, int32_t index = 0);
+	void SetValue(DirectX::XMFLOAT2 value, int32_t index = 0);
+	void SetValue(Math::Vector3 value, int32_t index = 0);
+	void SetValue(Math::Vector4 value, int32_t index = 0);
+	void SetValue(const Math::Matrix4& value, int32_t index = 0);
 
-	void SetValueImmediate(bool value);
-	void SetValueImmediate(int32_t value);
-	void SetValueImmediate(DirectX::XMINT2 value);
-	void SetValueImmediate(DirectX::XMINT3 value);
-	void SetValueImmediate(DirectX::XMINT4 value);
-	void SetValueImmediate(uint32_t value);
-	void SetValueImmediate(DirectX::XMUINT2 value);
-	void SetValueImmediate(DirectX::XMUINT3 value);
-	void SetValueImmediate(DirectX::XMUINT4 value);
-	void SetValueImmediate(float value);
-	void SetValueImmediate(DirectX::XMFLOAT2 value);
-	void SetValueImmediate(Math::Vector3 value);
-	void SetValueImmediate(Math::Vector4 value);
-	void SetValueImmediate(const Math::Matrix4& value);
+	void SetValueImmediate(bool value, int32_t index = 0);
+	void SetValueImmediate(int32_t value, int32_t index = 0);
+	void SetValueImmediate(DirectX::XMINT2 value, int32_t index = 0);
+	void SetValueImmediate(DirectX::XMINT3 value, int32_t index = 0);
+	void SetValueImmediate(DirectX::XMINT4 value, int32_t index = 0);
+	void SetValueImmediate(uint32_t value, int32_t index = 0);
+	void SetValueImmediate(DirectX::XMUINT2 value, int32_t index = 0);
+	void SetValueImmediate(DirectX::XMUINT3 value, int32_t index = 0);
+	void SetValueImmediate(DirectX::XMUINT4 value, int32_t index = 0);
+	void SetValueImmediate(float value, int32_t index = 0);
+	void SetValueImmediate(DirectX::XMFLOAT2 value, int32_t index = 0);
+	void SetValueImmediate(Math::Vector3 value, int32_t index = 0);
+	void SetValueImmediate(Math::Vector4 value, int32_t index = 0);
+	void SetValueImmediate(const Math::Matrix4& value, int32_t index = 0);
 
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData, const ShaderReflection::Parameter<1>& parameter);
 
 private:
-	void UpdateParameterOnRenderThread(const std::array<byte, 64>& data);
-	void SubmitToRenderThread();
+	void UpdateParameterOnRenderThread(const std::array<byte, 64>& data, int32_t index);
+	void SubmitToRenderThread(std::array<byte, 64> data, int32_t index);
+	void FlushPendingUpdates();
 
 private:
 	const std::string		m_name;
 
 	ShaderVariableType		m_type;
-	std::array<byte, 64>	m_data;
 	size_t					m_size{ kInvalid };
+	uint32_t				m_numElements;
 
 	// Render thread data
 	std::weak_ptr<RenderThread::ComputeData>	m_renderThreadData;
 	byte*										m_binding{ nullptr };
+
+	// Pending updates
+	std::vector<std::pair<std::array<byte, 64>, int32_t>> m_pendingUpdates;
 };
 
 } // namespace Kodiak

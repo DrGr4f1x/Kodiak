@@ -171,6 +171,7 @@ void IntrospectCBuffer(ID3DShaderReflection* reflector, const D3D_SHADER_INPUT_B
 		parameter.type = varType;
 		parameter.sizeInBytes = varDesc.Size;
 		parameter.cbvShaderRegister[0] = inputDesc.BindPoint;
+		parameter.numElements = typeDesc.Elements;
 		parameter.byteOffset[0] = varDesc.StartOffset;
 
 		signature.parameters.push_back(parameter);

@@ -63,11 +63,12 @@ struct DescriptorRange
 struct BaseParameter
 {
 	BaseParameter() = default;
-	BaseParameter(const BaseParameter& other) : name(other.name), type(other.type), sizeInBytes(other.sizeInBytes) {}
+	BaseParameter(const BaseParameter& other) : name(other.name), type(other.type), sizeInBytes(other.sizeInBytes), numElements(other.numElements) {}
 
 	std::string							name;
 	Kodiak::ShaderVariableType			type;
 	uint32_t							sizeInBytes{ 0 };
+	uint32_t							numElements{ 0 };
 };
 
 
@@ -95,6 +96,7 @@ struct Parameter : public BaseParameter
 		assert(slot < SlotCount);
 		assert(type == other.type);
 		assert(sizeInBytes == other.sizeInBytes);
+		assert(numElements == other.numElements);
 		cbvShaderRegister[slot] = other.cbvShaderRegister[0];
 		byteOffset[slot] = other.byteOffset[0];
 	}

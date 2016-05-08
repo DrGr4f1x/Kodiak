@@ -25,232 +25,370 @@ ComputeParameter::ComputeParameter(const string& name)
 	: m_name(name)
 	, m_type(ShaderVariableType::Unsupported)
 	, m_renderThreadData()
+{}
+
+
+void ComputeParameter::SetValue(bool value, int32_t index)
 {
-	ZeroMemory(&m_data[0], 64);
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(bool));
+
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(bool value)
+void ComputeParameter::SetValue(int32_t value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(bool));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(int32_t));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(int32_t value)
+void ComputeParameter::SetValue(XMINT2 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(int32_t));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMINT2));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(XMINT2 value)
+void ComputeParameter::SetValue(XMINT3 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMINT2));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMINT3));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(XMINT3 value)
+void ComputeParameter::SetValue(XMINT4 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMINT3));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMINT4));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(XMINT4 value)
+void ComputeParameter::SetValue(uint32_t value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMINT4));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(uint32_t));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(uint32_t value)
+void ComputeParameter::SetValue(XMUINT2 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(uint32_t));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMUINT2));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(XMUINT2 value)
+void ComputeParameter::SetValue(XMUINT3 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMUINT2));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMUINT3));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(XMUINT3 value)
+void ComputeParameter::SetValue(XMUINT4 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMUINT3));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMUINT4));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(XMUINT4 value)
+void ComputeParameter::SetValue(float value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMUINT4));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(float));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(float value)
+void ComputeParameter::SetValue(XMFLOAT2 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(float));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMFLOAT2));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(XMFLOAT2 value)
+void ComputeParameter::SetValue(Vector3 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT2));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(Vector3));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(Vector3 value)
+void ComputeParameter::SetValue(Vector4 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT3));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(Vector4));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(Vector4 value)
+void ComputeParameter::SetValue(const Matrix4& value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT4));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(Matrix4));
 
-	SubmitToRenderThread();
+	SubmitToRenderThread(move(data), index);
 }
 
 
-void ComputeParameter::SetValue(const Matrix4& value)
+void ComputeParameter::SetValueImmediate(bool value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT4X4));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(bool));
 
-	SubmitToRenderThread();
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(bool value)
+void ComputeParameter::SetValueImmediate(int32_t value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(bool));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(int32_t));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(int32_t value)
+void ComputeParameter::SetValueImmediate(XMINT2 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(int32_t));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMINT2));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(XMINT2 value)
+void ComputeParameter::SetValueImmediate(XMINT3 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMINT2));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMINT3));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(XMINT3 value)
+void ComputeParameter::SetValueImmediate(XMINT4 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMINT3));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMINT4));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(XMINT4 value)
+void ComputeParameter::SetValueImmediate(uint32_t value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMINT4));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(uint32_t));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(uint32_t value)
+void ComputeParameter::SetValueImmediate(XMUINT2 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(uint32_t));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMUINT2));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(XMUINT2 value)
+void ComputeParameter::SetValueImmediate(XMUINT3 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMUINT2));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMUINT3));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(XMUINT3 value)
+void ComputeParameter::SetValueImmediate(XMUINT4 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMUINT3));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMUINT4));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(XMUINT4 value)
+void ComputeParameter::SetValueImmediate(float value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMUINT4));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(float));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(float value)
+void ComputeParameter::SetValueImmediate(XMFLOAT2 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(float));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(XMFLOAT2));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(XMFLOAT2 value)
+void ComputeParameter::SetValueImmediate(Vector3 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT2));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(Vector3));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(Vector3 value)
+void ComputeParameter::SetValueImmediate(Vector4 value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT3));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(Vector4));
 
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
-void ComputeParameter::SetValueImmediate(Vector4 value)
+void ComputeParameter::SetValueImmediate(const Matrix4& value, int32_t index)
 {
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT4));
+	array<byte, 64> data;
+	memcpy(&data[0], &value, sizeof(Matrix4));
 
-	UpdateParameterOnRenderThread(m_data);
-}
-
-
-void ComputeParameter::SetValueImmediate(const Matrix4& value)
-{
-	memcpy(&m_data[0], &value, sizeof(XMFLOAT4X4));
-
-	UpdateParameterOnRenderThread(m_data);
+	if (auto computeData = m_renderThreadData.lock())
+	{
+		UpdateParameterOnRenderThread(data, index);
+		computeData->cbufferDirty = true;
+	}
+	else
+	{
+		m_pendingUpdates.push_back(make_pair(data, index));
+	}
 }
 
 
@@ -260,26 +398,33 @@ void ComputeParameter::CreateRenderThreadData(shared_ptr<RenderThread::ComputeDa
 
 	m_type = parameter.type;
 	m_size = parameter.sizeInBytes;
+	m_numElements = parameter.numElements;
+
+	if (m_numElements > 0)
+	{
+		m_size /= m_numElements;
+	}
 
 	if (parameter.byteOffset[0] != kInvalid)
 	{
 		m_binding = computeData->cbufferData + parameter.byteOffset[0];
 	}
 	
-	UpdateParameterOnRenderThread(m_data);
+	FlushPendingUpdates();
 }
 
 
-void ComputeParameter::UpdateParameterOnRenderThread(const array<byte, 64>& data)
+void ComputeParameter::UpdateParameterOnRenderThread(const array<byte, 64>& data, int32_t index)
 {
+	assert((index == 0 && m_numElements == 0) || (index < static_cast<int32_t>(m_numElements)));
 	if (m_binding)
 	{
-		memcpy(m_binding, &data[0], m_size);
+		memcpy(m_binding + index * m_size, &data[0], m_size);
 	}
 }
 
 
-void ComputeParameter::SubmitToRenderThread()
+void ComputeParameter::SubmitToRenderThread(array<byte, 64> data, int32_t index)
 {
 	if (m_size == kInvalid || m_type == ShaderVariableType::Unsupported)
 	{
@@ -289,11 +434,19 @@ void ComputeParameter::SubmitToRenderThread()
 	if (auto computeData = m_renderThreadData.lock())
 	{
 		auto thisParameter = shared_from_this();
-		auto thisData = m_data;
-		Renderer::GetInstance().EnqueueTask([computeData, thisParameter, thisData](RenderTaskEnvironment& rte)
+		Renderer::GetInstance().EnqueueTask([computeData, thisParameter, data, index](RenderTaskEnvironment& rte)
 		{
-			thisParameter->UpdateParameterOnRenderThread(thisData);
+			thisParameter->UpdateParameterOnRenderThread(data, index);
 			computeData->cbufferDirty = true;
 		});
+	}
+}
+
+
+void ComputeParameter::FlushPendingUpdates()
+{
+	for (const auto& updatePair : m_pendingUpdates)
+	{
+		UpdateParameterOnRenderThread(updatePair.first, updatePair.second);
 	}
 }
