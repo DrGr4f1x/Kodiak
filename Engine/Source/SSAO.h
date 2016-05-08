@@ -74,6 +74,14 @@ private:
 	std::shared_ptr<ColorBuffer>	m_depthTiled2;
 	std::shared_ptr<ColorBuffer>	m_depthTiled3;
 	std::shared_ptr<ColorBuffer>	m_depthTiled4;
+	std::shared_ptr<ColorBuffer>	m_aoMerged1;
+	std::shared_ptr<ColorBuffer>	m_aoMerged2;
+	std::shared_ptr<ColorBuffer>	m_aoMerged3;
+	std::shared_ptr<ColorBuffer>	m_aoMerged4;
+	std::shared_ptr<ColorBuffer>	m_aoHighQuality1;
+	std::shared_ptr<ColorBuffer>	m_aoHighQuality2;
+	std::shared_ptr<ColorBuffer>	m_aoHighQuality3;
+	std::shared_ptr<ColorBuffer>	m_aoHighQuality4;
 
 	// Camera
 	std::shared_ptr<RenderThread::Camera> m_camera;

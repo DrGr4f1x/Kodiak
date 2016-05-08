@@ -26,6 +26,7 @@
 
 using namespace Kodiak;
 using namespace std;
+using namespace DirectX;
 
 
 SSAO::SSAO()
@@ -110,9 +111,9 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 	m_depthDownsize3->Create("Depth downsized 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R32_Float);
 	m_depthDownsize4->Create("Depth downsized 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R32_Float);
 	m_depthTiled1->CreateArray("Depth de-interleaved 1", bufferWidth3, bufferHeight3, 16, ColorFormat::R16_Float);
-	m_depthTiled2->CreateArray("Depth de-interleaved 1", bufferWidth4, bufferHeight4, 16, ColorFormat::R16_Float);
-	m_depthTiled3->CreateArray("Depth de-interleaved 1", bufferWidth5, bufferHeight5, 16, ColorFormat::R16_Float);
-	m_depthTiled4->CreateArray("Depth de-interleaved 1", bufferWidth6, bufferHeight6, 16, ColorFormat::R16_Float);
+	m_depthTiled2->CreateArray("Depth de-interleaved 2", bufferWidth4, bufferHeight4, 16, ColorFormat::R16_Float);
+	m_depthTiled3->CreateArray("Depth de-interleaved 3", bufferWidth5, bufferHeight5, 16, ColorFormat::R16_Float);
+	m_depthTiled4->CreateArray("Depth de-interleaved 4", bufferWidth6, bufferHeight6, 16, ColorFormat::R16_Float);
 }
 
 
@@ -170,11 +171,82 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		return;
 	}
 
+	commandList->PIXBeginEvent("Generate SSAO");
+
 	commandList->TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
 	commandList->TransitionResource(*m_ssaoFullscreen, ResourceState::UnorderedAccess);
 
 	auto computeCommandList = commandList->GetComputeCommandList();
 
-	m_depthPrepare1Cs->GetParameter("ZMagic")->SetValueImmediate(zMagic);
-	
+	// Decompress and downsample
+	{
+		computeCommandList->PIXBeginEvent("Decompress and downsample");
+
+		m_depthPrepare1Cs->GetParameter("ZMagic")->SetValueImmediate(zMagic);
+		m_depthPrepare1Cs->GetResource("Depth")->SetSRVImmediate(m_sceneDepthBuffer);
+
+		computeCommandList->TransitionResource(*m_linearDepth, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_depthDownsize1, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_depthTiled1, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_depthDownsize2, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_depthTiled2, ResourceState::UnorderedAccess);
+
+		m_depthPrepare1Cs->GetResource("LinearZ")->SetUAVImmediate(m_linearDepth);
+		m_depthPrepare1Cs->GetResource("DS2x")->SetUAVImmediate(m_depthDownsize1);
+		m_depthPrepare1Cs->GetResource("DS2Atlas")->SetUAVImmediate(m_depthTiled1);
+		m_depthPrepare1Cs->GetResource("DS4x")->SetUAVImmediate(m_depthDownsize2);
+		m_depthPrepare1Cs->GetResource("DS4Atlas")->SetUAVImmediate(m_depthTiled2);
+
+		m_depthPrepare1Cs->Dispatch2D(computeCommandList, m_depthTiled2->GetWidth() * 8, m_depthTiled2->GetHeight() * 8);
+		m_depthPrepare1Cs->UnbindUAVs(computeCommandList);
+
+		if (m_hierarchyDepth > 2)
+		{
+			XMFLOAT2 invSize(1.0f / m_depthDownsize2->GetWidth(), 1.0f / m_depthDownsize2->GetHeight());
+			m_depthPrepare2Cs->GetParameter("InvSourceDimension")->SetValueImmediate(invSize);
+
+			computeCommandList->TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
+			computeCommandList->TransitionResource(*m_depthDownsize3, ResourceState::UnorderedAccess);
+			computeCommandList->TransitionResource(*m_depthTiled3, ResourceState::UnorderedAccess);
+			computeCommandList->TransitionResource(*m_depthDownsize4, ResourceState::UnorderedAccess);
+			computeCommandList->TransitionResource(*m_depthTiled4, ResourceState::UnorderedAccess);
+
+			m_depthPrepare2Cs->GetResource("DS4x")->SetSRVImmediate(m_depthDownsize2);
+			m_depthPrepare2Cs->GetResource("DS8x")->SetUAVImmediate(m_depthDownsize3);
+			m_depthPrepare2Cs->GetResource("DS8xAtlas")->SetUAVImmediate(m_depthTiled3);
+			m_depthPrepare2Cs->GetResource("DS16x")->SetUAVImmediate(m_depthDownsize4);
+			m_depthPrepare2Cs->GetResource("DS16xAtlas")->SetUAVImmediate(m_depthTiled4);
+
+			m_depthPrepare2Cs->Dispatch2D(computeCommandList, m_depthTiled4->GetWidth() * 8, m_depthTiled4->GetHeight() * 8);
+			m_depthPrepare2Cs->UnbindUAVs(computeCommandList);
+		}
+
+		computeCommandList->PIXEndEvent();
+	}
+
+	// Analyze depth volumes
+	if(false)
+	{
+		const auto& projMat = m_camera->GetProjectionMatrix();
+		const float fovTangent = 1.0f / (projMat.GetX().GetX());
+
+		computeCommandList->TransitionResource(*m_aoMerged1, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_aoMerged2, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_aoMerged3, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_aoMerged4, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_aoHighQuality1, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_aoHighQuality2, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_aoHighQuality3, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_aoHighQuality4, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_depthTiled1, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_depthTiled2, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_depthTiled3, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_depthTiled4, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_depthDownsize1, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_depthDownsize3, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_depthDownsize4, ResourceState::NonPixelShaderResource);
+	}
+
+	commandList->PIXEndEvent();
 }

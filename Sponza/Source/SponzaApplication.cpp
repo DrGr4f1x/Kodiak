@@ -121,8 +121,8 @@ void SponzaApplication::CreateResources()
 	m_ssao->LinearDepthBuffer = m_linearDepthBuffer;
 	m_ssao->SsaoFullscreen = m_ssaoFullscreen;
 
-	m_ssao->Enable = false;
-	m_ssao->DebugDraw = true;
+	m_ssao->Enable = true;
+	m_ssao->DebugDraw = false;
 }
 
 
@@ -232,7 +232,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	};
 	rootTask->Continue(depthTask);
 
-	bool ssaoEnabled = false;
+	bool ssaoEnabled = true;
 
 	auto ssaoTask = make_shared<RenderTask>();
 	ssaoTask->SetName("SSAO");
