@@ -19,6 +19,7 @@ enum class ColorFormat
 	R8_UNorm,
 	R11G11B10_Float,
 	R16_Float,
+	R32_Float
 };
 
 enum class DepthFormat

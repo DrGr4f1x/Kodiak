@@ -29,7 +29,7 @@ class SSAO : public std::enable_shared_from_this<SSAO>
 public:
 	SSAO();
 
-	void Initialize();
+	void Initialize(uint32_t width, uint32_t height);
 
 	// Feature toggles
 	ThreadParameter<bool> Enable;
@@ -64,6 +64,16 @@ private:
 	std::shared_ptr<ColorBuffer>	m_sceneColorBuffer;
 	std::shared_ptr<DepthBuffer>	m_sceneDepthBuffer;
 	std::shared_ptr<ColorBuffer>	m_linearDepth;
+
+	// Internal render targets and UAV buffers
+	std::shared_ptr<ColorBuffer>	m_depthDownsize1;
+	std::shared_ptr<ColorBuffer>	m_depthDownsize2;
+	std::shared_ptr<ColorBuffer>	m_depthDownsize3;
+	std::shared_ptr<ColorBuffer>	m_depthDownsize4;
+	std::shared_ptr<ColorBuffer>	m_depthTiled1;
+	std::shared_ptr<ColorBuffer>	m_depthTiled2;
+	std::shared_ptr<ColorBuffer>	m_depthTiled3;
+	std::shared_ptr<ColorBuffer>	m_depthTiled4;
 
 	// Camera
 	std::shared_ptr<RenderThread::Camera> m_camera;

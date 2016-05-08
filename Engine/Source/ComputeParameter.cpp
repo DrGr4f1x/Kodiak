@@ -142,6 +142,118 @@ void ComputeParameter::SetValue(const Matrix4& value)
 }
 
 
+void ComputeParameter::SetValueImmediate(bool value)
+{
+	memcpy(&m_data[0], &value, sizeof(bool));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(int32_t value)
+{
+	memcpy(&m_data[0], &value, sizeof(int32_t));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(XMINT2 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMINT2));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(XMINT3 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMINT3));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(XMINT4 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMINT4));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(uint32_t value)
+{
+	memcpy(&m_data[0], &value, sizeof(uint32_t));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(XMUINT2 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMUINT2));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(XMUINT3 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMUINT3));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(XMUINT4 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMUINT4));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(float value)
+{
+	memcpy(&m_data[0], &value, sizeof(float));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(XMFLOAT2 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT2));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(Vector3 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT3));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(Vector4 value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT4));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
+void ComputeParameter::SetValueImmediate(const Matrix4& value)
+{
+	memcpy(&m_data[0], &value, sizeof(XMFLOAT4X4));
+
+	UpdateParameterOnRenderThread(m_data);
+}
+
+
 void ComputeParameter::CreateRenderThreadData(shared_ptr<RenderThread::ComputeData> computeData, const ShaderReflection::Parameter<1>& parameter)
 {
 	m_renderThreadData = computeData;

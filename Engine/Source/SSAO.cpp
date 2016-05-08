@@ -19,6 +19,7 @@
 #include "ComputeParameter.h"
 #include "ComputeResource.h"
 #include "DepthBuffer.h"
+#include "Format.h"
 #include "Renderer.h"
 #include "RenderTask.h"
 
@@ -38,7 +39,7 @@ SSAO::SSAO()
 {}
 
 
-void SSAO::Initialize()
+void SSAO::Initialize(uint32_t width, uint32_t height)
 {
 	m_sampleThickness[0]	= sqrt(1.0f - 0.2f * 0.2f);
 	m_sampleThickness[1]	= sqrt(1.0f - 0.4f * 0.4f);
@@ -82,6 +83,36 @@ void SSAO::Initialize()
 
 	m_debugSsaoCs = make_shared<ComputeKernel>("debugSSAO");
 	m_debugSsaoCs->SetComputeShaderPath("Engine", "DebugSSAOCS.cso");
+
+	const uint32_t bufferWidth1 = (width + 1) / 2;
+	const uint32_t bufferWidth2 = (width + 3) / 4;
+	const uint32_t bufferWidth3 = (width + 7) / 8;
+	const uint32_t bufferWidth4 = (width + 15) / 16;
+	const uint32_t bufferWidth5 = (width + 31) / 32;
+	const uint32_t bufferWidth6 = (width + 63) / 64;
+	const uint32_t bufferHeight1 = (height + 1) / 2;
+	const uint32_t bufferHeight2 = (height + 3) / 4;
+	const uint32_t bufferHeight3 = (height + 7) / 8;
+	const uint32_t bufferHeight4 = (height + 15) / 16;
+	const uint32_t bufferHeight5 = (height + 31) / 32;
+	const uint32_t bufferHeight6 = (height + 63) / 64;
+
+	m_depthDownsize1 = make_shared<ColorBuffer>();
+	m_depthDownsize2 = make_shared<ColorBuffer>();
+	m_depthDownsize3 = make_shared<ColorBuffer>();
+	m_depthDownsize4 = make_shared<ColorBuffer>();
+	m_depthTiled1 = make_shared<ColorBuffer>();
+	m_depthTiled2 = make_shared<ColorBuffer>();
+	m_depthTiled3 = make_shared<ColorBuffer>();
+	m_depthTiled4 = make_shared<ColorBuffer>();
+	m_depthDownsize1->Create("Depth downsized 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R32_Float);
+	m_depthDownsize2->Create("Depth downsized 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R32_Float);
+	m_depthDownsize3->Create("Depth downsized 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R32_Float);
+	m_depthDownsize4->Create("Depth downsized 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R32_Float);
+	m_depthTiled1->CreateArray("Depth de-interleaved 1", bufferWidth3, bufferHeight3, 16, ColorFormat::R16_Float);
+	m_depthTiled2->CreateArray("Depth de-interleaved 1", bufferWidth4, bufferHeight4, 16, ColorFormat::R16_Float);
+	m_depthTiled3->CreateArray("Depth de-interleaved 1", bufferWidth5, bufferHeight5, 16, ColorFormat::R16_Float);
+	m_depthTiled4->CreateArray("Depth de-interleaved 1", bufferWidth6, bufferHeight6, 16, ColorFormat::R16_Float);
 }
 
 
@@ -94,7 +125,7 @@ void SSAO::SetCamera(shared_ptr<Camera> camera)
 void SSAO::Render(GraphicsCommandList* commandList)
 {
 	const float zMagic = (m_camera->GetZFar() - m_camera->GetZNear()) / m_camera->GetZNear();
-
+	
 	if (!m_enabled)
 	{
 		commandList->PIXBeginEvent("Generate SSAO");
@@ -138,4 +169,12 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		commandList->PIXEndEvent();
 		return;
 	}
+
+	commandList->TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
+	commandList->TransitionResource(*m_ssaoFullscreen, ResourceState::UnorderedAccess);
+
+	auto computeCommandList = commandList->GetComputeCommandList();
+
+	m_depthPrepare1Cs->GetParameter("ZMagic")->SetValueImmediate(zMagic);
+	
 }

@@ -20,17 +20,20 @@ using namespace Kodiak;
 using namespace std;
 
 
-D3D11_TEXTURE2D_DESC PixelBuffer::DescribeTex2D(size_t width, size_t height, size_t depthOrArraySize, ColorFormat format, uint32_t flags)
+D3D11_TEXTURE2D_DESC PixelBuffer::DescribeTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, uint32_t numMips, 
+	ColorFormat format, uint32_t flags)
 {
-	return InternalDescribeTex2D(width, height, depthOrArraySize, DXGIUtility::ConvertToDXGI(format), flags);
+	return InternalDescribeTex2D(width, height, depthOrArraySize, numMips, DXGIUtility::ConvertToDXGI(format), flags);
 }
 
 
-D3D11_TEXTURE2D_DESC PixelBuffer::DescribeDepthTex2D(size_t width, size_t height, size_t depthOrArraySize, DepthFormat format, uint32_t flags)
+D3D11_TEXTURE2D_DESC PixelBuffer::DescribeDepthTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, DepthFormat format, 
+	uint32_t flags)
 {
 	DXGI_FORMAT dxgiFormat = DXGIUtility::ConvertToDXGI(format);
 	dxgiFormat = DXGIUtility::GetBaseFormat(dxgiFormat);
-	return InternalDescribeTex2D(width, height, depthOrArraySize, dxgiFormat, flags);
+	const uint32_t numMips = 1;
+	return InternalDescribeTex2D(width, height, depthOrArraySize, numMips, dxgiFormat, flags);
 }
 
 
@@ -63,7 +66,8 @@ void PixelBuffer::CreateTextureResource(const std::string& name, const D3D11_TEX
 }
 
 
-D3D11_TEXTURE2D_DESC PixelBuffer::InternalDescribeTex2D(size_t width, size_t height, size_t depthOrArraySize, DXGI_FORMAT format, uint32_t flags)
+D3D11_TEXTURE2D_DESC PixelBuffer::InternalDescribeTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, uint32_t numMips,
+	DXGI_FORMAT format, uint32_t flags)
 {
 	m_width = width;
 	m_height = height;
@@ -71,10 +75,10 @@ D3D11_TEXTURE2D_DESC PixelBuffer::InternalDescribeTex2D(size_t width, size_t hei
 	m_format = format;
 
 	D3D11_TEXTURE2D_DESC desc = {};
-	desc.Width = static_cast<UINT>(width);
-	desc.Height = static_cast<UINT>(height);
-	desc.MipLevels = 1;
-	desc.ArraySize = static_cast<UINT>(depthOrArraySize);
+	desc.Width = width;
+	desc.Height = height;
+	desc.MipLevels = numMips;
+	desc.ArraySize = depthOrArraySize;
 	desc.Format = format;
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;

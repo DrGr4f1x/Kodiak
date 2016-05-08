@@ -40,6 +40,21 @@ public:
 	void SetValue(Math::Vector4 value);
 	void SetValue(const Math::Matrix4& value);
 
+	void SetValueImmediate(bool value);
+	void SetValueImmediate(int32_t value);
+	void SetValueImmediate(DirectX::XMINT2 value);
+	void SetValueImmediate(DirectX::XMINT3 value);
+	void SetValueImmediate(DirectX::XMINT4 value);
+	void SetValueImmediate(uint32_t value);
+	void SetValueImmediate(DirectX::XMUINT2 value);
+	void SetValueImmediate(DirectX::XMUINT3 value);
+	void SetValueImmediate(DirectX::XMUINT4 value);
+	void SetValueImmediate(float value);
+	void SetValueImmediate(DirectX::XMFLOAT2 value);
+	void SetValueImmediate(Math::Vector3 value);
+	void SetValueImmediate(Math::Vector4 value);
+	void SetValueImmediate(const Math::Matrix4& value);
+
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData, const ShaderReflection::Parameter<1>& parameter);
 
 private:

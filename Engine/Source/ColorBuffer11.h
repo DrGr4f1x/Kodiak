@@ -26,22 +26,26 @@ public:
 	void CreateFromSwapChain(DeviceManager* deviceManager, const std::string& name, ID3D11Texture2D* baseTexture);
 
 	// Create a color buffer
-	void Create(DeviceManager* deviceManager, const std::string& name, size_t width, size_t height, size_t depthOrArraySize, ColorFormat format);
+	void Create(const std::string& name, uint32_t width, uint32_t height, uint32_t numMips, ColorFormat format);
+
+	// Create a color buffer array
+	void CreateArray(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format);
 
 	ID3D11RenderTargetView*		GetRTV() { return m_rtv.Get(); }
 	ID3D11ShaderResourceView*	GetSRV() { return m_srv.Get(); }
-	ID3D11UnorderedAccessView*	GetUAV() { return m_uav.Get(); }
+	ID3D11UnorderedAccessView*	GetUAV() { return m_uav[0].Get(); }
 
 	DirectX::XMVECTORF32 GetClearColor() const { return m_clearColor; }
 
 private:
-	void CreateDerivedViews(size_t arraySize);
+	void CreateDerivedViews(uint32_t arraySize, uint32_t numMips);
 
 private:
 	DirectX::XMVECTORF32 m_clearColor;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>		m_rtv;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
-	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	m_uav;
+	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	m_uav[12];
+	uint32_t m_numMipMaps;
 };
 
 } // namespace Kodiak

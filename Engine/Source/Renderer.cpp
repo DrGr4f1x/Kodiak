@@ -177,7 +177,7 @@ shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t widt
 {
 	auto colorBuffer = make_shared<ColorBuffer>(clearColor);
 
-	colorBuffer->Create(Renderer::GetInstance().GetDeviceManager(), name, width, height, arraySize, format);
+	colorBuffer->Create(name, width, height, 1, format);
 
 	return colorBuffer;
 }

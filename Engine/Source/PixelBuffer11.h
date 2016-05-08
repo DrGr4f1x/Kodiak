@@ -22,27 +22,29 @@ enum class DepthFormat;
 class PixelBuffer : public GpuResource
 {
 public:
-	size_t GetWidth()			const { return m_width; }
-	size_t GetHeight()			const { return m_height; }
-	size_t GetArraySize()		const { return m_arraySize; }
+	uint32_t GetWidth()			const { return m_width; }
+	uint32_t GetHeight()			const { return m_height; }
+	uint32_t GetArraySize()		const { return m_arraySize; }
 	DXGI_FORMAT GetFormat()		const { return m_format; }
 
 protected:
-	D3D11_TEXTURE2D_DESC DescribeTex2D(size_t width, size_t height, size_t depthOrArraySize, ColorFormat format, uint32_t flags);
-	D3D11_TEXTURE2D_DESC DescribeDepthTex2D(size_t width, size_t height, size_t depthOrArraySize, DepthFormat format, uint32_t flags);
+	D3D11_TEXTURE2D_DESC DescribeTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, uint32_t numMips, 
+		ColorFormat format, uint32_t flags);
+	D3D11_TEXTURE2D_DESC DescribeDepthTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, DepthFormat format, uint32_t flags);
 
 	void AssociateWithTexture(const std::string& name, ID3D11Texture2D* texture);
 
 	void CreateTextureResource(const std::string& name, const D3D11_TEXTURE2D_DESC& textureDesc);
 
 protected:
-	size_t			m_width{ 1 };
-	size_t			m_height{ 1 };
-	size_t			m_arraySize{ 1 };
+	uint32_t		m_width{ 1 };
+	uint32_t		m_height{ 1 };
+	uint32_t		m_arraySize{ 1 };
 	DXGI_FORMAT		m_format{ DXGI_FORMAT_UNKNOWN };
 
 private:
-	D3D11_TEXTURE2D_DESC InternalDescribeTex2D(size_t width, size_t height, size_t depthOrArraySize, DXGI_FORMAT format, uint32_t flags);
+	D3D11_TEXTURE2D_DESC InternalDescribeTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, uint32_t numMips,
+		DXGI_FORMAT format, uint32_t flags);
 };
 
 } // namespace Kodiak

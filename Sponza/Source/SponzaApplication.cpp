@@ -115,7 +115,7 @@ void SponzaApplication::CreateResources()
 	m_ssaoFullscreen = CreateColorBuffer("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm, DirectX::Colors::Black);
 
 	m_ssao = make_shared<SSAO>();
-	m_ssao->Initialize();
+	m_ssao->Initialize(m_width, m_height);
 	m_ssao->SceneColorBuffer = m_colorTarget;
 	m_ssao->SceneDepthBuffer = m_depthBuffer;
 	m_ssao->LinearDepthBuffer = m_linearDepthBuffer;
@@ -206,48 +206,6 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 
 		commandList->CloseAndExecute();
 		PROFILE_END();
-
-
-		/*PROFILE_BEGIN(itt_depth_prepass);
-		commandList = GraphicsCommandList::Begin();
-
-		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-		commandList->SetScissor(0, 0, m_width, m_height);
-		commandList->SetDepthStencilTarget(*m_depthBuffer);
-
-		m_mainScene->Update(commandList);
-		m_mainScene->Render(GetDefaultDepthPass(), commandList);
-
-		commandList->UnbindRenderTargets();
-
-		commandList->CloseAndExecute();
-		PROFILE_END();
-
-
-		PROFILE_BEGIN(itt_ssao);
-		commandList = GraphicsCommandList::Begin();
-
-		m_ssao->Render(commandList);
-
-		commandList->CloseAndExecute();
-		PROFILE_END();
-
-
-		if (!m_ssao->DebugDraw)
-		{
-			PROFILE_BEGIN(itt_opaque_pass);
-			commandList = GraphicsCommandList::Begin();
-
-			commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-			commandList->SetScissor(0, 0, m_width, m_height);
-			commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
-
-			m_mainScene->Update(commandList);
-			m_mainScene->Render(GetDefaultBasePass(), commandList);
-
-			commandList->CloseAndExecute();
-			PROFILE_END();
-		}*/
 	};
 	
 
@@ -274,7 +232,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	};
 	rootTask->Continue(depthTask);
 
-	bool ssaoEnabled = true;
+	bool ssaoEnabled = false;
 
 	auto ssaoTask = make_shared<RenderTask>();
 	ssaoTask->SetName("SSAO");
