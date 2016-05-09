@@ -54,6 +54,10 @@ private:
 	void ComputeAO(ComputeCommandList* commandList, std::shared_ptr<ComputeKernel> kernel, std::shared_ptr<ColorBuffer> destination,
 		std::shared_ptr<ColorBuffer> depthBuffer, const float tanHalfFovH);
 
+	void BlurAndUpsample(ComputeCommandList* commandList,
+		std::shared_ptr<ColorBuffer> destination, std::shared_ptr<ColorBuffer> hiResDepth, std::shared_ptr<ColorBuffer> loResDepth,
+		std::shared_ptr<ColorBuffer> interleavedAO, std::shared_ptr<ColorBuffer> highQualityAO, std::shared_ptr<ColorBuffer> hiResAO);
+
 private:
 	// Compute shader kernels
 	std::shared_ptr<ComputeKernel>	m_depthPrepare1Cs;

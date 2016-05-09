@@ -117,6 +117,14 @@ void ComputeKernel::Dispatch3D(ComputeCommandList* commandList, size_t threadCou
 }
 
 
+void ComputeKernel::UnbindSRVs(ComputeCommandList* commandList)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->UnbindSRVs(commandList);
+}
+
+
 void ComputeKernel::UnbindUAVs(ComputeCommandList* commandList)
 {
 	assert(m_renderThreadData);
@@ -201,6 +209,7 @@ void ComputeKernel::SetupKernel()
 		layout.resources.insert(layout.resources.end(), layout.numItems, nullptr);
 
 		computeData.srvTables.layouts.push_back(layout);
+		computeData.nullSRVTables.layouts.push_back(layout);
 	}
 
 
@@ -304,6 +313,15 @@ void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
 	for (const auto& layout : uavTables.layouts)
 	{
 		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+	}
+}
+
+
+void RenderThread::ComputeData::UnbindSRVs(ComputeCommandList* commandList)
+{
+	for (const auto& layout : nullSRVTables.layouts)
+	{
+		commandList->SetShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 }
 

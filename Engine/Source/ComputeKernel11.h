@@ -51,6 +51,7 @@ public:
 	void Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, 
 		size_t groupSizeY, size_t groupSizeZ);
 
+	void UnbindSRVs(ComputeCommandList* commandList);
 	void UnbindUAVs(ComputeCommandList* commandList);
 
 private:
@@ -83,6 +84,7 @@ struct ComputeData
 	}
 
 	void Commit(ComputeCommandList* commandList);
+	void UnbindSRVs(ComputeCommandList* commandList);
 	void UnbindUAVs(ComputeCommandList* commandList);
 
 	std::shared_ptr<ComputePSO>		pso;
@@ -120,6 +122,7 @@ struct ComputeData
 	ResourceTable<ID3D11UnorderedAccessView> 	uavTables;
 	ResourceTable<ID3D11SamplerState>			samplerTables;
 
+	ResourceTable<ID3D11ShaderResourceView>		nullSRVTables;
 	ResourceTable<ID3D11UnorderedAccessView>	nullUAVTables;
 };
 

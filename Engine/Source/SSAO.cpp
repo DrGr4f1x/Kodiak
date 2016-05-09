@@ -193,6 +193,7 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(m_linearDepth);
 		
 		m_linearizeDepthCs->Dispatch2D(computeCommandList, m_linearDepth->GetWidth(), m_linearDepth->GetHeight(), 16, 16);
+		m_linearizeDepthCs->UnbindSRVs(computeCommandList);
 		m_linearizeDepthCs->UnbindUAVs(computeCommandList);
 
 		if (m_debugDraw)
@@ -206,6 +207,7 @@ void SSAO::Render(GraphicsCommandList* commandList)
 			m_debugSsaoCs->GetResource("OutColor")->SetUAV(m_sceneColorBuffer);
 
 			m_debugSsaoCs->Dispatch2D(computeCommandList, m_ssaoFullscreen->GetWidth(), m_ssaoFullscreen->GetHeight());
+			m_debugSsaoCs->UnbindSRVs(computeCommandList);
 			m_debugSsaoCs->UnbindUAVs(computeCommandList);
 
 			computeCommandList->PIXEndEvent();
@@ -237,11 +239,12 @@ void SSAO::Render(GraphicsCommandList* commandList)
 
 		m_depthPrepare1Cs->GetResource("LinearZ")->SetUAVImmediate(m_linearDepth);
 		m_depthPrepare1Cs->GetResource("DS2x")->SetUAVImmediate(m_depthDownsize1);
-		m_depthPrepare1Cs->GetResource("DS2Atlas")->SetUAVImmediate(m_depthTiled1);
+		m_depthPrepare1Cs->GetResource("DS2xAtlas")->SetUAVImmediate(m_depthTiled1);
 		m_depthPrepare1Cs->GetResource("DS4x")->SetUAVImmediate(m_depthDownsize2);
-		m_depthPrepare1Cs->GetResource("DS4Atlas")->SetUAVImmediate(m_depthTiled2);
+		m_depthPrepare1Cs->GetResource("DS4xAtlas")->SetUAVImmediate(m_depthTiled2);
 
 		m_depthPrepare1Cs->Dispatch2D(computeCommandList, m_depthTiled2->GetWidth() * 8, m_depthTiled2->GetHeight() * 8);
+		m_depthPrepare1Cs->UnbindSRVs(computeCommandList);
 		m_depthPrepare1Cs->UnbindUAVs(computeCommandList);
 
 		if (m_hierarchyDepth > 2)
@@ -262,6 +265,7 @@ void SSAO::Render(GraphicsCommandList* commandList)
 			m_depthPrepare2Cs->GetResource("DS16xAtlas")->SetUAVImmediate(m_depthTiled4);
 
 			m_depthPrepare2Cs->Dispatch2D(computeCommandList, m_depthTiled4->GetWidth() * 8, m_depthTiled4->GetHeight() * 8);
+			m_depthPrepare2Cs->UnbindSRVs(computeCommandList);
 			m_depthPrepare2Cs->UnbindUAVs(computeCommandList);
 		}
 
@@ -324,6 +328,54 @@ void SSAO::Render(GraphicsCommandList* commandList)
 				ComputeAO(computeCommandList, m_render2Cs, m_aoHighQuality1, m_depthDownsize1, fovTangent);
 			}
 		}
+
+		computeCommandList->PIXEndEvent();
+	}
+
+	// Blur and upsample
+	{
+		computeCommandList->PIXBeginEvent("Blur and upsample");
+
+		shared_ptr<ColorBuffer> nextSRV = m_aoMerged4;
+
+		if (m_hierarchyDepth > 3)
+		{
+			BlurAndUpsample(computeCommandList, m_aoSmooth3, m_depthDownsize3, m_depthDownsize4, nextSRV,
+				m_qualityLevel >= kSsaoQualityLow ? m_aoHighQuality4 : nullptr, m_aoMerged3);
+
+			nextSRV = m_aoSmooth3;
+		}
+		else
+		{
+			nextSRV = m_aoMerged3;
+		}
+
+		if (m_hierarchyDepth > 2)
+		{
+			BlurAndUpsample(computeCommandList, m_aoSmooth2, m_depthDownsize2, m_depthDownsize3, nextSRV,
+				m_qualityLevel >= kSsaoQualityMedium ? m_aoHighQuality3 : nullptr, m_aoMerged2);
+
+			nextSRV = m_aoSmooth2;
+		}
+		else
+		{
+			nextSRV = m_aoMerged2;
+		}
+
+		if (m_hierarchyDepth > 1)
+		{
+			BlurAndUpsample(computeCommandList, m_aoSmooth1, m_depthDownsize1, m_depthDownsize2, nextSRV,
+				m_qualityLevel >= kSsaoQualityHigh ? m_aoHighQuality2 : nullptr, m_aoMerged1);
+
+			nextSRV = m_aoSmooth1;
+		}
+		else
+		{
+			nextSRV = m_aoMerged1;
+		}
+
+		BlurAndUpsample(computeCommandList, m_ssaoFullscreen, m_linearDepth, m_depthDownsize1, nextSRV,
+			m_qualityLevel >= kSsaoQualityVeryHigh ? m_aoHighQuality1 : nullptr, nullptr);
 
 		computeCommandList->PIXEndEvent();
 	}
@@ -453,4 +505,71 @@ void SSAO::ComputeAO(ComputeCommandList* commandList, shared_ptr<ComputeKernel> 
 	{
 		kernel->Dispatch3D(commandList, bufferWidth, bufferHeight, arrayCount, 8, 8, 1);
 	}
+	kernel->UnbindSRVs(commandList);
+	kernel->UnbindUAVs(commandList);
+}
+
+
+void SSAO::BlurAndUpsample(ComputeCommandList* commandList,
+	shared_ptr<ColorBuffer> destination, shared_ptr<ColorBuffer> hiResDepth, shared_ptr<ColorBuffer> loResDepth,
+	shared_ptr<ColorBuffer> interleavedAO, shared_ptr<ColorBuffer> highQualityAO, shared_ptr<ColorBuffer> hiResAO)
+{
+	uint32_t loWidth = loResDepth->GetWidth();
+	uint32_t loHeight = loResDepth->GetHeight();
+	uint32_t hiWidth = hiResDepth->GetWidth();
+	uint32_t hiHeight = hiResDepth->GetHeight();
+
+	shared_ptr<ComputeKernel> kernel = nullptr;
+	if (hiResAO == nullptr)
+	{
+		kernel = m_blurUpsampleFinal[highQualityAO == nullptr ? 0 : 1];
+	}
+	else
+	{
+		kernel = m_blurUpsampleBlend[highQualityAO == nullptr ? 0 : 1];
+	}
+
+	float blurTolerance = 1.0f - powf(10.0f, m_blurTolerance) * 1920.0f / (float)loWidth;
+	blurTolerance *= blurTolerance;
+	float upsampleTolerance = powf(10.0f, m_upsampleTolerance);
+	float noiseFilterWeight = 1.0f / (powf(10.0f, m_noiseFilterTolerance) + upsampleTolerance);
+
+	kernel->GetParameter("InvLowResolution")->SetValueImmediate(XMFLOAT2(1.0f / loWidth, 1.0f / loHeight));
+	kernel->GetParameter("InvHighResolution")->SetValueImmediate(XMFLOAT2(1.0f / hiWidth, 1.0f / hiHeight));
+	kernel->GetParameter("NoiseFilterStrength")->SetValueImmediate(noiseFilterWeight);
+	kernel->GetParameter("StepSize")->SetValueImmediate(1920.0f / (float)loWidth);
+	kernel->GetParameter("kBlurTolerance")->SetValueImmediate(blurTolerance);
+	kernel->GetParameter("kUpsampleTolerance")->SetValueImmediate(upsampleTolerance);
+
+	commandList->TransitionResource(*destination, ResourceState::UnorderedAccess);
+	commandList->TransitionResource(*loResDepth, ResourceState::NonPixelShaderResource);
+	commandList->TransitionResource(*hiResDepth, ResourceState::NonPixelShaderResource);
+
+	kernel->GetResource("AoResult")->SetUAVImmediate(destination);
+	kernel->GetResource("LoResDB")->SetSRVImmediate(loResDepth);
+	kernel->GetResource("HiResDB")->SetSRVImmediate(hiResDepth);
+
+	if (interleavedAO != nullptr)
+	{
+		commandList->TransitionResource(*interleavedAO, ResourceState::NonPixelShaderResource);
+		kernel->GetResource("LoResAO1")->SetSRVImmediate(interleavedAO);
+	}
+
+	if (highQualityAO != nullptr)
+	{
+		commandList->TransitionResource(*highQualityAO, ResourceState::NonPixelShaderResource);
+		kernel->GetResource("LoResAO2")->SetSRVImmediate(highQualityAO);
+	}
+
+	if (hiResAO != nullptr)
+	{
+		commandList->TransitionResource(*hiResAO, ResourceState::NonPixelShaderResource);
+		kernel->GetResource("HiResAO")->SetSRVImmediate(hiResAO);
+	}
+
+	commandList->SetShaderSampler(0, m_linearClampSampler.Get());
+	
+	kernel->Dispatch2D(commandList, hiWidth + 2, hiHeight + 2, 16, 16);
+	kernel->UnbindSRVs(commandList);
+	kernel->UnbindUAVs(commandList);
 }

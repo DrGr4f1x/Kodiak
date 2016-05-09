@@ -8,5 +8,4 @@
 // https://github.com/Microsoft/DirectX-Graphics-Samples
 //
 
-#define INTERLEAVE_RESULT
 #include "AoRenderCS.hlsli"
