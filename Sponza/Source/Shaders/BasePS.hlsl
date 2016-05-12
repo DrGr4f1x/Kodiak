@@ -2,6 +2,8 @@ Texture2D<float3> texDiffuse : register(t0);
 Texture2D<float3> texSpecular : register(t1);
 Texture2D<float3> texNormal : register(t2);
 
+Texture2D<float> texSSAO : register(t3);
+
 SamplerState AnisotropicWrap : register(s0);
 
 cbuffer PerMaterialData : register(b2)
@@ -122,8 +124,8 @@ float3 main(PixelShaderInput input) : SV_Target0
 	float specularMask = texSpecular.Sample(AnisotropicWrap, input.texcoord0).g;
 	float3 normal = texNormal.Sample(AnisotropicWrap, input.texcoord0) * 2.0f - 1.0f;
 	float gloss = 128.0f;
-	//float ao = texSSAO[uint2(vsOutput.position.xy)];
-	float ao = 1.0f;
+	float ao = texSSAO[uint2(input.position.xy)];
+	//float ao = 1.0f;
 	float3 viewDir = normalize(input.viewDir);
 
 	AntiAliasSpecular(normal, gloss);

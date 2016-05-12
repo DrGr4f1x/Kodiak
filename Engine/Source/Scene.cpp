@@ -12,6 +12,7 @@
 #include "Scene.h"
 
 #include "Camera.h"
+#include "ColorBuffer.h"
 #include "CommandList.h"
 #include "ConstantBuffer.h"
 #include "DeviceManager.h"
@@ -41,6 +42,7 @@ using namespace RenderThread;
 
 
 Scene::Scene()
+	: SsaoFullscreen(m_ssaoFullscreen)
 {
 	Initialize();
 }
@@ -120,6 +122,7 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 #elif defined(DX11)
 					commandList->SetVertexShaderConstants(0, *m_perViewConstantBuffer);
 					commandList->SetVertexShaderConstants(1, *mesh->perObjectConstants);
+					commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
 #endif
 					
 					commandList->SetVertexBuffer(0, *meshPart.vertexBuffer);
@@ -133,6 +136,9 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 		}
 		PROFILE_END();
 	}
+
+	commandList->SetPixelShaderResource(3, nullptr);
+
 	commandList->PIXEndEvent();
 }
 

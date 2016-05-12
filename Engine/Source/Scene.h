@@ -7,9 +7,10 @@
 // Author: David Elder
 //
 
-#include <concurrent_queue.h>
-
 #pragma once
+
+#include <concurrent_queue.h>
+#include "RenderThread.h"
 
 namespace Kodiak
 {
@@ -18,6 +19,7 @@ namespace Kodiak
 namespace RenderThread { class Camera; }
 class Camera;
 class ConstantBuffer;
+class ColorBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
 class RenderPass;
@@ -55,6 +57,8 @@ public:
 	// TODO: Super-hacky way to ram sampler states into the engine
 	void BindSamplerStates(GraphicsCommandList* commandList);
 
+	ThreadParameter<std::shared_ptr<ColorBuffer>> SsaoFullscreen;
+
 private:
 	void Initialize();
 
@@ -79,7 +83,8 @@ private:
 
 	// HACK
 #if defined(DX11)
-	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_samplerState;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>	m_samplerState;
+	std::shared_ptr<ColorBuffer>				m_ssaoFullscreen;
 #endif
 
 	// Maps from static model pointers into the m_staticModels list for faster adds/removes

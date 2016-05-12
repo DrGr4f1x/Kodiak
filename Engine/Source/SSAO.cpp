@@ -380,6 +380,23 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		computeCommandList->PIXEndEvent();
 	}
 
+	if(m_debugDraw)
+	{
+		computeCommandList->PIXBeginEvent("Debug draw");
+
+		computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_ssaoFullscreen, ResourceState::NonPixelShaderResource);
+
+		m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRVImmediate(m_ssaoFullscreen);
+		m_debugSsaoCs->GetResource("OutColor")->SetUAVImmediate(m_sceneColorBuffer);
+
+		m_debugSsaoCs->Dispatch2D(computeCommandList, m_ssaoFullscreen->GetWidth(), m_ssaoFullscreen->GetHeight());
+		m_debugSsaoCs->UnbindSRVs(computeCommandList);
+		m_debugSsaoCs->UnbindUAVs(computeCommandList);
+
+		computeCommandList->PIXEndEvent();
+	}
+
 	commandList->PIXEndEvent();
 }
 

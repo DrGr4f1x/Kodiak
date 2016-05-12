@@ -43,6 +43,9 @@
     <Filter Include="Shaders\Common\SSAO">
       <UniqueIdentifier>{635776ea-46ed-47cf-8a1a-730aef48db7d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Rendering\Techniques\PostProcessing">
+      <UniqueIdentifier>{d8e38b30-2739-4cd7-9855-c314d00edefe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />

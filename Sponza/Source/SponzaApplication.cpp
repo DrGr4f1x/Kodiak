@@ -185,6 +185,7 @@ void SponzaApplication::SetupScene()
 
 	// Add camera and model to scene
 	m_mainScene->SetCamera(m_camera);
+	m_mainScene->SsaoFullscreen = m_ssaoFullscreen;
 	m_mainScene->AddStaticModel(m_sponzaModel);
 }
 
