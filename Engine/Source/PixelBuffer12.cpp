@@ -24,15 +24,17 @@ using namespace Kodiak;
 using namespace std;
 
 
-D3D12_RESOURCE_DESC PixelBuffer::DescribeTex2D(size_t width, size_t height, size_t depthOrArraySize, ColorFormat format, uint32_t flags)
+D3D12_RESOURCE_DESC PixelBuffer::DescribeTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, uint32_t numMips,
+	ColorFormat format, uint32_t flags)
 {
-	return InternalDescribeTex2D(width, height, depthOrArraySize, DXGIUtility::ConvertToDXGI(format), flags);
+	return InternalDescribeTex2D(width, height, depthOrArraySize, numMips, DXGIUtility::ConvertToDXGI(format), flags);
 }
 
 
-D3D12_RESOURCE_DESC PixelBuffer::DescribeDepthTex2D(size_t width, size_t height, size_t depthOrArraySize, DepthFormat format, uint32_t flags)
+D3D12_RESOURCE_DESC PixelBuffer::DescribeDepthTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, DepthFormat format, uint32_t flags)
 {
-	return InternalDescribeTex2D(width, height, depthOrArraySize, DXGIUtility::ConvertToDXGI(format), flags);
+	const uint32_t numMips = 1;
+	return InternalDescribeTex2D(width, height, depthOrArraySize, numMips, DXGIUtility::ConvertToDXGI(format), flags);
 }
 
 
@@ -77,7 +79,8 @@ void PixelBuffer::CreateTextureResource(const string& name, const D3D12_RESOURCE
 }
 
 
-D3D12_RESOURCE_DESC PixelBuffer::InternalDescribeTex2D(size_t width, size_t height, size_t depthOrArraySize, DXGI_FORMAT format, uint32_t flags)
+D3D12_RESOURCE_DESC PixelBuffer::InternalDescribeTex2D(uint32_t width, uint32_t height, uint32_t depthOrArraySize, uint32_t numMips, 
+	DXGI_FORMAT format, uint32_t flags)
 {
 	m_width = width;
 	m_height = height;
@@ -92,7 +95,7 @@ D3D12_RESOURCE_DESC PixelBuffer::InternalDescribeTex2D(size_t width, size_t heig
 	desc.Format = DXGIUtility::GetBaseFormat(m_format);
 	desc.Height = (UINT)height;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	desc.MipLevels = 1;
+	desc.MipLevels = numMips;
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Width = (UINT64)width;

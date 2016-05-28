@@ -122,7 +122,7 @@ void MaterialResource::SetSRV(shared_ptr<ColorBuffer> buffer)
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
 	{
-		assert_msg(m_type != ShaderResourceType::Texture && m_type != ShaderResourceType::TBuffer,
+		assert_msg(m_type == ShaderResourceType::Texture || m_type == ShaderResourceType::TBuffer,
 			"MaterialResource is bound to a UAV, but an SRV is being assigned.");
 	}
 

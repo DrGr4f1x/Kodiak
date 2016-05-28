@@ -31,7 +31,7 @@ ComputeResource::ComputeResource(const string& name)
 {}
 
 
-void ComputeResource::SetTexture(shared_ptr<Texture> texture)
+void ComputeResource::SetSRVInternal(shared_ptr<Texture> texture, bool bImmediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -53,40 +53,61 @@ void ComputeResource::SetTexture(shared_ptr<Texture> texture)
 		if (thisTexture && !thisTexture->loadTask.is_done())
 		{
 			// Wait until the texture loads before updating the compute kernel on the render thread
-			m_texture->loadTask.then([renderThreadData, thisResource, thisTexture]
+			m_texture->loadTask.then([renderThreadData, thisResource, thisTexture, bImmediate]
 			{
-				// Update material on render thread
-				Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisTexture](RenderTaskEnvironment& rte)
+				if (bImmediate)
 				{
 					auto srv = thisTexture->GetSRV();
 					thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
-				});
+				}
+				else
+				{
+					// Update material on render thread
+					Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisTexture](RenderTaskEnvironment& rte)
+					{
+						auto srv = thisTexture->GetSRV();
+						thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+					});
+				}
 			});
 		}
 		else
 		{
-			// Texture is either null or fully loaded.  Either way, we can update the compute kernel on the render thread now
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisTexture](RenderTaskEnvironment& rte)
+			if (bImmediate)
 			{
 				CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
-				if (thisTexture)
+				if (m_texture)
 				{
 					// TODO properly handle null SRV here
-					srv = thisTexture->GetSRV();
+					srv = m_texture->GetSRV();
 				}
-				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
-			});
+				UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+			}
+			else
+			{
+				// Texture is either null or fully loaded.  Either way, we can update the compute kernel on the render thread now
+				Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisTexture](RenderTaskEnvironment& rte)
+				{
+					CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
+					if (thisTexture)
+					{
+						// TODO properly handle null SRV here
+						srv = thisTexture->GetSRV();
+					}
+					thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+				});
+			}
 		}
 	}
 }
 
 
-void ComputeResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
+void ComputeResource::SetSRVInternal(shared_ptr<DepthBuffer> buffer, bool stencil, bool bImmediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
 	{
-		assert_msg(m_type != ShaderResourceType::Texture && m_type != ShaderResourceType::TBuffer,
+		assert_msg(m_type == ShaderResourceType::Texture || m_type == ShaderResourceType::TBuffer,
 			"ComputeResource is bound to a UAV, but an SRV is being assigned.");
 	}
 
@@ -97,32 +118,45 @@ void ComputeResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
 
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
-		// Locals for lambda capture
-		auto thisResource = shared_from_this();
-		auto thisBuffer = m_depthBuffer;
-		auto thisStencil = m_stencil;
-
-		// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
-		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer, thisStencil](RenderTaskEnvironment& rte)
+		if (bImmediate)
 		{
 			CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
-			if (thisBuffer)
+			if (m_depthBuffer)
 			{
 				// TODO properly handle null SRV here
-				srv = thisStencil ? thisBuffer->GetStencilSRV() : thisBuffer->GetDepthSRV();
+				srv = m_stencil ? m_depthBuffer->GetStencilSRV() : m_depthBuffer->GetDepthSRV();
 			}
-			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
-		});
+			UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+		}
+		else
+		{
+			// Locals for lambda capture
+			auto thisResource = shared_from_this();
+			auto thisBuffer = m_depthBuffer;
+			auto thisStencil = m_stencil;
+
+			// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer, thisStencil](RenderTaskEnvironment& rte)
+			{
+				CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
+				if (thisBuffer)
+				{
+					// TODO properly handle null SRV here
+					srv = thisStencil ? thisBuffer->GetStencilSRV() : thisBuffer->GetDepthSRV();
+				}
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+			});
+		}
 	}
 }
 
 
-void ComputeResource::SetSRV(shared_ptr<ColorBuffer> buffer)
+void ComputeResource::SetSRVInternal(shared_ptr<ColorBuffer> buffer, bool bImmediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
 	{
-		assert_msg(m_type != ShaderResourceType::Texture && m_type != ShaderResourceType::TBuffer,
+		assert_msg(m_type == ShaderResourceType::Texture || m_type == ShaderResourceType::TBuffer,
 			"ComputeResource is bound to a UAV, but an SRV is being assigned.");
 	}
 
@@ -132,26 +166,39 @@ void ComputeResource::SetSRV(shared_ptr<ColorBuffer> buffer)
 
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
-		// Locals for lambda capture
-		auto thisResource = shared_from_this();
-		auto thisBuffer = m_colorBuffer;
-		
-		// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
-		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer](RenderTaskEnvironment& rte)
+		if (bImmediate)
 		{
 			CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
-			if (thisBuffer)
+			if (m_colorBuffer)
 			{
 				// TODO properly handle null SRV here
-				srv = thisBuffer->GetSRV();
+				srv = m_colorBuffer->GetSRV();
 			}
-			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
-		});
+			UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+		}
+		else
+		{
+			// Locals for lambda capture
+			auto thisResource = shared_from_this();
+			auto thisBuffer = m_colorBuffer;
+
+			// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer](RenderTaskEnvironment& rte)
+			{
+				CD3DX12_CPU_DESCRIPTOR_HANDLE srv(D3D12_DEFAULT);
+				if (thisBuffer)
+				{
+					// TODO properly handle null SRV here
+					srv = thisBuffer->GetSRV();
+				}
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+			});
+		}
 	}
 }
 
 
-void ComputeResource::SetUAV(shared_ptr<ColorBuffer> buffer)
+void ComputeResource::SetUAVInternal(shared_ptr<ColorBuffer> buffer, bool bImmediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -161,24 +208,39 @@ void ComputeResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 	}
 
 	m_colorBuffer = buffer;
+	m_texture = nullptr;
+	m_depthBuffer = nullptr;
 
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
-		// Locals for lambda capture
-		auto thisResource = shared_from_this();
-		shared_ptr<ColorBuffer> thisBuffer = m_colorBuffer;
-
-		// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
-		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer](RenderTaskEnvironment& rte)
+		if (bImmediate)
 		{
 			CD3DX12_CPU_DESCRIPTOR_HANDLE uav(D3D12_DEFAULT);
-			if (thisBuffer)
+			if (m_colorBuffer)
 			{
 				// TODO properly handle null UAV here
-				uav = thisBuffer->GetUAV();
+				uav = m_colorBuffer->GetUAV();
 			}
-			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), uav);
-		});
+			UpdateResourceOnRenderThread(renderThreadData.get(), uav);
+		}
+		else
+		{
+			// Locals for lambda capture
+			auto thisResource = shared_from_this();
+			shared_ptr<ColorBuffer> thisBuffer = m_colorBuffer;
+
+			// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisBuffer](RenderTaskEnvironment& rte)
+			{
+				CD3DX12_CPU_DESCRIPTOR_HANDLE uav(D3D12_DEFAULT);
+				if (thisBuffer)
+				{
+					// TODO properly handle null UAV here
+					uav = thisBuffer->GetUAV();
+				}
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), uav);
+			});
+		}
 	}
 }
 

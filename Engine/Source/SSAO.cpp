@@ -45,48 +45,63 @@ SSAO::SSAO()
 
 void SSAO::Initialize(uint32_t width, uint32_t height)
 {
-	m_sampleThickness[0]	= sqrt(1.0f - 0.2f * 0.2f);
-	m_sampleThickness[1]	= sqrt(1.0f - 0.4f * 0.4f);
-	m_sampleThickness[2]	= sqrt(1.0f - 0.6f * 0.6f);
-	m_sampleThickness[3]	= sqrt(1.0f - 0.8f * 0.8f);
-	m_sampleThickness[4]	= sqrt(1.0f - 0.2f * 0.2f - 0.2f * 0.2f);
-	m_sampleThickness[5]	= sqrt(1.0f - 0.2f * 0.2f - 0.4f * 0.4f);
-	m_sampleThickness[6]	= sqrt(1.0f - 0.2f * 0.2f - 0.6f * 0.6f);
-	m_sampleThickness[7]	= sqrt(1.0f - 0.2f * 0.2f - 0.8f * 0.8f);
-	m_sampleThickness[8]	= sqrt(1.0f - 0.4f * 0.4f - 0.4f * 0.4f);
-	m_sampleThickness[9]	= sqrt(1.0f - 0.4f * 0.4f - 0.6f * 0.6f);
-	m_sampleThickness[10]	= sqrt(1.0f - 0.4f * 0.4f - 0.8f * 0.8f);
-	m_sampleThickness[11]	= sqrt(1.0f - 0.6f * 0.6f - 0.6f * 0.6f);
+	m_sampleThickness[0] = sqrt(1.0f - 0.2f * 0.2f);
+	m_sampleThickness[1] = sqrt(1.0f - 0.4f * 0.4f);
+	m_sampleThickness[2] = sqrt(1.0f - 0.6f * 0.6f);
+	m_sampleThickness[3] = sqrt(1.0f - 0.8f * 0.8f);
+	m_sampleThickness[4] = sqrt(1.0f - 0.2f * 0.2f - 0.2f * 0.2f);
+	m_sampleThickness[5] = sqrt(1.0f - 0.2f * 0.2f - 0.4f * 0.4f);
+	m_sampleThickness[6] = sqrt(1.0f - 0.2f * 0.2f - 0.6f * 0.6f);
+	m_sampleThickness[7] = sqrt(1.0f - 0.2f * 0.2f - 0.8f * 0.8f);
+	m_sampleThickness[8] = sqrt(1.0f - 0.4f * 0.4f - 0.4f * 0.4f);
+	m_sampleThickness[9] = sqrt(1.0f - 0.4f * 0.4f - 0.6f * 0.6f);
+	m_sampleThickness[10] = sqrt(1.0f - 0.4f * 0.4f - 0.8f * 0.8f);
+	m_sampleThickness[11] = sqrt(1.0f - 0.6f * 0.6f - 0.6f * 0.6f);
 
 	m_depthPrepare1Cs = make_shared<ComputeKernel>("depthPrepare1Cs");
 	m_depthPrepare1Cs->SetComputeShaderPath("Engine", "AoPrepareDepthBuffers1CS.cso");
+	auto waitTask = m_depthPrepare1Cs->loadTask;
 
 	m_depthPrepare2Cs = make_shared<ComputeKernel>("depthPrepare2Cs");
 	m_depthPrepare2Cs->SetComputeShaderPath("Engine", "AoPrepareDepthBuffers2CS.cso");
+	waitTask = waitTask && m_depthPrepare2Cs->loadTask;
 
-	m_render1Cs = make_shared<ComputeKernel>("render1Cs");
-	m_render1Cs->SetComputeShaderPath("Engine", "AoRender1CS.cso");
+	for (int32_t i = 0; i < 4; ++i)
+	{
+		m_render1Cs[i] = make_shared<ComputeKernel>("render1Cs");
+		m_render1Cs[i]->SetComputeShaderPath("Engine", "AoRender1CS.cso");
+		waitTask = waitTask && m_render1Cs[i]->loadTask;
 
-	m_render2Cs = make_shared<ComputeKernel>("render2Cs");
-	m_render2Cs->SetComputeShaderPath("Engine", "AoRender2CS.cso");
+		m_render2Cs[i] = make_shared<ComputeKernel>("render2Cs");
+		m_render2Cs[i]->SetComputeShaderPath("Engine", "AoRender2CS.cso");
+		waitTask = waitTask && m_render2Cs[i]->loadTask;
 
-	m_blurUpsampleBlend[0] = make_shared<ComputeKernel>("blurUpsampleBlendOutCs");
-	m_blurUpsampleBlend[0]->SetComputeShaderPath("Engine", "AoBlurUpsampleBlendOutCS.cso");
+		m_blurUpsampleBlend[i][0] = make_shared<ComputeKernel>("blurUpsampleBlendOutCs");
+		m_blurUpsampleBlend[i][0]->SetComputeShaderPath("Engine", "AoBlurUpsampleBlendOutCS.cso");
+		waitTask = waitTask && m_blurUpsampleBlend[i][0]->loadTask;
 
-	m_blurUpsampleBlend[1] = make_shared<ComputeKernel>("blurUpsamplePreMinBlendOutCs");
-	m_blurUpsampleBlend[1]->SetComputeShaderPath("Engine", "AoBlurUpsamplePreMinBlendOutCS.cso");
+		m_blurUpsampleBlend[i][1] = make_shared<ComputeKernel>("blurUpsamplePreMinBlendOutCs");
+		m_blurUpsampleBlend[i][1]->SetComputeShaderPath("Engine", "AoBlurUpsamplePreMinBlendOutCS.cso");
+		waitTask = waitTask && m_blurUpsampleBlend[i][1]->loadTask;
 
-	m_blurUpsampleFinal[0] = make_shared<ComputeKernel>("blurUpsampleCs");
-	m_blurUpsampleFinal[0]->SetComputeShaderPath("Engine", "AoBlurUpsampleCS.cso");
+		m_blurUpsampleFinal[i][0] = make_shared<ComputeKernel>("blurUpsampleCs");
+		m_blurUpsampleFinal[i][0]->SetComputeShaderPath("Engine", "AoBlurUpsampleCS.cso");
+		waitTask = waitTask && m_blurUpsampleFinal[i][0]->loadTask;
 
-	m_blurUpsampleFinal[1] = make_shared<ComputeKernel>("blurUpsamplePreMinCs");
-	m_blurUpsampleFinal[1]->SetComputeShaderPath("Engine", "AoBlurUpsamplePreMinCS.cso");
+		m_blurUpsampleFinal[i][1] = make_shared<ComputeKernel>("blurUpsamplePreMinCs");
+		m_blurUpsampleFinal[i][1]->SetComputeShaderPath("Engine", "AoBlurUpsamplePreMinCS.cso");
+		waitTask = waitTask && m_blurUpsampleFinal[i][1]->loadTask;
+	}
 
 	m_linearizeDepthCs = make_shared<ComputeKernel>("linearizeDepthCs");
 	m_linearizeDepthCs->SetComputeShaderPath("Engine", "LinearizeDepthCS.cso");
+	waitTask = waitTask && m_linearizeDepthCs->loadTask;
 
 	m_debugSsaoCs = make_shared<ComputeKernel>("debugSSAO");
 	m_debugSsaoCs->SetComputeShaderPath("Engine", "DebugSSAOCS.cso");
+	waitTask = waitTask && m_debugSsaoCs->loadTask;
+
+	waitTask.wait();
 
 	const uint32_t bufferWidth1 = (width + 1) / 2;
 	const uint32_t bufferWidth2 = (width + 3) / 4;
@@ -299,33 +314,33 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		// Render SSAO for each sub-tile
 		if (m_hierarchyDepth > 3)
 		{
-			ComputeAO(computeCommandList, m_render1Cs, m_aoMerged4, m_depthTiled4, fovTangent);
+			ComputeAO(computeCommandList, m_render1Cs[0], m_aoMerged4, m_depthTiled4, fovTangent);
 			if (m_qualityLevel >= kSsaoQualityLow)
 			{
-				ComputeAO(computeCommandList, m_render2Cs, m_aoHighQuality4, m_depthDownsize4, fovTangent);
+				ComputeAO(computeCommandList, m_render2Cs[0], m_aoHighQuality4, m_depthDownsize4, fovTangent);
 			}
 		}
 		if (m_hierarchyDepth > 2)
 		{
-			ComputeAO(computeCommandList, m_render1Cs, m_aoMerged3, m_depthTiled3, fovTangent);
+			ComputeAO(computeCommandList, m_render1Cs[1], m_aoMerged3, m_depthTiled3, fovTangent);
 			if (m_qualityLevel >= kSsaoQualityMedium)
 			{
-				ComputeAO(computeCommandList, m_render2Cs, m_aoHighQuality3, m_depthDownsize3, fovTangent);
+				ComputeAO(computeCommandList, m_render2Cs[1], m_aoHighQuality3, m_depthDownsize3, fovTangent);
 			}
 		}
 		if (m_hierarchyDepth > 1)
 		{
-			ComputeAO(computeCommandList, m_render1Cs, m_aoMerged2, m_depthTiled2, fovTangent);
+			ComputeAO(computeCommandList, m_render1Cs[2], m_aoMerged2, m_depthTiled2, fovTangent);
 			if (m_qualityLevel >= kSsaoQualityHigh)
 			{
-				ComputeAO(computeCommandList, m_render2Cs, m_aoHighQuality2, m_depthDownsize2, fovTangent);
+				ComputeAO(computeCommandList, m_render2Cs[2], m_aoHighQuality2, m_depthDownsize2, fovTangent);
 			}
 		}
 		{
-			ComputeAO(computeCommandList, m_render1Cs, m_aoMerged1, m_depthTiled1, fovTangent);
+			ComputeAO(computeCommandList, m_render1Cs[3], m_aoMerged1, m_depthTiled1, fovTangent);
 			if (m_qualityLevel >= kSsaoQualityVeryHigh)
 			{
-				ComputeAO(computeCommandList, m_render2Cs, m_aoHighQuality1, m_depthDownsize1, fovTangent);
+				ComputeAO(computeCommandList, m_render2Cs[3], m_aoHighQuality1, m_depthDownsize1, fovTangent);
 			}
 		}
 
@@ -337,6 +352,9 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		computeCommandList->PIXBeginEvent("Blur and upsample");
 
 		shared_ptr<ColorBuffer> nextSRV = m_aoMerged4;
+
+		m_currentBlurUpsampleBlend = 0;
+		m_currentBlurUpsampleFinal = 0;
 
 		if (m_hierarchyDepth > 3)
 		{
@@ -539,11 +557,13 @@ void SSAO::BlurAndUpsample(ComputeCommandList* commandList,
 	shared_ptr<ComputeKernel> kernel = nullptr;
 	if (hiResAO == nullptr)
 	{
-		kernel = m_blurUpsampleFinal[highQualityAO == nullptr ? 0 : 1];
+		kernel = m_blurUpsampleFinal[m_currentBlurUpsampleFinal][highQualityAO == nullptr ? 0 : 1];
+		++m_currentBlurUpsampleFinal;
 	}
 	else
 	{
-		kernel = m_blurUpsampleBlend[highQualityAO == nullptr ? 0 : 1];
+		kernel = m_blurUpsampleBlend[m_currentBlurUpsampleBlend][highQualityAO == nullptr ? 0 : 1];
+		++m_currentBlurUpsampleBlend;
 	}
 
 	float blurTolerance = 1.0f - powf(10.0f, m_blurTolerance) * 1920.0f / (float)loWidth;
@@ -584,7 +604,9 @@ void SSAO::BlurAndUpsample(ComputeCommandList* commandList,
 		kernel->GetResource("HiResAO")->SetSRVImmediate(hiResAO);
 	}
 
+#if DX11
 	commandList->SetShaderSampler(0, m_linearClampSampler.Get());
+#endif
 	
 	kernel->Dispatch2D(commandList, hiWidth + 2, hiHeight + 2, 16, 16);
 	kernel->UnbindSRVs(commandList);

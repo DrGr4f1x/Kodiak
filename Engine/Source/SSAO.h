@@ -62,12 +62,14 @@ private:
 	// Compute shader kernels
 	std::shared_ptr<ComputeKernel>	m_depthPrepare1Cs;
 	std::shared_ptr<ComputeKernel>	m_depthPrepare2Cs;
-	std::shared_ptr<ComputeKernel>	m_render1Cs;
-	std::shared_ptr<ComputeKernel>	m_render2Cs;
-	std::shared_ptr<ComputeKernel>	m_blurUpsampleBlend[2];
-	std::shared_ptr<ComputeKernel>	m_blurUpsampleFinal[2];
+	std::shared_ptr<ComputeKernel>	m_render1Cs[4];
+	std::shared_ptr<ComputeKernel>	m_render2Cs[4];
+	std::shared_ptr<ComputeKernel>	m_blurUpsampleBlend[4][2];
+	std::shared_ptr<ComputeKernel>	m_blurUpsampleFinal[4][2];
 	std::shared_ptr<ComputeKernel>	m_linearizeDepthCs;
 	std::shared_ptr<ComputeKernel>	m_debugSsaoCs;
+	uint32_t						m_currentBlurUpsampleBlend{ 0 };
+	uint32_t						m_currentBlurUpsampleFinal{ 0 };
 
 	// Render targets and UAV buffers
 	std::shared_ptr<ColorBuffer>	m_ssaoFullscreen;

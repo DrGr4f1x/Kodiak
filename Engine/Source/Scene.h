@@ -57,7 +57,9 @@ public:
 	// TODO: Super-hacky way to ram sampler states into the engine
 	void BindSamplerStates(GraphicsCommandList* commandList);
 
+#if DX11
 	ThreadParameter<std::shared_ptr<ColorBuffer>> SsaoFullscreen;
+#endif
 
 private:
 	void Initialize();
@@ -66,7 +68,7 @@ private:
 	std::shared_ptr<ConstantBuffer>		m_perViewConstantBuffer;
 	std::shared_ptr<GraphicsPSO>		m_pso;
 
-#if defined(DX12)
+#if DX12
 	std::shared_ptr<RootSignature>		m_rootSignature;
 #endif
 
@@ -82,7 +84,7 @@ private:
 	std::shared_ptr<RenderThread::Camera> m_camera;
 
 	// HACK
-#if defined(DX11)
+#if DX11
 	Microsoft::WRL::ComPtr<ID3D11SamplerState>	m_samplerState;
 	std::shared_ptr<ColorBuffer>				m_ssaoFullscreen;
 #endif

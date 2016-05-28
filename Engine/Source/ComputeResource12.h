@@ -30,11 +30,17 @@ public:
 
 	const std::string& GetName() const { return m_name; }
 
-	void SetTexture(std::shared_ptr<Texture> texture);
-	void SetSRV(std::shared_ptr<Texture> texture) { SetTexture(texture); }
-	void SetSRV(std::shared_ptr<DepthBuffer> buffer, bool stencil = false);
-	void SetSRV(std::shared_ptr<ColorBuffer> buffer);
-	void SetUAV(std::shared_ptr<ColorBuffer> buffer);
+	void SetTexture(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, false); }
+	void SetSRV(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, false); }
+	void SetSRV(std::shared_ptr<DepthBuffer> buffer, bool stencil = false) { SetSRVInternal(buffer, stencil, false); }
+	void SetSRV(std::shared_ptr<ColorBuffer> buffer) { SetSRVInternal(buffer, false); }
+	void SetUAV(std::shared_ptr<ColorBuffer> buffer) { SetUAVInternal(buffer, false); }
+
+	void SetTextureImmediate(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, true); }
+	void SetSRVImmediate(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, true); }
+	void SetSRVImmediate(std::shared_ptr<DepthBuffer> buffer, bool stencil = false) { SetSRVInternal(buffer, stencil, true); }
+	void SetSRVImmediate(std::shared_ptr<ColorBuffer> buffer) { SetSRVInternal(buffer, true); }
+	void SetUAVImmediate(std::shared_ptr<ColorBuffer> buffer) { SetUAVInternal(buffer, true); }
 
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData, const ShaderReflection::ResourceSRV<1>& resource,
 		uint32_t destCpuHandleSlot);
@@ -44,6 +50,11 @@ public:
 
 private:
 	void UpdateResourceOnRenderThread(RenderThread::ComputeData* materialData, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
+
+	void SetSRVInternal(std::shared_ptr<Texture> texture, bool bImmediate);
+	void SetSRVInternal(std::shared_ptr<DepthBuffer> buffer, bool stencil, bool bImmediate);
+	void SetSRVInternal(std::shared_ptr<ColorBuffer> buffer, bool bImmediate);
+	void SetUAVInternal(std::shared_ptr<ColorBuffer> buffer, bool bImmediate);
 
 private:
 	const std::string				m_name;

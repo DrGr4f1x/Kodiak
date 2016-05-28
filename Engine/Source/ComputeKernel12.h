@@ -53,6 +53,7 @@ public:
 	void Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
 		size_t groupSizeY, size_t groupSizeZ);
 
+	void UnbindSRVs(ComputeCommandList* commandList) {}
 	void UnbindUAVs(ComputeCommandList* commandList) {}
 
 private:
@@ -79,11 +80,6 @@ namespace RenderThread
 
 struct ComputeData
 {
-	~ComputeData()
-	{
-		_aligned_free(cbufferData);
-	}
-
 	void Commit(ComputeCommandList* commandList);
 
 	std::shared_ptr<ComputePSO>					pso;

@@ -16,6 +16,7 @@
 #include "ComputeResource12.h"
 #include "PipelineState12.h"
 #include "RootSignature12.h"
+#include "SamplerManager.h"
 #include "ShaderManager.h"
 
 using namespace Kodiak;
@@ -127,7 +128,7 @@ void ComputeKernel::SetupKernel()
 
 	// Figure out the number of root parameters we need
 	uint32_t numRootParameters = 0;
-	numRootParameters += static_cast<uint32_t>(shaderSig.cbvTable.size());  // One root param per CBV
+	numRootParameters += !shaderSig.cbvTable.empty() ? 1 : 0;  // One root param per CBV
 	numRootParameters += !shaderSig.srvTable.empty() ? 1 : 0;				// One root param for SRV table (holds all SRVs)
 	numRootParameters += !shaderSig.uavTable.empty() ? 1 : 0;				// One root param for UAV table (holds all UAVs)
 
@@ -148,8 +149,7 @@ void ComputeKernel::SetupKernel()
 	{
 		// Allocate the GPU-side buffer
 		computeData.cbuffer.CreateUpload("Compute kernel cbuffer", computeData.cbufferSize);
-		// Allocate the CPU-side buffer mirror
-		computeData.cbufferData = (byte*)_aligned_malloc(computeData.cbufferSize, 16);
+		computeData.cbufferData = computeData.cbuffer.Map();
 	}
 
 
@@ -161,23 +161,30 @@ void ComputeKernel::SetupKernel()
 
 	uint32_t currentDescriptor = 0;
 
-	// CBVs - one root parameter per constant buffer
-	for (const auto& shaderCBV : shaderSig.cbvTable)
+	// CBVs - one root parameter for the whole table
+	if (!shaderSig.cbvTable.empty())
 	{
 		// Create root parameter for the CBV in the root signature
 		const auto curRootIndex = rootIndex;
 		auto& rootParam = rootSig[rootIndex++];
-		rootParam.InitAsConstantBuffer(shaderCBV.shaderRegister);
+		rootParam.InitAsDescriptorTable(static_cast<uint32_t>(shaderSig.cbvTable.size()));
 
-		// Create root parameter binding
-		computeData.rootParameters.push_back(DescriptorRange(curRootIndex, currentDescriptor, 1));
+		uint32_t rangeIndex = 0;
 
-		// Create the actual constant buffer view and assign its cpu handle in the master list
-		auto cpuHandle = computeData.cbuffer.CreateConstantBufferView(shaderCBV.byteOffset, shaderCBV.sizeInBytes);
-		computeData.cpuHandles[currentDescriptor] = cpuHandle;
+		for (const auto& shaderCBV : shaderSig.cbvTable)
+		{
+			rootParam.SetTableRange(rangeIndex, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, shaderCBV.shaderRegister, 1);
 
-		// Track the current descriptor index for the master CPU handle list
-		++currentDescriptor;
+			// Create root parameter binding
+			computeData.rootParameters.push_back(DescriptorRange(curRootIndex, currentDescriptor, 1));
+
+			// Create the actual constant buffer view and assign its cpu handle in the master list
+			auto cpuHandle = computeData.cbuffer.CreateConstantBufferView(shaderCBV.byteOffset, shaderCBV.sizeInBytes);
+			computeData.cpuHandles[currentDescriptor] = cpuHandle;
+
+			// Track the current descriptor index for the master CPU handle list
+			++currentDescriptor;
+		}
 	}
 
 
@@ -214,20 +221,7 @@ void ComputeKernel::SetupKernel()
 				{
 					if (srv.shaderRegister[0] == shaderRegister)
 					{
-						lock_guard<mutex> CS(m_resourceLock);
-
-						shared_ptr<ComputeResource> computeResource;
-
-						auto it = m_resources.find(srv.name);
-						if (end(m_resources) != it)
-						{
-							computeResource = it->second;
-						}
-						else
-						{
-							computeResource = make_shared<ComputeResource>(srv.name);
-						}
-
+						auto computeResource = GetResource(srv.name);
 						computeResource->CreateRenderThreadData(m_renderThreadData, srv, currentDescriptorSlot);
 
 						found = true;
@@ -279,20 +273,7 @@ void ComputeKernel::SetupKernel()
 				{
 					if (uav.shaderRegister[0] == shaderRegister)
 					{
-						lock_guard<mutex> CS(m_resourceLock);
-
-						shared_ptr<ComputeResource> computeResource;
-
-						auto it = m_resources.find(uav.name);
-						if (end(m_resources) != it)
-						{
-							computeResource = it->second;
-						}
-						else
-						{
-							computeResource = make_shared<ComputeResource>(uav.name);
-						}
-
+						auto computeResource = GetResource(uav.name);
 						computeResource->CreateRenderThreadData(m_renderThreadData, uav, currentDescriptorSlot);
 
 						found = true;
@@ -332,6 +313,18 @@ void ComputeKernel::SetupKernel()
 
 			computeParameter->CreateRenderThreadData(m_renderThreadData, parameter);
 		}
+	}
+
+	// Samplers
+	auto& samplerManager = SamplerManager::GetInstance();
+
+	for (const auto& sampler : shaderSig.samplers)
+	{
+		assert(samplerManager.IsBuiltInSamplerState(sampler.name));
+
+		auto state = samplerManager.GetSamplerState(sampler.name);
+
+		rootSig.InitStaticSampler(sampler.shaderRegister[0], state->GetDesc(), D3D12_SHADER_VISIBILITY_ALL);
 	}
 
 	// Finalize the Root Signature

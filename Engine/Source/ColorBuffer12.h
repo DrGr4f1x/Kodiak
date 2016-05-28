@@ -29,22 +29,26 @@ public:
 	void CreateFromSwapChain(DeviceManager* deviceManager, const std::string& name, ID3D12Resource* baseResource);
 
 	// Create a color buffer
-	void Create(DeviceManager* deviceManager, const std::string& name, size_t width, size_t height, size_t depthOrArraySize, ColorFormat format);
+	void Create(const std::string& name, uint32_t width, uint32_t height, uint32_t numMips, ColorFormat format);
+
+	// Create a color buffer array
+	void CreateArray(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format);
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetRTV() const { return m_rtvHandle; }
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV() const { return m_srvHandle; }
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetUAV() const { return m_uavHandle; }
+	const D3D12_CPU_DESCRIPTOR_HANDLE& GetUAV() const { return m_uavHandle[0]; }
 
 	DirectX::XMVECTORF32 GetClearColor() const { return m_clearColor; }
 
 private:
-	void CreateDerivedViews(DeviceManager* deviceManager, size_t depthOrArraySize);
+	void CreateDerivedViews(uint32_t arraySize, uint32_t numMips);
 
 private:
 	DirectX::XMVECTORF32			m_clearColor;
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_rtvHandle;
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_srvHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE		m_uavHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE		m_uavHandle[12];
+	uint32_t						m_numMipMaps;
 };
 
 } // namespace Kodiak

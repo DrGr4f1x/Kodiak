@@ -23,6 +23,7 @@
 #include "Engine\Source\InputState.h"
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Material.h"
+#include "Engine\Source\MaterialResource.h"
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Profile.h"
 #include "Engine\Source\Renderer.h"
@@ -165,6 +166,22 @@ void SponzaApplication::CreateEffects()
 void SponzaApplication::CreateModel()
 {
 	m_sponzaModel = LoadModel("sponza.h3d");
+
+	// Miserable hack!!!!
+#if DX12
+	const auto numMeshes = m_sponzaModel->GetNumMeshes();
+	for (uint32_t i = 0; i < numMeshes; ++i)
+	{
+		auto mesh = m_sponzaModel->GetMesh(i);
+
+		const auto numParts = mesh->GetNumMeshParts();
+		for (uint32_t j = 0; j < numParts; ++j)
+		{
+			auto material = mesh->GetMaterial(j);
+			material->GetResource("texSSAO")->SetSRV(m_ssaoFullscreen);
+		}
+	}
+#endif
 }
 
 
@@ -185,7 +202,9 @@ void SponzaApplication::SetupScene()
 
 	// Add camera and model to scene
 	m_mainScene->SetCamera(m_camera);
+#if DX11
 	m_mainScene->SsaoFullscreen = m_ssaoFullscreen;
+#endif
 	m_mainScene->AddStaticModel(m_sponzaModel);
 }
 

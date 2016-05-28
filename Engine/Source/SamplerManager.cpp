@@ -23,6 +23,32 @@ void SamplerManager::Initialize()
 		m_samplers.push_back(sampler);
 	}
 
+#if DX12
+	// Linear clamp
+	{
+		auto sampler = make_shared<SamplerState>("LinearSampler");
+		sampler->m_desc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		sampler->m_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler->m_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler->m_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		m_samplers.push_back(sampler);
+	}
+
+	// Linear border
+	{
+		auto sampler = make_shared<SamplerState>("LinearBorderSampler");
+		sampler->m_desc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		sampler->m_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		sampler->m_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		sampler->m_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		sampler->m_desc.BorderColor[0] = 0.0f;
+		sampler->m_desc.BorderColor[1] = 0.0f;
+		sampler->m_desc.BorderColor[2] = 0.0f;
+		sampler->m_desc.BorderColor[3] = 0.0f;
+		m_samplers.push_back(sampler);
+	}
+#endif
+
 	// Create all states
 	for (auto& sampler : m_samplers)
 	{

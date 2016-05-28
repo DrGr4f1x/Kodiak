@@ -42,7 +42,9 @@ using namespace RenderThread;
 
 
 Scene::Scene()
+#if DX11
 	: SsaoFullscreen(m_ssaoFullscreen)
+#endif
 {
 	Initialize();
 }
@@ -137,7 +139,9 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 		PROFILE_END();
 	}
 
+#if DX11
 	commandList->SetPixelShaderResource(3, nullptr);
+#endif
 
 	commandList->PIXEndEvent();
 }

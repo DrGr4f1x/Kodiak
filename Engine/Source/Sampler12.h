@@ -14,6 +14,8 @@ namespace Kodiak
 
 class SamplerState
 {
+	friend class SamplerManager;
+
 public:
 	SamplerState(const std::string& name);
 
