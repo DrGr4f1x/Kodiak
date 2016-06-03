@@ -87,6 +87,9 @@ enum class ShaderResourceType
 	Unsupported
 };
 
+bool IsSRVType(ShaderResourceType type);
+bool IsUAVType(ShaderResourceType type);
+
 
 enum class ShaderResourceDimension
 {

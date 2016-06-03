@@ -101,8 +101,6 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 	m_debugSsaoCs->SetComputeShaderPath("Engine", "DebugSSAOCS.cso");
 	waitTask = waitTask && m_debugSsaoCs->loadTask;
 
-	waitTask.wait();
-
 	const uint32_t bufferWidth1 = (width + 1) / 2;
 	const uint32_t bufferWidth2 = (width + 3) / 4;
 	const uint32_t bufferWidth3 = (width + 7) / 8;
@@ -173,6 +171,8 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_linearClampSampler.GetAddressOf()));
 #endif
+
+	waitTask.wait();
 }
 
 

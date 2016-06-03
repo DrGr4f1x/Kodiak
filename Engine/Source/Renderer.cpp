@@ -130,6 +130,8 @@ void Renderer::StartRenderTask()
 
 	m_renderTask = create_task([&]
 	{
+		SetThreadRole(ThreadRole::RenderMain);
+
 		bool endRenderLoop = false;
 
 		// Loop until we're signalled to stop

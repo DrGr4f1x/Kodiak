@@ -16,6 +16,7 @@
 #include "InputState.h"
 #include "Profile.h"
 #include "Renderer.h"
+#include "RenderThread.h"
 #include "StepTimer.h"
 
 #include <shellapi.h>
@@ -27,6 +28,8 @@ using namespace std;
 
 Application::Application(uint32_t width, uint32_t height, const std::wstring& name)
 {
+	SetThreadRole(ThreadRole::Main);
+
 	InitializeProfiling();
 	InitializeLogging();
 

@@ -48,7 +48,11 @@ void RenderTask::Start(Concurrency::task<void>& currentTask)
 	{
 		if (m_enabled)
 		{
-			currentTask = currentTask.then([this] { Render(); });
+			currentTask = currentTask.then([this] 
+			{ 
+				SetThreadRole(ThreadRole::RenderWorker);
+				Render(); 
+			});
 		}
 
 		for (auto antecedent : m_antecedents)
@@ -87,7 +91,11 @@ void RenderTask::Start(Concurrency::task<void>& currentTask)
 
 void RootRenderTask::Start()
 {
-	m_rootTask = concurrency::create_task([this] { Render(); });
+	m_rootTask = concurrency::create_task([this] 
+	{ 
+		SetThreadRole(ThreadRole::RenderWorker);
+		Render(); 
+	});
 
 	for (auto antecendent : m_antecedents)
 	{

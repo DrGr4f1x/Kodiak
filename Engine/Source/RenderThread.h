@@ -47,4 +47,20 @@ void ThreadParameter<T>::operator=(T other)
 }
 
 
+enum class ThreadRole
+{
+	Main,
+	RenderMain,
+	RenderWorker,
+	GenericWorker,
+
+	Unknown
+};
+
+
+ThreadRole GetThreadRole();
+void SetThreadRole(ThreadRole role);
+bool IsRenderThread();
+
+
 } // namespace Kodiak

@@ -46,6 +46,9 @@
     <Filter Include="Rendering\Techniques\PostProcessing">
       <UniqueIdentifier>{d8e38b30-2739-4cd7-9855-c314d00edefe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Common\PostProcessing">
+      <UniqueIdentifier>{064b8f3e-452c-4abc-84ca-e0361a50da46}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -389,6 +392,9 @@
     <ClInclude Include="Source\SSAO.h">
       <Filter>Rendering\Techniques\SSAO</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PostProcessing.h">
+      <Filter>Rendering\Techniques\PostProcessing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -600,6 +606,15 @@
     <ClCompile Include="Source\SSAO.cpp">
       <Filter>Rendering\Techniques\SSAO</Filter>
     </ClCompile>
+    <ClCompile Include="Source\PostProcessing.cpp">
+      <Filter>Rendering\Techniques\PostProcessing</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderEnums.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderThread.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
@@ -644,6 +659,12 @@
     <FxCompile Include="Source\Shaders\Common\LinearizeDepthCS.hlsl">
       <Filter>Shaders\Common\SSAO</Filter>
     </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BloomExtractAndDownsampleHdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BloomExtractAndDownsampleLdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Shaders\Common\PerViewData.hlsli">
@@ -660,6 +681,9 @@
     </None>
     <None Include="Source\Shaders\Common\AoBlurAndUpsampleCS.hlsli">
       <Filter>Shaders\Common\SSAO</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\ShaderUtility.hlsli">
+      <Filter>Shaders\Common</Filter>
     </None>
   </ItemGroup>
 </Project>

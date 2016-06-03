@@ -17,6 +17,7 @@ namespace Kodiak
 // Forward declarations
 class ColorBuffer;
 class DepthBuffer;
+class GpuBuffer;
 class Texture;
 enum class ShaderResourceType;
 enum class ShaderResourceDimension;
@@ -30,17 +31,31 @@ public:
 
 	const std::string& GetName() const { return m_name; }
 
-	void SetTexture(std::shared_ptr<Texture> texture);
-	void SetSRV(std::shared_ptr<Texture> texture) { SetTexture(texture); }
+	void SetSRV(std::shared_ptr<Texture> texture);
 	void SetSRV(std::shared_ptr<DepthBuffer> buffer, bool stencil = false);
 	void SetSRV(std::shared_ptr<ColorBuffer> buffer);
+	void SetSRV(std::shared_ptr<GpuBuffer> buffer);
+
 	void SetUAV(std::shared_ptr<ColorBuffer> buffer);
+	void SetUAV(std::shared_ptr<GpuBuffer> buffer);
 
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource);
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceUAV<5>& resource);
 
 private:
 	void UpdateResourceOnRenderThread(RenderThread::MaterialData* materialData, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
+	void DispatchToRenderThread(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
+	void DispatchToRenderThreadNoLock(std::shared_ptr<RenderThread::MaterialData> materialData, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
+
+	inline void SetCachedResources(std::shared_ptr<Texture> texture, std::shared_ptr<ColorBuffer> colorBuffer,
+		std::shared_ptr<DepthBuffer> depthBuffer, std::shared_ptr<GpuBuffer> gpuBuffer, bool stencil)
+	{
+		m_texture = texture;
+		m_colorBuffer = colorBuffer;
+		m_depthBuffer = depthBuffer;
+		m_gpuBuffer = gpuBuffer;
+		m_stencil = stencil;
+	}
 
 private:
 	const std::string				m_name;
@@ -50,11 +65,12 @@ private:
 	std::shared_ptr<Texture>		m_texture;
 	std::shared_ptr<ColorBuffer>	m_colorBuffer;
 	std::shared_ptr<DepthBuffer>	m_depthBuffer;
-	bool							m_stencil{ false };
-
+	std::shared_ptr<GpuBuffer>		m_gpuBuffer;
+	bool							m_stencil{ false };	
+	
 	// Render thread data
-	std::array<std::pair<uint32_t, uint32_t>, 5>		m_shaderSlots;
-	std::weak_ptr<RenderThread::MaterialData>			m_renderThreadData;
+	std::array<std::pair<uint32_t, uint32_t>, 5>	m_shaderSlots;
+	std::weak_ptr<RenderThread::MaterialData>		m_renderThreadData;
 };
 
 } // namespace Kodiak
