@@ -220,6 +220,7 @@ public:
 	void ClearUAV(ColorBuffer& target);
 	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor);
 	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue);
+	void ClearUAV(GpuBuffer& target);
 
 	void SetRootSignature(const RootSignature& rootSig);
 

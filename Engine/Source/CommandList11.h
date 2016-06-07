@@ -19,6 +19,7 @@ class ComputeCommandList;
 class ComputePSO;
 class ConstantBuffer;
 class DepthBuffer;
+class GpuBuffer;
 class GpuResource;
 class GraphicsCommandList;
 class GraphicsPSO;
@@ -51,6 +52,8 @@ public:
 		return reinterpret_cast<ComputeCommandList*>(this);
 	}
 
+	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
+	
 	// TODO: See if we can handle resource transitions in the ComputeKernel and Material such that DX11 doesn't need to know
 	void TransitionResource(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
 	void BeginResourceTransition(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
@@ -189,6 +192,7 @@ public:
 	void ClearUAV(ColorBuffer& target);
 	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor);
 	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue);
+	void ClearUAV(GpuBuffer& target);
 
 	void SetPipelineState(ComputePSO& PSO);
 

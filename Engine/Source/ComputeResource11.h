@@ -43,6 +43,7 @@ public:
 	void SetSRVImmediate(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, true); }
 	void SetSRVImmediate(std::shared_ptr<DepthBuffer> buffer, bool stencil = false) { SetSRVInternal(buffer, stencil, true); }
 	void SetSRVImmediate(std::shared_ptr<ColorBuffer> buffer) { SetSRVInternal(buffer, true); }
+	void SetSRVImmediate(std::shared_ptr<GpuBuffer> buffer) { SetSRVInternal(buffer, true); }
 
 	void SetUAVImmediate(std::shared_ptr<ColorBuffer> buffer) { SetUAVInternal(buffer, true); }
 	void SetUAVImmediate(std::shared_ptr<GpuBuffer> buffer) { SetUAVInternal(buffer, true); }

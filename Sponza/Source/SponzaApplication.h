@@ -21,6 +21,7 @@ class CameraController;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
+class PostProcessing;
 class RootRenderTask;
 class SSAO;
 class Scene;
@@ -57,6 +58,7 @@ private:
 	std::shared_ptr<CameraController>	m_cameraController;
 	std::shared_ptr<StaticModel>	m_sponzaModel;
 	std::shared_ptr<SSAO>			m_ssao;
+	std::shared_ptr<PostProcessing> m_postProcessing;
 
 	bool							m_reverseZ{ true };
 };

@@ -288,7 +288,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 			break;
 
 		case D3D_SIT_STRUCTURED:
-			IntrospectResourceUAV(ShaderResourceType::Structured, inputDesc, signature);
+			IntrospectResourceSRV(ShaderResourceType::Structured, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWSTRUCTURED:
@@ -296,7 +296,7 @@ void Introspect(ID3DShaderReflection* reflector, Signature& signature)
 			break;
 
 		case D3D_SIT_BYTEADDRESS:
-			IntrospectResourceUAV(ShaderResourceType::ByteAddress, inputDesc, signature);
+			IntrospectResourceSRV(ShaderResourceType::ByteAddress, inputDesc, signature);
 			break;
 
 		case D3D_SIT_UAV_RWBYTEADDRESS:

@@ -789,6 +789,18 @@ void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU3
 }
 
 
+void ComputeCommandList::ClearUAV(GpuBuffer& target)
+{
+	TransitionResource(target, ResourceState::UnorderedAccess, true);
+
+	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
+	// a shader to set all of the values).
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuVisibleHandle = m_dynamicDescriptorHeap.UploadDirect(target.GetUAV());
+	const UINT clearColor[4] = {};
+	m_commandList->ClearUnorderedAccessViewUint(gpuVisibleHandle, target.GetUAV(), target.GetResource(), clearColor, 0, nullptr);
+}
+
+
 void ComputeCommandList::SetPipelineState(const ComputePSO& pso)
 {
 	ID3D12PipelineState* pipelineState = pso.GetPipelineStateObject();

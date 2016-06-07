@@ -73,7 +73,10 @@ float3 ApplyAmbientLight(
 //}
 
 
-float GetShadow(float3 shadowCoord) { return 1.0f; }
+float GetShadow(float3 shadowCoord) 
+{ 
+	return 1.0f; 
+}
 
 
 float3 ApplyDirectionalLight(
@@ -90,10 +93,8 @@ float3 ApplyDirectionalLight(
 {
 	// normal and lightDir are assumed to be pre-normalized
 	float nDotL = dot(normal, lightDir);
-	if (nDotL <= 0.0f)
-	{
-		return float3(0.0f, 0.0f, 0.0f);
-	}
+	nDotL = max(0.0f, nDotL);
+
 
 	// viewDir is also assumed normalized
 	float3 halfVec = normalize(lightDir - viewDir);
@@ -125,7 +126,6 @@ float3 main(PixelShaderInput input) : SV_Target0
 	float3 normal = texNormal.Sample(AnisotropicWrap, input.texcoord0) * 2.0f - 1.0f;
 	float gloss = 128.0f;
 	float ao = texSSAO[uint2(input.position.xy)];
-	//float ao = 1.0f;
 	float3 viewDir = normalize(input.viewDir);
 
 	AntiAliasSpecular(normal, gloss);
@@ -134,6 +134,8 @@ float3 main(PixelShaderInput input) : SV_Target0
 	normal = normalize(mul(normal, tbn));
 
 	float3 ambientContribution = ApplyAmbientLight(diffuseAlbedo, ao, ambientColor);
+
+	//float3 sunlightContribution = float3(0.0f, 0.0f, 0.0f);
 
 	float3 sunlightContribution = ApplyDirectionalLight(
 		diffuseAlbedo, 

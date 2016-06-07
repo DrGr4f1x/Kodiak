@@ -4,32 +4,9 @@
 // IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
-// Author: David Elder
+// Adapted from ToneMap2CS.hlsl in Microsoft's Miniengine sample
+// https://github.com/Microsoft/DirectX-Graphics-Samples
 //
 
-#pragma once
-
-namespace Kodiak
-{
-
-enum class ColorFormat
-{
-	Unknown,
-	R8G8B8A8,
-	R8_UNorm,
-	R8_UInt,
-	R11G11B10_Float,
-	R16_Float,
-	R32_Float
-};
-
-enum class DepthFormat
-{
-	Unknown,
-	D32,
-	D32S8,
-	D24S8,
-	D16
-};
-
-} // namespace Kodiak
+#define PRESERVE_HUE 1
+#include "ToneMapCS.hlsl"

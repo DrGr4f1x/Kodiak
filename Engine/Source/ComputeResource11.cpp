@@ -45,6 +45,8 @@ void ComputeResource::SetSRVInternal(shared_ptr<Texture> texture, bool bImmediat
 
 	SetCachedResources(texture, nullptr, nullptr, nullptr, false);
 
+	_ReadWriteBarrier();
+
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
 		if (texture && !texture->loadTask.is_done())
@@ -76,6 +78,8 @@ void ComputeResource::SetSRVInternal(shared_ptr<DepthBuffer> buffer, bool stenci
 
 	SetCachedResources(nullptr, nullptr, buffer, nullptr, stencil);
 
+	_ReadWriteBarrier();
+
 	if (buffer)
 	{
 		DispatchToRenderThread(stencil ? buffer->GetStencilSRV() : buffer->GetDepthSRV(), bImmediate);
@@ -98,6 +102,8 @@ void ComputeResource::SetSRVInternal(shared_ptr<ColorBuffer> buffer, bool bImmed
 
 	SetCachedResources(nullptr, buffer, nullptr, nullptr, false);
 
+	_ReadWriteBarrier();
+
 	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr, bImmediate);
 }
 
@@ -112,6 +118,8 @@ void ComputeResource::SetSRVInternal(shared_ptr<GpuBuffer> buffer, bool bImmedia
 	}
 
 	SetCachedResources(nullptr, nullptr, nullptr, buffer, false);
+
+	_ReadWriteBarrier();
 
 	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr, bImmediate);
 }
@@ -128,6 +136,8 @@ void ComputeResource::SetUAVInternal(shared_ptr<ColorBuffer> buffer, bool bImmed
 
 	SetCachedResources(nullptr, buffer, nullptr, nullptr, false);
 
+	_ReadWriteBarrier();
+
 	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, bImmediate);
 }
 
@@ -143,6 +153,8 @@ void ComputeResource::SetUAVInternal(shared_ptr<GpuBuffer> buffer, bool bImmedia
 
 	SetCachedResources(nullptr, nullptr, nullptr, buffer, false);
 
+	_ReadWriteBarrier();
+
 	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, bImmediate);
 }
 
@@ -150,13 +162,15 @@ void ComputeResource::SetUAVInternal(shared_ptr<GpuBuffer> buffer, bool bImmedia
 void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData,
 	const ShaderReflection::ResourceSRV<1>& resource)
 {
-	m_renderThreadData = computeData;
-
 	m_type = resource.type;
 	m_dimension = resource.dimension;
 
 	m_bindingTable = resource.binding[0].tableIndex;
 	m_bindingSlot = resource.binding[0].tableSlot;
+
+	_ReadWriteBarrier();
+
+	m_renderThreadData = computeData;
 
 	if (m_texture)
 	{
@@ -180,12 +194,14 @@ void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::Compu
 void ComputeResource::CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData,
 	const ShaderReflection::ResourceUAV<1>& resource)
 {
-	m_renderThreadData = computeData;
-
 	m_type = resource.type;
 
 	m_bindingTable = resource.binding[0].tableIndex;
 	m_bindingSlot = resource.binding[0].tableSlot;
+
+	_ReadWriteBarrier();
+
+	m_renderThreadData = computeData;
 
 	if (m_colorBuffer)
 	{

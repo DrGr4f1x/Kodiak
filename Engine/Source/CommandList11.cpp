@@ -15,6 +15,7 @@
 #include "CommandListManager11.h"
 #include "ConstantBuffer11.h"
 #include "DepthBuffer11.h"
+#include "GpuBuffer11.h"
 #include "IndexBuffer11.h"
 #include "PipelineState11.h"
 #include "Rectangle.h"
@@ -54,6 +55,12 @@ CommandList::~CommandList()
 void CommandList::DestroyAllCommandLists()
 {
 	s_commandListPool.clear();
+}
+
+
+void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes)
+{
+	m_context->UpdateSubresource(dest.GetResource(), 0, nullptr, data, 0, 0);
 }
 
 
@@ -519,6 +526,17 @@ void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU3
 	if (uav)
 	{
 		m_context->ClearUnorderedAccessViewUint(uav, clearValue.u);
+	}
+}
+
+
+void ComputeCommandList::ClearUAV(GpuBuffer& target)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		UINT values[4] = { 0, 0, 0, 0 };
+		m_context->ClearUnorderedAccessViewUint(uav, values);
 	}
 }
 

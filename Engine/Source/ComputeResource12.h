@@ -45,6 +45,7 @@ public:
 	void SetSRVImmediate(std::shared_ptr<GpuBuffer> buffer) { SetSRVInternal(buffer, true); }
 
 	void SetUAVImmediate(std::shared_ptr<ColorBuffer> buffer) { SetUAVInternal(buffer, true); }
+	void SetUAVImmediate(std::shared_ptr<GpuBuffer> buffer) { SetUAVInternal(buffer, true); }
 
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> computeData, const ShaderReflection::ResourceSRV<1>& resource,
 		uint32_t destCpuHandleSlot);

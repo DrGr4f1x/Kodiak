@@ -13,6 +13,8 @@
 
 #include "DeviceManager11.h"
 #include "DDSTextureLoader11.h"
+#include "DXGIUtility.h"
+#include "Format.h"
 #include "Paths.h"
 #include "RenderUtils.h"
 
@@ -77,6 +79,43 @@ shared_ptr<Texture> Texture::Load(const string& path, bool sRGB, bool asyncLoad)
 	}
 
 	return texture;
+}
+
+
+void Texture::Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData)
+{
+	D3D11_TEXTURE2D_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
+
+	DXGI_FORMAT dxgiFormat = DXGIUtility::ConvertToDXGI(format);
+
+	desc.Width = width;
+	desc.Height = height;
+	desc.MipLevels = desc.ArraySize = 1;
+	desc.Format = dxgiFormat;
+	desc.SampleDesc.Count = 1;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = initData;
+	data.SysMemPitch = static_cast<UINT>(width * DXGIUtility::BytesPerPixel(dxgiFormat));
+	data.SysMemSlicePitch = static_cast<UINT>(data.SysMemPitch * height);
+
+	ID3D11Texture2D* texture = nullptr;
+	ThrowIfFailed(g_device->CreateTexture2D(&desc, &data, &texture));
+
+	m_resource = texture;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+	srvDesc.Format = dxgiFormat;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	ThrowIfFailed(g_device->CreateShaderResourceView(m_resource.Get(), &srvDesc, m_srv.GetAddressOf()));
 }
 
 

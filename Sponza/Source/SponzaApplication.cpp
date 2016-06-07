@@ -25,6 +25,7 @@
 #include "Engine\Source\Material.h"
 #include "Engine\Source\MaterialResource.h"
 #include "Engine\Source\Model.h"
+#include "Engine\Source\PostProcessing.h"
 #include "Engine\Source\Profile.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
@@ -39,6 +40,7 @@ __itt_string_handle* itt_frame_setup = nullptr;
 __itt_string_handle* itt_depth_prepass = nullptr;
 __itt_string_handle* itt_ssao = nullptr;
 __itt_string_handle* itt_opaque_pass = nullptr;
+__itt_string_handle* itt_postprocessing = nullptr;
 #endif
 
 
@@ -62,6 +64,7 @@ void SponzaApplication::OnInit()
 	itt_depth_prepass = __itt_string_handle_create("Depth prepass");
 	itt_ssao = __itt_string_handle_create("SSAO");
 	itt_opaque_pass = __itt_string_handle_create("Opaque pass");
+	itt_postprocessing = __itt_string_handle_create("Postprocessing");
 #endif
 
 	CreateResources();
@@ -124,6 +127,12 @@ void SponzaApplication::CreateResources()
 
 	m_ssao->Enable = true;
 	m_ssao->DebugDraw = false;
+
+	m_postProcessing = make_shared<PostProcessing>();
+	m_postProcessing->Initialize(m_width, m_height);
+	m_postProcessing->SceneColorBuffer = m_colorTarget;
+	m_postProcessing->EnableAdaptation = false;
+	//m_postProcessing->EnableBloom = false;
 }
 
 
@@ -292,6 +301,22 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 		}
 	};
 	ssaoTask->Continue(opaqueTask);
+
+	auto postTask = make_shared<RenderTask>();
+	postTask->SetName("Postprocessing");
+	postTask->Render = [this]
+	{
+		PROFILE_BEGIN(itt_postprocessing);
+
+		auto commandList = GraphicsCommandList::Begin();
+
+		m_postProcessing->Render(commandList);
+
+		commandList->CloseAndExecute();
+
+		PROFILE_END();
+	};
+	opaqueTask->Continue(postTask);
 
 	rootTask->Present(m_colorTarget);
 

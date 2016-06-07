@@ -665,6 +665,33 @@
     <FxCompile Include="Source\Shaders\Common\BloomExtractAndDownsampleLdrCS.hlsl">
       <Filter>Shaders\Common\PostProcessing</Filter>
     </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ExtractLumaCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DownsampleBloom4CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DownsampleBloom2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BlurCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\UpsampleAndBlurCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMapCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMap2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\GenerateHistogramCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AdaptExposureCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Shaders\Common\PerViewData.hlsli">

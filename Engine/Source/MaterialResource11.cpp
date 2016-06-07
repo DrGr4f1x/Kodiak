@@ -43,6 +43,8 @@ void MaterialResource::SetSRV(shared_ptr<Texture> texture)
 
 	SetCachedResources(texture, nullptr, nullptr, nullptr, false);
 
+	_ReadWriteBarrier();
+
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
 		if (texture && !texture->loadTask.is_done())
@@ -74,6 +76,8 @@ void MaterialResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
 
 	SetCachedResources(nullptr, nullptr, buffer, nullptr, stencil);
 
+	_ReadWriteBarrier();
+
 	if (buffer)
 	{
 		DispatchToRenderThread(stencil ? buffer->GetStencilSRV() : buffer->GetDepthSRV());
@@ -96,6 +100,8 @@ void MaterialResource::SetSRV(shared_ptr<ColorBuffer> buffer)
 
 	SetCachedResources(nullptr, buffer, nullptr, nullptr, false);
 
+	_ReadWriteBarrier();
+
 	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr);
 }
 
@@ -110,6 +116,8 @@ void MaterialResource::SetSRV(shared_ptr<GpuBuffer> buffer)
 	}
 
 	SetCachedResources(nullptr, nullptr, nullptr, buffer, false);
+
+	_ReadWriteBarrier();
 
 	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr);
 }
@@ -126,6 +134,8 @@ void MaterialResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 
 	SetCachedResources(nullptr, buffer, nullptr, nullptr, false);
 
+	_ReadWriteBarrier();
+
 	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr);
 }
 
@@ -140,6 +150,8 @@ void MaterialResource::SetUAV(shared_ptr<GpuBuffer> buffer)
 	}
 
 	SetCachedResources(nullptr, nullptr, nullptr, buffer, false);
+	
+	_ReadWriteBarrier();
 
 	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr);
 }
@@ -147,8 +159,6 @@ void MaterialResource::SetUAV(shared_ptr<GpuBuffer> buffer)
 
 void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource)
 {
-	m_renderThreadData = materialData;
-
 	m_type = resource.type;
 	m_dimension = resource.dimension;
 
@@ -158,6 +168,10 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 		m_shaderSlots[i].first = binding.tableIndex;
 		m_shaderSlots[i].second = binding.tableSlot;
 	}
+
+	_ReadWriteBarrier();
+
+	m_renderThreadData = materialData;
 
 	if (m_texture)
 	{
@@ -180,8 +194,6 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 
 void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceUAV<5>& resource)
 {
-	m_renderThreadData = materialData;
-
 	m_type = resource.type;
 
 	for (uint32_t i = 0; i < 5; ++i)
@@ -190,6 +202,10 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 		m_shaderSlots[i].first = binding.tableIndex;
 		m_shaderSlots[i].second = binding.tableSlot;
 	}
+
+	_ReadWriteBarrier();
+
+	m_renderThreadData = materialData;
 
 	if (m_colorBuffer)
 	{

@@ -22,6 +22,8 @@ DXGI_FORMAT ConvertToDXGI(Kodiak::ColorFormat format)
 		return DXGI_FORMAT_R8G8B8A8_UNORM;
 	case Kodiak::ColorFormat::R8_UNorm:
 		return DXGI_FORMAT_R8_UNORM;
+	case Kodiak::ColorFormat::R8_UInt:
+		return DXGI_FORMAT_R8_UINT;
 	case Kodiak::ColorFormat::R11G11B10_Float:
 		return DXGI_FORMAT_R11G11B10_FLOAT;
 	case Kodiak::ColorFormat::R16_Float:
@@ -390,5 +392,9 @@ size_t BitsPerPixel(DXGI_FORMAT fmt)
 	}
 }
 
+size_t BytesPerPixel(DXGI_FORMAT fmt)
+{
+	return BitsPerPixel(fmt) / 8;
+}
 
 } // namespace DXGIUtility
