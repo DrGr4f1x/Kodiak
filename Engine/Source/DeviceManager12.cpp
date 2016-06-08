@@ -325,7 +325,7 @@ void DeviceManager::CreatePresentState()
 
 	// Load shaders
 	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "ScreenQuadVS.cso"));
-	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "BufferCopyPS.cso"));
+	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "ConvertLDRToDisplayPS.cso"));
 	(vs->loadTask && ps->loadTask).wait();
 
 	// Configure PSO

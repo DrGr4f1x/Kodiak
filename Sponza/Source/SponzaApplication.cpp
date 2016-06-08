@@ -131,7 +131,7 @@ void SponzaApplication::CreateResources()
 	m_postProcessing = make_shared<PostProcessing>();
 	m_postProcessing->Initialize(m_width, m_height);
 	m_postProcessing->SceneColorBuffer = m_colorTarget;
-	m_postProcessing->EnableAdaptation = false;
+	m_postProcessing->EnableAdaptation = true;
 	//m_postProcessing->EnableBloom = false;
 }
 

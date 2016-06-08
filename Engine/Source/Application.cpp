@@ -75,8 +75,8 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 		L"WindowClass1",
 		m_title.c_str(),
 		WS_OVERLAPPEDWINDOW,
-		100,
-		100,
+		0,
+		0,
 		windowRect.right - windowRect.left,
 		windowRect.bottom - windowRect.top,
 		NULL,		// We have no parent window, NULL.

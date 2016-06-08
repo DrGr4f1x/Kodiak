@@ -327,11 +327,11 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 
 		if (materials[i].texNormalPath.back() == '\\' || materials[i].texNormalPath.back() == '/')
 		{
-			normalTexture = Texture::Load("default_normal.dds", true);
+			normalTexture = Texture::Load("default_normal.dds", false);
 		}
 		else
 		{
-			normalTexture = Texture::Load(materials[i].texNormalPath, true);
+			normalTexture = Texture::Load(materials[i].texNormalPath, false);
 		}
 
 		opaqueMaterial->GetResource("texDiffuse")->SetSRV(diffuseTexture);

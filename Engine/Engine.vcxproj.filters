@@ -49,6 +49,9 @@
     <Filter Include="Shaders\Common\PostProcessing">
       <UniqueIdentifier>{064b8f3e-452c-4abc-84ca-e0361a50da46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Common\Present">
+      <UniqueIdentifier>{ce44a8bd-b6ab-4406-9ac7-cb6d6c7880e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -620,9 +623,6 @@
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
-    <FxCompile Include="Source\Shaders\Common\BufferCopyPS.hlsl">
-      <Filter>Shaders\Common</Filter>
-    </FxCompile>
     <FxCompile Include="Source\Shaders\Common\SimpleVertexShader.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
@@ -691,6 +691,12 @@
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\AdaptExposureCS.hlsl">
       <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BufferCopyPS.hlsl">
+      <Filter>Shaders\Common\Present</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ConvertLDRToDisplayPS.hlsl">
+      <Filter>Shaders\Common\Present</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
