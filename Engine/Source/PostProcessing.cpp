@@ -467,7 +467,7 @@ void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
 	m_adaptExposureCs->GetParameter("MinExposure")->SetValueImmediate(m_minExposure);
 	m_adaptExposureCs->GetParameter("MaxExposure")->SetValueImmediate(m_maxExposure);
 	m_adaptExposureCs->GetParameter("PeakIntensity")->SetValueImmediate(m_peakIntensity);
-	m_adaptExposureCs->GetParameter("PixelCount")->SetValueImmediate(m_bloomWidth * m_bloomHeight);
+	m_adaptExposureCs->GetParameter("PixelCount")->SetValueImmediate(static_cast<float>(m_bloomWidth * m_bloomHeight));
 
 	m_adaptExposureCs->Dispatch(commandList);
 	m_adaptExposureCs->UnbindUAVs(commandList);

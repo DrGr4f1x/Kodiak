@@ -317,7 +317,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 		swapChainDesc.Width = m_width; // Match the size of the window.
 		swapChainDesc.Height = m_height;
-		swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // This is the most common swap chain format.
+		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // This is the most common swap chain format.
 		swapChainDesc.Stereo = false;
 		swapChainDesc.SampleDesc.Count = 1; // Don't use multi-sampling.
 		swapChainDesc.SampleDesc.Quality = 0;
