@@ -53,6 +53,8 @@ private:
 	std::shared_ptr<CameraController>	m_cameraController;
 
 	float	m_meshRadians[4];
+
+	bool								m_reverseZ{ true };
 };
 
 } // namespace Kodiak

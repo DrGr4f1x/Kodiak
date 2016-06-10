@@ -66,8 +66,7 @@ void Scene::Update(GraphicsCommandList* commandList)
 {
 	PROFILE_BEGIN(itt_scene_update);
 	// Update per-view constants
-	m_perViewConstants.projection = m_camera->GetProjectionMatrix();
-	m_perViewConstants.view = m_camera->GetViewMatrix();
+	m_perViewConstants.viewProjection = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 	m_perViewConstants.viewPosition = m_camera->GetPosition();
 
 	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
@@ -124,9 +123,74 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 #elif defined(DX11)
 					commandList->SetVertexShaderConstants(0, *m_perViewConstantBuffer);
 					commandList->SetVertexShaderConstants(1, *mesh->perObjectConstants);
-					commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+
+					// TODO bad hack, figure out a different way to handle global textures for a render pass
+					if (m_ssaoFullscreen)
+					{
+						commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+					}
 #endif
 					
+					commandList->SetVertexBuffer(0, *meshPart.vertexBuffer);
+					commandList->SetIndexBuffer(*meshPart.indexBuffer);
+					commandList->SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);
+
+					commandList->DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
+				}
+			}
+			PROFILE_END();
+		}
+		PROFILE_END();
+	}
+
+#if DX11
+	commandList->SetPixelShaderResource(3, nullptr);
+#endif
+
+	commandList->PIXEndEvent();
+}
+
+
+void Scene::RenderShadows(shared_ptr<RenderPass> renderPass, const Matrix4& viewProjectionMatrix, GraphicsCommandList* commandList)
+{
+	// Update per-view constants
+	m_perViewConstants.viewProjection = viewProjectionMatrix;
+	m_perViewConstants.viewPosition = m_camera->GetPosition();
+
+	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
+	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
+	commandList->UnmapConstants(*m_perViewConstantBuffer);
+
+	commandList->PIXBeginEvent("Bind sampler states");
+	BindSamplerStates(commandList);
+	commandList->PIXEndEvent();
+
+	commandList->PIXBeginEvent(renderPass->GetName());
+	// Visit models
+	for (auto& model : m_staticModels)
+	{
+		PROFILE_BEGIN(itt_draw_model);
+		// Visit meshes
+		for (const auto& mesh : model->meshes)
+		{
+			PROFILE_BEGIN(itt_draw_mesh);
+			// Visit mesh parts
+			for (const auto& meshPart : mesh->meshParts)
+			{
+				if (meshPart.material->renderPass == renderPass && meshPart.material->IsReady())
+				{
+					meshPart.material->Commit(commandList);
+
+					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
+#if defined(DX12)
+					commandList->SetConstantBuffer(0, *m_perViewConstantBuffer);
+					commandList->SetConstantBuffer(1, *mesh->perObjectConstants);
+#elif defined(DX11)
+					commandList->SetVertexShaderConstants(0, *m_perViewConstantBuffer);
+					commandList->SetVertexShaderConstants(1, *mesh->perObjectConstants);
+					commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+#endif
+
 					commandList->SetVertexBuffer(0, *meshPart.vertexBuffer);
 					commandList->SetIndexBuffer(*meshPart.indexBuffer);
 					commandList->SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);

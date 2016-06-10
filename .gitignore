@@ -195,3 +195,12 @@ Basic/Bin64/AppX/microsoft.system.package.metadata/S-1-5-21-2056340387-205977010
 *.ipdb
 *.tlog
 *.exp
+/Basic/Shaders/Engine/SM5
+*.idb
+*.cso
+*.tss
+*.db
+*.opendb
+/Sponza/Log
+/External
+*.rej

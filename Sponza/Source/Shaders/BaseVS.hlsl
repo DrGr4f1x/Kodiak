@@ -31,8 +31,7 @@ VertexShaderOutput main(VertexShaderInput input)
 
 	// Transform the vertex position into projected space.
 	pos = mul(model, pos);
-	pos = mul(view, pos);
-	pos = mul(projection, pos);
+	pos = mul(viewProjection, pos);
 	output.position = pos;
 
 	output.texcoord0 = input.texcoord0;

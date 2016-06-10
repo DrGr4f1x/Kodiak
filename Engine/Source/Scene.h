@@ -47,6 +47,9 @@ public:
 	void Update(GraphicsCommandList* commandList);
 	void Render(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList);
 
+	// TODO: This is hacky
+	void RenderShadows(std::shared_ptr<RenderPass> renderPass, const Math::Matrix4& viewProjectionMatrix, GraphicsCommandList* commandList);
+
 	void SetCamera(std::shared_ptr<Camera> camera);
 
 	// To be called from the render thread only
@@ -75,8 +78,7 @@ private:
 	// TODO allocation/alignment problem with this struct
 	struct PerViewConstants
 	{
-		Math::Matrix4 view;
-		Math::Matrix4 projection;
+		Math::Matrix4 viewProjection;
 		Math::Vector3 viewPosition;
 	} m_perViewConstants;
 
