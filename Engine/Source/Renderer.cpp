@@ -190,7 +190,7 @@ shared_ptr<DepthBuffer> CreateDepthBuffer(const std::string& name, uint32_t widt
 {
 	auto depthBuffer = make_shared<DepthBuffer>(clearDepth, clearStencil);
 
-	depthBuffer->Create(Renderer::GetInstance().GetDeviceManager(), name, width, height, format);
+	depthBuffer->Create(name, width, height, format);
 
 	return depthBuffer;
 }

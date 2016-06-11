@@ -25,6 +25,8 @@ class PostProcessing;
 class RootRenderTask;
 class SSAO;
 class Scene;
+class ShadowBuffer;
+class ShadowCamera;
 class StaticModel;
 
 
@@ -48,19 +50,22 @@ private:
 	std::shared_ptr<RootRenderTask> SetupFrame();
 
 private:
-	std::shared_ptr<ColorBuffer>	m_colorTarget;
-	std::shared_ptr<DepthBuffer>	m_depthBuffer;
-	std::shared_ptr<ColorBuffer>	m_linearDepthBuffer;
-	std::shared_ptr<ColorBuffer>	m_ssaoFullscreen;
+	std::shared_ptr<ColorBuffer>		m_colorTarget;
+	std::shared_ptr<DepthBuffer>		m_depthBuffer;
+	std::shared_ptr<ColorBuffer>		m_linearDepthBuffer;
+	std::shared_ptr<ColorBuffer>		m_ssaoFullscreen;
 
-	std::shared_ptr<Scene>			m_mainScene;
-	std::shared_ptr<Camera>			m_camera;
+	std::shared_ptr<Scene>				m_mainScene;
+	std::shared_ptr<Camera>				m_camera;
 	std::shared_ptr<CameraController>	m_cameraController;
-	std::shared_ptr<StaticModel>	m_sponzaModel;
-	std::shared_ptr<SSAO>			m_ssao;
-	std::shared_ptr<PostProcessing> m_postProcessing;
+	std::shared_ptr<StaticModel>		m_sponzaModel;
+	std::shared_ptr<SSAO>				m_ssao;
+	std::shared_ptr<PostProcessing>		m_postProcessing;
 
-	bool							m_reverseZ{ true };
+	std::shared_ptr<ShadowBuffer>		m_shadowBuffer;
+	std::shared_ptr<ShadowCamera>		m_shadowCamera;
+
+	bool								m_reverseZ{ true };
 };
 
 } // namespace Kodiak

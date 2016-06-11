@@ -24,7 +24,7 @@ class DepthBuffer : public PixelBuffer
 public:
 	DepthBuffer(float clearDepth = 0.0f, uint32_t clearStencil = 0);
 
-	void Create(DeviceManager* deviceManager, const std::string& name, uint32_t width, uint32_t height, DepthFormat format);
+	void Create(const std::string& name, uint32_t width, uint32_t height, DepthFormat format);
 
 	ID3D11DepthStencilView* GetDSV() { return m_dsv.Get(); }
 	ID3D11DepthStencilView* GetDSVReadOnly() { return m_dsvReadOnly.Get(); }

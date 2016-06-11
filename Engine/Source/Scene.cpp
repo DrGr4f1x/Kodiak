@@ -27,6 +27,8 @@
 #include "RenderPass.h"
 #include "Shader.h"
 #include "ShaderManager.h"
+#include "ShadowBuffer.h"
+#include "ShadowCamera.h"
 #include "VertexBuffer.h"
 
 #if defined(DX12)
@@ -67,6 +69,7 @@ void Scene::Update(GraphicsCommandList* commandList)
 	PROFILE_BEGIN(itt_scene_update);
 	// Update per-view constants
 	m_perViewConstants.viewProjection = m_camera->GetViewProjMatrix();
+	m_perViewConstants.modelToShadow = m_shadowCamera->GetShadowMatrix();
 	m_perViewConstants.viewPosition = m_camera->GetPosition();
 
 	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
@@ -129,6 +132,7 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 					{
 						commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
 					}
+					commandList->SetPixelShaderResource(4, m_shadowBuffer->GetSRV());
 #endif
 					
 					commandList->SetVertexBuffer(0, *meshPart.vertexBuffer);
@@ -145,6 +149,7 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 
 #if DX11
 	commandList->SetPixelShaderResource(3, nullptr);
+	commandList->SetPixelShaderResource(4, nullptr);
 #endif
 
 	commandList->PIXEndEvent();
@@ -203,8 +208,10 @@ void Scene::RenderShadows(shared_ptr<RenderPass> renderPass, const Matrix4& view
 		PROFILE_END();
 	}
 
+	// TODO hack
 #if DX11
 	commandList->SetPixelShaderResource(3, nullptr);
+	commandList->SetPixelShaderResource(4, nullptr);
 #endif
 
 	commandList->PIXEndEvent();
@@ -215,6 +222,18 @@ void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
 {
 	auto thisScene = shared_from_this();
 	Renderer::GetInstance().EnqueueTask([thisScene, camera](RenderTaskEnvironment& rte) { thisScene->SetCameraDeferred(camera); });
+}
+
+
+void Scene::SetShadowBuffer(shared_ptr<ShadowBuffer> buffer)
+{
+	m_shadowBuffer = buffer;
+}
+
+
+void Scene::SetShadowCamera(shared_ptr<ShadowCamera> camera)
+{
+	m_shadowCamera = camera;
 }
 
 
@@ -232,6 +251,14 @@ void Scene::Initialize()
 	samplerDesc.MaxAnisotropy = 8;
 	
 	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf()));
+
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_GREATER_EQUAL;
+	samplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+
+	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_shadowSamplerState.GetAddressOf()));
 #endif
 }
 
@@ -294,5 +321,6 @@ void Scene::BindSamplerStates(GraphicsCommandList* commandList)
 {
 #if defined(DX11)
 	commandList->SetPixelShaderSampler(0, m_samplerState.Get());
+	commandList->SetPixelShaderSampler(1, m_shadowSamplerState.Get());
 #endif
 }

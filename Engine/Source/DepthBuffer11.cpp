@@ -27,7 +27,7 @@ DepthBuffer::DepthBuffer(float clearDepth, uint32_t clearStencil)
 {}
 
 
-void DepthBuffer::Create(DeviceManager* deviceManager,const std::string& name, uint32_t width, uint32_t height, DepthFormat format)
+void DepthBuffer::Create(const std::string& name, uint32_t width, uint32_t height, DepthFormat format)
 {
 	auto textureDesc = DescribeDepthTex2D(width, height, 1, format,
 		D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL);

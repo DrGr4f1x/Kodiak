@@ -37,7 +37,7 @@ public:
 	// Create a depth buffer.  If an address is supplied, memory will not be allocated.
 	// The vmem address allows you to alias buffers (which can be especially useful for
 	// reusing ESRAM across a frame.)
-	void Create(DeviceManager* deviceManager, const std::string& name, size_t width, size_t height, DepthFormat format);
+	void Create(const std::string& name, size_t width, size_t height, DepthFormat format);
 
 	// Get pre-created CPU-visible descriptor handles
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetDSV() const					{ return m_dsv; }
@@ -51,7 +51,7 @@ public:
 	uint32_t GetClearStencil() const { return m_clearStencil; }
 
 private:
-	void CreateDerivedViews(DeviceManager* deviceManager);
+	void CreateDerivedViews();
 
 private:
 	float		m_clearDepth{ 0.0f };

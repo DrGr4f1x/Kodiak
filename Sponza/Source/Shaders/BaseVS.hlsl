@@ -16,7 +16,7 @@ struct VertexShaderOutput
 	float4 position : SV_Position;
 	float2 texcoord0 : texcoord0;
 	float3 viewDir : texcoord1;
-	//float3 shadowCoord : texcoord2;
+	float3 shadowCoord : texcoord2;
 	float3 normal : normal;
 	float3 tangent : tangent;
 	float3 bitangent : bitangent;
@@ -36,6 +36,7 @@ VertexShaderOutput main(VertexShaderInput input)
 
 	output.texcoord0 = input.texcoord0;
 	output.viewDir = input.position - viewPosition;
+	output.shadowCoord = mul(modelToShadow, float4(input.position, 1.0)).xyz;
 	output.normal = input.normal;
 	output.tangent = input.tangent;
 	output.bitangent = input.bitangent;

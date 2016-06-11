@@ -4,6 +4,7 @@
 cbuffer PerViewConstants : register(b0)
 {
 	matrix viewProjection;
+	matrix modelToShadow;
 	float3 viewPosition;
 };
 
