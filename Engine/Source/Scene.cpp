@@ -66,7 +66,7 @@ void Scene::Update(GraphicsCommandList* commandList)
 {
 	PROFILE_BEGIN(itt_scene_update);
 	// Update per-view constants
-	m_perViewConstants.viewProjection = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+	m_perViewConstants.viewProjection = m_camera->GetViewProjMatrix();
 	m_perViewConstants.viewPosition = m_camera->GetPosition();
 
 	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
@@ -238,7 +238,8 @@ void Scene::Initialize()
 
 void Scene::SetCameraDeferred(shared_ptr<Kodiak::Camera> camera)
 {
-	m_camera = camera->GetRenderThreadData();
+	// TODO: Not threadsafe!!!
+	m_camera = camera;
 }
 
 

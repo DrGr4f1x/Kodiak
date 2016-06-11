@@ -15,3 +15,5 @@ General Engine Stuff
 * Should be a 1-liner to switch between async renderer and serial renderer
 * Don't require shared_ptr for anything - sort out real object ownership/lifetime pattern across whole engine
 * Figure out the default texture situation for DX12 (no null SRVs)
+* Make RenderSceneTask class for rendering a pass on a Scene, w/ render targets, camera, etc.
+* System for default parameters/textures for render pass (figure out shader slot/root sig binding problem)

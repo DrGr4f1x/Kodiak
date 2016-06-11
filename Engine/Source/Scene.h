@@ -16,7 +16,6 @@ namespace Kodiak
 {
 
 // Forward declarations
-namespace RenderThread { class Camera; }
 class Camera;
 class ConstantBuffer;
 class ColorBuffer;
@@ -83,7 +82,8 @@ private:
 	} m_perViewConstants;
 
 	// Scene camera
-	std::shared_ptr<RenderThread::Camera> m_camera;
+	// TODO: this is not thread-safe!
+	std::shared_ptr<Camera> m_camera;
 
 	// HACK
 #if DX11

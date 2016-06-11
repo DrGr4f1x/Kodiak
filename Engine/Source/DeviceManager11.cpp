@@ -96,7 +96,7 @@ void DeviceManager::BeginFrame()
 		// Discard the contents of the render target.
 		// This is a valid operation only when the existing contents will be entirely
 		// overwritten. If dirty or scroll rects are used, this call should be removed.
-		m_d3dContext1->DiscardView(m_backBuffer->GetRTV());
+		//m_d3dContext1->DiscardView(m_backBuffer->GetRTV());
 	}
 }
 

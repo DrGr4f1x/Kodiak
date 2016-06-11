@@ -248,11 +248,9 @@ void BasicApplication::SetupScene()
 {
 	// Setup scene camera
 	m_camera = make_shared<Camera>();
-	m_camera->SetPosition(Vector3(0.0f, 0.7f, 1.5f));
-	m_camera->LookAt(Vector3(0.0f, -0.1f, 0.0f), Vector3(kYUnitVector));
-	m_camera->SetPerspective(70.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 100.0f);
-	m_camera->SetReverseZ(m_reverseZ);
-
+	m_camera->SetEyeAtUp(Vector3(0.0f, 0.7f, 1.5f), Vector3(0.0f, -0.1f, 0.0f), Vector3(kYUnitVector));
+	m_camera->SetPerspectiveMatrix(70.0f, static_cast<float>(m_height) / static_cast<float>(m_width), 0.01f, 100.0f);
+	
 	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
 	m_cameraController->SetMoveSpeed(10.0f);
 	m_cameraController->SetStrafeSpeed(10.0f);

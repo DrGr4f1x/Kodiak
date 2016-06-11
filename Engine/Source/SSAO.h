@@ -23,7 +23,6 @@ class ComputeKernel;
 class DepthBuffer;
 class GraphicsCommandList;
 class RenderTask;
-namespace RenderThread { class Camera; }
 
 
 class SSAO : public std::enable_shared_from_this<SSAO>
@@ -105,7 +104,8 @@ private:
 #endif
 
 	// Camera
-	std::shared_ptr<RenderThread::Camera> m_camera;
+	// TODO Not threadsafe!!!
+	std::shared_ptr<Camera> m_camera;
 
 	// Parameters
 	enum QualityLevel { kSsaoQualityLow, kSsaoQualityMedium, kSsaoQualityHigh, kSsaoQualityVeryHigh, kNumSsaoQualitySettings};
