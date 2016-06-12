@@ -66,5 +66,6 @@
 #include "Constants.h"
 #include "DebugUtility.h"
 #include "Log.h"
+#include "PlatformTypes.h"
 #include "Utility.h"
 #include "VectorMath.h"

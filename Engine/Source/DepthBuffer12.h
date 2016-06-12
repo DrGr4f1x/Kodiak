@@ -34,18 +34,15 @@ public:
 		m_stencilSRV.ptr = ~0ull;
 	}
 
-	// Create a depth buffer.  If an address is supplied, memory will not be allocated.
-	// The vmem address allows you to alias buffers (which can be especially useful for
-	// reusing ESRAM across a frame.)
 	void Create(const std::string& name, size_t width, size_t height, DepthFormat format);
 
 	// Get pre-created CPU-visible descriptor handles
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetDSV() const					{ return m_dsv; }
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetDSVReadOnly() const			{ return m_dsvReadOnly; }
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetDSVReadOnlyDepth() const		{ return m_dsvReadOnlyDepth; }
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetDSVReadOnlyStencil() const	{ return m_dsvReadOnlyStencil; }
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetDepthSRV() const				{ return m_depthSRV; }
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetStencilSRV() const			{ return m_stencilSRV; }
+	DepthStencilView GetDSV() const					{ return GetRawDSV(m_dsv); }
+	DepthStencilView GetDSVReadOnly() const			{ return GetRawDSV(m_dsvReadOnly); }
+	DepthStencilView GetDSVReadOnlyDepth() const	{ return GetRawDSV(m_dsvReadOnlyDepth); }
+	DepthStencilView GetDSVReadOnlyStencil() const	{ return GetRawDSV(m_dsvReadOnlyStencil); }
+	ShaderResourceView GetDepthSRV() const			{ return GetRawSRV(m_depthSRV); }
+	ShaderResourceView GetStencilSRV() const		{ return GetRawSRV(m_stencilSRV); }
 
 	float GetClearDepth() const { return m_clearDepth; }
 	uint32_t GetClearStencil() const { return m_clearStencil; }

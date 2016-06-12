@@ -26,12 +26,12 @@ public:
 
 	void Create(const std::string& name, uint32_t width, uint32_t height, DepthFormat format);
 
-	ID3D11DepthStencilView* GetDSV() { return m_dsv.Get(); }
-	ID3D11DepthStencilView* GetDSVReadOnly() { return m_dsvReadOnly.Get(); }
-	ID3D11DepthStencilView* GetDSVReadOnlyDepth() { return m_dsvReadOnlyDepth.Get(); }
-	ID3D11DepthStencilView* GetDSVReadOnlyStencil() { return m_dsvReadOnlyStencil.Get(); }
-	ID3D11ShaderResourceView* GetDepthSRV() { return m_depthSRV.Get(); }
-	ID3D11ShaderResourceView* GetStencilSRV() { return m_stencilSRV.Get(); }
+	DepthStencilView GetDSV() { return GetRawDSV(m_dsv); }
+	DepthStencilView GetDSVReadOnly() { return GetRawDSV(m_dsvReadOnly); }
+	DepthStencilView GetDSVReadOnlyDepth() { return GetRawDSV(m_dsvReadOnlyDepth); }
+	DepthStencilView GetDSVReadOnlyStencil() { return GetRawDSV(m_dsvReadOnlyStencil); }
+	ShaderResourceView GetDepthSRV() { return GetRawSRV(m_depthSRV); }
+	ShaderResourceView GetStencilSRV() { return GetRawSRV(m_stencilSRV); }
 
 	float GetClearDepth() const { return m_clearDepth; }
 	uint32_t GetClearStencil() const { return m_clearStencil; }
@@ -40,12 +40,12 @@ private:
 	void CreateDerivedViews();
 
 private:
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsv{ nullptr };
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsvReadOnly{ nullptr };
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsvReadOnlyDepth{ nullptr };
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_dsvReadOnlyStencil{ nullptr };
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_depthSRV{ nullptr };
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_stencilSRV{ nullptr };
+	DepthStencilViewPtr m_dsv;
+	DepthStencilViewPtr m_dsvReadOnly;
+	DepthStencilViewPtr m_dsvReadOnlyDepth;
+	DepthStencilViewPtr m_dsvReadOnlyStencil;
+	ShaderResourceViewPtr m_depthSRV;
+	ShaderResourceViewPtr m_stencilSRV;
 
 	float		m_clearDepth{ 0.0f };
 	uint32_t	m_clearStencil{ 0 };

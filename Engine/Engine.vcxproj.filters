@@ -416,6 +416,9 @@
     <ClInclude Include="Source\FXAA.h">
       <Filter>Rendering\Techniques\FXAA</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PlatformTypes.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
