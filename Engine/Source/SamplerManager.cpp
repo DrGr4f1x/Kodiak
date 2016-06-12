@@ -47,6 +47,22 @@ void SamplerManager::Initialize()
 		sampler->m_desc.BorderColor[3] = 0.0f;
 		m_samplers.push_back(sampler);
 	}
+
+	// Shadow
+	{
+		auto sampler = make_shared<SamplerState>("ShadowSampler");
+
+		sampler->m_desc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+		sampler->m_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler->m_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler->m_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler->m_desc.ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+		sampler->m_desc.BorderColor[0] = 0.0f;
+		sampler->m_desc.BorderColor[1] = 0.0f;
+		sampler->m_desc.BorderColor[2] = 0.0f;
+		sampler->m_desc.BorderColor[3] = 0.0f;
+		m_samplers.push_back(sampler);
+	}
 #endif
 
 	// Create all states

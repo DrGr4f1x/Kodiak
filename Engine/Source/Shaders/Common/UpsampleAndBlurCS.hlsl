@@ -10,7 +10,7 @@
 
 Texture2D<float3> HigherResBuf : register(t0);
 Texture2D<float3> LowerResBuf : register(t1);
-SamplerState LinearBorder : register(s1);
+SamplerState LinearBorderSampler : register(s1);
 RWTexture2D<float3> Result : register(u0);
 
 
@@ -134,12 +134,12 @@ void main(uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV
 	float2 uvLL = float2(uvUL.x, uvLR.y);
 	int destIdx = GTid.x + (GTid.y << 4);
 
-	float3 pixel1a = lerp(HigherResBuf[ThreadUL + uint2(0, 0)], LowerResBuf.SampleLevel(LinearBorder, uvUL, 0.0f), g_upsampleBlendFactor);
-	float3 pixel1b = lerp(HigherResBuf[ThreadUL + uint2(1, 0)], LowerResBuf.SampleLevel(LinearBorder, uvUR, 0.0f), g_upsampleBlendFactor);
+	float3 pixel1a = lerp(HigherResBuf[ThreadUL + uint2(0, 0)], LowerResBuf.SampleLevel(LinearBorderSampler, uvUL, 0.0f), g_upsampleBlendFactor);
+	float3 pixel1b = lerp(HigherResBuf[ThreadUL + uint2(1, 0)], LowerResBuf.SampleLevel(LinearBorderSampler, uvUR, 0.0f), g_upsampleBlendFactor);
 	Store2Pixels(destIdx + 0, pixel1a, pixel1b);
 
-	float3 pixel2a = lerp(HigherResBuf[ThreadUL + uint2(0, 1)], LowerResBuf.SampleLevel(LinearBorder, uvLL, 0.0f), g_upsampleBlendFactor);
-	float3 pixel2b = lerp(HigherResBuf[ThreadUL + uint2(1, 1)], LowerResBuf.SampleLevel(LinearBorder, uvLR, 0.0f), g_upsampleBlendFactor);
+	float3 pixel2a = lerp(HigherResBuf[ThreadUL + uint2(0, 1)], LowerResBuf.SampleLevel(LinearBorderSampler, uvLL, 0.0f), g_upsampleBlendFactor);
+	float3 pixel2b = lerp(HigherResBuf[ThreadUL + uint2(1, 1)], LowerResBuf.SampleLevel(LinearBorderSampler, uvLR, 0.0f), g_upsampleBlendFactor);
 	Store2Pixels(destIdx + 8, pixel2a, pixel2b);
 
 	GroupMemoryBarrierWithGroupSync();

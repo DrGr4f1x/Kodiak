@@ -170,13 +170,13 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 	uint32_t blackPixel = 0;
 	m_defaultBlackTexture->Create(1, 1, ColorFormat::R8G8B8A8, &blackPixel);
 
+#if DX11
 	if (m_copySceneColor)
 	{
 		m_sceneColorCopy = make_shared<ColorBuffer>();
 		m_sceneColorCopy->Create("Scene color copy", width, height, 1, ColorFormat::R11G11B10_Float);
 	}
 
-#if DX11
 	InitializeSamplers();
 #endif
 
@@ -192,6 +192,7 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 
 	computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::PixelShaderResource);
 
+#if DX11
 	ColorBuffer nullBuffer;
 	commandList->SetRenderTarget(nullBuffer);
 
@@ -212,7 +213,6 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 		commandList->SetRenderTarget(nullBuffer);
 	}
 
-#if DX11
 	computeCommandList->SetShaderSampler(0, m_linearClampSampler.Get());
 	computeCommandList->SetShaderSampler(1, m_linearBorderSampler.Get());
 #endif
@@ -278,7 +278,11 @@ void PostProcessing::ProcessHDR(ComputeCommandList* commandList)
 	computeKernel->GetParameter("g_BloomStrength")->SetValueImmediate(m_bloomStrength);
 	computeKernel->GetParameter("g_LumaGamma")->SetValueImmediate(m_logLumaConstant);
 
+#if DX11
 	computeKernel->GetResource("SrcColor")->SetSRVImmediate(m_sceneColorCopy);
+#else
+	computeKernel->GetResource("SrcColor")->SetSRVImmediate(m_sceneColorBuffer);
+#endif
 	computeKernel->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
 	if (m_enableBloom)
 	{
@@ -327,13 +331,21 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 
 	commandList->TransitionResource(*m_bloomUAV1[0], ResourceState::UnorderedAccess);
 	commandList->TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
+#if DX11
 	commandList->TransitionResource(*m_sceneColorCopy, ResourceState::NonPixelShaderResource);
+#else
+	commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
+#endif
 	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-	computeKernel->GetResource("SourceTex")->SetSRV(m_sceneColorCopy);
-	computeKernel->GetResource("Exposure")->SetSRV(m_exposureBuffer);
-	computeKernel->GetResource("BloomResult")->SetUAV(m_bloomUAV1[0]);
-	computeKernel->GetResource("LumaResult")->SetUAV(m_lumaLR);
+#if DX11
+	computeKernel->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorCopy);
+#else
+	computeKernel->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);
+#endif
+	computeKernel->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
+	computeKernel->GetResource("BloomResult")->SetUAVImmediate(m_bloomUAV1[0]);
+	computeKernel->GetResource("LumaResult")->SetUAVImmediate(m_lumaLR);
 
 	if (m_enableHDR)
 	{
@@ -417,7 +429,11 @@ void PostProcessing::ExtractLuma(ComputeCommandList* commandList)
 	const float invBloomHeight = 1.0f / static_cast<float>(m_bloomHeight);
 
 	m_extractLumaCs->GetParameter("g_inverseOutputSize")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
+#if DX11
 	m_extractLumaCs->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorCopy);
+#else
+	m_extractLumaCs->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);
+#endif
 	m_extractLumaCs->GetResource("LumaResult")->SetUAVImmediate(m_lumaLR);
 
 	m_extractLumaCs->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight);
