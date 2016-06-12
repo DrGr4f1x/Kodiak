@@ -195,3 +195,14 @@ Basic/Bin64/AppX/microsoft.system.package.metadata/S-1-5-21-2056340387-205977010
 *.ipdb
 *.tlog
 *.exp
+*.opendb
+*.cso
+*.db
+*.idb
+*.tss
+/External/IntelITT/include/ittnotify.h
+*.lib
+/Basic/Bin64/Basic11.exe
+/Basic/Bin64
+/Basic/Log
+*.nvuser
