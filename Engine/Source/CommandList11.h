@@ -57,6 +57,7 @@ public:
 	// TODO: See if we can handle resource transitions in the ComputeKernel and Material such that DX11 doesn't need to know
 	void TransitionResource(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
 	void BeginResourceTransition(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
+	void InsertUAVBarrier(GpuResource& Resource, bool FlushImmediate = false) {}
 
 	void PIXBeginEvent(const std::string& label);
 	void PIXEndEvent();

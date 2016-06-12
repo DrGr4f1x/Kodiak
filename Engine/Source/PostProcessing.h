@@ -58,6 +58,7 @@ public:
 
 	// Render post effects
 	void Render(GraphicsCommandList* commandList);
+	void DebugDrawHistogram(GraphicsCommandList* commandList);
 
 private:
 	void ProcessHDR(ComputeCommandList* commandList);
@@ -87,6 +88,7 @@ private:
 	std::shared_ptr<ComputeKernel>	m_toneMap2Cs;
 	std::shared_ptr<ComputeKernel>	m_generateHistogramCs;
 	std::shared_ptr<ComputeKernel>	m_adaptExposureCs;
+	std::shared_ptr<ComputeKernel>	m_debugDrawHistogramCs;
 
 	// Graphics shaders
 	std::shared_ptr<GraphicsPSO>	m_copyPSO;

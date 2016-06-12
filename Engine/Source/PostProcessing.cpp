@@ -104,6 +104,10 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 	m_adaptExposureCs->SetComputeShaderPath("Engine", "AdaptExposureCS.cso");
 	waitTask = waitTask && m_adaptExposureCs->loadTask;
 
+	m_debugDrawHistogramCs = make_shared<ComputeKernel>();
+	m_debugDrawHistogramCs->SetComputeShaderPath("Engine", "DebugDrawHistogramCS.cso");
+	waitTask = waitTask && m_debugDrawHistogramCs->loadTask;
+
 	if (m_copySceneColor)
 	{
 		m_copyPSO = make_shared<GraphicsPSO>();
@@ -224,6 +228,29 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 
 
 	commandList->PIXEndEvent();
+}
+
+
+void PostProcessing::DebugDrawHistogram(GraphicsCommandList* commandList)
+{
+	ComputeCommandList* computeCommandList = commandList->GetComputeCommandList();
+
+	computeCommandList->PIXBeginEvent("Debug Histogram");
+
+	computeCommandList->InsertUAVBarrier(*m_sceneColorBuffer);
+	computeCommandList->TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
+	computeCommandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+
+	m_debugDrawHistogramCs->GetResource("Histogram")->SetSRVImmediate(m_histogram);
+	m_debugDrawHistogramCs->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
+	m_debugDrawHistogramCs->GetResource("ColorBuffer")->SetUAVImmediate(m_sceneColorBuffer);
+
+	m_debugDrawHistogramCs->Dispatch(computeCommandList, 1, 32);
+
+	computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
+	m_debugDrawHistogramCs->UnbindUAVs(computeCommandList);
+
+	computeCommandList->PIXEndEvent();
 }
 
 

@@ -45,6 +45,7 @@ __itt_string_handle* itt_ssao = nullptr;
 __itt_string_handle* itt_opaque_pass = nullptr;
 __itt_string_handle* itt_postprocessing = nullptr;
 __itt_string_handle* itt_shadows = nullptr;
+__itt_string_handle* itt_debug_histogram = nullptr;
 #endif
 
 
@@ -70,6 +71,7 @@ void SponzaApplication::OnInit()
 	itt_opaque_pass = __itt_string_handle_create("Opaque pass");
 	itt_postprocessing = __itt_string_handle_create("Postprocessing");
 	itt_shadows = __itt_string_handle_create("Shadows");
+	itt_debug_histogram = __itt_string_handle_create("Debug histogram");
 #endif
 
 	CreateResources();
@@ -383,6 +385,21 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	};
 	opaqueTask->Continue(postTask);
 
+	auto debugHistogramTask = make_shared<RenderTask>();
+	debugHistogramTask->SetName("Debug histogram");
+	debugHistogramTask->Render = [this]
+	{
+		PROFILE_BEGIN(itt_debug_histogram);
+
+		auto commandList = GraphicsCommandList::Begin();
+
+		m_postProcessing->DebugDrawHistogram(commandList);
+
+		commandList->CloseAndExecute();
+
+		PROFILE_END();
+	};
+	postTask->Continue(debugHistogramTask);
 
 	rootTask->Present(m_colorTarget);
 

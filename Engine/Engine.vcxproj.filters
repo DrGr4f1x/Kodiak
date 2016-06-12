@@ -52,6 +52,9 @@
     <Filter Include="Shaders\Common\Present">
       <UniqueIdentifier>{ce44a8bd-b6ab-4406-9ac7-cb6d6c7880e4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Rendering\Techniques\FXAA">
+      <UniqueIdentifier>{c01e8367-c6ea-48d1-801d-0c417605ad30}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -410,6 +413,9 @@
     <ClInclude Include="Source\ShadowBuffer12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="Source\FXAA.h">
+      <Filter>Rendering\Techniques\FXAA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -639,6 +645,9 @@
     <ClCompile Include="Source\ShadowBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Source\FXAA.cpp">
+      <Filter>Rendering\Techniques\FXAA</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
@@ -718,6 +727,9 @@
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\ConvertLDRToDisplayPS.hlsl">
       <Filter>Shaders\Common\Present</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugDrawHistogramCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
