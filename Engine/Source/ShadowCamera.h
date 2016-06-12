@@ -15,11 +15,16 @@
 namespace Kodiak
 {
 
-class ShadowCamera : public BaseCamera
+struct ShadowCameraProxy;
+
+class ShadowCamera : public BaseCamera, public std::enable_shared_from_this<ShadowCamera>
 {
 public:
 
-	ShadowCamera() {}
+	ShadowCamera() 
+	{
+		m_proxy = std::make_shared<ShadowCameraProxy>();
+	}
 
 	void UpdateMatrix(
 		Math::Vector3 LightDirection,		// Direction parallel to light, in direction of travel
@@ -33,9 +38,19 @@ public:
 	// Used to transform world space to texture space for shadow sampling
 	const Math::Matrix4& GetShadowMatrix() const { return m_ShadowMatrix; }
 
+	ShadowCameraProxy* GetProxy() { return m_proxy.get(); }
+	
 private:
-
 	Math::Matrix4 m_ShadowMatrix;
+	std::shared_ptr<ShadowCameraProxy> m_proxy;
+};
+
+struct ShadowCameraProxy
+{
+	void CopyFromShadowCamera(ShadowCamera* camera);
+
+	BaseCameraProxy		Base;
+	Math::Matrix4		ShadowMatrix;
 };
 
 } // namespace Kodiak

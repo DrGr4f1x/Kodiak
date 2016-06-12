@@ -12,6 +12,7 @@
 
 #include "ShadowCamera.h"
 
+#include "Renderer.h"
 
 using namespace Kodiak;
 using namespace Math;
@@ -46,4 +47,18 @@ void ShadowCamera::UpdateMatrix(
 
 	// Transform from clip space to texture space
 	m_ShadowMatrix = Matrix4(AffineTransform(Matrix3::MakeScale(0.5f, -0.5f, 1.0f), Vector3(0.5f, 0.5f, 0.0f))) * m_viewProjMatrix;
+
+	auto thisCamera = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisCamera](RenderTaskEnvironment& rte)
+	{
+		auto proxy = thisCamera->GetProxy();
+		proxy->CopyFromShadowCamera(thisCamera.get());
+	});
+}
+
+
+void ShadowCameraProxy::CopyFromShadowCamera(ShadowCamera* camera)
+{
+	Base.CopyFromBaseCamera(camera);
+	ShadowMatrix = camera->GetShadowMatrix();
 }

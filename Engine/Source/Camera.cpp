@@ -56,7 +56,17 @@ void BaseCamera::Update()
 }
 
 
-void Camera::UpdateProjMatrix(void)
+void BaseCameraProxy::CopyFromBaseCamera(BaseCamera* camera)
+{
+	ViewMatrix			= camera->GetViewMatrix();
+	ProjMatrix			= camera->GetProjMatrix();
+	ViewProjMatrix		= camera->GetViewProjMatrix();
+	ReprojectMatrix		= camera->GetReprojectionMatrix();
+	Position			= camera->GetPosition();
+}
+
+
+void Camera::UpdateProjMatrix()
 {
 	float Y = 1.0f / std::tanf(m_verticalFOV * 0.5f);
 	float X = Y * m_aspectRatio;
@@ -84,4 +94,28 @@ void Camera::UpdateProjMatrix(void)
 		Vector4(0.0f, 0.0f, Q1, -1.0f),
 		Vector4(0.0f, 0.0f, Q2, 0.0f)
 	));
+}
+
+
+void Camera::Update()
+{
+	BaseCamera::Update();
+
+	auto thisCamera = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisCamera](RenderTaskEnvironment& rte)
+	{
+		auto proxy = thisCamera->GetProxy();
+		proxy->CopyFromCamera(thisCamera.get());
+	});
+}
+
+
+void CameraProxy::CopyFromCamera(Camera* camera)
+{
+	Base.CopyFromBaseCamera(camera);
+
+	VerticalFOV		= camera->GetFOV();
+	AspectRatio		= camera->GetAspectRatio();
+	NearClip		= camera->GetNearClip();
+	FarClip			= camera->GetFarClip();
 }

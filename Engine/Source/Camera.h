@@ -15,11 +15,12 @@ namespace Kodiak
 class BaseCamera
 {
 public:
+	virtual ~BaseCamera() {}
 
 	// Call this function once per frame and after you've changed any state.  This
 	// regenerates all matrices.  Calling it more or less than once per frame will break
 	// temporal effects and cause unpredictable results.
-	void Update();
+	virtual void Update();
 
 	// Public functions for controlling where the camera is and its orientation
 	void SetEyeAtUp(Math::Vector3 eye, Math::Vector3 at, Math::Vector3 up);
@@ -84,11 +85,31 @@ protected:
 };
 
 
-class Camera : public BaseCamera
+struct BaseCameraProxy
+{
+	void CopyFromBaseCamera(BaseCamera* camera);
+
+	Math::Matrix4	ViewMatrix;
+	Math::Matrix4	ProjMatrix;
+	Math::Matrix4	ViewProjMatrix;
+	Math::Matrix4	ReprojectMatrix;
+	Math::Vector3	Position;
+
+	// TODO: make a frustum class
+#if 0
+	Math::Frustum				FrustumVS;
+	Math::Frustum				FrustumWS;
+#endif
+};
+
+
+struct CameraProxy;
+
+class Camera : public BaseCamera, public std::enable_shared_from_this<Camera>
 {
 public:
 	Camera();
-
+	
 	// Controls the view-to-projection matrix
 	void SetPerspectiveMatrix(float verticalFovRadians, float aspectHeightOverWidth, float nearZClip, float farZClip);
 	void SetFOV(float verticalFovInRadians) { m_verticalFOV = verticalFovInRadians; UpdateProjMatrix(); }
@@ -97,9 +118,13 @@ public:
 	void ReverseZ(bool enable) { m_reverseZ = enable; UpdateProjMatrix(); }
 
 	float GetFOV() const { return m_verticalFOV; }
+	float GetAspectRatio() const { return m_aspectRatio; }
 	float GetNearClip() const { return m_nearClip; }
 	float GetFarClip() const { return m_farClip; }
 	float GetClearDepth() const { return m_reverseZ ? 0.0f : 1.0f; }
+
+	void Update() override;
+	CameraProxy* GetProxy() { return m_proxy.get(); }
 
 private:
 
@@ -110,6 +135,21 @@ private:
 	float m_nearClip;
 	float m_farClip;
 	bool m_reverseZ;				// Invert near and far clip distances so that Z=0 is the far plane
+
+	std::shared_ptr<struct CameraProxy> m_proxy;
+};
+
+
+struct CameraProxy
+{
+	void CopyFromCamera(Camera* camera);
+
+	BaseCameraProxy		Base;
+
+	float				VerticalFOV;
+	float				AspectRatio;
+	float				NearClip;
+	float				FarClip;
 };
 
 
@@ -133,16 +173,20 @@ inline void BaseCamera::SetTransform(const Math::AffineTransform& xform)
 	SetPosition(xform.GetTranslation());
 }
 
+
 inline void BaseCamera::SetRotation(Math::Quaternion basisRotation)
 {
 	m_cameraToWorld.SetRotation(Normalize(basisRotation));
 	m_basis = Math::Matrix3(m_cameraToWorld.GetRotation());
 }
 
+
 inline Camera::Camera() : m_reverseZ(true)
 {
+	m_proxy = std::make_shared<CameraProxy>();
 	SetPerspectiveMatrix(DirectX::XM_PIDIV4, 9.0f / 16.0f, 1.0f, 1000.0f);
 }
+
 
 inline void Camera::SetPerspectiveMatrix(float verticalFovRadians, float aspectHeightOverWidth, float nearZClip, float farZClip)
 {
@@ -153,5 +197,6 @@ inline void Camera::SetPerspectiveMatrix(float verticalFovRadians, float aspectH
 
 	UpdateProjMatrix();
 }
+
 
 } // namespace Kodiak

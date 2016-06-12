@@ -67,10 +67,14 @@ void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 void Scene::Update(GraphicsCommandList* commandList)
 {
 	PROFILE_BEGIN(itt_scene_update);
+
 	// Update per-view constants
-	m_perViewConstants.viewProjection = m_camera->GetViewProjMatrix();
-	m_perViewConstants.modelToShadow = m_shadowCamera->GetShadowMatrix();
-	m_perViewConstants.viewPosition = m_camera->GetPosition();
+	auto cameraProxy = m_camera->GetProxy();
+	auto shadowCameraProxy = m_shadowCamera->GetProxy();
+
+	m_perViewConstants.viewProjection = cameraProxy->Base.ViewProjMatrix;
+	m_perViewConstants.modelToShadow = shadowCameraProxy->ShadowMatrix;
+	m_perViewConstants.viewPosition = cameraProxy->Base.Position;
 
 	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
@@ -156,11 +160,14 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 }
 
 
-void Scene::RenderShadows(shared_ptr<RenderPass> renderPass, const Matrix4& viewProjectionMatrix, GraphicsCommandList* commandList)
+void Scene::RenderShadows(shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList)
 {
 	// Update per-view constants
-	m_perViewConstants.viewProjection = viewProjectionMatrix;
-	m_perViewConstants.viewPosition = m_camera->GetPosition();
+	auto cameraProxy = m_camera->GetProxy();
+	auto shadowCameraProxy = m_shadowCamera->GetProxy();
+
+	m_perViewConstants.viewProjection = shadowCameraProxy->Base.ViewProjMatrix;
+	m_perViewConstants.viewPosition = cameraProxy->Base.Position;
 
 	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));

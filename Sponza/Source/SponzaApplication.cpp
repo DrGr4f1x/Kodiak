@@ -332,7 +332,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 
 		m_shadowBuffer->BeginRendering(*commandList);
 
-		m_mainScene->RenderShadows(GetDefaultShadowPass(), m_shadowCamera->GetViewProjMatrix(), commandList);
+		m_mainScene->RenderShadows(GetDefaultShadowPass(), commandList);
 
 		m_shadowBuffer->EndRendering(*commandList);
 

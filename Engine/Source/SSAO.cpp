@@ -184,7 +184,8 @@ void SSAO::SetCamera(shared_ptr<Camera> camera)
 
 void SSAO::Render(GraphicsCommandList* commandList)
 {
-	const float zMagic = (m_camera->GetFarClip() - m_camera->GetNearClip()) / m_camera->GetNearClip();
+	auto cameraProxy = m_camera->GetProxy();
+	const float zMagic = (cameraProxy->FarClip - cameraProxy->NearClip) / cameraProxy->NearClip;
 	
 	if (!m_enabled)
 	{
@@ -289,7 +290,8 @@ void SSAO::Render(GraphicsCommandList* commandList)
 
 	// Analyze depth volumes
 	{
-		const auto& projMat = m_camera->GetProjMatrix();
+		auto cameraProxy = m_camera->GetProxy();
+		const auto& projMat = cameraProxy->Base.ProjMatrix;
 		const float fovTangent = 1.0f / (projMat.GetX().GetX());
 
 		computeCommandList->PIXBeginEvent("Analyze depth volumes");

@@ -49,7 +49,7 @@ public:
 	void Render(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList);
 
 	// TODO: This is hacky
-	void RenderShadows(std::shared_ptr<RenderPass> renderPass, const Math::Matrix4& viewProjectionMatrix, GraphicsCommandList* commandList);
+	void RenderShadows(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList);
 
 	void SetCamera(std::shared_ptr<Camera> camera);
 
