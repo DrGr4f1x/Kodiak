@@ -502,14 +502,6 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     <ClInclude Include="Source\ShaderManager.h" />
     <ClInclude Include="Source\ShaderReflection.h" />
     <ClInclude Include="Source\ShadowBuffer.h" />
-    <ClInclude Include="Source\ShadowBuffer11.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Source\ShadowBuffer12.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="Source\ShadowCamera.h" />
     <ClInclude Include="Source\SSAO.h" />
     <ClInclude Include="Source\Stdafx.h" />
@@ -657,14 +649,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\SM5.1\*.*" "$(ProjectDir)..\Sponza\
     </ClCompile>
     <ClCompile Include="Source\ShaderManager.cpp" />
     <ClCompile Include="Source\ShaderReflection.cpp" />
-    <ClCompile Include="Source\ShadowBuffer11.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Source\ShadowBuffer12.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="Source\ShadowBuffer.cpp" />
     <ClCompile Include="Source\ShadowCamera.cpp" />
     <ClCompile Include="Source\SSAO.cpp" />
     <ClCompile Include="Source\Stdafx.cpp">

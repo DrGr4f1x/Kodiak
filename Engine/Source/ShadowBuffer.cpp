@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "ShadowBuffer11.h"
+#include "ShadowBuffer.h"
 
 #include "CommandList.h"
 #include "Format.h"

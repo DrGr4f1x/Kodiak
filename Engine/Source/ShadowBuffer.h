@@ -4,17 +4,36 @@
 // IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
-// Author: David Elder
+// Adapted from ShadowBuffer.h in Microsoft's Miniengine sample
+// https://github.com/Microsoft/DirectX-Graphics-Samples
 //
 
 #pragma once
 
-#if defined(DX11)
-#include "ShadowBuffer11.h"
-#elif defined(DX12)
-#include "ShadowBuffer12.h"
-#elif defined(VK)
-#include "ShadowBufferVk.h"
-#else
-#error No graphics API defined!
-#endif
+#include "DepthBuffer.h"
+#include "Rectangle.h"
+#include "Viewport.h"
+
+namespace Kodiak
+{
+
+class GraphicsCommandList;
+
+class ShadowBuffer : public DepthBuffer
+{
+public:
+	ShadowBuffer() {}
+
+	void Create(const std::string& name, uint32_t width, uint32_t height);
+
+	ShaderResourceView GetSRV() { return GetDepthSRV(); }
+
+	void BeginRendering(GraphicsCommandList& context);
+	void EndRendering(GraphicsCommandList& context);
+
+private:
+	Viewport m_viewport;
+	Rectangle m_scissor;
+};
+
+} // namespace Kodiak

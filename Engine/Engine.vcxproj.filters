@@ -401,12 +401,6 @@
     <ClInclude Include="Source\ShadowBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShadowBuffer11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ShadowBuffer12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Source\FXAA.h">
       <Filter>Rendering\Techniques\FXAA</Filter>
     </ClInclude>
@@ -636,14 +630,11 @@
     <ClCompile Include="Source\ShadowCamera.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ShadowBuffer11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ShadowBuffer12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Source\FXAA.cpp">
       <Filter>Rendering\Techniques\FXAA</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShadowBuffer.cpp">
+      <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
