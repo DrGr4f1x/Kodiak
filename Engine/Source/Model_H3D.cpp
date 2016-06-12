@@ -295,6 +295,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 
 	// Textures and materials
 	std::vector<std::shared_ptr<Material>> opaqueMaterials(header.materialCount);
+	std::vector<std::shared_ptr<Material>> shadowMaterials(header.materialCount);
 	std::vector<std::shared_ptr<Material>> depthMaterials(header.materialCount);
 	for (uint32_t i = 0; i < header.materialCount; ++i)
 	{
@@ -343,6 +344,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		opaqueMaterial->GetParameter("sunDirection")->SetValue(Vector3(0.336f, 0.924f, -0.183f));
 		opaqueMaterial->GetParameter("sunColor")->SetValue(Vector3(4.0f, 4.0f, 4.0f));
 		opaqueMaterial->GetParameter("ambientColor")->SetValue(Vector3(0.2f, 0.2f, 0.2f));
+		opaqueMaterial->GetParameter("shadowTexelSize")->SetValue(1.0f / 2048.0f);
 
 		// Setup depth material
 		auto depthMaterial = depthMaterials[i] = make_shared<Material>();
@@ -350,6 +352,13 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		depthMaterial->SetRenderPass(GetDefaultDepthPass());
 
 		depthMaterial->GetResource("texDiffuse")->SetSRV(diffuseTexture);
+
+		// Setup shadow material
+		auto shadowMaterial = shadowMaterials[i] = make_shared<Material>();
+		shadowMaterial->SetEffect(GetDefaultShadowEffect());
+		shadowMaterial->SetRenderPass(GetDefaultShadowPass());
+
+		shadowMaterial->GetResource("texDiffuse")->SetSRV(diffuseTexture);
 	}
 
 	// Create meshes
@@ -380,6 +389,17 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 			h3dMesh.indexDataByteOffset / sizeof(uint16_t),
 			static_cast<int32_t>(h3dMesh.vertexDataByteOffset / vertexStride)};
 		mesh->AddMeshPart(depthPart);
+
+		// Shadow mesh part
+		StaticMeshPart shadowPart{
+			vbuffer,
+			ibuffer,
+			shadowMaterials[h3dMesh.materialIndex],
+			PrimitiveTopology::TriangleList,
+			h3dMesh.indexCount,
+			h3dMesh.indexDataByteOffset / sizeof(uint16_t),
+			static_cast<int32_t>(h3dMesh.vertexDataByteOffset / vertexStride) };
+		mesh->AddMeshPart(shadowPart);
 
 		model->AddMesh(mesh);
 	}

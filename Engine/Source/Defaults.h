@@ -20,16 +20,20 @@ class RenderPass;
 // Default effects
 std::shared_ptr<Effect> GetDefaultBaseEffect();
 std::shared_ptr<Effect> GetDefaultDepthEffect();
+std::shared_ptr<Effect> GetDefaultShadowEffect();
 
 void SetDefaultBaseEffect(std::shared_ptr<Effect> effect);
 void SetDefaultDepthEffect(std::shared_ptr<Effect> effect);
+void SetDefaultShadowEffect(std::shared_ptr<Effect> effect);
 
 
 // Default render passes
 std::shared_ptr<RenderPass> GetDefaultBasePass();
 std::shared_ptr<RenderPass> GetDefaultDepthPass();
+std::shared_ptr<RenderPass> GetDefaultShadowPass();
 
 void SetDefaultBasePass(std::shared_ptr<RenderPass> pass);
 void SetDefaultDepthPass(std::shared_ptr<RenderPass> pass);
+void SetDefaultShadowPass(std::shared_ptr<RenderPass> pass);
 
 } // namespace Kodiak

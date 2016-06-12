@@ -3,8 +3,10 @@ Texture2D<float3> texSpecular : register(t1);
 Texture2D<float3> texNormal : register(t2);
 
 Texture2D<float> texSSAO : register(t3);
+Texture2D<float> texShadow : register(t4);
 
 SamplerState AnisotropicWrap : register(s0);
+SamplerComparisonState ShadowSampler : register(s1);
 
 cbuffer PerMaterialData : register(b2)
 {
@@ -21,7 +23,7 @@ struct PixelShaderInput
 	float4 position : SV_Position;
 	float2 texcoord0 : texcoord0;
 	float3 viewDir : texcoord1;
-	//float3 shadowCoord : texcoord2;
+	float3 shadowCoord : texcoord2;
 	float3 normal : normal;
 	float3 tangent : tangent;
 	float3 bitangent : bitangent;
@@ -47,35 +49,29 @@ float3 ApplyAmbientLight(
 }
 
 
-//float GetShadow(float3 ShadowCoord)
-//{
-//#ifdef SINGLE_SAMPLE
-//	float result = ShadowMap.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy, ShadowCoord.z);
-//#else
-//	const float Dilation = 2.0;
-//	float d1 = Dilation * ShadowTexelSize * 0.125;
-//	float d2 = Dilation * ShadowTexelSize * 0.875;
-//	float d3 = Dilation * ShadowTexelSize * 0.625;
-//	float d4 = Dilation * ShadowTexelSize * 0.375;
-//	float result = (
-//		2.0 * texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy, ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(-d2, d1), ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(-d1, -d2), ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(d2, -d1), ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(d1, d2), ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(-d4, d3), ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(-d3, -d4), ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(d4, -d3), ShadowCoord.z) +
-//		texShadow.SampleCmpLevelZero(shadowSampler, ShadowCoord.xy + float2(d3, d4), ShadowCoord.z)
-//		) / 10.0;
-//#endif
-//	return result * result;
-//}
-
-
-float GetShadow(float3 shadowCoord) 
-{ 
-	return 1.0f; 
+float GetShadow(float3 ShadowCoord)
+{
+#ifdef SINGLE_SAMPLE
+	float result = ShadowMap.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy, ShadowCoord.z);
+#else
+	const float Dilation = 2.0;
+	float d1 = Dilation * shadowTexelSize * 0.125;
+	float d2 = Dilation * shadowTexelSize * 0.875;
+	float d3 = Dilation * shadowTexelSize * 0.625;
+	float d4 = Dilation * shadowTexelSize * 0.375;
+	float result = (
+		2.0 * texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy, ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(-d2, d1), ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(-d1, -d2), ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(d2, -d1), ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(d1, d2), ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(-d4, d3), ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(-d3, -d4), ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(d4, -d3), ShadowCoord.z) +
+		texShadow.SampleCmpLevelZero(ShadowSampler, ShadowCoord.xy + float2(d3, d4), ShadowCoord.z)
+		) / 10.0;
+#endif
+	return result * result;
 }
 
 
@@ -135,8 +131,6 @@ float3 main(PixelShaderInput input) : SV_Target0
 
 	float3 ambientContribution = ApplyAmbientLight(diffuseAlbedo, ao, ambientColor);
 
-	//float3 sunlightContribution = float3(0.0f, 0.0f, 0.0f);
-
 	float3 sunlightContribution = ApplyDirectionalLight(
 		diffuseAlbedo, 
 		specularAlbedo, 
@@ -146,7 +140,7 @@ float3 main(PixelShaderInput input) : SV_Target0
 		viewDir, 
 		sunDirection,
 		sunColor,
-		float3(0.0f, 0.0f, 0.0f) /*input.shadowCoord*/);
+		input.shadowCoord);
 
 	return ambientContribution + sunlightContribution;
 }

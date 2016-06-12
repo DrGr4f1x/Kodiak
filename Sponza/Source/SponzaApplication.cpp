@@ -32,7 +32,10 @@
 #include "Engine\Source\RenderTask.h"
 #include "Engine\Source\SSAO.h"
 #include "Engine\Source\Scene.h"
+#include "Engine\Source\ShadowBuffer.h"
+#include "Engine\Source\ShadowCamera.h"
 #include "Engine\Source\StepTimer.h"
+
 
 #if defined(PROFILING) && (PROFILING == 1)
 #include "IntelITT\include\ittnotify.h"
@@ -41,6 +44,7 @@ __itt_string_handle* itt_depth_prepass = nullptr;
 __itt_string_handle* itt_ssao = nullptr;
 __itt_string_handle* itt_opaque_pass = nullptr;
 __itt_string_handle* itt_postprocessing = nullptr;
+__itt_string_handle* itt_shadows = nullptr;
 #endif
 
 
@@ -65,6 +69,7 @@ void SponzaApplication::OnInit()
 	itt_ssao = __itt_string_handle_create("SSAO");
 	itt_opaque_pass = __itt_string_handle_create("Opaque pass");
 	itt_postprocessing = __itt_string_handle_create("Postprocessing");
+	itt_shadows = __itt_string_handle_create("Shadows");
 #endif
 
 	CreateResources();
@@ -84,6 +89,12 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 	}
 
 	m_cameraController->Update(static_cast<float>(timer->GetElapsedSeconds()));
+	const Vector3 sunDirection = Vector3(0.336f, 0.924f, -0.183f);
+	const uint32_t shadowDimX = 5000;
+	const uint32_t shadowDimY = 3000;
+	const uint32_t shadowDimZ = 3000;
+	m_shadowCamera->UpdateMatrix(-sunDirection, Vector3(0.0f, -500.0f, 0.0f), Vector3(shadowDimX, shadowDimY, shadowDimZ),
+		m_shadowBuffer->GetWidth(), m_shadowBuffer->GetHeight(), 16);
 }
 
 
@@ -133,6 +144,9 @@ void SponzaApplication::CreateResources()
 	m_postProcessing->SceneColorBuffer = m_colorTarget;
 	m_postProcessing->EnableAdaptation = true;
 	//m_postProcessing->EnableBloom = false;
+
+	m_shadowBuffer = make_shared<ShadowBuffer>();
+	m_shadowBuffer->Create("Shadow Map", 2048, 2048);
 }
 
 
@@ -146,6 +160,11 @@ void SponzaApplication::CreateEffects()
 	auto depthPass = make_shared<RenderPass>("Depth");
 	depthPass->SetDepthTargetFormat(DepthFormat::D32);
 	SetDefaultDepthPass(depthPass);
+
+	auto shadowPass = make_shared<RenderPass>("Shadow");
+	shadowPass->SetDepthTargetFormat(DepthFormat::D16);
+	SetDefaultShadowPass(shadowPass);
+
 
 	// Default effects
 	auto baseEffect = make_shared<Effect>("Base");
@@ -169,6 +188,17 @@ void SponzaApplication::CreateEffects()
 	depthEffect->SetRenderTargetFormats(0, nullptr, DepthFormat::D32);
 	depthEffect->Finalize();
 	SetDefaultDepthEffect(depthEffect);
+
+	auto shadowEffect = make_shared<Effect>("Shadow");
+	shadowEffect->SetVertexShaderPath(ShaderPath("DepthVS.cso"));
+	shadowEffect->SetPixelShaderPath(ShaderPath("DepthPS.cso"));
+	shadowEffect->SetBlendState(CommonStates::Opaque());
+	shadowEffect->SetRasterizerState(CommonStates::Shadow());
+	shadowEffect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
+	shadowEffect->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
+	shadowEffect->SetRenderTargetFormats(0, nullptr, DepthFormat::D16);
+	shadowEffect->Finalize();
+	SetDefaultShadowEffect(shadowEffect);
 }
 
 
@@ -188,6 +218,7 @@ void SponzaApplication::CreateModel()
 		{
 			auto material = mesh->GetMaterial(j);
 			material->GetResource("texSSAO")->SetSRV(m_ssaoFullscreen);
+			material->GetResource("texShadow")->SetSRV(m_shadowBuffer);
 		}
 	}
 #endif
@@ -198,19 +229,27 @@ void SponzaApplication::SetupScene()
 {
 	// Setup scene camera
 	m_camera = make_shared<Camera>();
-	m_camera->SetPosition(Vector3(1099.0f, 652.0f, -39.0f));
-	m_camera->LookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(kYUnitVector));
-	m_camera->SetPerspective(45.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 1.0f, 10000.0f);
-	m_camera->SetReverseZ(m_reverseZ);
-
+	m_camera->SetEyeAtUp(Vector3(1099.0f, 652.0f, -39.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(kYUnitVector));
+	m_camera->SetPerspectiveMatrix(45.0f, static_cast<float>(m_height) / static_cast<float>(m_width), 1.0f, 10000.0f);
+	
 	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
 
 	m_ssao->SetCamera(m_camera);
+
+	m_shadowCamera = make_shared<ShadowCamera>();
+	const Vector3 sunDirection = Vector3(0.336f, 0.924f, -0.183f);
+	const uint32_t shadowDimX = 5000;
+	const uint32_t shadowDimY = 3000;
+	const uint32_t shadowDimZ = 3000;
+	m_shadowCamera->UpdateMatrix(-sunDirection, Vector3(0.0f, -500.0f, 0.0f), Vector3(shadowDimX, shadowDimY, shadowDimZ),
+		m_shadowBuffer->GetWidth(), m_shadowBuffer->GetHeight(), 16);
 
 	m_mainScene = make_shared<Scene>();
 
 	// Add camera and model to scene
 	m_mainScene->SetCamera(m_camera);
+	m_mainScene->SetShadowBuffer(m_shadowBuffer);
+	m_mainScene->SetShadowCamera(m_shadowCamera);
 #if DX11
 	m_mainScene->SsaoFullscreen = m_ssaoFullscreen;
 #endif
@@ -261,6 +300,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	};
 	rootTask->Continue(depthTask);
 
+
 	bool ssaoEnabled = true;
 
 	auto ssaoTask = make_shared<RenderTask>();
@@ -279,6 +319,30 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 		PROFILE_END();
 	};
 	depthTask->Continue(ssaoTask);
+
+
+	auto shadowTask = make_shared<RenderTask>();
+	shadowTask->SetName("Shadows");
+	shadowTask->Render = [this]
+	{
+		PROFILE_BEGIN(itt_shadows);
+
+		auto commandList = GraphicsCommandList::Begin();
+		commandList->PIXBeginEvent("Shadows");
+
+		m_shadowBuffer->BeginRendering(*commandList);
+
+		m_mainScene->RenderShadows(GetDefaultShadowPass(), m_shadowCamera->GetViewProjMatrix(), commandList);
+
+		m_shadowBuffer->EndRendering(*commandList);
+
+		commandList->PIXEndEvent();
+		commandList->CloseAndExecute();
+
+		PROFILE_END();
+	};
+	ssaoTask->Continue(shadowTask);
+
 
 	auto opaqueTask = make_shared<RenderTask>();
 	opaqueTask->SetName("Opaque pass");
@@ -300,7 +364,8 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 			PROFILE_END();
 		}
 	};
-	ssaoTask->Continue(opaqueTask);
+	shadowTask->Continue(opaqueTask);
+
 
 	auto postTask = make_shared<RenderTask>();
 	postTask->SetName("Postprocessing");
@@ -317,6 +382,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 		PROFILE_END();
 	};
 	opaqueTask->Continue(postTask);
+
 
 	rootTask->Present(m_colorTarget);
 

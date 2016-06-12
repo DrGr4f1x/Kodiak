@@ -109,3 +109,12 @@ const RasterizerStateDesc& CommonStates::Wireframe()
 	static RasterizerStateDesc desc = RasterizerStateDesc(CullMode::None, FillMode::Wireframe);
 	return desc;
 }
+
+
+const RasterizerStateDesc& CommonStates::Shadow()
+{
+	static RasterizerStateDesc desc = RasterizerStateDesc(CullMode::Back, FillMode::Solid);
+	desc.slopeScaledDepthBias = -1.5f;
+	desc.depthBias = -100;
+	return desc;
+}

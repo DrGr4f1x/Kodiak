@@ -163,7 +163,7 @@ void BasicApplication::CreateResources()
 	m_colorTarget = CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float,
 		DirectX::Colors::CornflowerBlue);
 
-	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32);
+	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32, 0.0f);
 }
 
 
@@ -180,7 +180,7 @@ void BasicApplication::CreateMaterials()
 	effect->SetVertexShaderPath("Engine", "SimpleVertexShader.cso");
 	effect->SetPixelShaderPath("Engine", "SimplePixelShader.cso");
 	effect->SetBlendState(CommonStates::Opaque());
-	effect->SetDepthStencilState(CommonStates::DepthDefault());
+	effect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
 	effect->SetRasterizerState(CommonStates::CullClockwise());
 	effect->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
 	effect->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
@@ -248,10 +248,9 @@ void BasicApplication::SetupScene()
 {
 	// Setup scene camera
 	m_camera = make_shared<Camera>();
-	m_camera->SetPosition(Vector3(0.0f, 0.7f, 1.5f));
-	m_camera->LookAt(Vector3(0.0f, -0.1f, 0.0f), Vector3(kYUnitVector));
-	m_camera->SetPerspective(70.0f, static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 100.0f);
-
+	m_camera->SetEyeAtUp(Vector3(0.0f, 0.7f, 1.5f), Vector3(0.0f, -0.1f, 0.0f), Vector3(kYUnitVector));
+	m_camera->SetPerspectiveMatrix(70.0f, static_cast<float>(m_height) / static_cast<float>(m_width), 0.01f, 100.0f);
+	
 	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
 	m_cameraController->SetMoveSpeed(10.0f);
 	m_cameraController->SetStrafeSpeed(10.0f);
@@ -280,6 +279,8 @@ shared_ptr<RootRenderTask> BasicApplication::SetupFrame()
 
 		m_mainScene->Update(commandList);
 		m_mainScene->Render(GetDefaultBasePass(), commandList);
+
+		commandList->CloseAndExecute();
 	};
 	
 

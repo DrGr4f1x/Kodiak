@@ -398,6 +398,18 @@
     <ClInclude Include="Source\PostProcessing.h">
       <Filter>Rendering\Techniques\PostProcessing</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ShadowCamera.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShadowBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShadowBuffer11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShadowBuffer12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -617,6 +629,15 @@
     </ClCompile>
     <ClCompile Include="Source\RenderThread.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShadowCamera.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShadowBuffer11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShadowBuffer12.cpp">
+      <Filter>Rendering\DX12</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

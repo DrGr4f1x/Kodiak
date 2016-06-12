@@ -31,8 +31,8 @@ CameraController::CameraController(shared_ptr<Camera> camera, shared_ptr<InputSt
 	m_worldNorth = Normalize(Cross(m_worldUp, Vector3(kXUnitVector)));
 	m_worldEast = Cross(m_worldNorth, m_worldUp);
 
-	m_currentPitch = Sin(Dot(m_camera->GetForwardVector(), m_worldUp));
-	auto forward = Normalize(Cross(m_worldUp, m_camera->GetRightVector()));
+	m_currentPitch = Sin(Dot(m_camera->GetForwardVec(), m_worldUp));
+	auto forward = Normalize(Cross(m_worldUp, m_camera->GetRightVec()));
 
 	m_currentHeading = ATan2(-Dot(forward, m_worldEast), Dot(forward, m_worldNorth));
 }
@@ -100,15 +100,10 @@ void CameraController::Update(float deltaTime)
 		m_currentHeading += DirectX::XM_2PI;
 	}
 
-	Matrix3 temp = Matrix3(m_worldEast, m_worldUp, -m_worldNorth);
-	Matrix3 rotY = Matrix3::MakeYRotation(m_currentHeading);
-	Matrix3 rotX = Matrix3::MakeXRotation(m_currentPitch);
-
-	Matrix3 orientationMatrix = temp * rotY * rotX;
-	Vector3 position = orientationMatrix * Vector3(strafe, ascent, -forward) + m_camera->GetPosition();
-	Quaternion orientation(orientationMatrix);
-
-	m_camera->SetPositionAndOrientation(position, orientation);
+	Matrix3 orientation = Matrix3(m_worldEast, m_worldUp, -m_worldNorth) * Matrix3::MakeYRotation(m_currentHeading) * Matrix3::MakeXRotation(m_currentPitch);
+	Vector3 position = orientation * Vector3(strafe, ascent, -forward) + m_camera->GetPosition();
+	m_camera->SetTransform(AffineTransform(orientation, position));
+	m_camera->Update();
 }
 
 

@@ -14,13 +14,13 @@
 
 #include "DeviceManager12.h"
 #include "DXGIUtility.h"
-
+#include "Renderer.h"
 
 using namespace Kodiak;
 using namespace std;
 
 
-void DepthBuffer::Create(DeviceManager* deviceManager, const std::string& name, size_t width, size_t height, DepthFormat format)
+void DepthBuffer::Create(const std::string& name, size_t width, size_t height, DepthFormat format)
 {
 	D3D12_RESOURCE_DESC ResourceDesc = DescribeDepthTex2D(width, height, 1, format, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
@@ -29,11 +29,11 @@ void DepthBuffer::Create(DeviceManager* deviceManager, const std::string& name, 
 	ClearValue.DepthStencil.Depth = m_clearDepth;
 	ClearValue.DepthStencil.Stencil = m_clearStencil;
 	CreateTextureResource(name, ResourceDesc, ClearValue);
-	CreateDerivedViews(deviceManager);
+	CreateDerivedViews();
 }
 
 
-void DepthBuffer::CreateDerivedViews(DeviceManager* deviceManager)
+void DepthBuffer::CreateDerivedViews()
 {
 	ID3D12Resource* resource = m_resource.Get();
 
@@ -41,6 +41,8 @@ void DepthBuffer::CreateDerivedViews(DeviceManager* deviceManager)
 	dsvDesc.Format = DXGIUtility::GetDSVFormat(m_format);
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
+
+	auto deviceManager = Renderer::GetInstance().GetDeviceManager();
 
 	if (m_dsv.ptr == ~0ull)
 	{

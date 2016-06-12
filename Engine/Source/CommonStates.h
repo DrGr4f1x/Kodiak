@@ -38,6 +38,7 @@ public:
 	static const RasterizerStateDesc& CullClockwise();
 	static const RasterizerStateDesc& CullCounterClockwise();
 	static const RasterizerStateDesc& Wireframe();
+	static const RasterizerStateDesc& Shadow();
 };
 
 } // namespace Kodiak

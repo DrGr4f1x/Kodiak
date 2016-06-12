@@ -16,13 +16,14 @@ namespace Kodiak
 {
 
 // Forward declarations
-namespace RenderThread { class Camera; }
 class Camera;
 class ConstantBuffer;
 class ColorBuffer;
 class GraphicsCommandList;
 class GraphicsPSO;
 class RenderPass;
+class ShadowBuffer;
+class ShadowCamera;
 class StaticModel;
 #if defined(DX12)
 class RootSignature;
@@ -47,7 +48,14 @@ public:
 	void Update(GraphicsCommandList* commandList);
 	void Render(std::shared_ptr<RenderPass> renderPass, GraphicsCommandList* commandList);
 
+	// TODO: This is hacky
+	void RenderShadows(std::shared_ptr<RenderPass> renderPass, const Math::Matrix4& viewProjectionMatrix, GraphicsCommandList* commandList);
+
 	void SetCamera(std::shared_ptr<Camera> camera);
+
+	// TODO: This is hacky
+	void SetShadowBuffer(std::shared_ptr<ShadowBuffer> buffer);
+	void SetShadowCamera(std::shared_ptr<ShadowCamera> camera);
 
 	// To be called from the render thread only
 	void SetCameraDeferred(std::shared_ptr<Camera> camera);
@@ -75,19 +83,25 @@ private:
 	// TODO allocation/alignment problem with this struct
 	struct PerViewConstants
 	{
-		Math::Matrix4 view;
-		Math::Matrix4 projection;
+		Math::Matrix4 viewProjection;
+		Math::Matrix4 modelToShadow;
 		Math::Vector3 viewPosition;
 	} m_perViewConstants;
 
 	// Scene camera
-	std::shared_ptr<RenderThread::Camera> m_camera;
+	// TODO: this is not thread-safe!
+	std::shared_ptr<Camera> m_camera;
 
 	// HACK
 #if DX11
 	Microsoft::WRL::ComPtr<ID3D11SamplerState>	m_samplerState;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>  m_shadowSamplerState;
 	std::shared_ptr<ColorBuffer>				m_ssaoFullscreen;
 #endif
+
+	// TODO: hacks
+	std::shared_ptr<ShadowBuffer> m_shadowBuffer;
+	std::shared_ptr<ShadowCamera> m_shadowCamera;
 
 	// Maps from static model pointers into the m_staticModels list for faster adds/removes
 	std::map<std::shared_ptr<RenderThread::StaticModelData>, size_t>	m_staticModelMap;

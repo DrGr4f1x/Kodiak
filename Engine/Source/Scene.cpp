@@ -27,6 +27,8 @@
 #include "RenderPass.h"
 #include "Shader.h"
 #include "ShaderManager.h"
+#include "ShadowBuffer.h"
+#include "ShadowCamera.h"
 #include "VertexBuffer.h"
 
 #if defined(DX12)
@@ -66,8 +68,8 @@ void Scene::Update(GraphicsCommandList* commandList)
 {
 	PROFILE_BEGIN(itt_scene_update);
 	// Update per-view constants
-	m_perViewConstants.projection = m_camera->GetProjectionMatrix();
-	m_perViewConstants.view = m_camera->GetViewMatrix();
+	m_perViewConstants.viewProjection = m_camera->GetViewProjMatrix();
+	m_perViewConstants.modelToShadow = m_shadowCamera->GetShadowMatrix();
 	m_perViewConstants.viewPosition = m_camera->GetPosition();
 
 	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
@@ -124,7 +126,13 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 #elif defined(DX11)
 					commandList->SetVertexShaderConstants(0, *m_perViewConstantBuffer);
 					commandList->SetVertexShaderConstants(1, *mesh->perObjectConstants);
-					commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+
+					// TODO bad hack, figure out a different way to handle global textures for a render pass
+					if (m_ssaoFullscreen)
+					{
+						commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+					}
+					commandList->SetPixelShaderResource(4, m_shadowBuffer->GetSRV());
 #endif
 					
 					commandList->SetVertexBuffer(0, *meshPart.vertexBuffer);
@@ -141,6 +149,69 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList* comma
 
 #if DX11
 	commandList->SetPixelShaderResource(3, nullptr);
+	commandList->SetPixelShaderResource(4, nullptr);
+#endif
+
+	commandList->PIXEndEvent();
+}
+
+
+void Scene::RenderShadows(shared_ptr<RenderPass> renderPass, const Matrix4& viewProjectionMatrix, GraphicsCommandList* commandList)
+{
+	// Update per-view constants
+	m_perViewConstants.viewProjection = viewProjectionMatrix;
+	m_perViewConstants.viewPosition = m_camera->GetPosition();
+
+	auto perViewData = commandList->MapConstants(*m_perViewConstantBuffer);
+	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
+	commandList->UnmapConstants(*m_perViewConstantBuffer);
+
+	commandList->PIXBeginEvent("Bind sampler states");
+	BindSamplerStates(commandList);
+	commandList->PIXEndEvent();
+
+	commandList->PIXBeginEvent(renderPass->GetName());
+	// Visit models
+	for (auto& model : m_staticModels)
+	{
+		PROFILE_BEGIN(itt_draw_model);
+		// Visit meshes
+		for (const auto& mesh : model->meshes)
+		{
+			PROFILE_BEGIN(itt_draw_mesh);
+			// Visit mesh parts
+			for (const auto& meshPart : mesh->meshParts)
+			{
+				if (meshPart.material->renderPass == renderPass && meshPart.material->IsReady())
+				{
+					meshPart.material->Commit(commandList);
+
+					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
+#if defined(DX12)
+					commandList->SetConstantBuffer(0, *m_perViewConstantBuffer);
+					commandList->SetConstantBuffer(1, *mesh->perObjectConstants);
+#elif defined(DX11)
+					commandList->SetVertexShaderConstants(0, *m_perViewConstantBuffer);
+					commandList->SetVertexShaderConstants(1, *mesh->perObjectConstants);
+					commandList->SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+#endif
+
+					commandList->SetVertexBuffer(0, *meshPart.vertexBuffer);
+					commandList->SetIndexBuffer(*meshPart.indexBuffer);
+					commandList->SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);
+
+					commandList->DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
+				}
+			}
+			PROFILE_END();
+		}
+		PROFILE_END();
+	}
+
+	// TODO hack
+#if DX11
+	commandList->SetPixelShaderResource(3, nullptr);
+	commandList->SetPixelShaderResource(4, nullptr);
 #endif
 
 	commandList->PIXEndEvent();
@@ -151,6 +222,18 @@ void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
 {
 	auto thisScene = shared_from_this();
 	Renderer::GetInstance().EnqueueTask([thisScene, camera](RenderTaskEnvironment& rte) { thisScene->SetCameraDeferred(camera); });
+}
+
+
+void Scene::SetShadowBuffer(shared_ptr<ShadowBuffer> buffer)
+{
+	m_shadowBuffer = buffer;
+}
+
+
+void Scene::SetShadowCamera(shared_ptr<ShadowCamera> camera)
+{
+	m_shadowCamera = camera;
 }
 
 
@@ -168,13 +251,22 @@ void Scene::Initialize()
 	samplerDesc.MaxAnisotropy = 8;
 	
 	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf()));
+
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_GREATER_EQUAL;
+	samplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+
+	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_shadowSamplerState.GetAddressOf()));
 #endif
 }
 
 
 void Scene::SetCameraDeferred(shared_ptr<Kodiak::Camera> camera)
 {
-	m_camera = camera->GetRenderThreadData();
+	// TODO: Not threadsafe!!!
+	m_camera = camera;
 }
 
 
@@ -229,5 +321,6 @@ void Scene::BindSamplerStates(GraphicsCommandList* commandList)
 {
 #if defined(DX11)
 	commandList->SetPixelShaderSampler(0, m_samplerState.Get());
+	commandList->SetPixelShaderSampler(1, m_shadowSamplerState.Get());
 #endif
 }

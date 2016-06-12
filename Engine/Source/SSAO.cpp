@@ -178,13 +178,13 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 
 void SSAO::SetCamera(shared_ptr<Camera> camera)
 {
-	m_camera = camera->GetRenderThreadData();
+	m_camera = camera;
 }
 
 
 void SSAO::Render(GraphicsCommandList* commandList)
 {
-	const float zMagic = (m_camera->GetZFar() - m_camera->GetZNear()) / m_camera->GetZNear();
+	const float zMagic = (m_camera->GetFarClip() - m_camera->GetNearClip()) / m_camera->GetNearClip();
 	
 	if (!m_enabled)
 	{
@@ -289,7 +289,7 @@ void SSAO::Render(GraphicsCommandList* commandList)
 
 	// Analyze depth volumes
 	{
-		const auto& projMat = m_camera->GetProjectionMatrix();
+		const auto& projMat = m_camera->GetProjMatrix();
 		const float fovTangent = 1.0f / (projMat.GetX().GetX());
 
 		computeCommandList->PIXBeginEvent("Analyze depth volumes");
