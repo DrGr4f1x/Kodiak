@@ -12,69 +12,45 @@
 #if defined(DX12)
 
 // Raw types
-using ShaderResourceView = D3D12_CPU_DESCRIPTOR_HANDLE;
-using DepthStencilView = D3D12_CPU_DESCRIPTOR_HANDLE;
-using UnorderedAccessView = D3D12_CPU_DESCRIPTOR_HANDLE;
+using ShaderResourceView		= D3D12_CPU_DESCRIPTOR_HANDLE;
+using DepthStencilView			= D3D12_CPU_DESCRIPTOR_HANDLE;
+using UnorderedAccessView		= D3D12_CPU_DESCRIPTOR_HANDLE;
 
 // Ref-counted pointers
-using ShaderResourceViewPtr = D3D12_CPU_DESCRIPTOR_HANDLE;
-using DepthStencilViewPtr = D3D12_CPU_DESCRIPTOR_HANDLE;
-using UnorderedAccessViewPtr = D3D12_CPU_DESCRIPTOR_HANDLE;
+using ShaderResourceViewPtr		= D3D12_CPU_DESCRIPTOR_HANDLE;
+using DepthStencilViewPtr		= D3D12_CPU_DESCRIPTOR_HANDLE;
+using UnorderedAccessViewPtr	= D3D12_CPU_DESCRIPTOR_HANDLE;
 
 // Conversion functions
-inline ShaderResourceView GetRawSRV(ShaderResourceViewPtr srv)
-{
-	return srv;
-}
+inline ShaderResourceView GetRawSRV(ShaderResourceViewPtr srv) { return srv; }
+inline DepthStencilView GetRawDSV(DepthStencilViewPtr dsv) { return dsv; }
+inline UnorderedAccessView GetRawUAV(UnorderedAccessViewPtr uav) { return uav; }
 
-inline DepthStencilView GetRawDSV(DepthStencilViewPtr dsv)
-{
-	return dsv;
-}
-
-inline UnorderedAccessView GetRawUAV(UnorderedAccessViewPtr uav)
-{
-	return uav;
-}
+// Initialization functions
+inline void InitializeSRV(ShaderResourceViewPtr& srv) { srv.ptr = ~0ull; }
+inline void InitializeDSV(DepthStencilViewPtr& dsv) { dsv.ptr = ~0ull; }
+inline void InitializeUAV(UnorderedAccessViewPtr& uav) { uav.ptr = ~0ull; }
 
 #elif defined(DX11)
 
 // Raw types
-struct ShaderResourceView
-{
-	ID3D11ShaderResourceView* Ptr;
-};
-
-struct DepthStencilView
-{
-	ID3D11DepthStencilView* Ptr;
-};
-
-struct UnorderedAccessView
-{
-	ID3D11UnorderedAccessView* Ptr;
-};
+using ShaderResourceView		= ID3D11ShaderResourceView*;
+using DepthStencilView			= ID3D11DepthStencilView*;
+using UnorderedAccessView		= ID3D11UnorderedAccessView*;
 
 // Ref-counted types
-using ShaderResourceViewPtr = Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
-using DepthStencilViewPtr = Microsoft::WRL::ComPtr<ID3D11DepthStencilView>;
-using UnorderedAccessViewPtr = Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
+using ShaderResourceViewPtr		= Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>;
+using DepthStencilViewPtr		= Microsoft::WRL::ComPtr<ID3D11DepthStencilView>;
+using UnorderedAccessViewPtr	= Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>;
 
 // Conversion functions
-inline ShaderResourceView GetRawSRV(ShaderResourceViewPtr srv)
-{
-	return ShaderResourceView{ srv.Get() };
-}
+inline ShaderResourceView GetRawSRV(ShaderResourceViewPtr srv) { return srv.Get(); }
+inline DepthStencilView GetRawDSV(DepthStencilViewPtr dsv) { return dsv.Get(); }
+inline UnorderedAccessView GetRawUAV(UnorderedAccessViewPtr uav) { return uav.Get(); }
 
-inline DepthStencilView GetRawDSV(DepthStencilViewPtr dsv)
-{
-	return DepthStencilView{ dsv.Get() };
-}
-
-inline UnorderedAccessView GetRawUAV(UnorderedAccessViewPtr uav)
-{
-	return UnorderedAccessView{ uav.Get() };
-}
+inline void InitializeSRV(ShaderResourceViewPtr& srv) { srv.Reset(); }
+inline void InitializeDSV(DepthStencilViewPtr& dsv) { dsv.Reset(); }
+inline void InitializeUAV(UnorderedAccessViewPtr& uav) { uav.Reset(); }
 
 #elif defined(VK)
 #

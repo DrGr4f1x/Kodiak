@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "DepthBuffer12.h"
+#include "DepthBuffer.h"
 #include "Rectangle.h"
 #include "Viewport.h"
 
@@ -26,7 +26,7 @@ public:
 
 	void Create(const std::string& name, uint32_t width, uint32_t height);
 	
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const { return GetDepthSRV(); }
+	ShaderResourceView GetSRV() { return GetDepthSRV(); }
 
 	void BeginRendering(GraphicsCommandList& context);
 	void EndRendering(GraphicsCommandList& context);

@@ -13,7 +13,7 @@
 
 #include "ColorBuffer12.h"
 #include "ComputeKernel12.h"
-#include "DepthBuffer12.h"
+#include "DepthBuffer.h"
 #include "RenderEnums.h"
 #include "Renderer.h"
 #include "RenderThread.h"

@@ -154,16 +154,10 @@
     <ClInclude Include="Source\Format.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DepthBuffer11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RootSignature12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\DynamicDescriptorHeap12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DepthBuffer12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\DXGIUtility.h">

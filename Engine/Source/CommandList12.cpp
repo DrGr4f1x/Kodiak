@@ -15,7 +15,7 @@
 #include "ColorBuffer12.h"
 #include "CommandListManager12.h"
 #include "ConstantBuffer12.h"
-#include "DepthBuffer12.h"
+#include "DepthBuffer.h"
 #include "DeviceManager12.h"
 #include "GpuResource12.h"
 #include "IndexBuffer12.h"

@@ -13,7 +13,7 @@
 
 #include "ColorBuffer11.h"
 #include "ComputeKernel11.h"
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
 #include "GpuBuffer11.h"
 #include "RenderEnums.h"
 #include "Renderer.h"

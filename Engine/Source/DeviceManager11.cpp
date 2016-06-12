@@ -14,7 +14,7 @@
 #include "ColorBuffer11.h"
 #include "CommandList11.h"
 #include "CommandListManager11.h"
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
 #include "Format.h"
 #include "Profile.h"
 #include "RenderEnums11.h"

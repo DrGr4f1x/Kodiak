@@ -9,12 +9,45 @@
 
 #pragma once
 
-#if defined(DX12)
-#include "DepthBuffer12.h"
-#elif defined(DX11)
-#include "DepthBuffer11.h"
-#elif defined(VK)
-#include "DepthBufferVk.h"
-#else
-#error No graphics API defined!
-#endif
+#include "PixelBuffer.h"
+
+namespace Kodiak
+{
+
+// Forward declarations
+enum class DepthFormat;
+
+
+class DepthBuffer : public PixelBuffer
+{
+public:
+	DepthBuffer(float clearDepth = 0.0f, uint32_t clearStencil = 0);
+
+	void Create(const std::string& name, uint32_t width, uint32_t height, DepthFormat format);
+
+	DepthStencilView GetDSV() { return GetRawDSV(m_dsv); }
+	DepthStencilView GetDSVReadOnly() { return GetRawDSV(m_dsvReadOnly); }
+	DepthStencilView GetDSVReadOnlyDepth() { return GetRawDSV(m_dsvReadOnlyDepth); }
+	DepthStencilView GetDSVReadOnlyStencil() { return GetRawDSV(m_dsvReadOnlyStencil); }
+	ShaderResourceView GetDepthSRV() { return GetRawSRV(m_depthSRV); }
+	ShaderResourceView GetStencilSRV() { return GetRawSRV(m_stencilSRV); }
+
+	float GetClearDepth() const { return m_clearDepth; }
+	uint32_t GetClearStencil() const { return m_clearStencil; }
+
+private:
+	void CreateDerivedViews();
+
+private:
+	DepthStencilViewPtr m_dsv;
+	DepthStencilViewPtr m_dsvReadOnly;
+	DepthStencilViewPtr m_dsvReadOnlyDepth;
+	DepthStencilViewPtr m_dsvReadOnlyStencil;
+	ShaderResourceViewPtr m_depthSRV;
+	ShaderResourceViewPtr m_stencilSRV;
+
+	float		m_clearDepth{ 0.0f };
+	uint32_t	m_clearStencil{ 0 };
+};
+
+} // namespace Kodiak

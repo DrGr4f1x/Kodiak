@@ -12,7 +12,7 @@
 #include "MaterialResource11.h"
 
 #include "ColorBuffer11.h"
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
 #include "GpuBuffer11.h"
 #include "Material11.h"
 #include "RenderEnums.h"

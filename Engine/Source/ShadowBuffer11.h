@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
 #include "Rectangle.h"
 #include "Viewport.h"
 
@@ -26,7 +26,7 @@ public:
 
 	void Create(const std::string& name, uint32_t width, uint32_t height);
 	
-	ID3D11ShaderResourceView* GetSRV() { return GetDepthSRV(); }
+	ShaderResourceView GetSRV() { return GetDepthSRV(); }
 
 	void BeginRendering(GraphicsCommandList& context);
 	void EndRendering(GraphicsCommandList& context);

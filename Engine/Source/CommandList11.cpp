@@ -14,7 +14,7 @@
 #include "ColorBuffer11.h"
 #include "CommandListManager11.h"
 #include "ConstantBuffer11.h"
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
 #include "GpuBuffer11.h"
 #include "IndexBuffer11.h"
 #include "PipelineState11.h"
