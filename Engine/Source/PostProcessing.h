@@ -91,6 +91,7 @@ private:
 	std::shared_ptr<ComputeKernel>	m_adaptExposureCs;
 	std::shared_ptr<ComputeKernel>	m_debugDrawHistogramCs;
 	std::shared_ptr<ComputeKernel>	m_debugLuminanceHdrCs;
+	std::shared_ptr<ComputeKernel>	m_debugLuminanceLdrCs;
 	std::shared_ptr<ComputeKernel>	m_copyPostToSceneCs;
 
 	// Render targets and UAV buffers

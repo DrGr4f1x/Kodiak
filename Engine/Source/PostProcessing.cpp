@@ -90,13 +90,42 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 		waitTask = waitTask && m_upsampleAndBlurCs[i]->loadTask;
 	}
 
-	m_toneMapCs = make_shared<ComputeKernel>();
-	m_toneMapCs->SetComputeShaderPath("Engine\\ToneMap2CS");
-	waitTask = waitTask && m_toneMapCs->loadTask;
+	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+	{
+		m_toneMapCs = make_shared<ComputeKernel>();
+		m_toneMapCs->SetComputeShaderPath("Engine\\ToneMap2CS");
+		waitTask = waitTask && m_toneMapCs->loadTask;
 
-	m_toneMapHdrCs = make_shared<ComputeKernel>();
-	m_toneMapHdrCs->SetComputeShaderPath("Engine\\ToneMapHdr2CS");
-	waitTask = waitTask && m_toneMapHdrCs->loadTask;
+		m_toneMapHdrCs = make_shared<ComputeKernel>();
+		m_toneMapHdrCs->SetComputeShaderPath("Engine\\ToneMapHdr2CS");
+		waitTask = waitTask && m_toneMapHdrCs->loadTask;
+
+		m_debugLuminanceHdrCs = make_shared<ComputeKernel>();
+		m_debugLuminanceHdrCs->SetComputeShaderPath("Engine\\DebugLuminanceHdr2CS");
+		waitTask = waitTask && m_debugLuminanceHdrCs->loadTask;
+
+		m_debugLuminanceLdrCs = make_shared<ComputeKernel>();
+		m_debugLuminanceLdrCs->SetComputeShaderPath("Engine\\DebugLuminanceLdr2CS");
+		waitTask = waitTask && m_debugLuminanceLdrCs->loadTask;
+	}
+	else
+	{
+		m_toneMapCs = make_shared<ComputeKernel>();
+		m_toneMapCs->SetComputeShaderPath("Engine\\ToneMapCS");
+		waitTask = waitTask && m_toneMapCs->loadTask;
+
+		m_toneMapHdrCs = make_shared<ComputeKernel>();
+		m_toneMapHdrCs->SetComputeShaderPath("Engine\\ToneMapHdrCS");
+		waitTask = waitTask && m_toneMapHdrCs->loadTask;
+
+		m_debugLuminanceHdrCs = make_shared<ComputeKernel>();
+		m_debugLuminanceHdrCs->SetComputeShaderPath("Engine\\DebugLuminanceHdrCS");
+		waitTask = waitTask && m_debugLuminanceHdrCs->loadTask;
+
+		m_debugLuminanceLdrCs = make_shared<ComputeKernel>();
+		m_debugLuminanceLdrCs->SetComputeShaderPath("Engine\\DebugLuminanceLdrCS");
+		waitTask = waitTask && m_debugLuminanceLdrCs->loadTask;
+	}
 
 	m_generateHistogramCs = make_shared<ComputeKernel>();
 	m_generateHistogramCs->SetComputeShaderPath("Engine\\GenerateHistogramCS");
@@ -109,10 +138,6 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 	m_debugDrawHistogramCs = make_shared<ComputeKernel>();
 	m_debugDrawHistogramCs->SetComputeShaderPath("Engine\\DebugDrawHistogramCS");
 	waitTask = waitTask && m_debugDrawHistogramCs->loadTask;
-
-	m_debugLuminanceHdrCs = make_shared<ComputeKernel>();
-	m_debugLuminanceHdrCs->SetComputeShaderPath("Engine\\DebugLuminanceHdr2CS");
-	waitTask = waitTask && m_debugLuminanceHdrCs->loadTask;
 
 	m_copyPostToSceneCs = make_shared<ComputeKernel>();
 	m_copyPostToSceneCs->SetComputeShaderPath("Engine\\CopyBackPostBufferCS");
@@ -174,8 +199,10 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 	computeCommandList->PIXBeginEvent("Post Effects");
 
 	computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::ShaderResourceGeneric);
+#if DX11
 	ColorBuffer nullRenderTarget;
 	commandList->SetRenderTarget(nullRenderTarget);
+#endif
 
 	if(m_enableHDR && !m_debugDrawSSAO)
 	{ 
