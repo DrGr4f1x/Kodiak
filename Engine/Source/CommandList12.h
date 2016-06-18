@@ -81,6 +81,8 @@ public:
 
 	void CopyBuffer(GpuResource& dest, GpuResource& src);
 	void CopyBufferRegion(GpuResource& dest, size_t destOffset, GpuResource& src, size_t srcOffset, size_t numBytes);
+	void CopyCounter(GpuResource& Dest, size_t DestOffset, StructuredBuffer& Src);
+	void ResetCounter(StructuredBuffer& Buf, uint32_t Value = 0);
 
 	static void InitializeTexture(GpuResource& dest, UINT numSubresources, D3D12_SUBRESOURCE_DATA subData[]);
 	static void InitializeBuffer(GpuResource& dest, const void* data, size_t numBytes);
@@ -262,6 +264,22 @@ inline void CommandList::CopyBufferRegion(GpuResource& dest, size_t destOffset, 
 	TransitionResource(src, ResourceState::CopySource);
 	FlushResourceBarriers();
 	m_commandList->CopyBufferRegion(dest.GetResource(), destOffset, src.GetResource(), srcOffset, numBytes);
+}
+
+
+inline void CommandList::CopyCounter(GpuResource& Dest, size_t DestOffset, StructuredBuffer& Src)
+{
+	TransitionResource(Dest, ResourceState::CopyDest);
+	TransitionResource(*Src.GetCounterBuffer(), ResourceState::CopySource);
+	FlushResourceBarriers();
+	m_commandList->CopyBufferRegion(Dest.GetResource(), DestOffset, Src.GetCounterBuffer()->GetResource(), 0, 4);
+}
+
+
+inline void CommandList::ResetCounter(StructuredBuffer& Buf, uint32_t Value)
+{
+	FillBuffer(*Buf.GetCounterBuffer(), 0, Value, sizeof(uint32_t));
+	TransitionResource(*Buf.GetCounterBuffer(), ResourceState::UnorderedAccess);
 }
 
 

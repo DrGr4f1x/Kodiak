@@ -18,6 +18,7 @@
 #include "Engine\Source\CommonStates.h"
 #include "Engine\Source\Defaults.h"
 #include "Engine\Source\DepthBuffer.h"
+#include "Engine\Source\DeviceManager.h"
 #include "Engine\Source\Effect.h"
 #include "Engine\Source\Format.h"
 #include "Engine\Source\InputState.h"
@@ -50,7 +51,7 @@ BasicApplication::BasicApplication(uint32_t width, uint32_t height, const std::w
 void BasicApplication::OnInit()
 {
 	LOG_INFO << "BasicApplication initialize";
-	Renderer::GetInstance().SetWindow(m_width, m_height, m_hwnd);
+	DeviceManager::GetInstance().SetWindow(m_width, m_height, m_hwnd);
 	
 	CreateResources();
 
@@ -177,8 +178,8 @@ void BasicApplication::CreateMaterials()
 	// Base effect
 	auto effect = make_shared<Effect>();
 	effect->SetName("Base effect");
-	effect->SetVertexShaderPath("Engine", "SimpleVertexShader.cso");
-	effect->SetPixelShaderPath("Engine", "SimplePixelShader.cso");
+	effect->SetVertexShaderPath("Engine\\SimpleVertexShader");
+	effect->SetPixelShaderPath("Engine\\SimplePixelShader");
 	effect->SetBlendState(CommonStates::Opaque());
 	effect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
 	effect->SetRasterizerState(CommonStates::CullClockwise());

@@ -116,6 +116,7 @@ void StructuredBuffer::CreateDerivedViews()
 	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
 	uavDesc.Buffer.NumElements = m_elementCount;
+	uavDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_COUNTER;
 
 	ThrowIfFailed(g_device->CreateUnorderedAccessView(m_resource.Get(), &uavDesc, m_uav.GetAddressOf()));
 }

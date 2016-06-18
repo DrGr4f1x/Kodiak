@@ -33,6 +33,13 @@ ID3D12Device* g_device = nullptr;
 } // namespace Kodiak
 
 
+DeviceManager& DeviceManager::GetInstance()
+{
+	static DeviceManager instance;
+	return instance;
+}
+
+
 DeviceManager::DeviceManager()
 	: m_descriptorAllocator{D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,	D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,	D3D12_DESCRIPTOR_HEAP_TYPE_RTV,	D3D12_DESCRIPTOR_HEAP_TYPE_DSV }
 {
@@ -175,6 +182,28 @@ void DeviceManager::CreateDeviceResources()
 
 	// Create DirectX 12 device.
 	ThrowIfFailed(D3D12CreateDevice(bestAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
+
+	// We like to do read-modify-write operations on UAVs during post processing.  To support that, we
+	// need to either have the hardware do typed UAV loads of R11G11B10_FLOAT or we need to manually
+	// decode an R32_UINT representation of the same buffer.  This code determines if we get the hardware
+	// load support.
+	D3D12_FEATURE_DATA_D3D12_OPTIONS featureData = {};
+	if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &featureData, sizeof(featureData))))
+	{
+		if (featureData.TypedUAVLoadAdditionalFormats)
+		{
+			D3D12_FEATURE_DATA_FORMAT_SUPPORT support =
+			{
+				DXGI_FORMAT_R11G11B10_FLOAT, D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE
+			};
+
+			if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &support, sizeof(support))) &&
+				(support.Support2 & D3D12_FORMAT_SUPPORT2_UAV_TYPED_LOAD) != 0)
+			{
+				m_supportsTypedUAVLoad_R11G11B10_FLOAT = true;
+			}
+		}
+	}
 
 	g_device = m_device.Get();
 
@@ -324,8 +353,8 @@ void DeviceManager::CreatePresentState()
 	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "ScreenQuadVS.cso"));
-	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "ConvertLDRToDisplayPS.cso"));
+	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine\\ScreenQuadVS");
+	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine\\ConvertLDRToDisplayPS");
 	(vs->loadTask && ps->loadTask).wait();
 
 	// Configure PSO

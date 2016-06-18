@@ -11,6 +11,7 @@
 
 #include "ShaderManager.h"
 
+#include "Paths.h"
 #include "Shader.h"
 
 #include <ppltasks.h>
@@ -50,12 +51,12 @@ void ShaderManager::DestroyAll()
 }
 
 
-shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const ShaderPath& shaderPath, bool asyncLoad) const
+shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const string& shaderPath, bool asyncLoad) const
 {
-	string fullPath = shaderPath.GetFullPath();
+	std::string fullShaderPath = Paths::GetInstance().ShaderDir() + shaderPath;
 
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(fullPath);
+	size_t hashCode = hashFunc(fullShaderPath);
 
 	shared_ptr<ComputeShader> computeShader;
 
@@ -73,12 +74,12 @@ shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const ShaderPath& sha
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(computeShader, fullPath);
+				LoadShaderAsync(computeShader, fullShaderPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(computeShader, fullPath);
+				LoadShaderSerial(computeShader, fullShaderPath);
 			}
 		}
 		else
@@ -91,12 +92,12 @@ shared_ptr<ComputeShader> ShaderManager::LoadComputeShader(const ShaderPath& sha
 }
 
 
-shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const ShaderPath& shaderPath, bool asyncLoad) const
+shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const string& shaderPath, bool asyncLoad) const
 {
-	string fullPath = shaderPath.GetFullPath();
+	std::string fullShaderPath = Paths::GetInstance().ShaderDir() + shaderPath;
 
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(fullPath);
+	size_t hashCode = hashFunc(fullShaderPath);
 
 	shared_ptr<DomainShader> domainShader;
 
@@ -114,12 +115,12 @@ shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const ShaderPath& shade
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(domainShader, fullPath);
+				LoadShaderAsync(domainShader, fullShaderPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(domainShader, fullPath);
+				LoadShaderSerial(domainShader, fullShaderPath);
 			}
 		}
 		else
@@ -132,12 +133,12 @@ shared_ptr<DomainShader> ShaderManager::LoadDomainShader(const ShaderPath& shade
 }
 
 
-shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const ShaderPath& shaderPath, bool asyncLoad) const
+shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const string& shaderPath, bool asyncLoad) const
 {
-	string fullPath = shaderPath.GetFullPath();
+	std::string fullShaderPath = Paths::GetInstance().ShaderDir() + shaderPath;
 
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(fullPath);
+	size_t hashCode = hashFunc(fullShaderPath);
 
 	shared_ptr<GeometryShader> geometryShader;
 
@@ -155,12 +156,12 @@ shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const ShaderPath& s
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(geometryShader, fullPath);
+				LoadShaderAsync(geometryShader, fullShaderPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(geometryShader, fullPath);
+				LoadShaderSerial(geometryShader, fullShaderPath);
 			}
 		}
 		else
@@ -173,12 +174,12 @@ shared_ptr<GeometryShader> ShaderManager::LoadGeometryShader(const ShaderPath& s
 }
 
 
-shared_ptr<HullShader> ShaderManager::LoadHullShader(const ShaderPath& shaderPath, bool asyncLoad) const
+shared_ptr<HullShader> ShaderManager::LoadHullShader(const string& shaderPath, bool asyncLoad) const
 {
-	string fullPath = shaderPath.GetFullPath();
+	std::string fullShaderPath = Paths::GetInstance().ShaderDir() + shaderPath;
 
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(fullPath);
+	size_t hashCode = hashFunc(fullShaderPath);
 
 	shared_ptr<HullShader> hullShader;
 
@@ -196,12 +197,12 @@ shared_ptr<HullShader> ShaderManager::LoadHullShader(const ShaderPath& shaderPat
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(hullShader, fullPath);
+				LoadShaderAsync(hullShader, fullShaderPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(hullShader, fullPath);
+				LoadShaderSerial(hullShader, fullShaderPath);
 			}
 		}
 		else
@@ -214,12 +215,12 @@ shared_ptr<HullShader> ShaderManager::LoadHullShader(const ShaderPath& shaderPat
 }
 
 
-shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const ShaderPath& shaderPath, bool asyncLoad) const
+shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const string& shaderPath, bool asyncLoad) const
 {
-	string fullPath = shaderPath.GetFullPath();
+	std::string fullShaderPath = Paths::GetInstance().ShaderDir() + shaderPath;
 
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(fullPath);
+	size_t hashCode = hashFunc(fullShaderPath);
 
 	shared_ptr<PixelShader> pixelShader;
 
@@ -237,12 +238,12 @@ shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const ShaderPath& shaderP
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(pixelShader, fullPath);
+				LoadShaderAsync(pixelShader, fullShaderPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(pixelShader, fullPath);
+				LoadShaderSerial(pixelShader, fullShaderPath);
 			}
 		}
 		else
@@ -255,12 +256,12 @@ shared_ptr<PixelShader> ShaderManager::LoadPixelShader(const ShaderPath& shaderP
 }
 
 
-shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const ShaderPath& shaderPath, bool asyncLoad) const
+shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const string& shaderPath, bool asyncLoad) const
 {
-	string fullPath = shaderPath.GetFullPath();
+	std::string fullShaderPath = Paths::GetInstance().ShaderDir() + shaderPath;
 
 	hash<string> hashFunc;
-	size_t hashCode = hashFunc(fullPath);
+	size_t hashCode = hashFunc(fullShaderPath);
 
 	shared_ptr<VertexShader> vertexShader;
 
@@ -278,12 +279,12 @@ shared_ptr<VertexShader> ShaderManager::LoadVertexShader(const ShaderPath& shade
 			if (asyncLoad)
 			{
 				// Non-blocking asynchronous load
-				LoadShaderAsync(vertexShader, fullPath);
+				LoadShaderAsync(vertexShader, fullShaderPath);
 			}
 			else
 			{
 				// Blocking synchronous load
-				LoadShaderSerial(vertexShader, fullPath);
+				LoadShaderSerial(vertexShader, fullShaderPath);
 			}
 		}
 		else

@@ -64,6 +64,12 @@ void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* 
 }
 
 
+void CommandList::ResetCounter(StructuredBuffer& buf, uint32_t value)
+{
+	buf.SetCounterInitialValue(value);
+}
+
+
 CommandList* CommandList::Begin()
 {
 	CommandList* newCommandList = CommandList::AllocateCommandList();

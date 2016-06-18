@@ -55,12 +55,10 @@ void DepthBuffer::CreateDerivedViews()
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0;
 
-	auto deviceManager = Renderer::GetInstance().GetDeviceManager();
-
 	if (m_dsv.ptr == ~0ull)
 	{
-		m_dsv =			deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-		m_dsvReadOnly =	deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		m_dsv = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		m_dsvReadOnly = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	}
 
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
@@ -74,8 +72,8 @@ void DepthBuffer::CreateDerivedViews()
 	{
 		if (m_dsvReadOnlyStencil.ptr == ~0ull)
 		{
-			m_dsvReadOnlyStencil =	deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-			m_dsvReadOnly =			deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+			m_dsvReadOnlyStencil = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+			m_dsvReadOnly = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		}
 
 		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_STENCIL;
@@ -92,7 +90,7 @@ void DepthBuffer::CreateDerivedViews()
 
 	if (m_depthSRV.ptr == ~0ull)
 	{
-		m_depthSRV = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_depthSRV = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	// Create the shader resource view
@@ -107,7 +105,7 @@ void DepthBuffer::CreateDerivedViews()
 	{
 		if (m_stencilSRV.ptr == ~0ull)
 		{
-			m_stencilSRV = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			m_stencilSRV = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		}
 
 		srvDesc.Format = stencilReadFormat;

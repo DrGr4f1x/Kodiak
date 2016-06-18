@@ -36,10 +36,10 @@ ComputeKernel::ComputeKernel(const string& name)
 }
 
 
-void ComputeKernel::SetComputeShaderPath(const ShaderPath& shaderPath)
+void ComputeKernel::SetComputeShaderPath(const string& path)
 {
-	m_shaderPath = shaderPath;
-	m_computeShader = ShaderManager::GetInstance().LoadComputeShader(shaderPath);
+	m_shaderPath = path;
+	m_computeShader = ShaderManager::GetInstance().LoadComputeShader(path);
 
 	loadTask = m_computeShader->loadTask.then([this] { SetupKernel(); });
 }

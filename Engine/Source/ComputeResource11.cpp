@@ -138,7 +138,8 @@ void ComputeResource::SetUAVInternal(shared_ptr<ColorBuffer> buffer, bool bImmed
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, bImmediate);
+	const uint32_t counterInitialValue = 0; // Unused for ColorBuffer UAVs
+	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, counterInitialValue, bImmediate);
 }
 
 
@@ -155,7 +156,10 @@ void ComputeResource::SetUAVInternal(shared_ptr<GpuBuffer> buffer, bool bImmedia
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, bImmediate);
+	ID3D11UnorderedAccessView* uav = buffer ? buffer->GetUAV() : nullptr;
+	uint32_t counterInitialValue = buffer ? buffer->GetCounterInitialValue() : 0;
+
+	DispatchToRenderThread(uav, counterInitialValue, bImmediate);
 }
 
 
@@ -223,11 +227,12 @@ void ComputeResource::UpdateResourceOnRenderThread(RenderThread::ComputeData* co
 }
 
 
-void ComputeResource::UpdateResourceOnRenderThread(RenderThread::ComputeData* computeData, ID3D11UnorderedAccessView* uav)
+void ComputeResource::UpdateResourceOnRenderThread(RenderThread::ComputeData* computeData, ID3D11UnorderedAccessView* uav, uint32_t counterInitialValue)
 {
 	if (m_bindingTable != kInvalid)
 	{
 		computeData->uavTables.layouts[m_bindingTable].resources[m_bindingSlot] = uav;
+		computeData->uavTables.layouts[m_bindingTable].counterInitialValues[m_bindingSlot] = counterInitialValue;
 	}
 }
 
@@ -255,13 +260,13 @@ void ComputeResource::DispatchToRenderThread(ID3D11ShaderResourceView* srv, bool
 }
 
 
-void ComputeResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav, bool bImmediate)
+void ComputeResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav, uint32_t counterInitialValue, bool bImmediate)
 {
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
 		if (bImmediate)
 		{
-			UpdateResourceOnRenderThread(renderThreadData.get(), uav);
+			UpdateResourceOnRenderThread(renderThreadData.get(), uav, counterInitialValue);
 		}
 		else
 		{
@@ -270,9 +275,9 @@ void ComputeResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav, boo
 			Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> thisUAV = uav;
 
 			// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisUAV](RenderTaskEnvironment& rte)
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisUAV, counterInitialValue](RenderTaskEnvironment& rte)
 			{
-				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisUAV.Get());
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisUAV.Get(), counterInitialValue);
 			});
 		}
 	}

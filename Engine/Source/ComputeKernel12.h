@@ -38,11 +38,7 @@ public:
 	void SetName(const std::string& name) { m_name = name; }
 	const std::string& GetName() const { return m_name; }
 
-	void SetComputeShaderPath(const std::string& path, const std::string& file)
-	{
-		SetComputeShaderPath(ShaderPath(path, file));
-	}
-	void SetComputeShaderPath(const ShaderPath& shaderPath);
+	void SetComputeShaderPath(const std::string& path);
 
 	std::shared_ptr<ComputeParameter> GetParameter(const std::string& name);
 	std::shared_ptr<ComputeResource> GetResource(const std::string& name);
@@ -61,7 +57,7 @@ private:
 
 private:
 	std::string							m_name;
-	ShaderPath							m_shaderPath;
+	std::string							m_shaderPath;
 	std::shared_ptr<ComputeShader>		m_computeShader;
 	
 	std::mutex													m_parameterLock;

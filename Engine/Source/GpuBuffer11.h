@@ -32,6 +32,9 @@ public:
 	ID3D11ShaderResourceView* GetSRV() { return m_srv.Get(); }
 	ID3D11UnorderedAccessView* GetUAV() { return m_uav.Get(); }
 
+	uint32_t GetCounterInitialValue() const { return m_counterInitialValue; }
+	void SetCounterInitialValue(uint32_t value) { m_counterInitialValue = value; }
+
 protected:
 	GpuBuffer() 
 	{
@@ -47,6 +50,7 @@ protected:
 	uint32_t	m_elementSize{ 0 };
 	uint32_t	m_bindFlags{ 0 };
 	uint32_t	m_miscFlags{ 0 };
+	uint32_t	m_counterInitialValue{ 0 };
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
 	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	m_uav;
@@ -82,19 +86,10 @@ public:
 
 	void Destroy() override
 	{
-		m_counterBuffer.Destroy();
 		GpuBuffer::Destroy();
 	}
 
 	void CreateDerivedViews() override;
-
-	ByteAddressBuffer& GetCounterBuffer() { return m_counterBuffer; }
-
-	const ID3D11ShaderResourceView* GetCounterSRV(CommandList&) { return m_counterBuffer.GetSRV(); }
-	const ID3D11UnorderedAccessView* GetCounterUAV(CommandList&) { return m_counterBuffer.GetUAV(); }
-
-private:
-	ByteAddressBuffer m_counterBuffer;
 };
 
 

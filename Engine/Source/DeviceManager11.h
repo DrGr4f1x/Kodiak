@@ -23,7 +23,7 @@ class GraphicsCommandList;
 class DeviceManager
 {
 public:
-	DeviceManager();
+	static DeviceManager& GetInstance();
 
 	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
 	void SetWindowSize(uint32_t width, uint32_t height);
@@ -32,10 +32,15 @@ public:
 	void BeginFrame();
 	void Present(std::shared_ptr<ColorBuffer> presentSource);
 
+	// Feature support queries
+	bool SupportsTypedUAVLoad_R11G11B10_FLOAT() const { return false; }
+
 	// Accessors
 	ID3D11Device* GetDevice() { return m_d3dDevice.Get(); }
 
 private:
+	DeviceManager();
+
 	void CreateDeviceIndependentResources();
 	void CreateDeviceResources();
 	void CreateWindowSizeDependentResources();

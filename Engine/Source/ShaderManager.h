@@ -32,12 +32,12 @@ public:
 
 	static void DestroyAll();
 
-	std::shared_ptr<ComputeShader> LoadComputeShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
-	std::shared_ptr<DomainShader> LoadDomainShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
-	std::shared_ptr<GeometryShader> LoadGeometryShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
-	std::shared_ptr<HullShader>	LoadHullShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
-	std::shared_ptr<PixelShader> LoadPixelShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
-	std::shared_ptr<VertexShader> LoadVertexShader(const ShaderPath& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<ComputeShader> LoadComputeShader(const std::string& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<DomainShader> LoadDomainShader(const std::string& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<GeometryShader> LoadGeometryShader(const std::string& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<HullShader>	LoadHullShader(const std::string& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<PixelShader> LoadPixelShader(const std::string& shaderPath, bool asyncLoad = true) const;
+	std::shared_ptr<VertexShader> LoadVertexShader(const std::string& shaderPath, bool asyncLoad = true) const;
 
 private:
 	template<class ShaderClass>

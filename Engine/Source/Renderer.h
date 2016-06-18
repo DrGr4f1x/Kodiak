@@ -56,12 +56,7 @@ public:
 
 	void EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback);
 
-	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
-	void SetWindowSize(uint32_t width, uint32_t height);
-
 	void Render(std::shared_ptr<RootRenderTask> rootTask);
-
-	DeviceManager* GetDeviceManager() { return m_deviceManager.get(); }
 
 private:
 	void StartRenderTask();
@@ -74,7 +69,6 @@ private:
 	bool								m_renderTaskStarted{ false };
 	Concurrency::task<void>				m_renderTask;
 	Concurrency::concurrent_queue<std::function<void(RenderTaskEnvironment&)>>	m_renderTaskQueue;
-	std::unique_ptr<DeviceManager>		m_deviceManager;
 };
 
 

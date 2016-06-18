@@ -25,24 +25,6 @@ using namespace std;
 using namespace Microsoft::WRL;
 
 
-ShaderPath::ShaderPath(const string& shaderFile)
-	: m_shaderPath()
-	, m_shaderFile(shaderFile)
-	, m_shaderFullPath()
-{
-	m_shaderFullPath = Paths::GetInstance().ShaderDir() + "SM5.1\\" + m_shaderFile;
-}
-
-
-ShaderPath::ShaderPath(const string& shaderPath, const string& shaderFile)
-	: m_shaderPath(shaderPath)
-	, m_shaderFile(shaderFile)
-	, m_shaderFullPath()
-{
-	m_shaderFullPath = Paths::GetInstance().ShaderDir() + m_shaderPath + "\\SM5.1\\" + m_shaderFile;
-}
-
-
 void Shader::Finalize()
 {
 	ComPtr<ID3D12ShaderReflection> reflector;

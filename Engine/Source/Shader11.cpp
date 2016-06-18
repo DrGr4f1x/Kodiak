@@ -25,24 +25,6 @@ using namespace std;
 using namespace Microsoft::WRL;
 
 
-ShaderPath::ShaderPath(const string& shaderFile)
-	: m_shaderPath()
-	, m_shaderFile(shaderFile)
-	, m_shaderFullPath()
-{
-	m_shaderFullPath = Paths::GetInstance().ShaderDir() + "SM5\\" + m_shaderFile;
-}
-
-
-ShaderPath::ShaderPath(const string& shaderPath, const string& shaderFile)
-	: m_shaderPath(shaderPath)
-	, m_shaderFile(shaderFile)
-	, m_shaderFullPath()
-{
-	m_shaderFullPath = Paths::GetInstance().ShaderDir() + m_shaderPath + "\\SM5\\" + m_shaderFile;
-}
-
-
 void VertexShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateVertexShader(data.get(), dataSize, nullptr, &m_shader));

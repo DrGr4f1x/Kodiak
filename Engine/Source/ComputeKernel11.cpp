@@ -37,7 +37,7 @@ ComputeKernel::ComputeKernel(const string& name)
 }
 
 
-void ComputeKernel::SetComputeShaderPath(const ShaderPath& shaderPath)
+void ComputeKernel::SetComputeShaderPath(const string& shaderPath)
 {
 	m_shaderPath = shaderPath;
 	m_computeShader = ShaderManager::GetInstance().LoadComputeShader(shaderPath);
@@ -222,6 +222,9 @@ void ComputeKernel::SetupKernel()
 		layout.resources.reserve(layout.numItems);
 		layout.resources.insert(layout.resources.end(), layout.numItems, nullptr);
 
+		layout.counterInitialValues.reserve(layout.numItems);
+		layout.counterInitialValues.insert(layout.counterInitialValues.end(), layout.numItems, 0);
+
 		computeData.uavTables.layouts.push_back(layout);
 		computeData.nullUAVTables.layouts.push_back(layout);
 	}
@@ -312,7 +315,7 @@ void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
 	// Bind UAVs
 	for (const auto& layout : uavTables.layouts)
 	{
-		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0], &layout.counterInitialValues[0]);
 	}
 }
 

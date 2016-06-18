@@ -17,7 +17,6 @@
 #include "DeviceManager12.h"
 #include "Format.h"
 #include "Paths.h"
-#include "Renderer.h"
 #include "RenderUtils.h"
 
 
@@ -124,7 +123,7 @@ void Texture::Create(uint32_t width, uint32_t height, ColorFormat format, const 
 
 	if (m_cpuDescriptorHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		m_cpuDescriptorHandle = Renderer::GetInstance().GetDeviceManager()->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_cpuDescriptorHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 	g_device->CreateShaderResourceView(m_resource.Get(), nullptr, m_cpuDescriptorHandle);
 }
@@ -172,8 +171,7 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 		{
 		case TextureFormat::DDS:
 				
-			auto deviceManager = Renderer::GetInstance().GetDeviceManager();
-			texture->m_cpuDescriptorHandle = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			texture->m_cpuDescriptorHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 			ThrowIfFailed(CreateDDSTextureFromFile(g_device,
 				fullPath,

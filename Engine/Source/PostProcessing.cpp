@@ -33,15 +33,16 @@ using namespace DirectX;
 
 PostProcessing::PostProcessing()
 	: SceneColorBuffer(m_sceneColorBuffer)
+	, PostEffectsBuffer(m_postEffectsBuffer)
 	, EnableHDR(m_enableHDR)
 	, DebugDrawSSAO(m_debugDrawSSAO)
 	, EnableBloom(m_enableBloom)
 	, EnableAdaptation(m_enableAdaptation)
 	, HighQualityBloom(m_highQualityBloom)
-	, ToneMapOnlyLuma(m_toneMapOnlyLuma)
+	, DrawHistogram(m_drawHistogram)
+	, DebugLuminance(m_debugLuminance)
 	, BloomThreshold(m_bloomThreshold)
 	, Exposure(m_exposure)
-	, PeakIntensity(m_peakIntensity)
 	, BloomUpsampleFactor(m_bloomUpsampleFactor)
 	, BloomStrength(m_bloomStrength)
 	, LogLumaConstant(m_logLumaConstant)
@@ -49,6 +50,7 @@ PostProcessing::PostProcessing()
 	, AdaptationRate(m_adaptationRate)
 	, MinExposure(m_minExposure)
 	, MaxExposure(m_maxExposure)
+	, ToeStrength(m_toeStrength)
 {}
 
 
@@ -58,76 +60,63 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 	m_height = height;
 
 	m_bloomExtractAndDownsampleHdrCs = make_shared<ComputeKernel>();
-	m_bloomExtractAndDownsampleHdrCs->SetComputeShaderPath("Engine", "BloomExtractAndDownsampleHdrCS.cso");
+	m_bloomExtractAndDownsampleHdrCs->SetComputeShaderPath("Engine\\BloomExtractAndDownsampleHdrCS");
 	auto waitTask = m_bloomExtractAndDownsampleHdrCs->loadTask;
 
 	m_bloomExtractAndDownsampleLdrCs = make_shared<ComputeKernel>();
-	m_bloomExtractAndDownsampleLdrCs->SetComputeShaderPath("Engine", "BloomExtractAndDownsampleLdrCS.cso");
+	m_bloomExtractAndDownsampleLdrCs->SetComputeShaderPath("Engine\\BloomExtractAndDownsampleLdrCS");
 	waitTask = waitTask && m_bloomExtractAndDownsampleLdrCs->loadTask;
 
 	m_extractLumaCs = make_shared<ComputeKernel>();
-	m_extractLumaCs->SetComputeShaderPath("Engine", "ExtractLumaCS.cso");
+	m_extractLumaCs->SetComputeShaderPath("Engine\\ExtractLumaCS");
 	waitTask = waitTask && m_extractLumaCs->loadTask;
 
 	m_downsampleBloom4Cs = make_shared<ComputeKernel>();
-	m_downsampleBloom4Cs->SetComputeShaderPath("Engine", "DownsampleBloom4CS.cso");
+	m_downsampleBloom4Cs->SetComputeShaderPath("Engine\\DownsampleBloomAllCS");
 	waitTask = waitTask && m_downsampleBloom4Cs->loadTask;
 
 	m_downsampleBloom2Cs = make_shared<ComputeKernel>();
-	m_downsampleBloom2Cs->SetComputeShaderPath("Engine", "DownsampleBloom2CS.cso");
+	m_downsampleBloom2Cs->SetComputeShaderPath("Engine\\DownsampleBloomCS");
 	waitTask = waitTask && m_downsampleBloom2Cs->loadTask;
 
 	for (uint32_t i = 0; i < 5; ++i)
 	{
 		m_blurCs[i] = make_shared<ComputeKernel>();
-		m_blurCs[i]->SetComputeShaderPath("Engine", "BlurCS.cso");
+		m_blurCs[i]->SetComputeShaderPath("Engine\\BlurCS");
 		waitTask = waitTask && m_blurCs[i]->loadTask;
 
 		m_upsampleAndBlurCs[i] = make_shared<ComputeKernel>();
-		m_upsampleAndBlurCs[i]->SetComputeShaderPath("Engine", "UpsampleAndBlurCS.cso");
+		m_upsampleAndBlurCs[i]->SetComputeShaderPath("Engine\\UpsampleAndBlurCS");
 		waitTask = waitTask && m_upsampleAndBlurCs[i]->loadTask;
 	}
 
 	m_toneMapCs = make_shared<ComputeKernel>();
-	m_toneMapCs->SetComputeShaderPath("Engine", "ToneMapCS.cso");
+	m_toneMapCs->SetComputeShaderPath("Engine\\ToneMap2CS");
 	waitTask = waitTask && m_toneMapCs->loadTask;
 
-	m_toneMap2Cs = make_shared<ComputeKernel>();
-	m_toneMap2Cs->SetComputeShaderPath("Engine", "ToneMap2CS.cso");
-	waitTask = waitTask && m_toneMap2Cs->loadTask;
+	m_toneMapHdrCs = make_shared<ComputeKernel>();
+	m_toneMapHdrCs->SetComputeShaderPath("Engine\\ToneMapHdr2CS");
+	waitTask = waitTask && m_toneMapHdrCs->loadTask;
 
 	m_generateHistogramCs = make_shared<ComputeKernel>();
-	m_generateHistogramCs->SetComputeShaderPath("Engine", "GenerateHistogramCS.cso");
+	m_generateHistogramCs->SetComputeShaderPath("Engine\\GenerateHistogramCS");
 	waitTask = waitTask && m_generateHistogramCs->loadTask;
 
 	m_adaptExposureCs = make_shared<ComputeKernel>();
-	m_adaptExposureCs->SetComputeShaderPath("Engine", "AdaptExposureCS.cso");
+	m_adaptExposureCs->SetComputeShaderPath("Engine\\AdaptExposureCS");
 	waitTask = waitTask && m_adaptExposureCs->loadTask;
 
 	m_debugDrawHistogramCs = make_shared<ComputeKernel>();
-	m_debugDrawHistogramCs->SetComputeShaderPath("Engine", "DebugDrawHistogramCS.cso");
+	m_debugDrawHistogramCs->SetComputeShaderPath("Engine\\DebugDrawHistogramCS");
 	waitTask = waitTask && m_debugDrawHistogramCs->loadTask;
 
-	if (m_copySceneColor)
-	{
-		m_copyPSO = make_shared<GraphicsPSO>();
+	m_debugLuminanceHdrCs = make_shared<ComputeKernel>();
+	m_debugLuminanceHdrCs->SetComputeShaderPath("Engine\\DebugLuminanceHdr2CS");
+	waitTask = waitTask && m_debugLuminanceHdrCs->loadTask;
 
-		BlendStateDesc defaultBlendState;
-		DepthStencilStateDesc depthStencilState(false, false);
-		RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
-
-		auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "ScreenQuadVS.cso"));
-		auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "BufferCopyPS.cso"));
-		(vs->loadTask && ps->loadTask).wait();
-
-		m_copyPSO->SetBlendState(defaultBlendState);
-		m_copyPSO->SetRasterizerState(rasterizerState);
-		m_copyPSO->SetDepthStencilState(depthStencilState);
-		m_copyPSO->SetVertexShader(vs.get());
-		m_copyPSO->SetPixelShader(ps.get());
-
-		m_copyPSO->Finalize();
-	}
+	m_copyPostToSceneCs = make_shared<ComputeKernel>();
+	m_copyPostToSceneCs->SetComputeShaderPath("Engine\\CopyBackPostBufferCS");
+	waitTask = waitTask && m_copyPostToSceneCs->loadTask;
 
 	for (uint32_t i = 0; i < 2; ++i)
 	{
@@ -157,7 +146,7 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 
 	__declspec(align(16)) float initExposure[] =
 	{
-		m_exposure, 1.0f / m_exposure, m_exposure / m_peakIntensity, 0.0f,
+		m_exposure, 1.0f / m_exposure, m_exposure, 0.0f,
 		m_initialMinLog, m_initialMaxLog, m_initialMaxLog - m_initialMinLog, 1.0f / (m_initialMaxLog - m_initialMinLog)
 	};
 	m_exposureBuffer = make_shared<StructuredBuffer>();
@@ -171,12 +160,6 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 	m_defaultBlackTexture->Create(1, 1, ColorFormat::R8G8B8A8, &blackPixel);
 
 #if DX11
-	if (m_copySceneColor)
-	{
-		m_sceneColorCopy = make_shared<ColorBuffer>();
-		m_sceneColorCopy->Create("Scene color copy", width, height, 1, ColorFormat::R11G11B10_Float);
-	}
-
 	InitializeSamplers();
 #endif
 
@@ -190,32 +173,9 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 
 	computeCommandList->PIXBeginEvent("Post Effects");
 
-	computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::PixelShaderResource);
-
-#if DX11
-	ColorBuffer nullBuffer;
-	commandList->SetRenderTarget(nullBuffer);
-
-	if (m_copySceneColor)
-	{
-		commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		commandList->SetPipelineState(*m_copyPSO);
-
-		// Copy and convert the LDR present source to the current back buffer
-		commandList->SetRenderTarget(*m_sceneColorCopy);
-		commandList->SetPixelShaderResource(0, m_sceneColorBuffer->GetSRV());
-
-		commandList->SetViewportAndScissor(0, 0, m_width, m_height);
-
-		commandList->Draw(3);
-
-		commandList->SetPixelShaderResource(0, nullptr);
-		commandList->SetRenderTarget(nullBuffer);
-	}
-
-	computeCommandList->SetShaderSampler(0, m_linearClampSampler.Get());
-	computeCommandList->SetShaderSampler(1, m_linearBorderSampler.Get());
-#endif
+	computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::ShaderResourceGeneric);
+	ColorBuffer nullRenderTarget;
+	commandList->SetRenderTarget(nullRenderTarget);
 
 	if(m_enableHDR && !m_debugDrawSSAO)
 	{ 
@@ -226,31 +186,49 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 		ProcessLDR(computeCommandList);
 	}
 
+	// In the case where we've been doing post processing in a separate buffer, we need to copy it
+	// back to the original buffer.  It is possible to skip this step if the next shader knows to
+	// do the manual format decode from UINT, but there are several code paths that need to be
+	// changed, and some of them rely on texture filtering, which won't work with UINT.  Since this
+	// is only to support legacy hardware and a single buffer copy isn't that big of a deal, this
+	// is the most economical solution.
+	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+	{
+		computeCommandList->PIXBeginEvent("Copy Post back to Scene");
+
+		computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+		computeCommandList->TransitionResource(*m_postEffectsBuffer, ResourceState::NonPixelShaderResource);
+
+		m_copyPostToSceneCs->GetResource("SceneColor")->SetUAVImmediate(m_sceneColorBuffer);
+		m_copyPostToSceneCs->GetResource("PostBuffer")->SetSRVImmediate(m_postEffectsBuffer);
+
+		m_copyPostToSceneCs->Dispatch2D(computeCommandList, m_sceneColorBuffer->GetWidth(), m_sceneColorBuffer->GetHeight());
+		m_copyPostToSceneCs->UnbindUAVs(computeCommandList);
+
+		computeCommandList->PIXEndEvent();
+	}
+
+	if (m_drawHistogram)
+	{
+		computeCommandList->PIXBeginEvent("Debug Histogram");
+
+		computeCommandList->InsertUAVBarrier(*m_sceneColorBuffer);
+		computeCommandList->TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
+		computeCommandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+
+		m_debugDrawHistogramCs->GetResource("Histogram")->SetSRVImmediate(m_histogram);
+		m_debugDrawHistogramCs->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
+		m_debugDrawHistogramCs->GetResource("ColorBuffer")->SetUAVImmediate(m_sceneColorBuffer);
+
+		m_debugDrawHistogramCs->Dispatch(computeCommandList, 1, 32);
+
+		computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
+		m_debugDrawHistogramCs->UnbindUAVs(computeCommandList);
+
+		computeCommandList->PIXEndEvent();
+	}
 
 	commandList->PIXEndEvent();
-}
-
-
-void PostProcessing::DebugDrawHistogram(GraphicsCommandList* commandList)
-{
-	ComputeCommandList* computeCommandList = commandList->GetComputeCommandList();
-
-	computeCommandList->PIXBeginEvent("Debug Histogram");
-
-	computeCommandList->InsertUAVBarrier(*m_sceneColorBuffer);
-	computeCommandList->TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
-	computeCommandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
-
-	m_debugDrawHistogramCs->GetResource("Histogram")->SetSRVImmediate(m_histogram);
-	m_debugDrawHistogramCs->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
-	m_debugDrawHistogramCs->GetResource("ColorBuffer")->SetUAVImmediate(m_sceneColorBuffer);
-
-	m_debugDrawHistogramCs->Dispatch(computeCommandList, 1, 32);
-
-	computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
-	m_debugDrawHistogramCs->UnbindUAVs(computeCommandList);
-
-	computeCommandList->PIXEndEvent();
 }
 
 
@@ -268,21 +246,39 @@ void PostProcessing::ProcessHDR(ComputeCommandList* commandList)
 		ExtractLuma(commandList);
 	}
 
-	commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+	{
+		commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+	}
+	else
+	{
+		commandList->TransitionResource(*m_postEffectsBuffer, ResourceState::UnorderedAccess);
+	}
 	commandList->TransitionResource(*m_lumaBuffer, ResourceState::UnorderedAccess);
 	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-	auto computeKernel = m_toneMapOnlyLuma ? m_toneMap2Cs : m_toneMapCs;
+	auto computeKernel = m_debugLuminance ? m_debugLuminanceHdrCs : (m_enableHDR ? m_toneMapHdrCs : m_toneMapCs);
 
+	float toeStrength = m_toeStrength < 1e-6f ? 1e32f : 1.0f / m_toeStrength;
+
+	// Set constants
 	computeKernel->GetParameter("g_RcpBufferDim")->SetValueImmediate(XMFLOAT2(1.0f / m_sceneColorBuffer->GetWidth(), 1.0f / m_sceneColorBuffer->GetHeight()));
 	computeKernel->GetParameter("g_BloomStrength")->SetValueImmediate(m_bloomStrength);
-	computeKernel->GetParameter("g_LumaGamma")->SetValueImmediate(m_logLumaConstant);
+	computeKernel->GetParameter("g_ToeStrength")->SetValueImmediate(toeStrength);
 
-#if DX11
-	computeKernel->GetResource("SrcColor")->SetSRVImmediate(m_sceneColorCopy);
-#else
-	computeKernel->GetResource("SrcColor")->SetSRVImmediate(m_sceneColorBuffer);
-#endif
+	// Separate out LDR result from its perceived luminance
+	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+	{
+		computeKernel->GetResource("ColorRW")->SetUAVImmediate(m_sceneColorBuffer);
+	}
+	else
+	{
+		computeKernel->GetResource("DstColor")->SetUAVImmediate(m_postEffectsBuffer);
+		computeKernel->GetResource("SrcColor")->SetSRVImmediate(m_sceneColorBuffer);
+	}
+	computeKernel->GetResource("OutLuma")->SetUAVImmediate(m_lumaBuffer);
+
+	// Read in original HDR value and blurred bloom buffer
 	computeKernel->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
 	if (m_enableBloom)
 	{
@@ -292,10 +288,7 @@ void PostProcessing::ProcessHDR(ComputeCommandList* commandList)
 	{
 		computeKernel->GetResource("Bloom")->SetSRVImmediate(m_defaultBlackTexture);
 	}
-
-	computeKernel->GetResource("DstColor")->SetUAVImmediate(m_sceneColorBuffer);
-	computeKernel->GetResource("OutLuma")->SetUAVImmediate(m_lumaBuffer);
-
+	
 	computeKernel->Dispatch2D(commandList, m_sceneColorBuffer->GetWidth(), m_sceneColorBuffer->GetHeight());
 	computeKernel->UnbindUAVs(commandList);
 	computeKernel->UnbindSRVs(commandList);
@@ -331,18 +324,10 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 
 	commandList->TransitionResource(*m_bloomUAV1[0], ResourceState::UnorderedAccess);
 	commandList->TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
-#if DX11
-	commandList->TransitionResource(*m_sceneColorCopy, ResourceState::NonPixelShaderResource);
-#else
 	commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
-#endif
 	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-#if DX11
-	computeKernel->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorCopy);
-#else
 	computeKernel->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);
-#endif
 	computeKernel->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
 	computeKernel->GetResource("BloomResult")->SetUAVImmediate(m_bloomUAV1[0]);
 	computeKernel->GetResource("LumaResult")->SetUAVImmediate(m_lumaLR);
@@ -429,11 +414,7 @@ void PostProcessing::ExtractLuma(ComputeCommandList* commandList)
 	const float invBloomHeight = 1.0f / static_cast<float>(m_bloomHeight);
 
 	m_extractLumaCs->GetParameter("g_inverseOutputSize")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
-#if DX11
-	m_extractLumaCs->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorCopy);
-#else
 	m_extractLumaCs->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);
-#endif
 	m_extractLumaCs->GetResource("LumaResult")->SetUAVImmediate(m_lumaLR);
 
 	m_extractLumaCs->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight);
@@ -479,7 +460,7 @@ void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
 	{
 		__declspec(align(16)) float initExposure[] =
 		{
-			m_exposure, 1.0f / m_exposure, m_exposure / m_peakIntensity, 0.0f,
+			m_exposure, 1.0f / m_exposure, m_exposure, 0.0f,
 			m_initialMinLog, m_initialMaxLog, m_initialMaxLog - m_initialMinLog, 1.0f / (m_initialMaxLog - m_initialMinLog)
 		};
 
@@ -509,7 +490,6 @@ void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
 	m_adaptExposureCs->GetParameter("AdaptationRate")->SetValueImmediate(m_adaptationRate);
 	m_adaptExposureCs->GetParameter("MinExposure")->SetValueImmediate(m_minExposure);
 	m_adaptExposureCs->GetParameter("MaxExposure")->SetValueImmediate(m_maxExposure);
-	m_adaptExposureCs->GetParameter("PeakIntensity")->SetValueImmediate(m_peakIntensity);
 	m_adaptExposureCs->GetParameter("PixelCount")->SetValueImmediate(static_cast<float>(m_bloomWidth * m_bloomHeight));
 
 	m_adaptExposureCs->Dispatch(commandList);

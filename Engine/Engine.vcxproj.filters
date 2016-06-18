@@ -55,6 +55,9 @@
     <Filter Include="Rendering\Techniques\FXAA">
       <UniqueIdentifier>{c01e8367-c6ea-48d1-801d-0c417605ad30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Common\FXAA">
+      <UniqueIdentifier>{6514b411-aa1f-42b1-86e1-242f07528bdd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -686,12 +689,6 @@
     <FxCompile Include="Source\Shaders\Common\ExtractLumaCS.hlsl">
       <Filter>Shaders\Common\PostProcessing</Filter>
     </FxCompile>
-    <FxCompile Include="Source\Shaders\Common\DownsampleBloom4CS.hlsl">
-      <Filter>Shaders\Common\PostProcessing</Filter>
-    </FxCompile>
-    <FxCompile Include="Source\Shaders\Common\DownsampleBloom2CS.hlsl">
-      <Filter>Shaders\Common\PostProcessing</Filter>
-    </FxCompile>
     <FxCompile Include="Source\Shaders\Common\BlurCS.hlsl">
       <Filter>Shaders\Common\PostProcessing</Filter>
     </FxCompile>
@@ -719,6 +716,69 @@
     <FxCompile Include="Source\Shaders\Common\DebugDrawHistogramCS.hlsl">
       <Filter>Shaders\Common\PostProcessing</Filter>
     </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_Luma_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_RGB_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2H2CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2HCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2HDebugCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2V2CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2VCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2VDebugCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAResolveWorkQueueCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ApplyBloom2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ApplyBloomCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AverageLumaCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceHdr2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceHdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceLdr2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceLdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DownsampleBloomAllCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DownsampleBloomCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMapHdr2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMapHdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\CopyBackPostBufferCS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Shaders\Common\PerViewData.hlsli">
@@ -737,6 +797,15 @@
       <Filter>Shaders\Common\SSAO</Filter>
     </None>
     <None Include="Source\Shaders\Common\ShaderUtility.hlsli">
+      <Filter>Shaders\Common</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\FXAAPass1CS.hlsli">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\FXAAPass2CS.hlsli">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\PixelPacking.hlsli">
       <Filter>Shaders\Common</Filter>
     </None>
   </ItemGroup>

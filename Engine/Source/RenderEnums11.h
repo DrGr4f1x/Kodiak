@@ -140,7 +140,8 @@ enum class ResourceState
 	ResolveSource,
 	GenericRead,
 	Present,
-	Predication
+	Predication,
+	ShaderResourceGeneric
 };
 
 } // namespace Kodiak

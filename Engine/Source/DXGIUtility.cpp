@@ -30,6 +30,8 @@ DXGI_FORMAT ConvertToDXGI(Kodiak::ColorFormat format)
 		return DXGI_FORMAT_R16_FLOAT;
 	case Kodiak::ColorFormat::R32_Float:
 		return DXGI_FORMAT_R32_FLOAT;
+	case Kodiak::ColorFormat::R32_UInt:
+		return DXGI_FORMAT_R32_UINT;
 	default:
 		assert(false);
 		return DXGI_FORMAT_UNKNOWN;

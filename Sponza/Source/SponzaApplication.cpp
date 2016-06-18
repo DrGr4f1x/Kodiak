@@ -18,6 +18,7 @@
 #include "Engine\Source\CommonStates.h"
 #include "Engine\Source\Defaults.h"
 #include "Engine\Source\DepthBuffer.h"
+#include "Engine\Source\DeviceManager.h"
 #include "Engine\Source\Effect.h"
 #include "Engine\Source\Format.h"
 #include "Engine\Source\InputState.h"
@@ -62,7 +63,7 @@ SponzaApplication::SponzaApplication(uint32_t width, uint32_t height, const std:
 void SponzaApplication::OnInit()
 {
 	LOG_INFO << "SponzaApplication initialize";
-	Renderer::GetInstance().SetWindow(m_width, m_height, m_hwnd);
+	DeviceManager::GetInstance().SetWindow(m_width, m_height, m_hwnd);
 
 #if defined(PROFILING) && (PROFILING == 1)
 	itt_frame_setup = __itt_string_handle_create("Frame setup");
@@ -131,6 +132,8 @@ void SponzaApplication::CreateResources()
 	m_linearDepthBuffer = CreateColorBuffer("Linear depth buffer", m_width, m_height, 1, ColorFormat::R16_Float, DirectX::Colors::Black);
 	m_ssaoFullscreen = CreateColorBuffer("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm, DirectX::Colors::Black);
 
+	
+
 	m_ssao = make_shared<SSAO>();
 	m_ssao->Initialize(m_width, m_height);
 	m_ssao->SceneColorBuffer = m_colorTarget;
@@ -145,7 +148,12 @@ void SponzaApplication::CreateResources()
 	m_postProcessing->Initialize(m_width, m_height);
 	m_postProcessing->SceneColorBuffer = m_colorTarget;
 	m_postProcessing->EnableAdaptation = true;
-	//m_postProcessing->EnableBloom = false;
+	
+	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+	{
+		m_postEffectsBuffer = CreateColorBuffer("Post Effects Buffer", m_width, m_height, 1, ColorFormat::R32_UInt, DirectX::Colors::Black);
+		m_postProcessing->PostEffectsBuffer = m_postEffectsBuffer;
+	}
 
 	m_shadowBuffer = make_shared<ShadowBuffer>();
 	m_shadowBuffer->Create("Shadow Map", 2048, 2048);
@@ -170,8 +178,8 @@ void SponzaApplication::CreateEffects()
 
 	// Default effects
 	auto baseEffect = make_shared<Effect>("Base");
-	baseEffect->SetVertexShaderPath(ShaderPath("BaseVS.cso"));
-	baseEffect->SetPixelShaderPath(ShaderPath("BasePS.cso"));
+	baseEffect->SetVertexShaderPath("BaseVS");
+	baseEffect->SetPixelShaderPath("BasePS");
 	baseEffect->SetBlendState(CommonStates::Opaque());
 	baseEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
 	baseEffect->SetDepthStencilState(CommonStates::DepthReadEqual());
@@ -181,8 +189,8 @@ void SponzaApplication::CreateEffects()
 	SetDefaultBaseEffect(baseEffect);
 
 	auto depthEffect = make_shared<Effect>("Depth");
-	depthEffect->SetVertexShaderPath(ShaderPath("DepthVS.cso"));
-	depthEffect->SetPixelShaderPath(ShaderPath("DepthPS.cso"));
+	depthEffect->SetVertexShaderPath("DepthVS");
+	depthEffect->SetPixelShaderPath("DepthPS");
 	depthEffect->SetBlendState(CommonStates::Opaque());
 	depthEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
 	depthEffect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
@@ -192,8 +200,8 @@ void SponzaApplication::CreateEffects()
 	SetDefaultDepthEffect(depthEffect);
 
 	auto shadowEffect = make_shared<Effect>("Shadow");
-	shadowEffect->SetVertexShaderPath(ShaderPath("DepthVS.cso"));
-	shadowEffect->SetPixelShaderPath(ShaderPath("DepthPS.cso"));
+	shadowEffect->SetVertexShaderPath("DepthVS");
+	shadowEffect->SetPixelShaderPath("DepthPS");
 	shadowEffect->SetBlendState(CommonStates::Opaque());
 	shadowEffect->SetRasterizerState(CommonStates::Shadow());
 	shadowEffect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
@@ -384,22 +392,6 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 		PROFILE_END();
 	};
 	opaqueTask->Continue(postTask);
-
-	auto debugHistogramTask = make_shared<RenderTask>();
-	debugHistogramTask->SetName("Debug histogram");
-	debugHistogramTask->Render = [this]
-	{
-		PROFILE_BEGIN(itt_debug_histogram);
-
-		auto commandList = GraphicsCommandList::Begin();
-
-		m_postProcessing->DebugDrawHistogram(commandList);
-
-		commandList->CloseAndExecute();
-
-		PROFILE_END();
-	};
-	postTask->Continue(debugHistogramTask);
 
 	rootTask->Present(m_colorTarget);
 

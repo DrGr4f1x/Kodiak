@@ -17,7 +17,6 @@ cbuffer cb0 : register(b1)
 	float AdaptationRate;
 	float MinExposure;
 	float MaxExposure;
-	float PeakIntensity;
 	float PixelCount;
 }
 
@@ -47,8 +46,10 @@ void main(uint GI : SV_GroupIndex)
 	// Average histogram value is the weighted sum of all pixels divided by the total number of pixels
 	// minus those pixels which provided no weight (i.e. black pixels.)
 	float weightedHistAvg = WeightedSum / (max(1, PixelCount - Histogram.Load(0))) - 1.0;
-	float logAvgLuminance = exp2(weightedHistAvg * LogRange / 254.0 + MinLog);
+	float logAvgLuminance = exp2(weightedHistAvg / 254.0 * LogRange + MinLog);
 	float targetExposure = TargetLuminance / logAvgLuminance;
+	//float targetExposure = -log2(1 - TargetLuminance) / logAvgLuminance;
+
 	float exposure = Exposure[0];
 	exposure = lerp(exposure, targetExposure, AdaptationRate);
 	exposure = clamp(exposure, MinExposure, MaxExposure);
@@ -57,11 +58,11 @@ void main(uint GI : SV_GroupIndex)
 	{
 		Exposure[0] = exposure;
 		Exposure[1] = 1.0 / exposure;
-		Exposure[2] = exposure / PeakIntensity;
+		Exposure[2] = exposure;
 		Exposure[3] = weightedHistAvg;
 
 		// First attempt to recenter our histogram around the log-average.
-		float biasToCenter = (floor(weightedHistAvg) - 128.0) / 255.0;//
+		float biasToCenter = (floor(weightedHistAvg) - 128.0) / 255.0;
 		if (abs(biasToCenter) > 0.1)
 		{
 			MinLog += biasToCenter * RcpLogRange;

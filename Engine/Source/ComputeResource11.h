@@ -63,10 +63,10 @@ private:
 	void SetUAVInternal(std::shared_ptr<GpuBuffer> buffer, bool bImmediate);
 
 	void UpdateResourceOnRenderThread(RenderThread::ComputeData* materialData, ID3D11ShaderResourceView* srv);
-	void UpdateResourceOnRenderThread(RenderThread::ComputeData* materialData, ID3D11UnorderedAccessView* uav);
+	void UpdateResourceOnRenderThread(RenderThread::ComputeData* materialData, ID3D11UnorderedAccessView* uav, uint32_t counterInitialValue);
 
 	void DispatchToRenderThread(ID3D11ShaderResourceView* srv, bool bImmediate);
-	void DispatchToRenderThread(ID3D11UnorderedAccessView* uav, bool bImmediate);
+	void DispatchToRenderThread(ID3D11UnorderedAccessView* uav, uint32_t counterInitialValue, bool bImmediate);
 	void DispatchToRenderThreadNoLock(std::shared_ptr<RenderThread::ComputeData> materialData, ID3D11ShaderResourceView* srv, bool bImmediate);
 
 	inline void SetCachedResources(std::shared_ptr<Texture> texture, std::shared_ptr<ColorBuffer> colorBuffer,

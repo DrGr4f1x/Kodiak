@@ -89,25 +89,26 @@ class StructuredBuffer : public GpuBuffer
 public:
 	void Destroy() override
 	{
-		m_counterBuffer.Destroy();
+		m_counterBuffer->Destroy();
 		GpuBuffer::Destroy();
 	}
 
 	void CreateDerivedViews() override;
 
-	ByteAddressBuffer& GetCounterBuffer() { return m_counterBuffer; }
+	std::shared_ptr<ByteAddressBuffer> GetCounterBuffer() { return m_counterBuffer; }
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetCounterSRV(CommandList& commandList);
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetCounterUAV(CommandList& commandList);
 
 private:
-	ByteAddressBuffer m_counterBuffer;
+	std::shared_ptr<ByteAddressBuffer> m_counterBuffer;
 };
 
 
 class TypedBuffer : public GpuBuffer
 {
 public:
+	// TODO: change format parameter to ColorFormat, instead of DXGI_FORMAT
 	TypedBuffer(DXGI_FORMAT format) : m_dataFormat(format) {}
 	void CreateDerivedViews() override;
 

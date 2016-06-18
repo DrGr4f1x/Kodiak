@@ -224,7 +224,7 @@ bool Application::OnEvent(MSG msg)
 // Handle window resize events
 void Application::OnResize()
 {
-	Renderer::GetInstance().SetWindowSize(m_width, m_height);
+	DeviceManager::GetInstance().SetWindowSize(m_width, m_height);
 }
 
 

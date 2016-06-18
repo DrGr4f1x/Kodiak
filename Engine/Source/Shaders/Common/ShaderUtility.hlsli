@@ -114,6 +114,16 @@ float ToneMapLuma(float Luma, float E = 4.0)
 	return (1 - exp2(-E * Luma)) / (1 - exp2(-E));
 }
 
+float3 ApplyToeRGB(float3 ldr, float ToeStrength)
+{
+	return ldr * ToneMap(ldr * ToeStrength);
+}
+
+float3 ApplyToe(float3 ldr, float ToeStrength)
+{
+	float luma = RGBToLuminance(ldr);//MaxChannel(ldr);
+	return ldr * ToneMapLuma(luma * ToeStrength);
+}
 
 // This is the same as above, but converts the linear luminance value to a more subjective "perceived luminance",
 // which could be called the Log-Luminance.

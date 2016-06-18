@@ -49,7 +49,7 @@ BaseEffect::BaseEffect(const string& name) : m_name(name)
 
 
 
-void BaseEffect::SetVertexShaderPath(const ShaderPath& shaderPath)
+void BaseEffect::SetVertexShaderPath(const string& shaderPath)
 {
 	m_shaderPaths[0] = shaderPath;
 	m_vertexShader = ShaderManager::GetInstance().LoadVertexShader(shaderPath);
@@ -58,7 +58,7 @@ void BaseEffect::SetVertexShaderPath(const ShaderPath& shaderPath)
 }
 
 
-void BaseEffect::SetDomainShaderPath(const ShaderPath& shaderPath)
+void BaseEffect::SetDomainShaderPath(const string& shaderPath)
 {
 	m_shaderPaths[1] = shaderPath;
 	m_domainShader = ShaderManager::GetInstance().LoadDomainShader(shaderPath);
@@ -67,7 +67,7 @@ void BaseEffect::SetDomainShaderPath(const ShaderPath& shaderPath)
 }
 
 
-void BaseEffect::SetHullShaderPath(const ShaderPath& shaderPath)
+void BaseEffect::SetHullShaderPath(const string& shaderPath)
 {
 	m_shaderPaths[2] = shaderPath;
 	m_hullShader = ShaderManager::GetInstance().LoadHullShader(shaderPath);
@@ -76,7 +76,7 @@ void BaseEffect::SetHullShaderPath(const ShaderPath& shaderPath)
 }
 
 
-void BaseEffect::SetGeometryShaderPath(const ShaderPath& shaderPath)
+void BaseEffect::SetGeometryShaderPath(const string& shaderPath)
 {
 	m_shaderPaths[3] = shaderPath;
 	m_geometryShader = ShaderManager::GetInstance().LoadGeometryShader(shaderPath);
@@ -85,7 +85,7 @@ void BaseEffect::SetGeometryShaderPath(const ShaderPath& shaderPath)
 }
 
 
-void BaseEffect::SetPixelShaderPath(const ShaderPath& shaderPath)
+void BaseEffect::SetPixelShaderPath(const string& shaderPath)
 {
 	m_shaderPaths[4] = shaderPath;
 	m_pixelShader = ShaderManager::GetInstance().LoadPixelShader(shaderPath);

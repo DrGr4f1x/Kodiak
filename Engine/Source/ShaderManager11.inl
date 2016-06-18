@@ -10,19 +10,30 @@
 #pragma once
 
 template<class ShaderClass>
-void ShaderManager::LoadShaderAsync(std::shared_ptr<ShaderClass> shader, const std::string& fullPathToShader) const
+void ShaderManager::LoadShaderAsync(std::shared_ptr<ShaderClass> shader, const std::string& shaderPath) const
 {
 	// Set initial state on the shader
 	shader->m_shader = nullptr;
 	shader->m_isReady = false;
 
 	using namespace concurrency;
-	shader->loadTask = create_task([shader, fullPathToShader]()
+	shader->loadTask = create_task([shader, shaderPath]()
 	{
 		// Load the compiled shader file
 		unique_ptr<uint8_t[]> data;
 		size_t dataSize;
-		ThrowIfFailed(BinaryReader::ReadEntireFile(fullPathToShader, data, &dataSize));
+		
+		// Try common DX shader first, i.e. shader.dx.cso
+		HRESULT res = S_OK;
+
+		std::string commonPath = shaderPath + ".dx.cso";
+		res = BinaryReader::ReadEntireFile(commonPath, data, &dataSize);
+		if (res != S_OK)
+		{
+			// Try dx11 shader, i.e. shader.dx11.cso
+			std::string dx11Path = shaderPath + ".dx11.cso";
+			ThrowIfFailed(BinaryReader::ReadEntireFile(dx11Path, data, &dataSize));
+		}
 
 		// Create the shader
 		shader->Create(data, dataSize);
@@ -34,7 +45,7 @@ void ShaderManager::LoadShaderAsync(std::shared_ptr<ShaderClass> shader, const s
 
 
 template<class ShaderClass>
-void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const std::string& fullPathToShader) const
+void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const std::string& shaderPath) const
 {
 	// Set initial state on the shader
 	shader->m_shader = nullptr;
@@ -44,7 +55,18 @@ void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const 
 	// Load the compiled shader file
 	unique_ptr<uint8_t[]> data;
 	size_t dataSize;
-	ThrowIfFailed(BinaryReader::ReadEntireFile(fullPathToShader, data, &dataSize));
+	
+	// Try common DX shader first, i.e. shader.dx.cso
+	HRESULT res = S_OK;
+
+	std::string commonPath = shaderPath + ".dx.cso";
+	res = BinaryReader::ReadEntireFile(commonPath, data, &dataSize);
+	if (res != S_OK)
+	{
+		// Try dx11 shader, i.e. shader.dx11.cso
+		std::string dx11Path = shaderPath + ".dx11.cso";
+		ThrowIfFailed(BinaryReader::ReadEntireFile(dx11Path, data, &dataSize));
+	}
 
 	// Create the shader
 	shader->Create(data, dataSize);

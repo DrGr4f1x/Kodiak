@@ -60,6 +60,13 @@ namespace
 } // anonymous namespace
 
 
+DeviceManager& DeviceManager::GetInstance()
+{
+	static DeviceManager instance;
+	return instance;
+}
+
+
 DeviceManager::DeviceManager()
 {
 	CreateDeviceIndependentResources();
@@ -412,8 +419,8 @@ void DeviceManager::CreatePresentState()
 	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader(ShaderPath("Engine", "ScreenQuadVS.cso"));
-	auto ps = ShaderManager::GetInstance().LoadPixelShader(ShaderPath("Engine", "ConvertLDRToDisplayPS.cso"));
+	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine\\ScreenQuadVS");
+	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine\\ConvertLDRToDisplayPS");
 	(vs->loadTask && ps->loadTask).wait();
 	
 	// Configure PSO

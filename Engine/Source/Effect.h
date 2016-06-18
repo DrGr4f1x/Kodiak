@@ -37,35 +37,11 @@ public:
 	void SetName(const std::string& name) { m_name = name; }
 	const std::string& GetName() const { return m_name; }
 
-	void SetVertexShaderPath(const std::string& path, const std::string& file)
-	{
-		SetVertexShaderPath(ShaderPath(path, file));
-	}
-	void SetVertexShaderPath(const ShaderPath& shaderPath);
-
-	void SetDomainShaderPath(const std::string& path, const std::string& file)
-	{
-		SetDomainShaderPath(ShaderPath(path, file));
-	}
-	void SetDomainShaderPath(const ShaderPath& shaderPath);
-
-	void SetHullShaderPath(const std::string& path, const std::string& file)
-	{
-		SetHullShaderPath(ShaderPath(path, file));
-	}
-	void SetHullShaderPath(const ShaderPath& shaderPath);
-
-	void SetGeometryShaderPath(const std::string& path, const std::string& file)
-	{
-		SetGeometryShaderPath(ShaderPath(path, file));
-	}
-	void SetGeometryShaderPath(const ShaderPath& shaderPath);
-
-	void SetPixelShaderPath(const std::string& path, const std::string& file)
-	{
-		SetPixelShaderPath(ShaderPath(path, file));
-	}
-	void SetPixelShaderPath(const ShaderPath& shaderPath);
+	void SetVertexShaderPath(const std::string& shaderPath);
+	void SetDomainShaderPath(const std::string& shaderPath);
+	void SetHullShaderPath(const std::string& shaderPath);
+	void SetGeometryShaderPath(const std::string& path);
+	void SetPixelShaderPath(const std::string& path);
 
 	void SetBlendState(const BlendStateDesc& desc) { m_blendStateDesc = desc; }
 	void SetDepthStencilState(const DepthStencilStateDesc& desc) { m_depthStencilStateDesc = desc; }
@@ -86,7 +62,7 @@ public:
 protected:
 	std::string							m_name;
 
-	ShaderPath							m_shaderPaths[5];
+	std::string							m_shaderPaths[5];
 
 	std::shared_ptr<VertexShader>		m_vertexShader;
 	std::shared_ptr<DomainShader>		m_domainShader;

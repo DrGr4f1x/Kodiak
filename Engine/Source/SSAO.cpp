@@ -59,46 +59,46 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 	m_sampleThickness[11] = sqrt(1.0f - 0.6f * 0.6f - 0.6f * 0.6f);
 
 	m_depthPrepare1Cs = make_shared<ComputeKernel>("depthPrepare1Cs");
-	m_depthPrepare1Cs->SetComputeShaderPath("Engine", "AoPrepareDepthBuffers1CS.cso");
+	m_depthPrepare1Cs->SetComputeShaderPath("Engine\\AoPrepareDepthBuffers1CS");
 	auto waitTask = m_depthPrepare1Cs->loadTask;
 
 	m_depthPrepare2Cs = make_shared<ComputeKernel>("depthPrepare2Cs");
-	m_depthPrepare2Cs->SetComputeShaderPath("Engine", "AoPrepareDepthBuffers2CS.cso");
+	m_depthPrepare2Cs->SetComputeShaderPath("Engine\\AoPrepareDepthBuffers2CS");
 	waitTask = waitTask && m_depthPrepare2Cs->loadTask;
 
 	for (int32_t i = 0; i < 4; ++i)
 	{
 		m_render1Cs[i] = make_shared<ComputeKernel>("render1Cs");
-		m_render1Cs[i]->SetComputeShaderPath("Engine", "AoRender1CS.cso");
+		m_render1Cs[i]->SetComputeShaderPath("Engine\\AoRender1CS");
 		waitTask = waitTask && m_render1Cs[i]->loadTask;
 
 		m_render2Cs[i] = make_shared<ComputeKernel>("render2Cs");
-		m_render2Cs[i]->SetComputeShaderPath("Engine", "AoRender2CS.cso");
+		m_render2Cs[i]->SetComputeShaderPath("Engine\\AoRender2CS");
 		waitTask = waitTask && m_render2Cs[i]->loadTask;
 
 		m_blurUpsampleBlend[i][0] = make_shared<ComputeKernel>("blurUpsampleBlendOutCs");
-		m_blurUpsampleBlend[i][0]->SetComputeShaderPath("Engine", "AoBlurUpsampleBlendOutCS.cso");
+		m_blurUpsampleBlend[i][0]->SetComputeShaderPath("Engine\\AoBlurUpsampleBlendOutCS");
 		waitTask = waitTask && m_blurUpsampleBlend[i][0]->loadTask;
 
 		m_blurUpsampleBlend[i][1] = make_shared<ComputeKernel>("blurUpsamplePreMinBlendOutCs");
-		m_blurUpsampleBlend[i][1]->SetComputeShaderPath("Engine", "AoBlurUpsamplePreMinBlendOutCS.cso");
+		m_blurUpsampleBlend[i][1]->SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinBlendOutCS");
 		waitTask = waitTask && m_blurUpsampleBlend[i][1]->loadTask;
 
 		m_blurUpsampleFinal[i][0] = make_shared<ComputeKernel>("blurUpsampleCs");
-		m_blurUpsampleFinal[i][0]->SetComputeShaderPath("Engine", "AoBlurUpsampleCS.cso");
+		m_blurUpsampleFinal[i][0]->SetComputeShaderPath("Engine\\AoBlurUpsampleCS");
 		waitTask = waitTask && m_blurUpsampleFinal[i][0]->loadTask;
 
 		m_blurUpsampleFinal[i][1] = make_shared<ComputeKernel>("blurUpsamplePreMinCs");
-		m_blurUpsampleFinal[i][1]->SetComputeShaderPath("Engine", "AoBlurUpsamplePreMinCS.cso");
+		m_blurUpsampleFinal[i][1]->SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinCS");
 		waitTask = waitTask && m_blurUpsampleFinal[i][1]->loadTask;
 	}
 
 	m_linearizeDepthCs = make_shared<ComputeKernel>("linearizeDepthCs");
-	m_linearizeDepthCs->SetComputeShaderPath("Engine", "LinearizeDepthCS.cso");
+	m_linearizeDepthCs->SetComputeShaderPath("Engine\\LinearizeDepthCS");
 	waitTask = waitTask && m_linearizeDepthCs->loadTask;
 
 	m_debugSsaoCs = make_shared<ComputeKernel>("debugSSAO");
-	m_debugSsaoCs->SetComputeShaderPath("Engine", "DebugSSAOCS.cso");
+	m_debugSsaoCs->SetComputeShaderPath("Engine\\DebugSSAOCS");
 	waitTask = waitTask && m_debugSsaoCs->loadTask;
 
 	const uint32_t bufferWidth1 = (width + 1) / 2;

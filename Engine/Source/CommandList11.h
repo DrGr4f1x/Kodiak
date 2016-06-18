@@ -25,6 +25,7 @@ class GraphicsCommandList;
 class GraphicsPSO;
 class IndexBuffer;
 class RenderTargetView;
+class StructuredBuffer;
 class VertexBuffer;
 struct Rectangle;
 struct Viewport;
@@ -53,6 +54,7 @@ public:
 	}
 
 	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
+	void ResetCounter(StructuredBuffer& buf, uint32_t value = 0);
 	
 	// TODO: See if we can handle resource transitions in the ComputeKernel and Material such that DX11 doesn't need to know
 	void TransitionResource(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
@@ -207,8 +209,8 @@ public:
 
 	void SetShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
 	void SetShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
-	void SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav);
-	void SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs);
+	void SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav, const uint32_t* counterInitialValue = nullptr);
+	void SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs, const uint32_t* counterInitialValues = nullptr);
 	void SetShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
 	void SetShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
 		const uint32_t* numConstants);
@@ -351,15 +353,15 @@ inline void ComputeCommandList::SetShaderResources(uint32_t startSlot, uint32_t 
 }
 
 
-inline void ComputeCommandList::SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav)
+inline void ComputeCommandList::SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav, const uint32_t* counterInitialValue)
 {
-	m_context->CSSetUnorderedAccessViews(slot, 1, &uav, nullptr);
+	m_context->CSSetUnorderedAccessViews(slot, 1, &uav, counterInitialValue);
 }
 
 
-inline void ComputeCommandList::SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs)
+inline void ComputeCommandList::SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs, const uint32_t* counterInitialValues)
 {
-	m_context->CSSetUnorderedAccessViews(startSlot, numResources, uavs, nullptr);
+	m_context->CSSetUnorderedAccessViews(startSlot, numResources, uavs, counterInitialValues);
 }
 
 

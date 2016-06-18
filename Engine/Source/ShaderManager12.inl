@@ -10,18 +10,27 @@
 #pragma once
 
 template<class ShaderClass>
-void ShaderManager::LoadShaderAsync(std::shared_ptr<ShaderClass> shader, const std::string& fullPathToShader) const
+void ShaderManager::LoadShaderAsync(std::shared_ptr<ShaderClass> shader, const std::string& shaderPath) const
 {
 	// Set initial state on the shader
 	shader->m_byteCode.reset();
 	shader->m_isReady = false;
 
 	using namespace concurrency;
-	shader->loadTask = create_task([shader, fullPathToShader]()
+	shader->loadTask = create_task([shader, shaderPath]()
 	{
-		// Load the compiled shader file
-		ThrowIfFailed(BinaryReader::ReadEntireFile(fullPathToShader, shader->m_byteCode, &shader->m_byteCodeSize));
+		// Try common DX shader first, i.e. shader.dx.cso
+		HRESULT res = S_OK;
 
+		std::string commonPath = shaderPath + ".dx.cso";
+		res = BinaryReader::ReadEntireFile(commonPath, shader->m_byteCode, &shader->m_byteCodeSize);
+		if (res != S_OK)
+		{
+			// Try dx12 shader, i.e. shader.dx12.cso
+			std::string dx12Path = shaderPath + ".dx12.cso";
+			ThrowIfFailed(BinaryReader::ReadEntireFile(dx12Path, shader->m_byteCode, &shader->m_byteCodeSize));
+		}
+		
 		// Introspect
 		shader->Finalize();
 
@@ -32,7 +41,7 @@ void ShaderManager::LoadShaderAsync(std::shared_ptr<ShaderClass> shader, const s
 
 
 template<class ShaderClass>
-void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const std::string& fullPathToShader) const
+void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const std::string& shaderPath) const
 {
 	// Set initial state on the shader
 	shader->m_byteCode.reset();
@@ -41,8 +50,17 @@ void ShaderManager::LoadShaderSerial(std::shared_ptr<ShaderClass> shader, const 
 	using namespace concurrency;
 	shader->loadTask = create_task([] {});
 
-	// Load the compiled shader file
-	ThrowIfFailed(BinaryReader::ReadEntireFile(fullPathToShader, shader->m_byteCode, &shader->m_byteCodeSize));
+	// Try common DX shader first, i.e. shader.dx.cso
+	HRESULT res = S_OK;
+
+	std::string commonPath = shaderPath + ".dx.cso";
+	res = BinaryReader::ReadEntireFile(commonPath, shader->m_byteCode, &shader->m_byteCodeSize);
+	if (res != S_OK)
+	{
+		// Try dx12 shader, i.e. shader.dx12.cso
+		std::string dx12Path = shaderPath + ".dx12.cso";
+		ThrowIfFailed(BinaryReader::ReadEntireFile(dx12Path, shader->m_byteCode, &shader->m_byteCodeSize));
+	}
 
 	// Introspect
 	shader->Finalize();

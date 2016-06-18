@@ -128,12 +128,10 @@ void ColorBuffer::CreateDerivedViews(uint32_t arraySize, uint32_t numMips)
 		srvDesc.Texture2D.MostDetailedMip = 0;
 	}
 
-	auto deviceManager = Renderer::GetInstance().GetDeviceManager();
-
 	if (~0ull == m_srvHandle.ptr)
 	{	
-		m_rtvHandle = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		m_srvHandle = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_rtvHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		m_srvHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	ID3D12Resource* resource = m_resource.Get();
@@ -148,7 +146,7 @@ void ColorBuffer::CreateDerivedViews(uint32_t arraySize, uint32_t numMips)
 	{
 		if (m_uavHandle[i].ptr = ~0ull)
 		{
-			m_uavHandle[i] = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			m_uavHandle[i] = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		}
 
 		g_device->CreateUnorderedAccessView(resource, nullptr, &uavDesc, m_uavHandle[i]);

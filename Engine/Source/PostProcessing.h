@@ -35,6 +35,7 @@ public:
 
 	// Render targets and buffers
 	ThreadParameter<std::shared_ptr<ColorBuffer>> SceneColorBuffer;
+	ThreadParameter<std::shared_ptr<ColorBuffer>> PostEffectsBuffer;
 
 	// Feature toggles
 	ThreadParameter<bool> EnableHDR;
@@ -42,12 +43,12 @@ public:
 	ThreadParameter<bool> EnableBloom;
 	ThreadParameter<bool> EnableAdaptation;
 	ThreadParameter<bool> HighQualityBloom;
-	ThreadParameter<bool> ToneMapOnlyLuma;
+	ThreadParameter<bool> DrawHistogram;
+	ThreadParameter<bool> DebugLuminance;
 
 	// Parameters
 	ThreadParameter<float> BloomThreshold;
 	ThreadParameter<float> Exposure;
-	ThreadParameter<float> PeakIntensity;
 	ThreadParameter<float> BloomUpsampleFactor;
 	ThreadParameter<float> BloomStrength;
 	ThreadParameter<float> LogLumaConstant;
@@ -55,11 +56,11 @@ public:
 	ThreadParameter<float> AdaptationRate;
 	ThreadParameter<float> MinExposure;
 	ThreadParameter<float> MaxExposure;
+	ThreadParameter<float> ToeStrength;
 
 	// Render post effects
 	void Render(GraphicsCommandList* commandList);
-	void DebugDrawHistogram(GraphicsCommandList* commandList);
-
+	
 private:
 	void ProcessHDR(ComputeCommandList* commandList);
 	void ProcessLDR(ComputeCommandList* commandList);
@@ -85,19 +86,18 @@ private:
 	std::shared_ptr<ComputeKernel>	m_blurCs[5];
 	std::shared_ptr<ComputeKernel>	m_upsampleAndBlurCs[5];
 	std::shared_ptr<ComputeKernel>	m_toneMapCs;
-	std::shared_ptr<ComputeKernel>	m_toneMap2Cs;
+	std::shared_ptr<ComputeKernel>	m_toneMapHdrCs;
 	std::shared_ptr<ComputeKernel>	m_generateHistogramCs;
 	std::shared_ptr<ComputeKernel>	m_adaptExposureCs;
 	std::shared_ptr<ComputeKernel>	m_debugDrawHistogramCs;
-
-	// Graphics shaders
-	std::shared_ptr<GraphicsPSO>	m_copyPSO;
+	std::shared_ptr<ComputeKernel>	m_debugLuminanceHdrCs;
+	std::shared_ptr<ComputeKernel>	m_copyPostToSceneCs;
 
 	// Render targets and UAV buffers
 	std::shared_ptr<ColorBuffer>	m_sceneColorBuffer;
+	std::shared_ptr<ColorBuffer>	m_postEffectsBuffer;
 
 	// Internal render targets and UAV buffers
-	std::shared_ptr<ColorBuffer>		m_sceneColorCopy;
 	std::shared_ptr<ColorBuffer>		m_bloomUAV1[2];	//  640x384 (1/3)
 	std::shared_ptr<ColorBuffer>		m_bloomUAV2[2];	//  320x192 (1/6)
 	std::shared_ptr<ColorBuffer>		m_bloomUAV3[2];	//  160x96  (1/12)
@@ -117,30 +117,26 @@ private:
 	bool m_enableBloom{ true };
 	bool m_enableAdaptation{ true };
 	bool m_highQualityBloom{ true };
-	bool m_toneMapOnlyLuma{ false };
+	bool m_drawHistogram{ false };
+	bool m_debugLuminance{ false };
 
 	// Parameters
 	float m_bloomThreshold{ 1.0f };
-	float m_exposure{ 4.0f };
-	float m_peakIntensity{ 16.0f };
+	float m_exposure{ 2.0f };
 	float m_bloomUpsampleFactor{ 0.65f };
 	float m_bloomStrength{ 0.1f };
 	float m_logLumaConstant{ 4.0f };
 	float m_targetLuminance{ 0.4f };
 	float m_adaptationRate{ 0.05f };
-	float m_minExposure{ 1.0f };
-	float m_maxExposure{ 8.0f };
+	float m_minExposure{ 1.0f / 64.0f };
+	float m_maxExposure{ 64.0f };
+	float m_toeStrength{ 0.01f };
 
 	// Constants
 	const uint32_t m_bloomWidth{ 640 };
 	const uint32_t m_bloomHeight{ 384 };
 	const float m_initialMinLog{ -12.0f };
 	const float m_initialMaxLog{ 4.0f };
-#if DX11
-	const bool m_copySceneColor{ true };
-#else
-	const bool m_copySceneColor{ false };
-#endif
 
 	// Internal state
 	uint32_t m_width{ 1 };

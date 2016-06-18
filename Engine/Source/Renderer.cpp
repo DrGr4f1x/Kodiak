@@ -41,9 +41,6 @@ Renderer& Renderer::GetInstance()
 
 void Renderer::Initialize()
 {
-	m_deviceManager = make_unique<DeviceManager>();
-
-	m_renderTaskEnvironment.deviceManager = m_deviceManager.get();
 	m_renderTaskEnvironment.rootTask = nullptr;
 
 	SamplerManager::GetInstance().Initialize();
@@ -60,7 +57,7 @@ void Renderer::Finalize()
 
 	SamplerManager::GetInstance().Shutdown();
 
-	m_deviceManager->Finalize();
+	DeviceManager::GetInstance().Finalize();
 }
 
 
@@ -70,18 +67,6 @@ void Renderer::EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback)
 	{
 		m_renderTaskQueue.push(callback);
 	}
-}
-
-
-void Renderer::SetWindow(uint32_t width, uint32_t height, HWND hwnd)
-{
-	m_deviceManager->SetWindow(width, height, hwnd);
-}
-
-
-void Renderer::SetWindowSize(uint32_t width, uint32_t height)
-{
-	m_deviceManager->SetWindowSize(width, height);
 }
 
 
@@ -99,7 +84,10 @@ void Renderer::Render(shared_ptr<RootRenderTask> rootTask)
 	m_renderTaskEnvironment.rootTask = rootTask;
 
 	// Start new frame
-	EnqueueTask([](RenderTaskEnvironment& rte) { rte.deviceManager->BeginFrame(); });
+	EnqueueTask([](RenderTaskEnvironment& rte) 
+	{ 
+		DeviceManager::GetInstance().BeginFrame(); 
+	});
 	
 	// Kick off rendering of root pipeline
 	EnqueueTask([](RenderTaskEnvironment& rte) { rte.rootTask->Start(); });
@@ -109,7 +97,7 @@ void Renderer::Render(shared_ptr<RootRenderTask> rootTask)
 	{
 		rte.rootTask->Wait();
 
-		rte.deviceManager->Present(rte.rootTask->GetPresentSource());
+		DeviceManager::GetInstance().Present(rte.rootTask->GetPresentSource());
 
 		rte.currentFrame += 1;
 		rte.frameCompleted = true;
