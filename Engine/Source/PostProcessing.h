@@ -127,7 +127,7 @@ private:
 	float m_bloomUpsampleFactor{ 0.65f };
 	float m_bloomStrength{ 0.1f };
 	float m_logLumaConstant{ 4.0f };
-	float m_targetLuminance{ 0.4f };
+	float m_targetLuminance{ 0.08f };
 	float m_adaptationRate{ 0.05f };
 	float m_minExposure{ 1.0f / 64.0f };
 	float m_maxExposure{ 64.0f };
