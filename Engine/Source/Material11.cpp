@@ -53,6 +53,10 @@ void Material::SetEffect(shared_ptr<Effect> effect)
 void Material::SetRenderPass(shared_ptr<RenderPass> pass)
 {
 	m_renderPass = pass;
+	if (m_renderThreadData)
+	{
+		m_renderThreadData->renderPass = pass;
+	}
 }
 
 
@@ -259,29 +263,27 @@ void Material::CreateRenderThreadData()
 		}
 	}
 	
-	// Resources
+	// Parameters
+	for (const auto& parameter : effectSig.parameters)
 	{
-		lock_guard<mutex> CS(m_resourceLock);
-
-		for (const auto& resource : effectSig.srvs)
-		{
-			shared_ptr<MaterialResource> matResource;
-			
-			auto it = m_resources.find(resource.second.name);
-			if (end(m_resources) != it)
-			{
-				matResource = it->second;
-			}
-			else
-			{
-				matResource = make_shared<MaterialResource>(resource.second.name);
-			}
-
-			matResource->CreateRenderThreadData(m_renderThreadData, resource.second);
-		}
+		auto materialParameter = GetParameter(parameter.second.name);
+		materialParameter->CreateRenderThreadData(m_renderThreadData, parameter.second);
 	}
 
-	// TODO: UAVs
+	// Resource SRVs
+	for (const auto& resource : effectSig.srvs)
+	{
+		auto materialResource = GetResource(resource.second.name);
+		materialResource->CreateRenderThreadData(m_renderThreadData, resource.second);
+	}
+
+	// Resource UAVs
+	for (const auto& uav : effectSig.uavs)
+	{
+		auto materialUAV = GetResource(uav.second.name);
+		materialUAV->CreateRenderThreadData(m_renderThreadData, uav.second);
+	}
+
 	// TODO: Samplers
 }
 

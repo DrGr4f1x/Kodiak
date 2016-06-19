@@ -50,6 +50,10 @@ void Material::SetEffect(shared_ptr<Effect> effect)
 void Material::SetRenderPass(shared_ptr<RenderPass> pass)
 {
 	m_renderPass = pass;
+	if (m_renderThreadData)
+	{
+		m_renderThreadData->renderPass = pass;
+	}
 }
 
 
