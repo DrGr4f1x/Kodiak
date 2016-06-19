@@ -154,6 +154,7 @@ void SponzaApplication::CreateResources()
 	m_postProcessing->Initialize(m_width, m_height);
 	m_postProcessing->SceneColorBuffer = m_colorTarget;
 	m_postProcessing->EnableAdaptation = true;
+	m_postProcessing->EnableBloom = true;
 	
 	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
@@ -383,7 +384,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	shadowTask->Continue(opaqueTask);
 
 
-	/*auto postTask = make_shared<RenderTask>();
+	auto postTask = make_shared<RenderTask>();
 	postTask->SetName("Postprocessing");
 	postTask->Render = [this]
 	{
@@ -397,7 +398,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 
 		PROFILE_END();
 	};
-	opaqueTask->Continue(postTask);*/
+	opaqueTask->Continue(postTask);
 
 	rootTask->Present(m_colorTarget);
 

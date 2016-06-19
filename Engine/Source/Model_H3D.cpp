@@ -315,7 +315,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 	// Create model
 	auto model = make_shared<StaticModel>();
 
-	bool asyncLoad = true;
+	bool asyncLoad = false;
 
 	// Textures and materials
 	std::vector<std::shared_ptr<Material>> opaqueMaterials(header.materialCount);

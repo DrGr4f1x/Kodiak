@@ -93,37 +93,58 @@ float RGBToLuminance(float3 x)
 }
 
 
+float MaxChannel(float3 x)
+{
+	return max(x.x, max(x.y, x.z));
+}
+
+
 float3 ToneMapRGB(float3 hdr)
 {
 	return 1 - exp2(-hdr);
 }
 
 
-// Assumes the "white point" is 1.0.  Prescale your HDR values if otherwise.  'E' affects the rate
-// at which colors blow out to white.
-float3 ToneMap(float3 hdr, float E = 4.0)
+float ToneMapLuma(float luma)
 {
-	return (1 - exp2(-E * hdr)) / (1 - exp2(-E));
+	return 1 - exp2(-luma);
 }
 
 
-// This variant rescales only the luminance of the color to fit in the [0, 1] range while preserving hue.
-float3 ToneMap2(float3 hdr, float E = 4.0)
+float InverseToneMapLuma(float luma)
 {
-	float luma = RGBToLuminance(hdr);
-	return hdr * (1 - exp2(-E * luma)) / (1 - exp2(-E)) / (luma + 0.0001);
+	return -log2(max(1e-6, 1 - luma));
 }
 
 
-float ToneMapLuma(float Luma, float E = 4.0)
+float3 InverseToneMapRGB(float3 ldr)
 {
-	return (1 - exp2(-E * Luma)) / (1 - exp2(-E));
+	return -log2(max(1e-6, 1 - ldr));
 }
+
+
+
+// This variant rescales only the luminance of the color to fit in the [0, 1] range while
+// preserving hue.
+float3 ToneMap(float3 hdr)
+{
+	float luma = RGBToLuminance(hdr);//MaxChannel(hdr);
+	return hdr / max(luma, 1e-6) * ToneMapLuma(luma);
+}
+
+
+float3 InverseToneMap(float3 ldr)
+{
+	float luma = RGBToLuminance(ldr);//MaxChannel(ldr);
+	return ldr / max(luma, 1e-6) * InverseToneMapLuma(luma);
+}
+
 
 float3 ApplyToeRGB(float3 ldr, float ToeStrength)
 {
 	return ldr * ToneMap(ldr * ToeStrength);
 }
+
 
 float3 ApplyToe(float3 ldr, float ToeStrength)
 {
@@ -138,6 +159,25 @@ float3 ApplyToe(float3 ldr, float ToeStrength)
 float ComputeHDRRescale(float PW, float MB, float N = 0.25)
 {
 	return log2(1 - N * PW / MB) / log2(1 - N);
+}
+
+
+float ReToneMapLuma(float luma, float Rescale)
+{
+	return 1 - pow(1 - luma, Rescale);
+}
+
+
+float3 ReToneMapRGB(float3 ldr, float Rescale)
+{
+	return ldr / max(ldr, 1e-6) * (1 - pow(1 - ldr, Rescale));
+}
+
+
+float3 ReToneMap(float3 ldr, float Rescale)
+{
+	float luma = RGBToLuminance(ldr);//MaxChannel(ldr);
+	return ldr / max(luma, 1e-6) * ReToneMapLuma(luma, Rescale);
 }
 
 

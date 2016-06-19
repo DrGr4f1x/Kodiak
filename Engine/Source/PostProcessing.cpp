@@ -359,18 +359,9 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 	computeKernel->GetResource("BloomResult")->SetUAVImmediate(m_bloomUAV1[0]);
 	computeKernel->GetResource("LumaResult")->SetUAVImmediate(m_lumaLR);
 
-	if (m_enableHDR)
-	{
-		m_bloomExtractAndDownsampleHdrCs->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight);
-		m_bloomExtractAndDownsampleHdrCs->UnbindUAVs(commandList);
-		m_bloomExtractAndDownsampleHdrCs->UnbindSRVs(commandList);
-	}
-	else
-	{
-		m_bloomExtractAndDownsampleLdrCs->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight);
-		m_bloomExtractAndDownsampleLdrCs->UnbindUAVs(commandList);
-		m_bloomExtractAndDownsampleLdrCs->UnbindSRVs(commandList);
-	}
+	computeKernel->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight);
+	computeKernel->UnbindUAVs(commandList);
+	computeKernel->UnbindSRVs(commandList);
 
 	commandList->TransitionResource(*m_bloomUAV1[0], ResourceState::NonPixelShaderResource);
 
