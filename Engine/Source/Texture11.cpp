@@ -91,6 +91,8 @@ shared_ptr<Texture> Texture::Load(const string& path, bool sRGB, bool asyncLoad)
 
 void Texture::Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData)
 {
+	loadTask = concurrency::create_task([] {});
+
 	D3D11_TEXTURE2D_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
 

@@ -93,6 +93,8 @@ shared_ptr<Texture> Texture::Load(const string& path, bool sRGB, bool asyncLoad)
 
 void Texture::Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData)
 {
+	loadTask = concurrency::create_task([] {});
+
 	m_usageState = D3D12_RESOURCE_STATE_COMMON;
 
 	DXGI_FORMAT dxgiFormat = DXGIUtility::ConvertToDXGI(format);
