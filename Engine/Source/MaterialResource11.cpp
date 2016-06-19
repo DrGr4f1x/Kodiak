@@ -157,6 +157,7 @@ void MaterialResource::SetUAV(shared_ptr<GpuBuffer> buffer)
 }
 
 
+static void whoa() {}
 void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource)
 {
 	m_type = resource.type;
@@ -176,6 +177,7 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 	if (m_texture)
 	{
 		SetSRV(m_texture);
+		return;
 	}
 	else if (m_colorBuffer)
 	{
@@ -189,6 +191,7 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 	{
 		SetSRV(m_gpuBuffer);
 	}
+	whoa();
 }
 
 

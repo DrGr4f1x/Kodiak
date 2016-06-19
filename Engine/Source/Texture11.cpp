@@ -18,6 +18,8 @@
 #include "Paths.h"
 #include "RenderUtils.h"
 
+#include <Shlwapi.h>
+
 using namespace Kodiak;
 using namespace std;
 
@@ -54,6 +56,11 @@ shared_ptr<Texture> Texture::Load(const string& path, bool sRGB, bool asyncLoad)
 
 		if (iter == s_textureMap.end())
 		{
+			if (!PathFileExistsA(path.c_str()))
+			{
+				return nullptr;
+			}
+
 			texture = make_shared<Texture>();
 			s_textureMap[path] = texture;
 
@@ -153,7 +160,7 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 
 	if (format != TextureFormat::None)
 	{
-		string fullPath = Paths::GetInstance().TextureDir() + path;
+		string fullPath = path;
 		if (appendExtension)
 		{
 			fullPath += extension;

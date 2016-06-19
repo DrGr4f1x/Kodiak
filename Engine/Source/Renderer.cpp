@@ -70,7 +70,7 @@ void Renderer::EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback)
 }
 
 
-void Renderer::Render(shared_ptr<RootRenderTask> rootTask)
+void Renderer::Render(shared_ptr<RootRenderTask> rootTask, bool bHDRPresent, const PresentParameters& params)
 {
 	PROFILE_BEGIN(itt_render);
 
@@ -93,11 +93,11 @@ void Renderer::Render(shared_ptr<RootRenderTask> rootTask)
 	EnqueueTask([](RenderTaskEnvironment& rte) { rte.rootTask->Start(); });
 
 	// Signal end of frame
-	EnqueueTask([](RenderTaskEnvironment& rte)
+	EnqueueTask([bHDRPresent, params](RenderTaskEnvironment& rte)
 	{
 		rte.rootTask->Wait();
 
-		DeviceManager::GetInstance().Present(rte.rootTask->GetPresentSource());
+		DeviceManager::GetInstance().Present(rte.rootTask->GetPresentSource(), bHDRPresent, params);
 
 		rte.currentFrame += 1;
 		rte.frameCompleted = true;

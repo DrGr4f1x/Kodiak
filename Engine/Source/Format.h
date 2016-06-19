@@ -18,6 +18,7 @@ enum class ColorFormat
 	R8G8B8A8,
 	R8_UNorm,
 	R8_UInt,
+	R10G10B10A2_UNorm,
 	R11G11B10_Float,
 	R16_Float,
 	R32_Float,

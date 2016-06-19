@@ -38,6 +38,14 @@ struct RenderTaskEnvironment
 	std::atomic<bool> frameCompleted{ true };
 };
 
+struct PresentParameters
+{
+	float PaperWhite;
+	float MaxBrightness;
+	float ToeStrength;
+	uint32_t DebugMode;
+};
+
 // TODO: Move this shit elsewhere
 std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
 	const DirectX::XMVECTORF32& clearColor);
@@ -56,7 +64,7 @@ public:
 
 	void EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback);
 
-	void Render(std::shared_ptr<RootRenderTask> rootTask);
+	void Render(std::shared_ptr<RootRenderTask> rootTask, bool bHDRPresent, const PresentParameters& params);
 
 private:
 	void StartRenderTask();

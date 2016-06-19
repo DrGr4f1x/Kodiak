@@ -17,6 +17,7 @@
 #include "Material.h"
 #include "MaterialParameter.h"
 #include "MaterialResource.h"
+#include "Paths.h"
 #include "RenderEnums.h"
 #include "Texture.h"
 #include "VertexBuffer.h"
@@ -220,7 +221,28 @@ void ReadMaterial(Material& material, BinaryReader& reader)
 	material.name = reader.ReadArray<char>(Material::maxMaterialName);
 }
 
-} // Anonymous namespace
+} // H3D namespace
+
+
+namespace
+{
+
+string BuildTexturePath(const string& basePath)
+{
+	string fullPath = Paths::GetInstance().TextureDir() + basePath;
+	bool appendExtension = false;
+	string extension;
+
+	auto sepIndex = basePath.rfind('.');
+	if (sepIndex == string::npos)
+	{
+		// Assume DDS
+		fullPath += ".dds";
+	}
+	return fullPath;
+}
+
+} // anonymous namespace
 
 
 namespace Kodiak
@@ -293,6 +315,8 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 	// Create model
 	auto model = make_shared<StaticModel>();
 
+	bool asyncLoad = true;
+
 	// Textures and materials
 	std::vector<std::shared_ptr<Material>> opaqueMaterials(header.materialCount);
 	std::vector<std::shared_ptr<Material>> shadowMaterials(header.materialCount);
@@ -308,31 +332,39 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		shared_ptr<Texture> specularTexture;
 		shared_ptr<Texture> normalTexture;
 
-		if (materials[i].texDiffusePath.back() == '\\' || materials[i].texDiffusePath.back() == '/')
+		string diffusePath = BuildTexturePath(materials[i].texDiffusePath);
+		diffuseTexture = Texture::Load(diffusePath, true, asyncLoad);
+		if (!diffuseTexture)
 		{
-			diffuseTexture = Texture::Load("default.dds", true);
+			diffusePath = BuildTexturePath("default.dds");
+			diffuseTexture = Texture::Load(diffusePath, true, asyncLoad);
+
 		}
-		else
+		
+		string specularPath = BuildTexturePath(materials[i].texSpecularPath);
+		specularTexture = Texture::Load(specularPath, true, asyncLoad);
+		if (!specularTexture)
 		{
-			diffuseTexture = Texture::Load(materials[i].texDiffusePath, true);
+			specularPath = BuildTexturePath(materials[i].texDiffusePath + "_specular");
+			specularTexture = Texture::Load(specularPath, true, asyncLoad);
+			if (!specularTexture)
+			{
+				specularPath = BuildTexturePath("default_specular");
+				specularTexture = Texture::Load(specularPath, true, asyncLoad);
+			}
 		}
 
-		if (materials[i].texSpecularPath.back() == '\\' || materials[i].texSpecularPath.back() == '/')
+		string normalPath = BuildTexturePath(materials[i].texNormalPath);
+		normalTexture = Texture::Load(normalPath, false, asyncLoad);
+		if (!normalTexture)
 		{
-			specularTexture = Texture::Load("default_specular.dds", true);
-		}
-		else
-		{
-			specularTexture = Texture::Load(materials[i].texSpecularPath, true);
-		}
-
-		if (materials[i].texNormalPath.back() == '\\' || materials[i].texNormalPath.back() == '/')
-		{
-			normalTexture = Texture::Load("default_normal.dds", false);
-		}
-		else
-		{
-			normalTexture = Texture::Load(materials[i].texNormalPath, false);
+			normalPath = BuildTexturePath(materials[i].texDiffusePath + "_normal");
+			normalTexture = Texture::Load(normalPath, false, asyncLoad);
+			if (!normalTexture)
+			{
+				normalPath = BuildTexturePath("default_normal");
+				normalTexture = Texture::Load(normalPath, false, asyncLoad);
+			}
 		}
 
 		opaqueMaterial->GetResource("texDiffuse")->SetSRV(diffuseTexture);
@@ -343,7 +375,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		using namespace DirectX;
 		opaqueMaterial->GetParameter("sunDirection")->SetValue(Vector3(0.336f, 0.924f, -0.183f));
 		opaqueMaterial->GetParameter("sunColor")->SetValue(Vector3(4.0f, 4.0f, 4.0f));
-		opaqueMaterial->GetParameter("ambientColor")->SetValue(Vector3(0.2f, 0.2f, 0.2f));
+		opaqueMaterial->GetParameter("ambientColor")->SetValue(Vector3(0.1f, 0.1f, 0.1f));
 		opaqueMaterial->GetParameter("shadowTexelSize")->SetValue(1.0f / 2048.0f);
 
 		// Setup depth material

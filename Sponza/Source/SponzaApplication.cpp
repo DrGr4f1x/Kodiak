@@ -104,7 +104,15 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 void SponzaApplication::OnRender()
 {
 	auto rootTask = SetupFrame();
-	Renderer::GetInstance().Render(rootTask);
+
+	PresentParameters params;
+	params.ToeStrength = 0.01f;
+	params.PaperWhite = 200.0f;
+	params.MaxBrightness = 600.0f;
+	params.DebugMode = 0;
+
+	const bool bHDRPresent = false;
+	Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
 }
 
 
@@ -125,14 +133,12 @@ void SponzaApplication::OnDestroy()
 void SponzaApplication::CreateResources()
 {
 	m_colorTarget = CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float,
-		DirectX::Colors::CornflowerBlue);
+		DirectX::Colors::Black);
 
 	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32, 0.0f);
 
 	m_linearDepthBuffer = CreateColorBuffer("Linear depth buffer", m_width, m_height, 1, ColorFormat::R16_Float, DirectX::Colors::Black);
 	m_ssaoFullscreen = CreateColorBuffer("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm, DirectX::Colors::Black);
-
-	
 
 	m_ssao = make_shared<SSAO>();
 	m_ssao->Initialize(m_width, m_height);
@@ -240,8 +246,8 @@ void SponzaApplication::SetupScene()
 	// Setup scene camera
 	m_camera = make_shared<Camera>();
 	m_camera->SetEyeAtUp(Vector3(1099.0f, 652.0f, -39.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3(kYUnitVector));
-	m_camera->SetPerspectiveMatrix(45.0f, static_cast<float>(m_height) / static_cast<float>(m_width), 1.0f, 10000.0f);
-	
+	m_camera->SetZRange(1.0f, 10000.0f);
+
 	m_cameraController = make_shared<CameraController>(m_camera, m_inputState, Vector3(kYUnitVector));
 
 	m_ssao->SetCamera(m_camera);
@@ -377,7 +383,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	shadowTask->Continue(opaqueTask);
 
 
-	auto postTask = make_shared<RenderTask>();
+	/*auto postTask = make_shared<RenderTask>();
 	postTask->SetName("Postprocessing");
 	postTask->Render = [this]
 	{
@@ -391,7 +397,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 
 		PROFILE_END();
 	};
-	opaqueTask->Continue(postTask);
+	opaqueTask->Continue(postTask);*/
 
 	rootTask->Present(m_colorTarget);
 

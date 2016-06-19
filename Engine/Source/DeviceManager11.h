@@ -10,6 +10,7 @@
 #pragma once
 
 #include "PipelineState11.h"
+#include "ConstantBuffer11.h"
 
 namespace Kodiak
 {
@@ -18,7 +19,7 @@ namespace Kodiak
 class ColorBuffer;
 class DepthBuffer;
 class GraphicsCommandList;
-
+enum class ColorFormat;
 
 class DeviceManager
 {
@@ -30,7 +31,7 @@ public:
 	void Finalize() {}
 
 	void BeginFrame();
-	void Present(std::shared_ptr<ColorBuffer> presentSource);
+	void Present(std::shared_ptr<ColorBuffer> presentSource, bool bHDRPresent, const struct PresentParameters& params);
 
 	// Feature support queries
 	bool SupportsTypedUAVLoad_R11G11B10_FLOAT() const { return false; }
@@ -47,7 +48,8 @@ private:
 
 	void CreatePresentState();
 
-	void PreparePresent(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresentLDR(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresentHDR(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource, const struct PresentParameters& params);
 
 private:
 	// Direct3D objects.
@@ -73,6 +75,7 @@ private:
 
 	// Rendering objects
 	std::shared_ptr<ColorBuffer>			m_backBuffer;
+	ColorFormat								m_swapChainFormat;
 	
 	// Cached device properties.
 	D3D_FEATURE_LEVEL						m_d3dFeatureLevel{ D3D_FEATURE_LEVEL_9_1 };
@@ -82,7 +85,9 @@ private:
 	bool									m_deviceRemoved{ false };
 
 	// Graphics state for present
-	GraphicsPSO m_convertLDRToDisplayPSO;
+	GraphicsPSO		m_convertLDRToDisplayPSO;
+	GraphicsPSO		m_convertHDRToDisplayPSO;
+	ConstantBuffer	m_presentHDRConstants;
 };
 
 // Global device handle, for convenience

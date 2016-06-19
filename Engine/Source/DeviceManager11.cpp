@@ -15,8 +15,10 @@
 #include "CommandList11.h"
 #include "CommandListManager11.h"
 #include "DepthBuffer.h"
+#include "DXGIUtility.h"
 #include "Format.h"
 #include "Profile.h"
+#include "Renderer.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
 #include "Shader.h"
@@ -69,6 +71,8 @@ DeviceManager& DeviceManager::GetInstance()
 
 DeviceManager::DeviceManager()
 {
+	m_swapChainFormat = ColorFormat::R10G10B10A2_UNorm;
+
 	CreateDeviceIndependentResources();
 	CreateDeviceResources();
 }
@@ -108,13 +112,20 @@ void DeviceManager::BeginFrame()
 }
 
 
-void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource, bool bHDRPresent, const PresentParameters& params)
 {
 	PROFILE_BEGIN(itt_present);
 
 	auto commandList = GraphicsCommandList::Begin();
 
-	PreparePresent(commandList, presentSource);
+	if (bHDRPresent)
+	{
+		PreparePresentHDR(commandList, presentSource, params);
+	}
+	else
+	{
+		PreparePresentLDR(commandList, presentSource);
+	}
 
 	commandList->CloseAndExecute();
 	commandList = nullptr;
@@ -299,7 +310,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 			2, // Double-buffered swap chain.
 			m_width,
 			m_height,
-			DXGI_FORMAT_B8G8R8A8_UNORM,
+			DXGIUtility::ConvertToDXGI(m_swapChainFormat),
 			0
 			);
 
@@ -324,7 +335,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 		swapChainDesc.Width = m_width; // Match the size of the window.
 		swapChainDesc.Height = m_height;
-		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // This is the most common swap chain format.
+		swapChainDesc.Format = DXGIUtility::ConvertToDXGI(m_swapChainFormat); // This is the most common swap chain format.
 		swapChainDesc.Stereo = false;
 		swapChainDesc.SampleDesc.Count = 1; // Don't use multi-sampling.
 		swapChainDesc.SampleDesc.Quality = 0;
@@ -419,22 +430,31 @@ void DeviceManager::CreatePresentState()
 	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine\\ScreenQuadVS");
-	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine\\ConvertLDRToDisplayPS");
-	(vs->loadTask && ps->loadTask).wait();
+	auto screenQuadVs = ShaderManager::GetInstance().LoadVertexShader("Engine\\ScreenQuadVS");
+	auto convertLDRToDisplayPs = ShaderManager::GetInstance().LoadPixelShader("Engine\\ConvertLDRToDisplayPS");
+	auto convertHDRToDisplayPs = ShaderManager::GetInstance().LoadPixelShader("Engine\\ConvertHDRToDisplayPS");
+	(screenQuadVs->loadTask && convertLDRToDisplayPs->loadTask && convertHDRToDisplayPs->loadTask).wait();
 	
 	// Configure PSO
 	m_convertLDRToDisplayPSO.SetBlendState(defaultBlendState);
 	m_convertLDRToDisplayPSO.SetRasterizerState(rasterizerState);
 	m_convertLDRToDisplayPSO.SetDepthStencilState(depthStencilState);
-	m_convertLDRToDisplayPSO.SetVertexShader(vs.get());
-	m_convertLDRToDisplayPSO.SetPixelShader(ps.get());
-
+	m_convertLDRToDisplayPSO.SetVertexShader(screenQuadVs.get());
+	m_convertLDRToDisplayPSO.SetPixelShader(convertLDRToDisplayPs.get());
 	m_convertLDRToDisplayPSO.Finalize();
+
+	m_convertHDRToDisplayPSO.SetBlendState(defaultBlendState);
+	m_convertHDRToDisplayPSO.SetRasterizerState(rasterizerState);
+	m_convertHDRToDisplayPSO.SetDepthStencilState(depthStencilState);
+	m_convertHDRToDisplayPSO.SetVertexShader(screenQuadVs.get());
+	m_convertHDRToDisplayPSO.SetPixelShader(convertHDRToDisplayPs.get());
+	m_convertHDRToDisplayPSO.Finalize();
+
+	m_presentHDRConstants.Create(16, Usage::Dynamic);
 }
 
 
-void DeviceManager::PreparePresent(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::PreparePresentLDR(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource)
 {
 	commandList->PIXBeginEvent("PreparePresent");
 	commandList->UnbindRenderTargets();
@@ -451,5 +471,35 @@ void DeviceManager::PreparePresent(GraphicsCommandList* commandList, shared_ptr<
 	commandList->Draw(3);
 
 	commandList->SetPixelShaderResource(0, nullptr);
+	commandList->PIXEndEvent();
+}
+
+
+void DeviceManager::PreparePresentHDR(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource, const PresentParameters& params)
+{
+	commandList->PIXBeginEvent("PreparePresent");
+	commandList->UnbindRenderTargets();
+
+	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->SetPipelineState(m_convertHDRToDisplayPSO);
+
+	// Copy and convert the LDR present source to the current back buffer
+	commandList->SetRenderTarget(*m_backBuffer);
+	commandList->SetViewportAndScissor(0, 0, m_width, m_height);
+
+	float toeStrength = params.ToeStrength < 1e-6f ? 1e32f : 1.0f / params.ToeStrength;
+	__declspec(align(16)) float presentData[4] = {params.PaperWhite, params.MaxBrightness, toeStrength, (float)params.DebugMode};
+
+	byte* dest = commandList->MapConstants(m_presentHDRConstants);
+	memcpy(dest, presentData, 16);
+	commandList->UnmapConstants(m_presentHDRConstants);
+
+	commandList->SetPixelShaderConstants(0, m_presentHDRConstants);
+	commandList->SetPixelShaderResource(0, presentSource->GetSRV());
+
+	commandList->Draw(3);
+
+	commandList->SetPixelShaderResource(0, nullptr);
+
 	commandList->PIXEndEvent();
 }

@@ -21,6 +21,8 @@ namespace Kodiak
 
 class GraphicsCommandList;
 
+
+
 class DeviceManager
 {
 public:
@@ -31,7 +33,7 @@ public:
 	void Finalize();
 
 	void BeginFrame() {}
-	void Present(std::shared_ptr<ColorBuffer> presentSource);
+	void Present(std::shared_ptr<ColorBuffer> presentSource, bool bHDRPresent, const struct PresentParameters& params);
 
 	// Feature support queries
 	bool SupportsTypedUAVLoad_R11G11B10_FLOAT() const {	return m_supportsTypedUAVLoad_R11G11B10_FLOAT; }
@@ -48,7 +50,8 @@ private:
 	void CreateWindowSizeDependentResources();
 	void CreatePresentState();
 
-	void PreparePresent(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresentLDR(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresentHDR(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource, const struct PresentParameters& params);
 
 private:
 	// Direct3D objects
@@ -69,6 +72,7 @@ private:
 
 	// Backbuffers
 	ColorBuffer	m_backbuffers[SWAP_CHAIN_BUFFER_COUNT];
+	ColorFormat m_swapChainFormat;
 
 	// Cached device properties.
 	uint32_t								m_currentFrame{ 0 };
@@ -83,6 +87,7 @@ private:
 	// Graphics state for Present
 	RootSignature m_presentRS;
 	GraphicsPSO m_convertLDRToDisplayPSO;
+	GraphicsPSO m_convertHDRToDisplayPSO;
 
 	// Feature flags
 	bool m_supportsTypedUAVLoad_R11G11B10_FLOAT{ false };

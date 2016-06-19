@@ -284,7 +284,7 @@ void PostProcessing::ProcessHDR(ComputeCommandList* commandList)
 	commandList->TransitionResource(*m_lumaBuffer, ResourceState::UnorderedAccess);
 	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-	auto computeKernel = m_debugLuminance ? m_debugLuminanceHdrCs : (m_enableHDR ? m_toneMapHdrCs : m_toneMapCs);
+	auto computeKernel = m_debugLuminance ? m_debugLuminanceHdrCs : (false ? m_toneMapHdrCs : m_toneMapCs);
 
 	float toeStrength = m_toeStrength < 1e-6f ? 1e32f : 1.0f / m_toeStrength;
 
@@ -493,6 +493,8 @@ void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
 
 		commandList->WriteBuffer(*m_exposureBuffer, 0, initExposure, sizeof(initExposure));
 		commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+
+		commandList->PIXEndEvent();
 
 		return;
 	}

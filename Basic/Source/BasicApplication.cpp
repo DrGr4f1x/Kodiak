@@ -144,7 +144,16 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 void BasicApplication::OnRender()
 {
 	auto rootTask = SetupFrame();
-	Renderer::GetInstance().Render(rootTask);
+
+	PresentParameters params;
+	params.ToeStrength = 0.01f;
+	params.PaperWhite = 200.0f;
+	params.MaxBrightness = 600.0f;
+	params.DebugMode = 0;
+
+	const bool bHDRPresent = true;
+
+	Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
 }
 
 

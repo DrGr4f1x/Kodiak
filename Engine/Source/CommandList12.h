@@ -185,6 +185,11 @@ public:
 	void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 
 	void SetPipelineState(const GraphicsPSO& PSO);
+	void SetConstants(UINT rootIndex, UINT numConstants, const void* pConstants);
+	void SetConstants(UINT rootIndex, DWParam x);
+	void SetConstants(UINT rootIndex, DWParam x, DWParam y);
+	void SetConstants(UINT rootIndex, DWParam x, DWParam y, DWParam z);
+	void SetConstants(UINT rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
 	void SetConstantBuffer(uint32_t rootIndex, const ConstantBuffer& cbuffer);
 
 	byte* MapConstants(ConstantBuffer& cbuffer);
@@ -310,6 +315,42 @@ inline void CommandList::SetDescriptorHeaps(uint32_t heapCount, D3D12_DESCRIPTOR
 	{
 		BindDescriptorHeaps();
 	}
+}
+
+
+inline void GraphicsCommandList::SetConstants(UINT rootIndex, UINT numConstants, const void* pConstants)
+{
+	m_commandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, pConstants, 0);
+}
+
+
+inline void GraphicsCommandList::SetConstants(UINT rootIndex, DWParam x)
+{
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.Uint, 0);
+}
+
+
+inline void GraphicsCommandList::SetConstants(UINT rootIndex, DWParam x, DWParam y)
+{
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.Uint, 0);
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, y.Uint, 1);
+}
+
+
+inline void GraphicsCommandList::SetConstants(UINT rootIndex, DWParam x, DWParam y, DWParam z)
+{
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.Uint, 0);
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, y.Uint, 1);
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, z.Uint, 2);
+}
+
+
+inline void GraphicsCommandList::SetConstants(UINT rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
+{
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.Uint, 0);
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, y.Uint, 1);
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, z.Uint, 2);
+	m_commandList->SetGraphicsRoot32BitConstant(rootIndex, w.Uint, 3);
 }
 
 

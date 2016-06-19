@@ -107,7 +107,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>$(ProjectDir)..\External\IntelITT\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libittnotify.lib</AdditionalDependencies>
+      <AdditionalDependencies>libittnotify.lib;shlwapi.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">
@@ -128,7 +128,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>$(ProjectDir)..\External\IntelITT\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libittnotify.lib</AdditionalDependencies>
+      <AdditionalDependencies>libittnotify.lib;shlwapi.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">
@@ -153,7 +153,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>$(ProjectDir)..\External\IntelITT\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libittnotify.lib</AdditionalDependencies>
+      <AdditionalDependencies>libittnotify.lib;shlwapi.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">
@@ -178,7 +178,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>$(ProjectDir)..\External\IntelITT\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libittnotify.lib</AdditionalDependencies>
+      <AdditionalDependencies>libittnotify.lib;shlwapi.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -901,6 +901,20 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ConvertHDRToDisplayPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\ConvertLDRToDisplayPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Pixel</ShaderType>

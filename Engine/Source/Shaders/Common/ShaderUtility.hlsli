@@ -93,6 +93,12 @@ float RGBToLuminance(float3 x)
 }
 
 
+float3 ToneMapRGB(float3 hdr)
+{
+	return 1 - exp2(-hdr);
+}
+
+
 // Assumes the "white point" is 1.0.  Prescale your HDR values if otherwise.  'E' affects the rate
 // at which colors blow out to white.
 float3 ToneMap(float3 hdr, float E = 4.0)
@@ -124,6 +130,16 @@ float3 ApplyToe(float3 ldr, float ToeStrength)
 	float luma = RGBToLuminance(ldr);//MaxChannel(ldr);
 	return ldr * ToneMapLuma(luma * ToeStrength);
 }
+
+
+// It's possible to rescale tonemapped values without inverting the tone operator and
+// applying a new one.  This will compute the desired rescale factor which can be used
+// with the ReToneMap* functions.
+float ComputeHDRRescale(float PW, float MB, float N = 0.25)
+{
+	return log2(1 - N * PW / MB) / log2(1 - N);
+}
+
 
 // This is the same as above, but converts the linear luminance value to a more subjective "perceived luminance",
 // which could be called the Log-Luminance.
