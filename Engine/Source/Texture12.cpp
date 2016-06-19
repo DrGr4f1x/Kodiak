@@ -19,6 +19,8 @@
 #include "Paths.h"
 #include "RenderUtils.h"
 
+#include <Shlwapi.h>
+
 
 using namespace Kodiak;
 using namespace std;
@@ -56,6 +58,11 @@ shared_ptr<Texture> Texture::Load(const string& path, bool sRGB, bool asyncLoad)
 
 		if (iter == s_textureMap.end())
 		{
+			if (!PathFileExistsA(path.c_str()))
+			{
+				return nullptr;
+			}
+
 			texture = make_shared<Texture>();
 			s_textureMap[path] = texture;
 
@@ -161,12 +168,6 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 
 	if (format != TextureFormat::None)
 	{
-		string fullPath = Paths::GetInstance().TextureDir() + path;
-		if (appendExtension)
-		{
-			fullPath += extension;
-		}
-
 		switch (format)
 		{
 		case TextureFormat::DDS:
@@ -174,7 +175,7 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 			texture->m_cpuDescriptorHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 			ThrowIfFailed(CreateDDSTextureFromFile(g_device,
-				fullPath,
+				path,
 				0, // maxsize
 				sRGB,
 				texture->m_resource.GetAddressOf(),
