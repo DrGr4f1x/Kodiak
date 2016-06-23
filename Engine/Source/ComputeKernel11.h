@@ -22,6 +22,7 @@ class ComputeParameter;
 class ComputePSO;
 class ComputeResource;
 class ConstantBuffer;
+class GpuBuffer;
 namespace RenderThread { struct ComputeData; }
 
 class ComputeKernel
@@ -46,6 +47,7 @@ public:
 	void Dispatch2D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
 	void Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, 
 		size_t groupSizeY, size_t groupSizeZ);
+	void DispatchIndirect(ComputeCommandList* commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 
 	void UnbindSRVs(ComputeCommandList* commandList);
 	void UnbindUAVs(ComputeCommandList* commandList);

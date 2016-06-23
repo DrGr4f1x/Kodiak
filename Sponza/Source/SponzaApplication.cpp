@@ -21,6 +21,7 @@
 #include "Engine\Source\DeviceManager.h"
 #include "Engine\Source\Effect.h"
 #include "Engine\Source\Format.h"
+#include "Engine\Source\FXAA.h"
 #include "Engine\Source\InputState.h"
 #include "Engine\Source\Log.h"
 #include "Engine\Source\Material.h"
@@ -140,6 +141,9 @@ void SponzaApplication::CreateResources()
 	m_linearDepthBuffer = CreateColorBuffer("Linear depth buffer", m_width, m_height, 1, ColorFormat::R16_Float, DirectX::Colors::Black);
 	m_ssaoFullscreen = CreateColorBuffer("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm, DirectX::Colors::Black);
 
+	m_lumaBuffer = make_shared<ColorBuffer>();
+	m_lumaBuffer->Create("Luminance", m_width, m_height, 1, ColorFormat::R8_UNorm);
+
 	m_ssao = make_shared<SSAO>();
 	m_ssao->Initialize(m_width, m_height);
 	m_ssao->SceneColorBuffer = m_colorTarget;
@@ -153,13 +157,22 @@ void SponzaApplication::CreateResources()
 	m_postProcessing = make_shared<PostProcessing>();
 	m_postProcessing->Initialize(m_width, m_height);
 	m_postProcessing->SceneColorBuffer = m_colorTarget;
+	m_postProcessing->LumaBuffer = m_lumaBuffer;
 	m_postProcessing->EnableAdaptation = true;
 	m_postProcessing->EnableBloom = true;
 	
+	m_fxaa = make_shared<FXAA>();
+	m_fxaa->Initialize(m_width, m_height);
+	m_fxaa->SceneColorBuffer = m_colorTarget;
+	m_fxaa->LumaBuffer = m_lumaBuffer;
+	m_fxaa->DebugDraw = false;
+	m_fxaa->UsePrecomputedLuma = true;
+
 	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
 		m_postEffectsBuffer = CreateColorBuffer("Post Effects Buffer", m_width, m_height, 1, ColorFormat::R32_UInt, DirectX::Colors::Black);
 		m_postProcessing->PostEffectsBuffer = m_postEffectsBuffer;
+		m_fxaa->PostEffectsBuffer = m_postEffectsBuffer;
 	}
 
 	m_shadowBuffer = make_shared<ShadowBuffer>();
@@ -399,6 +412,18 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 		PROFILE_END();
 	};
 	opaqueTask->Continue(postTask);
+
+	auto fxaaTask = make_shared<RenderTask>();
+	fxaaTask->SetName("FXAA");
+	fxaaTask->Render = [this]
+	{
+		auto commandList = GraphicsCommandList::Begin();
+
+		m_fxaa->Render(commandList);
+
+		commandList->CloseAndExecute();
+	};
+	postTask->Continue(fxaaTask);
 
 	rootTask->Present(m_colorTarget);
 

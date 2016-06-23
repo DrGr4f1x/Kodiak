@@ -49,6 +49,7 @@ void GpuBuffer::Create(const std::string& name, uint32_t numElements, uint32_t e
 	}
 
 	m_resource = buffer;
+	m_buffer = buffer;
 
 	CreateDerivedViews();
 }
@@ -129,8 +130,9 @@ void TypedBuffer::CreateDerivedViews()
 
 	srvDesc.Format = m_dataFormat;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-	srvDesc.Buffer.ElementOffset = 0;
-	srvDesc.Buffer.ElementWidth = static_cast<UINT>(m_bufferSize);
+	//srvDesc.Buffer.ElementOffset = 0;
+	//srvDesc.Buffer.ElementWidth = static_cast<UINT>(m_bufferSize);
+	srvDesc.Buffer.NumElements = m_elementCount;
 
 	ThrowIfFailed(g_device->CreateShaderResourceView(m_resource.Get(), &srvDesc, m_srv.GetAddressOf()));
 

@@ -32,6 +32,7 @@ public:
 
 	// Render targets and buffers
 	ThreadParameter<std::shared_ptr<ColorBuffer>> SceneColorBuffer;
+	ThreadParameter<std::shared_ptr<ColorBuffer>> PostEffectsBuffer;
 	ThreadParameter<std::shared_ptr<ColorBuffer>> LumaBuffer;
 
 	// Feature toggles
@@ -52,9 +53,12 @@ private:
 	std::shared_ptr<ComputeKernel>			m_resolveWorkCs;
 	std::shared_ptr<ComputeKernel>			m_pass2HDebugCs;
 	std::shared_ptr<ComputeKernel>			m_pass2HCs;
+	std::shared_ptr<ComputeKernel>			m_pass2VDebugCs;
+	std::shared_ptr<ComputeKernel>			m_pass2VCs;
 
 	// Render targets and UAV buffers
 	std::shared_ptr<ColorBuffer>			m_sceneColorBuffer;
+	std::shared_ptr<ColorBuffer>			m_postEffectsBuffer;
 	std::shared_ptr<ColorBuffer>			m_lumaBuffer;
 
 	// Internal render targets and UAV buffers

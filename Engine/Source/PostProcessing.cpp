@@ -34,6 +34,7 @@ using namespace DirectX;
 PostProcessing::PostProcessing()
 	: SceneColorBuffer(m_sceneColorBuffer)
 	, PostEffectsBuffer(m_postEffectsBuffer)
+	, LumaBuffer(m_lumaBuffer)
 	, EnableHDR(m_enableHDR)
 	, DebugDrawSSAO(m_debugDrawSSAO)
 	, EnableBloom(m_enableBloom)
@@ -162,9 +163,6 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 	m_bloomUAV4[1]->Create("Bloom Buffer 4b", m_bloomWidth/8, m_bloomHeight/8, 1, ColorFormat::R11G11B10_Float);
 	m_bloomUAV5[0]->Create("Bloom Buffer 5a", m_bloomWidth/16, m_bloomHeight/16, 1, ColorFormat::R11G11B10_Float);
 	m_bloomUAV5[1]->Create("Bloom Buffer 5b", m_bloomWidth/16, m_bloomHeight/16, 1, ColorFormat::R11G11B10_Float);
-
-	m_lumaBuffer = make_shared<ColorBuffer>();
-	m_lumaBuffer->Create("Luminance", width, height, 1, ColorFormat::R8_UNorm);
 
 	m_lumaLR = make_shared<ColorBuffer>();
 	m_lumaLR->Create("Luma Buffer", m_bloomWidth, m_bloomHeight, 1, ColorFormat::R8_UInt);

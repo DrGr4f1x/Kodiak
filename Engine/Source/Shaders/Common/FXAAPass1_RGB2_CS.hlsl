@@ -4,10 +4,9 @@
 // IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
-// Adapted from FXAAPass2VDebugCS.hlsl in Microsoft's Miniengine sample
+// Adapted from FXAAPass1_RGB2_CS.hlsl in Microsoft's Miniengine sample
 // https://github.com/Microsoft/DirectX-Graphics-Samples
 //
 
-#define VERTICAL_ORIENTATION
-#define DEBUG_OUTPUT
-#include "FXAAPass2CS.hlsli"
+#define SUPPORT_TYPED_UAV_LOADS 1
+#include "FXAAPass1CS.hlsli"

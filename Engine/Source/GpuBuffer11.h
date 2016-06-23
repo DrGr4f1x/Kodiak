@@ -31,6 +31,7 @@ public:
 
 	ID3D11ShaderResourceView* GetSRV() { return m_srv.Get(); }
 	ID3D11UnorderedAccessView* GetUAV() { return m_uav.Get(); }
+	ID3D11Buffer* GetBuffer() { return m_buffer.Get(); }
 
 	uint32_t GetCounterInitialValue() const { return m_counterInitialValue; }
 	void SetCounterInitialValue(uint32_t value) { m_counterInitialValue = value; }
@@ -43,6 +44,7 @@ protected:
 
 	D3D11_BUFFER_DESC DescribeBuffer();
 	virtual void CreateDerivedViews() = 0;
+	virtual void SetBuffer(ID3D11Buffer* buffer) {}
 
 protected:
 	size_t		m_bufferSize{ 0 };
@@ -54,6 +56,7 @@ protected:
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
 	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	m_uav;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>				m_buffer;
 };
 
 
@@ -70,8 +73,7 @@ class IndirectArgsBuffer : public ByteAddressBuffer
 public:
 	IndirectArgsBuffer() 
 	{ 
-		m_bindFlags = 0; 
-		m_miscFlags = D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
+		m_miscFlags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 	}
 };
 

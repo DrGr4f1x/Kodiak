@@ -117,6 +117,15 @@ void ComputeKernel::Dispatch3D(ComputeCommandList* commandList, size_t threadCou
 }
 
 
+void ComputeKernel::DispatchIndirect(ComputeCommandList* commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+{
+	assert(m_renderThreadData);
+
+	m_renderThreadData->Commit(commandList);
+	commandList->DispatchIndirect(argumentBuffer, argumentBufferOffset);
+}
+
+
 void ComputeKernel::UnbindSRVs(ComputeCommandList* commandList)
 {
 	assert(m_renderThreadData);

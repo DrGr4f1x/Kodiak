@@ -79,6 +79,7 @@ CommandList* CommandList::Begin()
 
 uint64_t CommandList::CloseAndExecute(bool waitForCompletion)
 {
+	assert(m_pixMarkerCount == 0);
 	ID3D11CommandList* commandList;
 	m_context->FinishCommandList(TRUE, &commandList);
 
@@ -108,6 +109,7 @@ void CommandList::PIXBeginEvent(const string& label)
 	wstring wide = converter.from_bytes(label);
 
 	m_annotation->BeginEvent(wide.c_str());
+	++m_pixMarkerCount;
 #endif
 }
 
@@ -116,6 +118,7 @@ void CommandList::PIXEndEvent()
 {
 #if !defined(RELEASE)
 	m_annotation->EndEvent();
+	--m_pixMarkerCount;
 #endif
 }
 
@@ -550,6 +553,13 @@ void ComputeCommandList::ClearUAV(GpuBuffer& target)
 void ComputeCommandList::SetPipelineState(ComputePSO& pso)
 {
 	m_context->CSSetShader(pso.m_computeShader.Get(), nullptr, 0);
+}
+
+
+void ComputeCommandList::DispatchIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+{
+
+	m_context->DispatchIndirect(argumentBuffer.GetBuffer(), argumentBufferOffset);
 }
 
 

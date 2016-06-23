@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "CommandSignature12.h"
 #include "DynamicDescriptorHeap12.h"
 #include "GpuBuffer12.h"
 #include "LinearAllocator12.h"
@@ -251,6 +252,7 @@ public:
 	void Dispatch1D(size_t threadCountX, size_t groupSizeX = 64);
 	void Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
 	void Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ);
+	void DispatchIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 };
 
 
@@ -266,7 +268,7 @@ inline void CommandList::CopyBuffer(GpuResource& dest, GpuResource& src)
 inline void CommandList::CopyBufferRegion(GpuResource& dest, size_t destOffset, GpuResource& src, size_t srcOffset, size_t numBytes)
 {
 	TransitionResource(dest, ResourceState::CopyDest);
-	TransitionResource(src, ResourceState::CopySource);
+	//TransitionResource(src, ResourceState::CopySource);
 	FlushResourceBarriers();
 	m_commandList->CopyBufferRegion(dest.GetResource(), destOffset, src.GetResource(), srcOffset, numBytes);
 }
@@ -563,6 +565,15 @@ inline void ComputeCommandList::Dispatch3D(size_t threadCountX, size_t threadCou
 		Math::DivideByMultiple(threadCountX, groupSizeX),
 		Math::DivideByMultiple(threadCountY, groupSizeY),
 		Math::DivideByMultiple(threadCountZ, groupSizeZ));
+}
+
+
+inline void ComputeCommandList::DispatchIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+{
+	FlushResourceBarriers();
+	m_dynamicDescriptorHeap.CommitComputeRootDescriptorTables(m_commandList);
+	m_commandList->ExecuteIndirect(DispatchIndirectCommandSignature.GetSignature(), 1, argumentBuffer.GetResource(),
+		(UINT64)argumentBufferOffset, nullptr, 0);
 }
 
 } // namespace Kodiak

@@ -78,6 +78,8 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_currentDepthStencilState;
 	GraphicsPSO* m_currentGraphicsPSO{ nullptr };
 
+	uint32_t m_pixMarkerCount{ 0 };
+
 private:
 	static CommandList* AllocateCommandList();
 	static void FreeCommandList(CommandList* commandList);
@@ -206,6 +208,7 @@ public:
 	void Dispatch1D(size_t threadCountX, size_t groupSizeX = 64);
 	void Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
 	void Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ);
+	void DispatchIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 
 	void SetShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
 	void SetShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);

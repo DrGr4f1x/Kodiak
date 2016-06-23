@@ -13,6 +13,7 @@
 
 #include "CommandList12.h"
 #include "CommandListManager12.h"
+#include "CommandSignature12.h"
 #include "DXGIUtility.h"
 #include "Format.h"
 #include "Renderer.h"
@@ -223,6 +224,12 @@ void DeviceManager::CreateDeviceResources()
 
 	// Initalize graphics state for present
 	CreatePresentState();
+
+	DispatchIndirectCommandSignature[0].Dispatch();
+	DispatchIndirectCommandSignature.Finalize();
+
+	DrawIndirectCommandSignature[0].Draw();
+	DrawIndirectCommandSignature.Finalize();
 
 #if 0
 	// Create an 11 device wrapped around the 12 device and share

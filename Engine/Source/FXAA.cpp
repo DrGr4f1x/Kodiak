@@ -17,6 +17,7 @@
 #include "ComputeKernel.h"
 #include "ComputeParameter.h"
 #include "ComputeResource.h"
+#include "DeviceManager.h"
 #include "GpuBuffer.h"
 
 
@@ -27,6 +28,7 @@ using namespace DirectX;
 
 FXAA::FXAA()
 	: SceneColorBuffer(m_sceneColorBuffer)
+	, PostEffectsBuffer(m_postEffectsBuffer)
 	, LumaBuffer(m_lumaBuffer)
 	, UsePrecomputedLuma(m_usePreComputedLuma)
 	, DebugDraw(m_debugDraw)
@@ -37,25 +39,54 @@ FXAA::FXAA()
 
 void FXAA::Initialize(uint32_t width, uint32_t height)
 {
-	m_pass1HdrCs = make_shared<ComputeKernel>();
-	m_pass1HdrCs->SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS");
-	auto waitTask = m_pass1HdrCs->loadTask;
-
-	m_pass1LdrCs = make_shared<ComputeKernel>();
-	m_pass1LdrCs->SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS");
-	waitTask = waitTask && m_pass1LdrCs->loadTask;
-
 	m_resolveWorkCs = make_shared<ComputeKernel>();
 	m_resolveWorkCs->SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS");
-	waitTask = waitTask && m_resolveWorkCs->loadTask;
+	auto waitTask = m_resolveWorkCs->loadTask;
+
+	if(DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+	{ 
+		m_pass1HdrCs = make_shared<ComputeKernel>();
+		m_pass1HdrCs->SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS");
+		waitTask = waitTask && m_pass1HdrCs->loadTask;
+
+		m_pass1LdrCs = make_shared<ComputeKernel>();
+		m_pass1LdrCs->SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS");
+		waitTask = waitTask && m_pass1LdrCs->loadTask;
+
+		m_pass2HCs = make_shared<ComputeKernel>();
+		m_pass2HCs->SetComputeShaderPath("Engine\\FXAAPass2H2CS");
+		waitTask = waitTask && m_pass2HCs->loadTask;
+
+		m_pass2VCs = make_shared<ComputeKernel>();
+		m_pass2VCs->SetComputeShaderPath("Engine\\FXAAPass2V2CS");
+		waitTask = waitTask && m_pass2VCs->loadTask;
+	}
+	else
+	{
+		m_pass1HdrCs = make_shared<ComputeKernel>();
+		m_pass1HdrCs->SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS");
+		waitTask = m_pass1HdrCs->loadTask;
+
+		m_pass1LdrCs = make_shared<ComputeKernel>();
+		m_pass1LdrCs->SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS");
+		waitTask = waitTask && m_pass1LdrCs->loadTask;
+
+		m_pass2HCs = make_shared<ComputeKernel>();
+		m_pass2HCs->SetComputeShaderPath("Engine\\FXAAPass2HCS");
+		waitTask = waitTask && m_pass2HCs->loadTask;
+
+		m_pass2VCs = make_shared<ComputeKernel>();
+		m_pass2VCs->SetComputeShaderPath("Engine\\FXAAPass2VCS");
+		waitTask = waitTask && m_pass2VCs->loadTask;
+	}
 
 	m_pass2HDebugCs = make_shared<ComputeKernel>();
 	m_pass2HDebugCs->SetComputeShaderPath("Engine\\FXAAPass2HDebugCS");
 	waitTask = waitTask && m_pass2HDebugCs->loadTask;
 
-	m_pass2HCs = make_shared<ComputeKernel>();
-	m_pass2HCs->SetComputeShaderPath("Engine\\FXAAPass2HCS");
-	waitTask = waitTask && m_pass2HCs->loadTask;
+	m_pass2VDebugCs = make_shared<ComputeKernel>();
+	m_pass2VDebugCs->SetComputeShaderPath("Engine\\FXAAPass2VDebugCS");
+	waitTask = waitTask && m_pass2VDebugCs->loadTask;
 
 	m_fxaaWorkQueueH = make_shared<StructuredBuffer>();
 	m_fxaaWorkQueueH->Create("FXAA Horizontal Work Queue", 512 * 1024, 4);
@@ -81,10 +112,15 @@ void FXAA::Render(GraphicsCommandList* commandList)
 {
 	commandList->PIXBeginEvent("FXAA");
 
+	auto target = DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT() ? m_sceneColorBuffer : m_postEffectsBuffer;
+
 	{
 		commandList->PIXBeginEvent("Pass 1");
 
-		commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
+		commandList->ResetCounter(*m_fxaaWorkQueueH);
+		commandList->ResetCounter(*m_fxaaWorkQueueV);
+
+		commandList->TransitionResource(*target, ResourceState::NonPixelShaderResource);
 		commandList->TransitionResource(*m_fxaaWorkQueueH, ResourceState::UnorderedAccess);
 		commandList->TransitionResource(*m_fxaaWorkQueueV, ResourceState::UnorderedAccess);
 		commandList->TransitionResource(*m_fxaaColorQueueH, ResourceState::UnorderedAccess);
@@ -95,10 +131,10 @@ void FXAA::Render(GraphicsCommandList* commandList)
 		computeKernel->GetResource("HWork")->SetUAVImmediate(m_fxaaWorkQueueH);
 		computeKernel->GetResource("VWork")->SetUAVImmediate(m_fxaaWorkQueueV);
 		computeKernel->GetResource("HColor")->SetUAVImmediate(m_fxaaColorQueueH);
-		computeKernel->GetResource("HColor")->SetUAVImmediate(m_fxaaColorQueueV);
-		computeKernel->GetResource("Color")->SetSRVImmediate(m_sceneColorBuffer);
+		computeKernel->GetResource("VColor")->SetUAVImmediate(m_fxaaColorQueueV);
+		computeKernel->GetResource("Color")->SetSRVImmediate(target);
 
-		computeKernel->GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / m_sceneColorBuffer->GetWidth(), 1.0f / m_sceneColorBuffer->GetHeight()));
+		computeKernel->GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
 		computeKernel->GetParameter("ContrastThreshold")->SetValueImmediate(m_contrastThreshold);
 		computeKernel->GetParameter("SubpixelRemoval")->SetValueImmediate(m_subpixelRemoval);
 
@@ -114,7 +150,8 @@ void FXAA::Render(GraphicsCommandList* commandList)
 		}
 
 		auto computeCommandList = commandList->GetComputeCommandList();
-		computeKernel->Dispatch2D(computeCommandList, m_sceneColorBuffer->GetWidth(), m_sceneColorBuffer->GetHeight());
+		computeKernel->Dispatch2D(computeCommandList, target->GetWidth(), target->GetHeight());
+		computeKernel->UnbindUAVs(computeCommandList);
 
 		commandList->PIXEndEvent();
 	}
@@ -139,14 +176,17 @@ void FXAA::Render(GraphicsCommandList* commandList)
 
 #if DX12
 		// Read the structured buffers' counter buffers directly
+		commandList->TransitionResource(*m_fxaaWorkQueueH->GetCounterBuffer(), ResourceState::GenericRead);
+		commandList->TransitionResource(*m_fxaaWorkQueueV->GetCounterBuffer(), ResourceState::GenericRead);
 		m_resolveWorkCs->GetResource("WorkCounterH")->SetUAVImmediate(m_fxaaWorkQueueH->GetCounterBuffer());
 		m_resolveWorkCs->GetResource("WorkCounterV")->SetUAVImmediate(m_fxaaWorkQueueV->GetCounterBuffer());
 #endif
 
 		auto computeCommandList = commandList->GetComputeCommandList();
 		m_resolveWorkCs->Dispatch(computeCommandList, 1, 1, 1);
+		m_resolveWorkCs->UnbindUAVs(computeCommandList);
 
-		commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+		commandList->TransitionResource(*target, ResourceState::UnorderedAccess);
 		commandList->TransitionResource(*m_indirectParameters, ResourceState::IndirectArgument);
 		commandList->TransitionResource(*m_fxaaWorkQueueH, ResourceState::NonPixelShaderResource);
 		commandList->TransitionResource(*m_fxaaWorkQueueV, ResourceState::NonPixelShaderResource);
@@ -154,6 +194,28 @@ void FXAA::Render(GraphicsCommandList* commandList)
 		commandList->TransitionResource(*m_fxaaColorQueueV, ResourceState::NonPixelShaderResource);
 
 		auto computeKernel = m_debugDraw ? m_pass2HDebugCs : m_pass2HCs;
+
+		computeKernel->GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
+		computeKernel->GetResource("DstColor")->SetUAVImmediate(target);
+		computeKernel->GetResource("Luma")->SetSRVImmediate(m_lumaBuffer);
+		computeKernel->GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueH);
+		computeKernel->GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueH);
+
+		computeKernel->DispatchIndirect(computeCommandList, *m_indirectParameters, 0);
+		computeKernel->UnbindUAVs(computeCommandList);
+
+		computeKernel = m_debugDraw ? m_pass2VDebugCs : m_pass2VCs;
+
+		computeKernel->GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
+		computeKernel->GetResource("DstColor")->SetUAVImmediate(target);
+		computeKernel->GetResource("Luma")->SetSRVImmediate(m_lumaBuffer);
+		computeKernel->GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueV);
+		computeKernel->GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueV);
+
+		computeKernel->DispatchIndirect(computeCommandList, *m_indirectParameters, 12);
+		computeKernel->UnbindUAVs(computeCommandList);
+
+		computeCommandList->InsertUAVBarrier(*target);
 
 		commandList->PIXEndEvent();
 	}

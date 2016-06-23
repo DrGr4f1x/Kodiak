@@ -36,6 +36,7 @@ public:
 	// Render targets and buffers
 	ThreadParameter<std::shared_ptr<ColorBuffer>> SceneColorBuffer;
 	ThreadParameter<std::shared_ptr<ColorBuffer>> PostEffectsBuffer;
+	ThreadParameter<std::shared_ptr<ColorBuffer>> LumaBuffer;
 
 	// Feature toggles
 	ThreadParameter<bool> EnableHDR;

@@ -21,6 +21,7 @@ class CameraController;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
+class FXAA;
 class PostProcessing;
 class RootRenderTask;
 class SSAO;
@@ -55,6 +56,7 @@ private:
 	std::shared_ptr<ColorBuffer>		m_linearDepthBuffer;
 	std::shared_ptr<ColorBuffer>		m_ssaoFullscreen;
 	std::shared_ptr<ColorBuffer>		m_postEffectsBuffer;
+	std::shared_ptr<ColorBuffer>		m_lumaBuffer;
 
 	std::shared_ptr<Scene>				m_mainScene;
 	std::shared_ptr<Camera>				m_camera;
@@ -62,6 +64,7 @@ private:
 	std::shared_ptr<StaticModel>		m_sponzaModel;
 	std::shared_ptr<SSAO>				m_ssao;
 	std::shared_ptr<PostProcessing>		m_postProcessing;
+	std::shared_ptr<FXAA>				m_fxaa;
 
 	std::shared_ptr<ShadowBuffer>		m_shadowBuffer;
 	std::shared_ptr<ShadowCamera>		m_shadowCamera;

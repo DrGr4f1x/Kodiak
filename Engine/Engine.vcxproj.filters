@@ -410,6 +410,9 @@
     <ClInclude Include="Source\PlatformTypes.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\CommandSignature12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -639,6 +642,9 @@
     <ClCompile Include="Source\ShadowBuffer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="Source\CommandSignature12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
@@ -781,6 +787,12 @@
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\ConvertHDRToDisplayPS.hlsl">
       <Filter>Shaders\Common\Present</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_Luma2_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_RGB2_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
