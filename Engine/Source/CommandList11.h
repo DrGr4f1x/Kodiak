@@ -53,14 +53,16 @@ public:
 		return reinterpret_cast<ComputeCommandList*>(this);
 	}
 
+	void CopyCounter(GpuBuffer& dest, size_t destOffset, StructuredBuffer& src);
+
 	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
 	void ResetCounter(StructuredBuffer& buf, uint32_t value = 0);
 	
 	// TODO: See if we can handle resource transitions in the ComputeKernel and Material such that DX11 doesn't need to know
-	void TransitionResource(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
-	void BeginResourceTransition(GpuResource& Resource, ResourceState NewState, bool FlushImmediate = false) {}
-	void InsertUAVBarrier(GpuResource& Resource, bool FlushImmediate = false) {}
-
+	void TransitionResource(GpuResource& resource, ResourceState newState, bool flushImmediate = false) {}
+	void BeginResourceTransition(GpuResource& resource, ResourceState newState, bool flushImmediate = false) {}
+	void InsertUAVBarrier(GpuResource& resource, bool flushImmediate = false) {}
+	
 	void PIXBeginEvent(const std::string& label);
 	void PIXEndEvent();
 	void PIXSetMarker(const std::string& label);

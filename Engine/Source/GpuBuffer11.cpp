@@ -120,6 +120,9 @@ void StructuredBuffer::CreateDerivedViews()
 	uavDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_COUNTER;
 
 	ThrowIfFailed(g_device->CreateUnorderedAccessView(m_resource.Get(), &uavDesc, m_uav.GetAddressOf()));
+
+	m_counterBuffer = make_shared<ByteAddressBuffer>();
+	m_counterBuffer->Create("StructuredBuffer::Counter", 1, 4);
 }
 
 
@@ -130,8 +133,6 @@ void TypedBuffer::CreateDerivedViews()
 
 	srvDesc.Format = m_dataFormat;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-	//srvDesc.Buffer.ElementOffset = 0;
-	//srvDesc.Buffer.ElementWidth = static_cast<UINT>(m_bufferSize);
 	srvDesc.Buffer.NumElements = m_elementCount;
 
 	ThrowIfFailed(g_device->CreateShaderResourceView(m_resource.Get(), &srvDesc, m_srv.GetAddressOf()));

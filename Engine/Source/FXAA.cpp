@@ -178,9 +178,12 @@ void FXAA::Render(GraphicsCommandList* commandList)
 		// Read the structured buffers' counter buffers directly
 		commandList->TransitionResource(*m_fxaaWorkQueueH->GetCounterBuffer(), ResourceState::GenericRead);
 		commandList->TransitionResource(*m_fxaaWorkQueueV->GetCounterBuffer(), ResourceState::GenericRead);
-		m_resolveWorkCs->GetResource("WorkCounterH")->SetUAVImmediate(m_fxaaWorkQueueH->GetCounterBuffer());
-		m_resolveWorkCs->GetResource("WorkCounterV")->SetUAVImmediate(m_fxaaWorkQueueV->GetCounterBuffer());
+#elif DX11
+		commandList->CopyCounter(*m_fxaaWorkQueueH->GetCounterBuffer(), 0, *m_fxaaWorkQueueH);
+		commandList->CopyCounter(*m_fxaaWorkQueueV->GetCounterBuffer(), 0, *m_fxaaWorkQueueV);
 #endif
+		m_resolveWorkCs->GetResource("WorkCounterH")->SetSRVImmediate(m_fxaaWorkQueueH->GetCounterBuffer());
+		m_resolveWorkCs->GetResource("WorkCounterV")->SetSRVImmediate(m_fxaaWorkQueueV->GetCounterBuffer());
 
 		auto computeCommandList = commandList->GetComputeCommandList();
 		m_resolveWorkCs->Dispatch(computeCommandList, 1, 1, 1);

@@ -1227,10 +1227,10 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx11.cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx11.cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx12.cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx12.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">DX11=1</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">DX12=1</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">DX11=1</PreprocessorDefinitions>

@@ -8,35 +8,17 @@
 // https://github.com/Microsoft/DirectX-Graphics-Samples
 //
 
-#if DX12
 ByteAddressBuffer WorkCounterH : register(t0);
 ByteAddressBuffer WorkCounterV : register(t1);
-#endif
 RWByteAddressBuffer IndirectParams : register(u0);
 RWStructuredBuffer<uint> WorkQueueH : register(u1);
 RWStructuredBuffer<uint> WorkQueueV : register(u2);
 
-#if DX11
-groupshared uint PixelCountH;
-groupshared uint PixelCountV;
-#endif
-
 [numthreads(64, 1, 1)]
 void main(uint3 Gid : SV_GroupID, uint GI : SV_GroupIndex, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
 {
-#if DX12
 	uint PixelCountH = WorkCounterH.Load(0);
 	uint PixelCountV = WorkCounterV.Load(0);
-#endif
-
-#if DX11
-	if (GI == 0)
-	{
-		PixelCountH = WorkQueueH.IncrementCounter();
-		PixelCountV = WorkQueueV.IncrementCounter();
-	}
-	GroupMemoryBarrierWithGroupSync();
-#endif
 
 	uint PaddedCountH = (PixelCountH + 63) & ~63;
 	uint PaddedCountV = (PixelCountV + 63) & ~63;

@@ -92,6 +92,14 @@ public:
 	}
 
 	void CreateDerivedViews() override;
+
+	std::shared_ptr<ByteAddressBuffer> GetCounterBuffer() { return m_counterBuffer; }
+
+	const ID3D11ShaderResourceView* GetCounterSRV() { return m_counterBuffer->GetSRV(); }
+	const ID3D11UnorderedAccessView* GetCounterUAV() { return m_counterBuffer->GetUAV(); }
+
+private:
+	std::shared_ptr<ByteAddressBuffer> m_counterBuffer;
 };
 
 

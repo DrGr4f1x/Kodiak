@@ -58,6 +58,12 @@ void CommandList::DestroyAllCommandLists()
 }
 
 
+void CommandList::CopyCounter(GpuBuffer& dest, size_t destOffset, StructuredBuffer& src)
+{
+	m_context->CopyStructureCount(dest.GetBuffer(), destOffset, src.GetUAV());
+}
+
+
 void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes)
 {
 	m_context->UpdateSubresource(dest.GetResource(), 0, nullptr, data, 0, 0);
