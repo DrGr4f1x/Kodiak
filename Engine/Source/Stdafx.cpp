@@ -8,3 +8,7 @@
 //
 
 #include "Stdafx.h"
+
+// Globals
+bool g_useImmediateContext = false;
+bool g_singleThreadedRenderer = g_useImmediateContext;

@@ -425,6 +425,22 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 	};
 	postTask->Continue(fxaaTask);
 
+	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+	{
+		auto finalizePostTask = make_shared<RenderTask>();
+		finalizePostTask->SetName("Finalize Post");
+
+		finalizePostTask->Render = [this]
+		{
+			auto commandList = GraphicsCommandList::Begin();
+
+			m_postProcessing->FinalizePostProcessing(commandList);
+
+			commandList->CloseAndExecute();
+		};
+		fxaaTask->Continue(finalizePostTask);
+	}
+
 	rootTask->Present(m_colorTarget);
 
 	return rootTask;

@@ -62,6 +62,9 @@ public:
 	// Render post effects
 	void Render(GraphicsCommandList* commandList);
 	
+	void FinalizePostProcessing(GraphicsCommandList* commandList);
+	void RenderHistogram(GraphicsCommandList* commandList);
+
 private:
 	void ProcessHDR(ComputeCommandList* commandList);
 	void ProcessLDR(ComputeCommandList* commandList);

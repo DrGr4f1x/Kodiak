@@ -211,14 +211,25 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 		ProcessLDR(computeCommandList);
 	}
 
+	
+
+	commandList->PIXEndEvent();
+}
+
+
+void PostProcessing::FinalizePostProcessing(GraphicsCommandList* commandList)
+{
 	// In the case where we've been doing post processing in a separate buffer, we need to copy it
 	// back to the original buffer.  It is possible to skip this step if the next shader knows to
 	// do the manual format decode from UINT, but there are several code paths that need to be
 	// changed, and some of them rely on texture filtering, which won't work with UINT.  Since this
 	// is only to support legacy hardware and a single buffer copy isn't that big of a deal, this
 	// is the most economical solution.
+
 	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
+		ComputeCommandList* computeCommandList = commandList->GetComputeCommandList();
+
 		computeCommandList->PIXBeginEvent("Copy Post back to Scene");
 
 		computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
@@ -232,9 +243,15 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 
 		computeCommandList->PIXEndEvent();
 	}
+}
 
+
+void PostProcessing::RenderHistogram(GraphicsCommandList* commandList)
+{
 	if (m_drawHistogram)
 	{
+		ComputeCommandList* computeCommandList = commandList->GetComputeCommandList();
+
 		computeCommandList->PIXBeginEvent("Debug Histogram");
 
 		computeCommandList->InsertUAVBarrier(*m_sceneColorBuffer);
@@ -252,8 +269,6 @@ void PostProcessing::Render(GraphicsCommandList* commandList)
 
 		computeCommandList->PIXEndEvent();
 	}
-
-	commandList->PIXEndEvent();
 }
 
 

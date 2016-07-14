@@ -82,7 +82,7 @@ void ByteAddressBuffer::CreateDerivedViews()
 	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
 	srvDesc.BufferEx.FirstElement = 0;
-	srvDesc.BufferEx.NumElements = m_elementCount;
+	srvDesc.BufferEx.NumElements = m_bufferSize / 4;
 	srvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
 
 	ThrowIfFailed(g_device->CreateShaderResourceView(m_resource.Get(), &srvDesc, m_srv.GetAddressOf()));
@@ -92,7 +92,7 @@ void ByteAddressBuffer::CreateDerivedViews()
 
 	uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-	uavDesc.Buffer.NumElements = m_elementCount;
+	uavDesc.Buffer.NumElements = m_bufferSize / 4;
 	uavDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
 
 	ThrowIfFailed(g_device->CreateUnorderedAccessView(m_resource.Get(), &uavDesc, m_uav.GetAddressOf()));

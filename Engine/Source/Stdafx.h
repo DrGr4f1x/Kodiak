@@ -62,6 +62,10 @@
 #include <string>
 #include <thread>
 
+// Engine globals
+extern bool g_singleThreadedRenderer;
+extern bool g_useImmediateContext;
+
 // Engine headers
 #include "Constants.h"
 #include "DebugUtility.h"
