@@ -58,6 +58,12 @@
     <Filter Include="Shaders\Common\FXAA">
       <UniqueIdentifier>{6514b411-aa1f-42b1-86e1-242f07528bdd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Rendering\Techniques\Particles">
+      <UniqueIdentifier>{d4d46e6c-4ff8-415b-928e-1ae295ba48a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Common\Particles">
+      <UniqueIdentifier>{c0763778-3bf8-4acf-b8c5-dbfb56fa24fb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Stdafx.h" />
@@ -794,6 +800,81 @@
     <FxCompile Include="Source\Shaders\Common\FXAAPass1_RGB2_CS.hlsl">
       <Filter>Shaders\Common\FXAA</Filter>
     </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleBinCullingCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleDepthBoundsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleDispatchIndirectArgsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleFinalDispatchIndirectArgsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleInnerSortCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleLargeBinCullingCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleOuterSortCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticlePreSortCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticlePS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleSortIndirectArgsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleSpawnCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileCullingCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRender2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFast2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastDynamic2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastDynamicCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastLowRes2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastLowResCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowDynamic2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowDynamicCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowLowRes2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowLowResCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleUpdateCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Shaders\Common\PerViewData.hlsli">
@@ -822,6 +903,12 @@
     </None>
     <None Include="Source\Shaders\Common\PixelPacking.hlsli">
       <Filter>Shaders\Common</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\ParticleUtility.hlsli">
+      <Filter>Shaders\Common\Particles</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\ParticleUpdateCommon.hlsli">
+      <Filter>Shaders\Common\Particles</Filter>
     </None>
   </ItemGroup>
 </Project>
