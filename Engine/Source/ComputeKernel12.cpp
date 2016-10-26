@@ -12,6 +12,7 @@
 #include "ComputeKernel12.h"
 
 #include "CommandList12.h"
+#include "ComputeConstantBuffer.h"
 #include "ComputeParameter.h"
 #include "ComputeResource12.h"
 #include "PipelineState12.h"
@@ -42,6 +43,23 @@ void ComputeKernel::SetComputeShaderPath(const string& path)
 	m_computeShader = ShaderManager::GetInstance().LoadComputeShader(path);
 
 	loadTask = m_computeShader->loadTask.then([this] { SetupKernel(); });
+}
+
+
+shared_ptr<ComputeConstantBuffer> ComputeKernel::GetConstantBuffer(const string& name)
+{
+	lock_guard<mutex> CS(m_constantBufferLock);
+
+	auto it = m_constantBuffers.find(name);
+	if (end(m_constantBuffers) != it)
+	{
+		return it->second;
+	}
+
+	auto constantBuffer = make_shared<ComputeConstantBuffer>(name);
+	m_constantBuffers[name] = constantBuffer;
+
+	return constantBuffer;
 }
 
 
@@ -301,27 +319,18 @@ void ComputeKernel::SetupKernel()
 	}
 	
 
-	// Parameters
+	// Bind constant buffers
+	for (const auto& cbv : shaderSig.cbvTable)
 	{
-		lock_guard<mutex> CS(m_parameterLock);
+		auto computeConstantBuffer = GetConstantBuffer(cbv.name);
+		computeConstantBuffer->CreateRenderThreadData(m_renderThreadData, cbv);
+	}
 
-		for (const auto& parameter : shaderSig.parameters)
-		{
-			shared_ptr<ComputeParameter> computeParameter;
-
-			auto it = m_parameters.find(parameter.name);
-			if (end(m_parameters) != it)
-			{
-				computeParameter = it->second;
-			}
-			else
-			{
-				computeParameter = make_shared<ComputeParameter>(parameter.name);
-				m_parameters[parameter.name] = computeParameter;
-			}
-
-			computeParameter->CreateRenderThreadData(m_renderThreadData, parameter);
-		}
+	// Parameters
+	for (const auto& parameter : shaderSig.parameters)
+	{
+		auto computeParameter = GetParameter(parameter.name);
+		computeParameter->CreateRenderThreadData(m_renderThreadData, parameter);
 	}
 
 	// Samplers

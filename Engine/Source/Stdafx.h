@@ -67,6 +67,7 @@ extern bool g_singleThreadedRenderer;
 extern bool g_useImmediateContext;
 
 // Engine headers
+#include "Color.h"
 #include "Constants.h"
 #include "DebugUtility.h"
 #include "Log.h"

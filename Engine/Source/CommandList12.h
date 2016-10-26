@@ -87,6 +87,7 @@ public:
 
 	static void InitializeTexture(GpuResource& dest, UINT numSubresources, D3D12_SUBRESOURCE_DATA subData[]);
 	static void InitializeBuffer(GpuResource& dest, const void* data, size_t numBytes);
+	static void InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src);
 
 	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
 	void FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes);

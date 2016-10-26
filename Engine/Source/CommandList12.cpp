@@ -185,6 +185,49 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 }
 
 
+void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src)
+{
+	CommandList* commandList = CommandList::Begin();
+
+	commandList->TransitionResource(dest, ResourceState::CopyDest);
+	commandList->TransitionResource(src, ResourceState::CopySource);
+	commandList->FlushResourceBarriers();
+
+	const D3D12_RESOURCE_DESC& destDesc = dest.GetResource()->GetDesc();
+	const D3D12_RESOURCE_DESC& srcDesc = src.GetResource()->GetDesc();
+
+	assert(sliceIndex < destDesc.DepthOrArraySize &&
+		srcDesc.DepthOrArraySize == 1 &&
+		destDesc.Width == srcDesc.Width &&
+		destDesc.Height == srcDesc.Height &&
+		destDesc.MipLevels <= srcDesc.MipLevels
+	);
+
+	UINT subResourceIndex = sliceIndex * destDesc.MipLevels;
+
+	for (UINT i = 0; i < destDesc.MipLevels; ++i)
+	{
+		D3D12_TEXTURE_COPY_LOCATION destCopyLocation =
+		{
+			dest.GetResource(),
+			D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+			subResourceIndex + i
+		};
+
+		D3D12_TEXTURE_COPY_LOCATION srcCopyLocation =
+		{
+			src.GetResource(),
+			D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+			i
+		};
+
+		commandList->m_commandList->CopyTextureRegion(&destCopyLocation, 0, 0, 0, &srcCopyLocation, nullptr);
+	}
+
+	commandList->Finish();
+}
+
+
 void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* bufferData, size_t numBytes)
 {
 	assert(bufferData != nullptr && Math::IsAligned(bufferData, 16));

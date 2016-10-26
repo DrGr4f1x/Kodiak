@@ -188,6 +188,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     <ClInclude Include="Source\BinaryReader.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\CameraController.h" />
+    <ClInclude Include="Source\Color.h" />
     <ClInclude Include="Source\ColorBuffer.h" />
     <ClInclude Include="Source\ColorBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -221,6 +222,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     </ClInclude>
     <ClInclude Include="Source\CommonMath.h" />
     <ClInclude Include="Source\CommonStates.h" />
+    <ClInclude Include="Source\ComputeConstantBuffer.h" />
     <ClInclude Include="Source\ComputeKernel.h" />
     <ClInclude Include="Source\ComputeKernel11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
@@ -357,6 +359,10 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     <ClInclude Include="Source\Matrix3.h" />
     <ClInclude Include="Source\Matrix4.h" />
     <ClInclude Include="Source\Model.h" />
+    <ClInclude Include="Source\ParticleEffect.h" />
+    <ClInclude Include="Source\ParticleEffectManager.h" />
+    <ClInclude Include="Source\ParticleEffectProperties.h" />
+    <ClInclude Include="Source\ParticleShaderStructs.h" />
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\PipelineState.h" />
     <ClInclude Include="Source\PipelineState11.h">
@@ -428,6 +434,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\CommonStates.cpp" />
+    <ClCompile Include="Source\ComputeConstantBuffer.cpp" />
     <ClCompile Include="Source\ComputeKernel11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -493,6 +500,9 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\Model_H3D.cpp" />
+    <ClCompile Include="Source\ParticleEffect.cpp" />
+    <ClCompile Include="Source\ParticleEffectManager.cpp" />
+    <ClCompile Include="Source\ParticleEmissionProperties.cpp" />
     <ClCompile Include="Source\PostProcessing.cpp" />
     <ClCompile Include="Source\Profile.cpp" />
     <ClCompile Include="Source\Random.cpp" />

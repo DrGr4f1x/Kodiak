@@ -12,6 +12,7 @@
 #include "ComputeKernel11.h"
 
 #include "CommandList11.h"
+#include "ComputeConstantBuffer.h"
 #include "ComputeParameter.h"
 #include "ComputeResource11.h"
 #include "ConstantBuffer11.h"
@@ -46,6 +47,23 @@ void ComputeKernel::SetComputeShaderPath(const string& shaderPath)
 }
 
 
+shared_ptr<ComputeConstantBuffer> ComputeKernel::GetConstantBuffer(const string& name)
+{
+	lock_guard<mutex> CS(m_constantBufferLock);
+
+	auto it = m_constantBuffers.find(name);
+	if (end(m_constantBuffers) != it)
+	{
+		return it->second;
+	}
+
+	auto constantBuffer = make_shared<ComputeConstantBuffer>(name);
+	m_constantBuffers[name] = constantBuffer;
+
+	return constantBuffer;
+}
+
+
 shared_ptr<ComputeParameter> ComputeKernel::GetParameter(const string& name)
 {
 	lock_guard<mutex> CS(m_parameterLock);
@@ -77,6 +95,26 @@ shared_ptr<ComputeResource> ComputeKernel::GetResource(const string& name)
 	m_resources[name] = resource;
 
 	return resource;
+}
+
+
+void ComputeKernel::SetConstantBufferDataImmediate(const string& cbufferName, const byte* data, size_t dataSizeInBytes)
+{
+	assert(m_renderThreadData);
+
+	bool foundCBV = false;
+	for (const auto& cbvLayout : m_renderThreadData->cbvLayouts)
+	{
+		if (cbvLayout.name == cbufferName)
+		{
+			foundCBV = true;
+			assert(cbvLayout.sizeInBytes == dataSizeInBytes);
+			memcpy(m_renderThreadData->cbufferData + cbvLayout.byteOffset, data, dataSizeInBytes);
+			m_renderThreadData->cbufferDirty = true;
+			break;
+		}
+	}
+	assert(foundCBV);
 }
 
 
@@ -157,6 +195,7 @@ void ComputeKernel::SetupKernel()
 	for (const auto& shaderCBV : shaderSig.cbvTable)
 	{
 		computeData.cbufferSize += shaderCBV.sizeInBytes;
+		m_renderThreadData->cbvLayouts.push_back(shaderCBV);
 	}
 
 	if (computeData.cbufferSize > 0)
@@ -251,6 +290,13 @@ void ComputeKernel::SetupKernel()
 		computeData.samplerTables.layouts.push_back(layout);
 	}
 
+
+	// Bind constant buffers
+	for (const auto& cbv : shaderSig.cbvTable)
+	{
+		auto computeConstantBuffer = GetConstantBuffer(cbv.name);
+		computeConstantBuffer->CreateRenderThreadData(m_renderThreadData, cbv);
+	}
 
 	// Bind parameters
 	for (const auto& parameter : shaderSig.parameters)

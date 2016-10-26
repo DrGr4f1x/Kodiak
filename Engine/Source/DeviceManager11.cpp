@@ -275,6 +275,7 @@ void DeviceManager::CreateDeviceResources()
 	CreatePresentState();
 
 	// Create the Direct2D device object and a corresponding context.
+#if 0
 	ComPtr<IDXGIDevice3> dxgiDevice;
 	ThrowIfFailed(
 		m_d3dDevice.As(&dxgiDevice)
@@ -290,6 +291,7 @@ void DeviceManager::CreateDeviceResources()
 			&m_d2dContext
 			)
 		);
+#endif
 }
 
 
@@ -299,8 +301,10 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	ID3D11RenderTargetView* nullViews[] = { nullptr };
 	m_d3dContext->OMSetRenderTargets(ARRAYSIZE(nullViews), nullViews, nullptr);
 	m_backBuffer = nullptr;
+#if 0
 	m_d2dContext->SetTarget(nullptr);
 	m_d2dTargetBitmap = nullptr;
+#endif
 	m_d3dContext->Flush();
 
 	if (m_swapChain != nullptr)

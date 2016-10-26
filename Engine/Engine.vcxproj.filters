@@ -419,6 +419,24 @@
     <ClInclude Include="Source\CommandSignature12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Color.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleEffect.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleEffectManager.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleEffectProperties.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleShaderStructs.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeConstantBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -650,6 +668,18 @@
     </ClCompile>
     <ClCompile Include="Source\CommandSignature12.cpp">
       <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParticleEffect.cpp">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParticleEffectManager.cpp">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParticleEmissionProperties.cpp">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeConstantBuffer.cpp">
+      <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

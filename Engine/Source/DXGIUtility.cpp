@@ -18,6 +18,8 @@ DXGI_FORMAT ConvertToDXGI(Kodiak::ColorFormat format)
 {
 	switch (format)
 	{
+	case Kodiak::ColorFormat::BC3_UNorm_sRGB:
+		return DXGI_FORMAT_BC3_UNORM_SRGB;
 	case Kodiak::ColorFormat::R8G8B8A8:
 		return DXGI_FORMAT_R8G8B8A8_UNORM;
 	case Kodiak::ColorFormat::R8_UNorm:

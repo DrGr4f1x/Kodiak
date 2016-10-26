@@ -17,3 +17,4 @@ General Engine Stuff
 * Figure out the default texture situation for DX12 (no null SRVs)
 * Make RenderSceneTask class for rendering a pass on a Scene, w/ render targets, camera, etc.
 * System for default parameters/textures for render pass (figure out shader slot/root sig binding problem)
+* Start unifying the DX APIs, e.g. wrapper for ID3D11ShaderResourceView/D3D12_CPU_HANDLE in DepthBuffer, etc.

@@ -17,6 +17,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class ComputeConstantBuffer;
 class ComputeCommandList;
 class ComputeParameter;
 class ComputePSO;
@@ -39,8 +40,11 @@ public:
 
 	void SetComputeShaderPath(const std::string& path);
 
+	std::shared_ptr<ComputeConstantBuffer> GetConstantBuffer(const std::string& name);
 	std::shared_ptr<ComputeParameter> GetParameter(const std::string& name);
 	std::shared_ptr<ComputeResource> GetResource(const std::string& name);
+
+	void SetConstantBufferDataImmediate(const std::string& cbufferName, const byte* data, size_t dataSizeInBytes);
 
 	void Dispatch(ComputeCommandList* commandList, size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
 	void Dispatch1D(ComputeCommandList* commandList, size_t threadCountX, size_t groupSizeX = 64);
@@ -59,6 +63,9 @@ private:
 	std::string							m_name;
 	std::string							m_shaderPath;
 	std::shared_ptr<ComputeShader>		m_computeShader;
+
+	std::mutex														m_constantBufferLock;
+	std::map<std::string, std::shared_ptr<ComputeConstantBuffer>>	m_constantBuffers;
 
 	std::mutex													m_parameterLock;
 	std::map<std::string, std::shared_ptr<ComputeParameter>>	m_parameters;
@@ -101,6 +108,8 @@ struct ComputeData
 		std::array<uint32_t, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT>			firstConstant;
 		std::array<uint32_t, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT>			numConstants;
 	};
+
+	std::vector<ShaderReflection::CBVLayout> cbvLayouts;
 
 	CBufferBinding cbufferBinding;
 

@@ -55,6 +55,8 @@ public:
 
 	void CopyCounter(GpuBuffer& dest, size_t destOffset, StructuredBuffer& src);
 
+	static void InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src);
+
 	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
 	void ResetCounter(StructuredBuffer& buf, uint32_t value = 0);
 	

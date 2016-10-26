@@ -35,6 +35,7 @@ public:
 
 	static std::shared_ptr<Texture> Load(const std::string& path, bool sRGB, bool asyncLoad = true);
 	void Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData);
+	void CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData = nullptr);
 
 	concurrency::task<void> loadTask;
 

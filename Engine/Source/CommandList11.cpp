@@ -60,7 +60,58 @@ void CommandList::DestroyAllCommandLists()
 
 void CommandList::CopyCounter(GpuBuffer& dest, size_t destOffset, StructuredBuffer& src)
 {
-	m_context->CopyStructureCount(dest.GetBuffer(), destOffset, src.GetUAV());
+	m_context->CopyStructureCount(dest.GetBuffer(), static_cast<UINT>(destOffset), src.GetUAV());
+}
+
+
+void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src)
+{
+	CommandList* commandList = CommandList::Begin();
+
+	auto destResource = dest.GetResource();
+	auto srcResource = src.GetResource();
+
+	D3D11_RESOURCE_DIMENSION destType, srcType;
+	destResource->GetType(&destType);
+	srcResource->GetType(&srcType);
+
+	// TODO: Only handling 2d textures for now
+	assert(destType == D3D11_RESOURCE_DIMENSION_TEXTURE2D);
+	assert(destType == srcType);
+
+	ID3D11Texture2D* destTexture = nullptr;
+	ID3D11Texture2D* srcTexture = nullptr;
+
+	ThrowIfFailed(destResource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&destTexture)));
+	ThrowIfFailed(srcResource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&srcTexture)));
+
+	D3D11_TEXTURE2D_DESC destDesc, srcDesc;
+	destTexture->GetDesc(&destDesc);
+	srcTexture->GetDesc(&srcDesc);
+
+	assert(sliceIndex < destDesc.ArraySize &&
+		srcDesc.ArraySize == 1 &&
+		destDesc.Width == srcDesc.Width &&
+		destDesc.Height == srcDesc.Height &&
+		destDesc.MipLevels <= srcDesc.MipLevels
+	);
+
+	UINT subresourceIndex = sliceIndex * destDesc.MipLevels;
+
+	for (UINT i = 0; i < destDesc.MipLevels; ++i)
+	{
+		commandList->m_context->CopySubresourceRegion(
+			destResource,
+			subresourceIndex + i,
+			0,
+			0,
+			0,
+			srcResource,
+			i,
+			nullptr);
+	}
+
+	commandList->CloseAndExecute(true);
 }
 
 
@@ -565,7 +616,7 @@ void ComputeCommandList::SetPipelineState(ComputePSO& pso)
 void ComputeCommandList::DispatchIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
 {
 
-	m_context->DispatchIndirect(argumentBuffer.GetBuffer(), argumentBufferOffset);
+	m_context->DispatchIndirect(argumentBuffer.GetBuffer(), static_cast<UINT>(argumentBufferOffset));
 }
 
 

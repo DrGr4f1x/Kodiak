@@ -15,6 +15,7 @@ namespace Kodiak
 enum class ColorFormat
 {
 	Unknown,
+	BC3_UNorm_sRGB,
 	R8G8B8A8,
 	R8_UNorm,
 	R8_UInt,

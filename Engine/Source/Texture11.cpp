@@ -128,6 +128,54 @@ void Texture::Create(uint32_t width, uint32_t height, ColorFormat format, const 
 }
 
 
+void Texture::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData)
+{
+	loadTask = concurrency::create_task([] {});
+
+	D3D11_TEXTURE2D_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
+
+	DXGI_FORMAT dxgiFormat = DXGIUtility::ConvertToDXGI(format);
+
+	desc.Width = width;
+	desc.Height = height;
+	desc.ArraySize = arraySize;
+	desc.MipLevels = numMips;
+	desc.Format = dxgiFormat;
+	desc.SampleDesc.Count = 1;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.MiscFlags = 0;
+
+	ID3D11Texture2D* texture = nullptr;
+
+	if (initData)
+	{
+		D3D11_SUBRESOURCE_DATA data;
+		data.pSysMem = initData;
+		data.SysMemPitch = static_cast<UINT>(width * DXGIUtility::BytesPerPixel(dxgiFormat));
+		data.SysMemSlicePitch = static_cast<UINT>(data.SysMemPitch * height);
+
+		ThrowIfFailed(g_device->CreateTexture2D(&desc, &data, &texture));
+	}
+	else
+	{
+		ID3D11Texture2D* texture = nullptr;
+		ThrowIfFailed(g_device->CreateTexture2D(&desc, nullptr, &texture));
+	}
+
+	m_resource = texture;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+	srvDesc.Format = dxgiFormat;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+	srvDesc.Texture2DArray.MipLevels = numMips;
+	srvDesc.Texture2DArray.ArraySize = arraySize;
+}
+
+
 void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string& path)
 {
 	TextureFormat format = TextureFormat::None;

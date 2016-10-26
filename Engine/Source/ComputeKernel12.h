@@ -18,6 +18,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class ComputeConstantBuffer;
 class ComputePSO;
 class ComputeParameter;
 class ComputeResource;
@@ -41,6 +42,7 @@ public:
 
 	void SetComputeShaderPath(const std::string& path);
 
+	std::shared_ptr<ComputeConstantBuffer> GetConstantBuffer(const std::string& name);
 	std::shared_ptr<ComputeParameter> GetParameter(const std::string& name);
 	std::shared_ptr<ComputeResource> GetResource(const std::string& name);
 
@@ -62,6 +64,9 @@ private:
 	std::string							m_shaderPath;
 	std::shared_ptr<ComputeShader>		m_computeShader;
 	
+	std::mutex														m_constantBufferLock;
+	std::map<std::string, std::shared_ptr<ComputeConstantBuffer>>	m_constantBuffers;
+
 	std::mutex													m_parameterLock;
 	std::map<std::string, std::shared_ptr<ComputeParameter>>	m_parameters;
 
