@@ -31,6 +31,26 @@ struct Rectangle;
 struct Viewport;
 enum class ResourceState;
 
+
+struct DWParam
+{
+	DWParam(FLOAT f) : Float(f) {}
+	DWParam(UINT u) : Uint(u) {}
+	DWParam(INT i) : Int(i) {}
+
+	void operator= (FLOAT f) { Float = f; }
+	void operator= (UINT u) { Uint = u; }
+	void operator= (INT i) { Int = i; }
+
+	union
+	{
+		FLOAT	Float;
+		UINT	Uint;
+		INT		Int;
+	};
+};
+
+
 class CommandList
 {
 public:
@@ -58,6 +78,8 @@ public:
 	static void InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src);
 
 	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
+	void FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes);
+
 	void ResetCounter(StructuredBuffer& buf, uint32_t value = 0);
 	
 	// TODO: See if we can handle resource transitions in the ComputeKernel and Material such that DX11 doesn't need to know
@@ -154,7 +176,7 @@ public:
 		uint32_t startVertexLocation = 0, uint32_t startInstanceLocation = 0);
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation);
-	//void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
+	void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 
 	void SetVertexShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
 	void SetVertexShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);

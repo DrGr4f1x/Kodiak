@@ -15,6 +15,7 @@
 #include "CommandListManager11.h"
 #include "ConstantBuffer11.h"
 #include "DepthBuffer.h"
+#include "DeviceManager11.h"
 #include "GpuBuffer11.h"
 #include "IndexBuffer11.h"
 #include "PipelineState11.h"
@@ -117,7 +118,47 @@ void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex
 
 void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes)
 {
-	m_context->UpdateSubresource(dest.GetResource(), 0, nullptr, data, 0, 0);
+	ComPtr<ID3D11Buffer> staging;
+
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.ByteWidth = static_cast<UINT>(numBytes);
+	desc.BindFlags = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = data;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	DeviceManager::GetInstance().GetDevice()->CreateBuffer(&desc, &initData, &staging);
+
+	m_context->CopySubresourceRegion(dest.GetResource(), 0, static_cast<UINT>(destOffset), 0, 0, staging.Get(), 0, nullptr);
+}
+
+
+void CommandList::FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes)
+{
+	ComPtr<ID3D11Buffer> staging;
+
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.ByteWidth = 4;
+	desc.BindFlags = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = &value;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	DeviceManager::GetInstance().GetDevice()->CreateBuffer(&desc, &initData, &staging);
+
+	m_context->CopySubresourceRegion(dest.GetResource(), 0, static_cast<UINT>(destOffset), 0, 0, staging.Get(), 0, nullptr);
 }
 
 
@@ -137,8 +178,8 @@ CommandList* CommandList::Begin()
 uint64_t CommandList::CloseAndExecute(bool waitForCompletion)
 {
 	assert(m_pixMarkerCount == 0);
-	ID3D11CommandList* commandList;
-	m_context->FinishCommandList(TRUE, &commandList);
+	ID3D11CommandList* commandList = nullptr;
+	ThrowIfFailed(m_context->FinishCommandList(TRUE, &commandList));
 
 	// ExecuteCommandList calls Release on the commandList pointer
 	m_owner->ExecuteCommandList(commandList);
@@ -488,6 +529,12 @@ void GraphicsCommandList::SetVertexBuffers(uint32_t numVBs, uint32_t startSlot, 
 	}
 
 	m_context->IASetVertexBuffers(startSlot, numVBs, d3dBuffers, strides, _offsets);
+}
+
+
+void GraphicsCommandList::DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+{
+	m_context->DrawInstancedIndirect(argumentBuffer.GetBuffer(), static_cast<UINT>(argumentBufferOffset));
 }
 
 

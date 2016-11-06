@@ -97,8 +97,8 @@ public:
 
 	std::shared_ptr<ByteAddressBuffer> GetCounterBuffer() { return m_counterBuffer; }
 
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetCounterSRV(CommandList& commandList);
-	const D3D12_CPU_DESCRIPTOR_HANDLE& GetCounterUAV(CommandList& commandList);
+	std::shared_ptr<ByteAddressBuffer> GetCounterSRV(CommandList& commandList);
+	std::shared_ptr<ByteAddressBuffer> GetCounterUAV(CommandList& commandList);
 
 private:
 	std::shared_ptr<ByteAddressBuffer> m_counterBuffer;

@@ -27,6 +27,8 @@
 #include "Engine\Source\Material.h"
 #include "Engine\Source\MaterialResource.h"
 #include "Engine\Source\Model.h"
+#include "Engine\Source\ParticleEffectManager.h"
+#include "Engine\Source\ParticleEffect.h"
 #include "Engine\Source\PostProcessing.h"
 #include "Engine\Source\Profile.h"
 #include "Engine\Source\Renderer.h"
@@ -45,6 +47,7 @@ __itt_string_handle* itt_frame_setup = nullptr;
 __itt_string_handle* itt_depth_prepass = nullptr;
 __itt_string_handle* itt_ssao = nullptr;
 __itt_string_handle* itt_opaque_pass = nullptr;
+__itt_string_handle* itt_particles = nullptr;
 __itt_string_handle* itt_postprocessing = nullptr;
 __itt_string_handle* itt_shadows = nullptr;
 __itt_string_handle* itt_debug_histogram = nullptr;
@@ -53,6 +56,7 @@ __itt_string_handle* itt_debug_histogram = nullptr;
 
 using namespace Kodiak;
 using namespace Math;
+using namespace DirectX;
 using namespace std;
 
 
@@ -71,12 +75,14 @@ void SponzaApplication::OnInit()
 	itt_depth_prepass = __itt_string_handle_create("Depth prepass");
 	itt_ssao = __itt_string_handle_create("SSAO");
 	itt_opaque_pass = __itt_string_handle_create("Opaque pass");
+	itt_particles = __itt_string_handle_create("Particles");
 	itt_postprocessing = __itt_string_handle_create("Postprocessing");
 	itt_shadows = __itt_string_handle_create("Shadows");
 	itt_debug_histogram = __itt_string_handle_create("Debug histogram");
 #endif
 
 	CreateResources();
+	CreateParticleEffects();
 
 	CreateEffects();
 	CreateModel();
@@ -94,11 +100,13 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 
 	m_cameraController->Update(static_cast<float>(timer->GetElapsedSeconds()));
 	const Vector3 sunDirection = Vector3(0.336f, 0.924f, -0.183f);
-	const uint32_t shadowDimX = 5000;
-	const uint32_t shadowDimY = 3000;
-	const uint32_t shadowDimZ = 3000;
+	const float shadowDimX = 5000.0f;
+	const float shadowDimY = 3000.0f;
+	const float shadowDimZ = 3000.0f;
 	m_shadowCamera->UpdateMatrix(-sunDirection, Vector3(0.0f, -500.0f, 0.0f), Vector3(shadowDimX, shadowDimY, shadowDimZ),
 		m_shadowBuffer->GetWidth(), m_shadowBuffer->GetHeight(), 16);
+
+	m_elapsedTime = static_cast<float>(timer->GetElapsedSeconds());
 }
 
 
@@ -177,6 +185,64 @@ void SponzaApplication::CreateResources()
 
 	m_shadowBuffer = make_shared<ShadowBuffer>();
 	m_shadowBuffer->Create("Shadow Map", 2048, 2048);
+}
+
+
+void SponzaApplication::CreateParticleEffects()
+{
+	m_particleEffectManager = make_shared<ParticleEffectManager>();
+	m_particleEffectManager->Initialize(m_width, m_height);
+
+	ParticleEffectProperties effect = ParticleEffectProperties();
+	effect.MinStartColor = effect.MaxStartColor = effect.MinEndColor = effect.MaxEndColor = Color(1.0f, 1.0f, 1.0f, 0.0f);
+	effect.TexturePath = "sparkTex.dds";
+
+	effect.TotalActiveLifetime = FLT_MAX;
+	effect.Size = Vector4(4.0f, 8.0f, 4.0f, 8.0f);
+	effect.Velocity = Vector4(20.0f, 200.0f, 50.0f, 180.0f);
+	effect.LifeMinMax = XMFLOAT2(1.0f, 3.0f);
+	effect.MassMinMax = XMFLOAT2(4.5f, 15.0f);
+	effect.EmitProperties.Gravity = XMFLOAT3(0.0f, -100.0f, 0.0f);
+	effect.EmitProperties.FloorHeight = -0.5f;
+	effect.EmitProperties.EmitPosW = effect.EmitProperties.LastEmitPosW = XMFLOAT3(-1200.0f, 185.0f, -445.0f);
+	effect.EmitProperties.MaxParticles = 800;
+	effect.EmitRate = 64.0f;
+	effect.Spread.x = 20.0f;
+	effect.Spread.y = 50.0f;
+	m_particleEffectManager->InstantiateEffect(&effect);
+
+	ParticleEffectProperties smoke = ParticleEffectProperties();
+	smoke.TexturePath = "smoke.dds";
+
+	smoke.TotalActiveLifetime = FLT_MAX;;
+	smoke.EmitProperties.MaxParticles = 25;
+	smoke.EmitProperties.EmitPosW = smoke.EmitProperties.LastEmitPosW = XMFLOAT3(1120.0f, 185.0f, -445.0f);
+	smoke.EmitRate = 64.0f;
+	smoke.LifeMinMax = XMFLOAT2(2.5f, 4.0f);
+	smoke.Size = Vector4(60.0f, 108.0f, 30.0f, 208.0f);
+	smoke.Velocity = Vector4(30.0f, 30.0f, 10.0f, 40.0f);
+	smoke.MassMinMax = XMFLOAT2(1.0, 3.5);
+	smoke.Spread.x = 60.0f;
+	smoke.Spread.y = 70.0f;
+	smoke.Spread.z = 20.0f;
+	m_particleEffectManager->InstantiateEffect(&smoke);
+
+	ParticleEffectProperties fire = ParticleEffectProperties();
+	fire.MinStartColor = fire.MaxStartColor = fire.MinEndColor = fire.MaxEndColor = Color(1.0f, 1.0f, 1.0f, 0.0f);
+	fire.TexturePath = "fire.dds";
+
+	fire.TotalActiveLifetime = FLT_MAX;
+	fire.Size = Vector4(54.0f, 68.0f, 0.1f, 0.3f);
+	fire.Velocity = Vector4(10.0f, 30.0f, 50.0f, 50.0f);
+	fire.LifeMinMax = XMFLOAT2(1.0f, 3.0f);
+	fire.MassMinMax = XMFLOAT2(10.5f, 14.0f);
+	fire.EmitProperties.Gravity = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	fire.EmitProperties.EmitPosW = fire.EmitProperties.LastEmitPosW = XMFLOAT3(1120.0f, 125.0f, 405.0f);
+	fire.EmitProperties.MaxParticles = 25;
+	fire.EmitRate = 64.0f;
+	fire.Spread.x = 1.0f;
+	fire.Spread.y = 60.0f;
+	m_particleEffectManager->InstantiateEffect(&fire);
 }
 
 
@@ -268,9 +334,9 @@ void SponzaApplication::SetupScene()
 
 	m_shadowCamera = make_shared<ShadowCamera>();
 	const Vector3 sunDirection = Vector3(0.336f, 0.924f, -0.183f);
-	const uint32_t shadowDimX = 5000;
-	const uint32_t shadowDimY = 3000;
-	const uint32_t shadowDimZ = 3000;
+	const float shadowDimX = 5000.0f;
+	const float shadowDimY = 3000.0f;
+	const float shadowDimZ = 3000.0f;
 	m_shadowCamera->UpdateMatrix(-sunDirection, Vector3(0.0f, -500.0f, 0.0f), Vector3(shadowDimX, shadowDimY, shadowDimZ),
 		m_shadowBuffer->GetWidth(), m_shadowBuffer->GetHeight(), 16);
 
@@ -389,6 +455,17 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 
 			m_mainScene->Update(commandList);
 			m_mainScene->Render(GetDefaultBasePass(), commandList);
+
+			if(false)
+			{
+				PROFILE_BEGIN(itt_particles);
+
+				auto compCommandList = commandList->GetComputeCommandList();
+				m_particleEffectManager->Update(*compCommandList, m_elapsedTime);
+				m_particleEffectManager->Render(*compCommandList, m_camera, m_colorTarget, m_depthBuffer, m_linearDepthBuffer);
+
+				PROFILE_END();
+			}
 
 			commandList->CloseAndExecute();
 			PROFILE_END();

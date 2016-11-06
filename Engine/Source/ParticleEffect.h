@@ -23,15 +23,18 @@
 namespace Kodiak
 {
 
+// Forward declarations
 class ComputeCommandList;
 class ComputeKernel;
+class StructuredBuffer;
+
 
 class ParticleEffect
 {
 public:
 	ParticleEffect(ParticleEffectProperties* effectProperties = &ParticleEffectProperties());
 	void LoadDeviceResources();
-	void Update(ComputeCommandList& commandList, float timeDelta);
+	void Update(ComputeCommandList& commandList, std::shared_ptr<StructuredBuffer> vertexBuffer, float timeDelta);
 	float GetLifetime() { return m_effectProperties.TotalActiveLifetime; }
 	float GetElapsedTime() { return m_elapsedTime; }
 	void Reset();

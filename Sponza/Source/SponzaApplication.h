@@ -10,7 +10,7 @@
 #pragma once
 
 #include "Engine\Source\Application.h"
-
+#include "Engine\Source\Color.h"
 
 namespace Kodiak
 {
@@ -22,6 +22,7 @@ class ColorBuffer;
 class CommandList;
 class DepthBuffer;
 class FXAA;
+class ParticleEffectManager;
 class PostProcessing;
 class RootRenderTask;
 class SSAO;
@@ -45,6 +46,7 @@ protected:
 private:
 	// Creation/setup helpers
 	void CreateResources();
+	void CreateParticleEffects();
 	void CreateEffects();
 	void CreateModel();
 	void SetupScene();
@@ -61,6 +63,7 @@ private:
 	std::shared_ptr<Scene>				m_mainScene;
 	std::shared_ptr<Camera>				m_camera;
 	std::shared_ptr<CameraController>	m_cameraController;
+	std::shared_ptr<ParticleEffectManager> m_particleEffectManager;
 	std::shared_ptr<StaticModel>		m_sponzaModel;
 	std::shared_ptr<SSAO>				m_ssao;
 	std::shared_ptr<PostProcessing>		m_postProcessing;
@@ -70,6 +73,7 @@ private:
 	std::shared_ptr<ShadowCamera>		m_shadowCamera;
 
 	bool								m_reverseZ{ true };
+	float								m_elapsedTime{ 0.0f };
 };
 
 } // namespace Kodiak

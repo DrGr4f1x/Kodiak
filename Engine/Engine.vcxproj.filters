@@ -437,6 +437,9 @@
     <ClInclude Include="Source\ComputeConstantBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\MaterialConstantBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -681,6 +684,9 @@
     <ClCompile Include="Source\ComputeConstantBuffer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="Source\MaterialConstantBuffer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
@@ -903,6 +909,9 @@
       <Filter>Shaders\Common\Particles</Filter>
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\ParticleUpdateCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleVS.hlsl">
       <Filter>Shaders\Common\Particles</Filter>
     </FxCompile>
   </ItemGroup>

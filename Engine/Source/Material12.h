@@ -20,6 +20,7 @@ namespace Kodiak
 class Effect;
 class GraphicsCommandList;
 class GraphicsPSO;
+class MaterialConstantBuffer;
 class MaterialParameter;
 class MaterialResource;
 class RenderPass;
@@ -47,6 +48,7 @@ public:
 
 	std::shared_ptr<MaterialParameter> GetParameter(const std::string& name);
 	std::shared_ptr<MaterialResource> GetResource(const std::string& name);
+	std::shared_ptr<MaterialConstantBuffer> GetConstantBuffer(const std::string& name);
 
 	std::shared_ptr<RenderThread::MaterialData> GetRenderThreadData() { return m_renderThreadData; }
 
@@ -68,6 +70,9 @@ private:
 
 	std::mutex													m_resourceLock;
 	std::map<std::string, std::shared_ptr<MaterialResource>>	m_resources;
+
+	std::mutex														m_constantBufferLock;
+	std::map<std::string, std::shared_ptr<MaterialConstantBuffer>>	m_constantBuffers;
 
 	std::shared_ptr<RenderThread::MaterialData>					m_renderThreadData;
 };
@@ -100,7 +105,7 @@ struct MaterialData
 	// Constant buffer
 	MappedConstantBuffer			cbuffer;
 	uint32_t						constantDataSize{ 0 };
-	uint8_t*						cbufferData{ nullptr };
+	byte*							cbufferData{ nullptr };
 };
 
 } // namespace RenderThread

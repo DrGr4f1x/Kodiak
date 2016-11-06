@@ -36,7 +36,7 @@ MaterialResource::MaterialResource(const string& name)
 {}
 
 
-void MaterialResource::SetSRV(shared_ptr<Texture> texture)
+void MaterialResource::SetSRVInternal(shared_ptr<Texture> texture, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -55,21 +55,21 @@ void MaterialResource::SetSRV(shared_ptr<Texture> texture)
 		{
 			auto thisResource = shared_from_this();
 			// Wait until the texture loads before updating the material on the render thread
-			texture->loadTask.then([renderThreadData, thisResource, texture]
+			texture->loadTask.then([renderThreadData, thisResource, texture, immediate]
 			{
 				SetThreadRole(ThreadRole::GenericWorker);
-				thisResource->DispatchToRenderThreadNoLock(renderThreadData, texture->GetSRV());
+				thisResource->DispatchToRenderThreadNoLock(renderThreadData, texture->GetSRV(), immediate);
 			});
 		}
 		else
 		{
-			DispatchToRenderThreadNoLock(renderThreadData, texture ? texture->GetSRV() : g_nullSRV );
+			DispatchToRenderThreadNoLock(renderThreadData, texture ? texture->GetSRV() : g_nullSRV, immediate);
 		}
 	}
 }
 
 
-void MaterialResource::SetSRV(shared_ptr<ColorBuffer> buffer)
+void MaterialResource::SetSRVInternal(shared_ptr<ColorBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -82,11 +82,11 @@ void MaterialResource::SetSRV(shared_ptr<ColorBuffer> buffer)
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetSRV() : g_nullSRV);
+	DispatchToRenderThread(buffer ? buffer->GetSRV() : g_nullSRV, immediate);
 }
 
 
-void MaterialResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
+void MaterialResource::SetSRVInternal(shared_ptr<DepthBuffer> buffer, bool stencil, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -101,16 +101,16 @@ void MaterialResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
 
 	if (buffer)
 	{
-		DispatchToRenderThread(stencil ? buffer->GetStencilSRV() : buffer->GetDepthSRV());
+		DispatchToRenderThread(stencil ? buffer->GetStencilSRV() : buffer->GetDepthSRV(), immediate);
 	}
 	else
 	{
-		DispatchToRenderThread(g_nullSRV);
+		DispatchToRenderThread(g_nullSRV, immediate);
 	}
 }
 
 
-void MaterialResource::SetSRV(shared_ptr<GpuBuffer> buffer)
+void MaterialResource::SetSRVInternal(shared_ptr<GpuBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -123,11 +123,11 @@ void MaterialResource::SetSRV(shared_ptr<GpuBuffer> buffer)
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetSRV() : g_nullSRV);
+	DispatchToRenderThread(buffer ? buffer->GetSRV() : g_nullSRV, immediate);
 }
 
 
-void MaterialResource::SetUAV(shared_ptr<ColorBuffer> buffer)
+void MaterialResource::SetUAVInternal(shared_ptr<ColorBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -140,11 +140,11 @@ void MaterialResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : g_nullUAV);
+	DispatchToRenderThread(buffer ? buffer->GetUAV() : g_nullUAV, immediate);
 }
 
 
-void MaterialResource::SetUAV(shared_ptr<GpuBuffer> buffer)
+void MaterialResource::SetUAVInternal(shared_ptr<GpuBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -157,7 +157,7 @@ void MaterialResource::SetUAV(shared_ptr<GpuBuffer> buffer)
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : g_nullUAV);
+	DispatchToRenderThread(buffer ? buffer->GetUAV() : g_nullUAV, immediate);
 }
 
 
@@ -235,24 +235,38 @@ void MaterialResource::UpdateResourceOnRenderThread(RenderThread::MaterialData* 
 }
 
 
-void MaterialResource::DispatchToRenderThread(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle)
+void MaterialResource::DispatchToRenderThread(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, bool immediate)
 {
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
-		auto thisResource = shared_from_this();
-		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, cpuHandle](RenderTaskEnvironment& rte)
+		if(immediate)
 		{
-			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), cpuHandle);
-		});
+			UpdateResourceOnRenderThread(renderThreadData.get(), cpuHandle);
+		}
+		else
+		{
+			auto thisResource = shared_from_this();
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, cpuHandle](RenderTaskEnvironment& rte)
+			{
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), cpuHandle);
+			});
+		}
 	}
 }
 
 
-void MaterialResource::DispatchToRenderThreadNoLock(shared_ptr<RenderThread::MaterialData> materialData, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle)
+void MaterialResource::DispatchToRenderThreadNoLock(shared_ptr<RenderThread::MaterialData> materialData, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, bool immediate)
 {
-	auto thisResource = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([materialData, thisResource, cpuHandle](RenderTaskEnvironment& rte)
+	if (immediate)
 	{
-		thisResource->UpdateResourceOnRenderThread(materialData.get(), cpuHandle);
-	});
+		UpdateResourceOnRenderThread(materialData.get(), cpuHandle);
+	}
+	else
+	{
+		auto thisResource = shared_from_this();
+		Renderer::GetInstance().EnqueueTask([materialData, thisResource, cpuHandle](RenderTaskEnvironment& rte)
+		{
+			thisResource->UpdateResourceOnRenderThread(materialData.get(), cpuHandle);
+		});
+	}
 }

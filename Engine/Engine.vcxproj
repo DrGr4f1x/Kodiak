@@ -346,6 +346,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\MaterialConstantBuffer.h" />
     <ClInclude Include="Source\MaterialParameter.h" />
     <ClInclude Include="Source\MaterialResource.h" />
     <ClInclude Include="Source\MaterialResource11.h">
@@ -490,6 +491,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\MaterialConstantBuffer.cpp" />
     <ClCompile Include="Source\MaterialParameter.cpp" />
     <ClCompile Include="Source\MaterialResource11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -1619,6 +1621,20 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">5.0</ShaderModel>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>

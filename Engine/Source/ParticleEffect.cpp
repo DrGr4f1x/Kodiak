@@ -121,7 +121,7 @@ void ParticleEffect::LoadDeviceResources()
 }
 
 
-void ParticleEffect::Update(ComputeCommandList& commandList, float timeDelta)
+void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<StructuredBuffer> vertexBuffer, float timeDelta)
 {
 	m_elapsedTime += timeDelta;
 	m_effectProperties.EmitProperties.LastEmitPosW = m_effectProperties.EmitProperties.EmitPosW;
@@ -146,7 +146,8 @@ void ParticleEffect::Update(ComputeCommandList& commandList, float timeDelta)
 	commandList.TransitionResource(*m_stateBuffers[m_currentStateBuffer], ResourceState::NonPixelShaderResource);
 	m_updateCs->GetResource("g_ResetData")->SetSRVImmediate(m_randomStateBuffer);
 	m_updateCs->GetResource("g_InputBuffer")->SetSRVImmediate(m_stateBuffers[m_currentStateBuffer]);
-	
+	m_updateCs->GetResource("g_VertexBuffer")->SetUAVImmediate(vertexBuffer);
+	m_updateCs->GetParameter("gElapsedTime")->SetValueImmediate(timeDelta);
 	m_currentStateBuffer ^= 1;
 
 	commandList.ResetCounter(*m_stateBuffers[m_currentStateBuffer]);

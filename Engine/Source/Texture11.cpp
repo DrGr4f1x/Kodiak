@@ -161,7 +161,6 @@ void Texture::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, u
 	}
 	else
 	{
-		ID3D11Texture2D* texture = nullptr;
 		ThrowIfFailed(g_device->CreateTexture2D(&desc, nullptr, &texture));
 	}
 
@@ -173,6 +172,8 @@ void Texture::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, u
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
 	srvDesc.Texture2DArray.MipLevels = numMips;
 	srvDesc.Texture2DArray.ArraySize = arraySize;
+
+	ThrowIfFailed(g_device->CreateShaderResourceView(m_resource.Get(), &srvDesc, m_srv.GetAddressOf()));
 }
 
 

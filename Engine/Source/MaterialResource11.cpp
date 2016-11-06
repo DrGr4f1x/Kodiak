@@ -32,7 +32,7 @@ MaterialResource::MaterialResource(const string& name)
 {}
 
 
-void MaterialResource::SetSRV(shared_ptr<Texture> texture)
+void MaterialResource::SetSRVInternal(shared_ptr<Texture> texture, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -51,21 +51,21 @@ void MaterialResource::SetSRV(shared_ptr<Texture> texture)
 		{
 			auto thisResource = shared_from_this();
 			// Wait until the texture loads before updating the material on the render thread
-			texture->loadTask.then([renderThreadData, thisResource, texture]
+			texture->loadTask.then([renderThreadData, thisResource, texture, immediate]
 			{
 				SetThreadRole(ThreadRole::GenericWorker);
-				thisResource->DispatchToRenderThreadNoLock(renderThreadData, texture->GetSRV());
+				thisResource->DispatchToRenderThreadNoLock(renderThreadData, texture->GetSRV(), immediate);
 			});
 		}
 		else
 		{
-			DispatchToRenderThreadNoLock(renderThreadData, texture ? texture->GetSRV() : nullptr);
+			DispatchToRenderThreadNoLock(renderThreadData, texture ? texture->GetSRV() : nullptr, immediate);
 		}
 	}
 }
 
 
-void MaterialResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
+void MaterialResource::SetSRVInternal(shared_ptr<DepthBuffer> buffer, bool stencil, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -80,16 +80,16 @@ void MaterialResource::SetSRV(shared_ptr<DepthBuffer> buffer, bool stencil)
 
 	if (buffer)
 	{
-		DispatchToRenderThread(stencil ? buffer->GetStencilSRV() : buffer->GetDepthSRV());
+		DispatchToRenderThread(stencil ? buffer->GetStencilSRV() : buffer->GetDepthSRV(), immediate);
 	}
 	else
 	{
-		DispatchToRenderThread((ID3D11ShaderResourceView*)nullptr);
+		DispatchToRenderThread((ID3D11ShaderResourceView*)nullptr, immediate);
 	}
 }
 
 
-void MaterialResource::SetSRV(shared_ptr<ColorBuffer> buffer)
+void MaterialResource::SetSRVInternal(shared_ptr<ColorBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -102,11 +102,11 @@ void MaterialResource::SetSRV(shared_ptr<ColorBuffer> buffer)
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr);
+	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr, immediate);
 }
 
 
-void MaterialResource::SetSRV(shared_ptr<GpuBuffer> buffer)
+void MaterialResource::SetSRVInternal(shared_ptr<GpuBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -119,11 +119,11 @@ void MaterialResource::SetSRV(shared_ptr<GpuBuffer> buffer)
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr);
+	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr, immediate);
 }
 
 
-void MaterialResource::SetUAV(shared_ptr<ColorBuffer> buffer)
+void MaterialResource::SetUAVInternal(shared_ptr<ColorBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -136,11 +136,11 @@ void MaterialResource::SetUAV(shared_ptr<ColorBuffer> buffer)
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr);
+	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, immediate);
 }
 
 
-void MaterialResource::SetUAV(shared_ptr<GpuBuffer> buffer)
+void MaterialResource::SetUAVInternal(shared_ptr<GpuBuffer> buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -153,11 +153,10 @@ void MaterialResource::SetUAV(shared_ptr<GpuBuffer> buffer)
 	
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr);
+	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, immediate);
 }
 
 
-static void whoa() {}
 void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialData> materialData, const ShaderReflection::ResourceSRV<5>& resource)
 {
 	m_type = resource.type;
@@ -191,7 +190,6 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 	{
 		SetSRV(m_gpuBuffer);
 	}
-	whoa();
 }
 
 
@@ -249,46 +247,66 @@ void MaterialResource::UpdateResourceOnRenderThread(RenderThread::MaterialData* 
 }
 
 
-void MaterialResource::DispatchToRenderThread(ID3D11ShaderResourceView* srv)
+void MaterialResource::DispatchToRenderThread(ID3D11ShaderResourceView* srv, bool immediate)
 {
 	if (auto renderThreadData = m_renderThreadData.lock())
 	{
-		// Locals for lambda capture
+		if (immediate)
+		{
+			UpdateResourceOnRenderThread(renderThreadData.get(), srv);
+		}
+		else
+		{
+			// Locals for lambda capture
+			auto thisResource = shared_from_this();
+			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> thisSRV = srv;
+
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisSRV](RenderTaskEnvironment& rte)
+			{
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisSRV.Get());
+			});
+		}
+	}
+}
+
+
+void MaterialResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav, bool immediate)
+{
+	if (auto renderThreadData = m_renderThreadData.lock())
+	{
+		if (immediate)
+		{
+			UpdateResourceOnRenderThread(renderThreadData.get(), uav);
+		}
+		else
+		{
+			// Locals for lambda capture
+			auto thisResource = shared_from_this();
+			Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> thisUAV = uav;
+
+			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisUAV](RenderTaskEnvironment& rte)
+			{
+				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisUAV.Get());
+			});
+		}
+	}
+}
+
+
+void MaterialResource::DispatchToRenderThreadNoLock(shared_ptr<RenderThread::MaterialData> materialData, ID3D11ShaderResourceView* srv, bool immediate)
+{
+	if (immediate)
+	{
+		UpdateResourceOnRenderThread(materialData.get(), srv);
+	}
+	else
+	{ // Locals for lambda capture
 		auto thisResource = shared_from_this();
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> thisSRV = srv;
 
-		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisSRV](RenderTaskEnvironment& rte)
+		Renderer::GetInstance().EnqueueTask([materialData, thisResource, thisSRV](RenderTaskEnvironment& rte)
 		{
-			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisSRV.Get());
+			thisResource->UpdateResourceOnRenderThread(materialData.get(), thisSRV.Get());
 		});
 	}
-}
-
-
-void MaterialResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav)
-{
-	if (auto renderThreadData = m_renderThreadData.lock())
-	{
-		// Locals for lambda capture
-		auto thisResource = shared_from_this();
-		Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> thisUAV = uav;
-
-		Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisUAV](RenderTaskEnvironment& rte)
-		{
-			thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisUAV.Get());
-		});
-	}
-}
-
-
-void MaterialResource::DispatchToRenderThreadNoLock(shared_ptr<RenderThread::MaterialData> materialData, ID3D11ShaderResourceView* srv)
-{
-	// Locals for lambda capture
-	auto thisResource = shared_from_this();
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> thisSRV = srv;
-
-	Renderer::GetInstance().EnqueueTask([materialData, thisResource, thisSRV](RenderTaskEnvironment& rte)
-	{
-		thisResource->UpdateResourceOnRenderThread(materialData.get(), thisSRV.Get());
-	});
 }

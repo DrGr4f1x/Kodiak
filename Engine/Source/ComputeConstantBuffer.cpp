@@ -24,7 +24,7 @@ ComputeConstantBuffer::ComputeConstantBuffer(const string& name)
 
 void ComputeConstantBuffer::SetDataImmediate(size_t sizeInBytes, const byte* data)
 {
-	assert(m_size == sizeInBytes);
+	assert(m_size >= sizeInBytes);
 
 	memcpy(m_binding, data, sizeInBytes);
 }

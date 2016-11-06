@@ -14,6 +14,7 @@
 #include "ConstantBuffer.h"
 #include "CommandList.h"
 #include "Effect.h"
+#include "MaterialConstantBuffer.h"
 #include "MaterialParameter.h"
 #include "MaterialResource11.h"
 #include "PipelineState.h"
@@ -25,6 +26,7 @@
 
 using namespace Kodiak;
 using namespace std;
+
 
 Material::Material() 
 {}
@@ -94,6 +96,23 @@ shared_ptr<MaterialResource> Material::GetResource(const string& name)
 }
 
 
+shared_ptr<MaterialConstantBuffer> Material::GetConstantBuffer(const string& name)
+{
+	lock_guard<mutex> CR(m_constantBufferLock);
+
+	auto it = m_constantBuffers.find(name);
+	if (end(m_constantBuffers) != it)
+	{
+		return it->second;
+	}
+
+	auto cbuffer = make_shared<MaterialConstantBuffer>(name);
+	m_constantBuffers[name] = cbuffer;
+
+	return cbuffer;
+}
+
+
 shared_ptr<Material> Material::Clone()
 {
 	auto clone = make_shared<Material>();
@@ -127,8 +146,8 @@ void SetupCBuffer(RenderThread::MaterialData& materialData, size_t cbufferSizeIn
 }
 
 
-void SetupBinding(RenderThread::MaterialData::CBufferBinding& binding, ID3D11Buffer* d3dBuffer, 
-	const vector<ShaderReflection::CBVLayout>& effectCBuffers)
+void SetupBinding(Material* material, RenderThread::MaterialData::CBufferBinding& binding, ID3D11Buffer* d3dBuffer, 
+	const vector<ShaderReflection::CBVLayout>& effectCBuffers, uint32_t index)
 {
 	uint32_t minSlot = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;
 	uint32_t numBuffers = static_cast<uint32_t>(effectCBuffers.size());
@@ -146,6 +165,9 @@ void SetupBinding(RenderThread::MaterialData::CBufferBinding& binding, ID3D11Buf
 			minSlot = min(minSlot, effectCBuffer.shaderRegister);
 		}
 
+		auto materialData = material->GetRenderThreadData();
+		byte* baseDestination = materialData->cbufferData;
+
 		// Fill out the cbuffer binding record
 		for (const auto& effectCBuffer : effectCBuffers)
 		{
@@ -154,6 +176,9 @@ void SetupBinding(RenderThread::MaterialData::CBufferBinding& binding, ID3D11Buf
 			binding.cbuffers[index] = d3dBuffer;
 			binding.firstConstant[index] = effectCBuffer.byteOffset;
 			binding.numConstants[index] = effectCBuffer.sizeInBytes;
+
+			auto cbuffer = material->GetConstantBuffer(effectCBuffer.name);
+			cbuffer->CreateRenderThreadData(index, effectCBuffer.sizeInBytes, baseDestination + effectCBuffer.byteOffset);
 		}
 	}
 	
@@ -162,7 +187,7 @@ void SetupBinding(RenderThread::MaterialData::CBufferBinding& binding, ID3D11Buf
 }
 
 
-void SetupShaderCBufferBindings(RenderThread::MaterialData& materialData, const Effect::Signature& effectSig, ShaderType shaderType)
+void SetupShaderCBufferBindings(Material* material, RenderThread::MaterialData& materialData, const Effect::Signature& effectSig, ShaderType shaderType)
 {
 	const uint32_t index = static_cast<uint32_t>(shaderType);
 
@@ -171,7 +196,7 @@ void SetupShaderCBufferBindings(RenderThread::MaterialData& materialData, const 
 	const auto& effectCBuffers = effectSig.cbvBindings[index];
 
 	auto d3dBuffer = materialData.cbuffer->constantBuffer.Get();
-	SetupBinding(binding, d3dBuffer, effectCBuffers);
+	SetupBinding(material, binding, d3dBuffer, effectCBuffers, index);
 }
 
 } // anonymous namespace
@@ -193,11 +218,11 @@ void Material::CreateRenderThreadData()
 	{
 		SetupCBuffer(materialData, materialData.cbufferSize);
 
-		SetupShaderCBufferBindings(materialData, effectSig, ShaderType::Vertex);
-		SetupShaderCBufferBindings(materialData, effectSig, ShaderType::Domain);
-		SetupShaderCBufferBindings(materialData, effectSig, ShaderType::Hull);
-		SetupShaderCBufferBindings(materialData, effectSig, ShaderType::Geometry);
-		SetupShaderCBufferBindings(materialData, effectSig, ShaderType::Pixel);
+		SetupShaderCBufferBindings(this, materialData, effectSig, ShaderType::Vertex);
+		SetupShaderCBufferBindings(this, materialData, effectSig, ShaderType::Domain);
+		SetupShaderCBufferBindings(this, materialData, effectSig, ShaderType::Hull);
+		SetupShaderCBufferBindings(this, materialData, effectSig, ShaderType::Geometry);
+		SetupShaderCBufferBindings(this, materialData, effectSig, ShaderType::Pixel);
 	}
 	
 	// Table bindings
@@ -237,29 +262,6 @@ void Material::CreateRenderThreadData()
 			layout.resources.insert(layout.resources.end(), layout.numItems, nullptr);
 
 			m_renderThreadData->samplerTables[i].layouts.push_back(layout);
-		}
-	}
-	
-	// Parameters
-	{
-		lock_guard<mutex> CS(m_parameterLock);
-	
-		for (const auto& parameter : effectSig.parameters)
-		{
-			shared_ptr<MaterialParameter> matParameter;
-			
-			auto it = m_parameters.find(parameter.second.name);
-			if (end(m_parameters) != it)
-			{
-				matParameter = it->second;
-			}
-			else
-			{
-				matParameter = make_shared<MaterialParameter>(parameter.second.name);
-				m_parameters[parameter.second.name] = matParameter;
-			}
-
-			matParameter->CreateRenderThreadData(m_renderThreadData, parameter.second);
 		}
 	}
 	

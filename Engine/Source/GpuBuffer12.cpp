@@ -228,17 +228,17 @@ void ByteAddressBuffer::CreateDerivedViews()
 }
 
 
-const D3D12_CPU_DESCRIPTOR_HANDLE& StructuredBuffer::GetCounterSRV(CommandList& commandList)
+std::shared_ptr<ByteAddressBuffer> StructuredBuffer::GetCounterSRV(CommandList& commandList)
 {
 	commandList.TransitionResource(*m_counterBuffer, ResourceState::GenericRead);
-	return m_counterBuffer->GetSRV();
+	return m_counterBuffer;
 }
 
 
-const D3D12_CPU_DESCRIPTOR_HANDLE& StructuredBuffer::GetCounterUAV(CommandList& commandList)
+std::shared_ptr<ByteAddressBuffer> StructuredBuffer::GetCounterUAV(CommandList& commandList)
 {
 	commandList.TransitionResource(*m_counterBuffer, ResourceState::UnorderedAccess);
-	return m_counterBuffer->GetUAV();
+	return m_counterBuffer;
 }
 
 

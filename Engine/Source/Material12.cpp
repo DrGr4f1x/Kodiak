@@ -13,6 +13,7 @@
 
 #include "Effect.h"
 #include "CommandList12.h"
+#include "MaterialConstantBuffer.h"
 #include "MaterialParameter.h"
 #include "MaterialResource12.h"
 #include "RenderPass.h"
@@ -91,6 +92,23 @@ shared_ptr<MaterialResource> Material::GetResource(const string& name)
 }
 
 
+shared_ptr<MaterialConstantBuffer> Material::GetConstantBuffer(const string& name)
+{
+	lock_guard<mutex> CS(m_constantBufferLock);
+
+	auto it = m_constantBuffers.find(name);
+	if (end(m_constantBuffers) != it)
+	{
+		return it->second;
+	}
+
+	auto cbuffer = make_shared<MaterialConstantBuffer>(name);
+	m_constantBuffers[name] = cbuffer;
+
+	return cbuffer;
+}
+
+
 shared_ptr<Material> Material::Clone()
 {
 	auto clone = make_shared<Material>();
@@ -139,6 +157,10 @@ void Material::CreateRenderThreadData()
 				{
 					auto handle = materialData.cbuffer.CreateConstantBufferView(cbv.byteOffset, cbv.sizeInBytes);
 					materialData.cpuHandles[cbv.binding.tableIndex] = handle;
+
+					auto cbuffer = GetConstantBuffer(cbv.name);
+					byte* cbufferDest = materialData.cbufferData + cbv.byteOffset;
+					cbuffer->CreateRenderThreadData(i, cbv.sizeInBytes, cbufferDest);
 				}
 			}
 		}

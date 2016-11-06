@@ -213,7 +213,7 @@ public:
 		uint32_t startVertexLocation = 0, uint32_t startInstanceLocation = 0);
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation);
-	//void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
+	void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 };
 
 
@@ -429,6 +429,15 @@ inline void GraphicsCommandList::DrawIndexedInstanced(uint32_t indexCountPerInst
 	FlushResourceBarriers();
 	m_dynamicDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
 	m_commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+
+inline void GraphicsCommandList::DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+{
+	FlushResourceBarriers();
+	m_dynamicDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_commandList->ExecuteIndirect(DrawIndirectCommandSignature.GetSignature(), 1, argumentBuffer.GetResource(),
+		(UINT64)argumentBufferOffset, nullptr, 0);
 }
 
 
