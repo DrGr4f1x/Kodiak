@@ -190,7 +190,6 @@ void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex
 	CommandList* commandList = CommandList::Begin();
 
 	commandList->TransitionResource(dest, ResourceState::CopyDest);
-	commandList->TransitionResource(src, ResourceState::CopySource);
 	commandList->FlushResourceBarriers();
 
 	const D3D12_RESOURCE_DESC& destDesc = dest.GetResource()->GetDesc();
@@ -282,8 +281,7 @@ void CommandList::TransitionResource(GpuResource& resource, ResourceState newSta
 
 	if (flushImmediate || m_numBarriersToFlush == 16)
 	{
-		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
-		m_numBarriersToFlush = 0;
+		FlushResourceBarriers();
 	}
 }
 
@@ -318,8 +316,7 @@ void CommandList::BeginResourceTransition(GpuResource& resource, ResourceState n
 
 	if (flushImmediate || m_numBarriersToFlush == 16)
 	{
-		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
-		m_numBarriersToFlush = 0;
+		FlushResourceBarriers();
 	}
 }
 

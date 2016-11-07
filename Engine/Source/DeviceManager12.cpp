@@ -366,11 +366,10 @@ void DeviceManager::CreatePresentState()
 	samplerPointClampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 
 	// Configure the root signature for a single input SRV and sampler
-	m_presentRS.Reset(4, 2);
+	m_presentRS.Reset(3, 2);
 	m_presentRS[0].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 2, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_presentRS[1].InitAsConstants(0, 6, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_presentRS[2].InitAsBufferSRV(2, D3D12_SHADER_VISIBILITY_PIXEL);
-	m_presentRS[3].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0, 1);
 	m_presentRS.InitStaticSampler(0, samplerLinearClampDesc, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_presentRS.InitStaticSampler(1, samplerPointClampDesc, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_presentRS.Finalize();

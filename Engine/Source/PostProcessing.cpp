@@ -364,7 +364,7 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 
 	commandList->TransitionResource(*m_bloomUAV1[0], ResourceState::UnorderedAccess);
 	commandList->TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
-	commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
+	//commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
 	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
 	computeKernel->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);

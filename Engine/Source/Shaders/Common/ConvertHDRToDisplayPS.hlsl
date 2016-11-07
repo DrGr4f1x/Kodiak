@@ -15,9 +15,9 @@ Texture2D<float3> ColorTex : register(t0);
 
 struct PS_OUT
 {
-	float3 HdrOutput : SV_Target0;
+	float4 HdrOutput : SV_Target0;
 #if _XBOX_ONE
-	float3 LdrOutput : SV_Target1;
+	float4 LdrOutput : SV_Target1;
 #endif
 };
 
@@ -58,7 +58,7 @@ PS_OUT main(float4 position : SV_Position)
 
 #if _XBOX_ONE
 	// This will output Rec.709 Limited Range
-	Out.LdrOutput = ApplyColorProfile(SDR, DISPLAY_PLANE_FORMAT);
+	Out.LdrOutput = float4(ApplyColorProfile(SDR, DISPLAY_PLANE_FORMAT), 1.0f);
 #endif
 
 	HDR = ConvertCS_709to2020(HDR);
@@ -79,7 +79,7 @@ PS_OUT main(float4 position : SV_Position)
 	}
 
 	// Current values are specified in nits.  Normalize to max specified brightness.
-	Out.HdrOutput = LinearToREC2084(FinalOutput / 10000.0);
+	Out.HdrOutput = float4(LinearToREC2084(FinalOutput / 10000.0), 1.0f);
 
 	return Out;
 }
