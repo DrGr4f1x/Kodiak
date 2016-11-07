@@ -32,7 +32,7 @@ MaterialResource::MaterialResource(const string& name)
 {}
 
 
-void MaterialResource::SetSRVInternal(shared_ptr<Texture> texture, bool immediate)
+void MaterialResource::SetSRVInternal(Texture& texture, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -41,31 +41,18 @@ void MaterialResource::SetSRVInternal(shared_ptr<Texture> texture, bool immediat
 			"MaterialResource is bound to a UAV, but a Texture is being assigned (should be a ColorBuffer).");
 	}
 
-	SetCachedResources(texture, nullptr, nullptr, nullptr, false);
+	// Texture must be fully loaded at this point
+	assert(texture != false);
+
+	SetCachedResources(texture.GetSRV(), nullptr);
 
 	_ReadWriteBarrier();
 
-	if (auto renderThreadData = m_renderThreadData.lock())
-	{
-		if (texture && !texture->loadTask.is_done())
-		{
-			auto thisResource = shared_from_this();
-			// Wait until the texture loads before updating the material on the render thread
-			texture->loadTask.then([renderThreadData, thisResource, texture, immediate]
-			{
-				SetThreadRole(ThreadRole::GenericWorker);
-				thisResource->DispatchToRenderThreadNoLock(renderThreadData, texture->GetSRV(), immediate);
-			});
-		}
-		else
-		{
-			DispatchToRenderThreadNoLock(renderThreadData, texture ? texture->GetSRV() : nullptr, immediate);
-		}
-	}
+	DispatchToRenderThread(m_srv.Get(), immediate);
 }
 
 
-void MaterialResource::SetSRVInternal(shared_ptr<DepthBuffer> buffer, bool stencil, bool immediate)
+void MaterialResource::SetSRVInternal(DepthBuffer& buffer, bool stencil, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -74,22 +61,15 @@ void MaterialResource::SetSRVInternal(shared_ptr<DepthBuffer> buffer, bool stenc
 			"MaterialResource is bound to a UAV, but an SRV is being assigned.");
 	}
 
-	SetCachedResources(nullptr, nullptr, buffer, nullptr, stencil);
+	SetCachedResources(stencil ? buffer.GetStencilSRV() : buffer.GetDepthSRV(), nullptr);
 
 	_ReadWriteBarrier();
 
-	if (buffer)
-	{
-		DispatchToRenderThread(stencil ? buffer->GetStencilSRV() : buffer->GetDepthSRV(), immediate);
-	}
-	else
-	{
-		DispatchToRenderThread((ID3D11ShaderResourceView*)nullptr, immediate);
-	}
+	DispatchToRenderThread(m_srv.Get(), immediate);
 }
 
 
-void MaterialResource::SetSRVInternal(shared_ptr<ColorBuffer> buffer, bool immediate)
+void MaterialResource::SetSRVInternal(ColorBuffer& buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -98,15 +78,15 @@ void MaterialResource::SetSRVInternal(shared_ptr<ColorBuffer> buffer, bool immed
 			"MaterialResource is bound to a UAV, but an SRV is being assigned.");
 	}
 
-	SetCachedResources(nullptr, buffer, nullptr, nullptr, false);
+	SetCachedResources(buffer.GetSRV(), nullptr);
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr, immediate);
+	DispatchToRenderThread(m_srv.Get(), immediate);
 }
 
 
-void MaterialResource::SetSRVInternal(shared_ptr<GpuBuffer> buffer, bool immediate)
+void MaterialResource::SetSRVInternal(GpuBuffer& buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -115,15 +95,15 @@ void MaterialResource::SetSRVInternal(shared_ptr<GpuBuffer> buffer, bool immedia
 			"MaterialResource is bound to a UAV, but an SRV is being assigned.");
 	}
 
-	SetCachedResources(nullptr, nullptr, nullptr, buffer, false);
+	SetCachedResources(buffer.GetSRV(), nullptr);
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetSRV() : nullptr, immediate);
+	DispatchToRenderThread(m_srv.Get(), immediate);
 }
 
 
-void MaterialResource::SetUAVInternal(shared_ptr<ColorBuffer> buffer, bool immediate)
+void MaterialResource::SetUAVInternal(ColorBuffer& buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -132,15 +112,15 @@ void MaterialResource::SetUAVInternal(shared_ptr<ColorBuffer> buffer, bool immed
 			"ComputeResource is bound to an SRV, but a UAV is being assigned.");
 	}
 
-	SetCachedResources(nullptr, buffer, nullptr, nullptr, false);
+	SetCachedResources(nullptr, buffer.GetUAV());
 
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, immediate);
+	DispatchToRenderThread(m_uav.Get(), immediate);
 }
 
 
-void MaterialResource::SetUAVInternal(shared_ptr<GpuBuffer> buffer, bool immediate)
+void MaterialResource::SetUAVInternal(GpuBuffer& buffer, bool immediate)
 {
 	// Validate type
 	if (m_type != ShaderResourceType::Unsupported)
@@ -149,11 +129,11 @@ void MaterialResource::SetUAVInternal(shared_ptr<GpuBuffer> buffer, bool immedia
 			"ComputeResource is bound to an SRV, but a UAV is being assigned.");
 	}
 
-	SetCachedResources(nullptr, nullptr, nullptr, buffer, false);
+	SetCachedResources(nullptr, buffer.GetUAV());
 	
 	_ReadWriteBarrier();
 
-	DispatchToRenderThread(buffer ? buffer->GetUAV() : nullptr, immediate);
+	DispatchToRenderThread(m_uav.Get(), immediate);
 }
 
 
@@ -173,23 +153,7 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 
 	m_renderThreadData = materialData;
 
-	if (m_texture)
-	{
-		SetSRV(m_texture);
-		return;
-	}
-	else if (m_colorBuffer)
-	{
-		SetSRV(m_colorBuffer);
-	}
-	else if (m_depthBuffer)
-	{
-		SetSRV(m_depthBuffer, m_stencil);
-	}
-	else if (m_gpuBuffer)
-	{
-		SetSRV(m_gpuBuffer);
-	}
+	DispatchToRenderThread(m_srv.Get(), false);
 }
 
 
@@ -208,14 +172,7 @@ void MaterialResource::CreateRenderThreadData(shared_ptr<RenderThread::MaterialD
 
 	m_renderThreadData = materialData;
 
-	if (m_colorBuffer)
-	{
-		SetUAV(m_colorBuffer);
-	}
-	else if (m_gpuBuffer)
-	{
-		SetUAV(m_gpuBuffer);
-	}
+	DispatchToRenderThread(m_uav.Get(), false);
 }
 
 
@@ -289,24 +246,5 @@ void MaterialResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav, bo
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisUAV.Get());
 			});
 		}
-	}
-}
-
-
-void MaterialResource::DispatchToRenderThreadNoLock(shared_ptr<RenderThread::MaterialData> materialData, ID3D11ShaderResourceView* srv, bool immediate)
-{
-	if (immediate)
-	{
-		UpdateResourceOnRenderThread(materialData.get(), srv);
-	}
-	else
-	{ // Locals for lambda capture
-		auto thisResource = shared_from_this();
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> thisSRV = srv;
-
-		Renderer::GetInstance().EnqueueTask([materialData, thisResource, thisSRV](RenderTaskEnvironment& rte)
-		{
-			thisResource->UpdateResourceOnRenderThread(materialData.get(), thisSRV.Get());
-		});
 	}
 }

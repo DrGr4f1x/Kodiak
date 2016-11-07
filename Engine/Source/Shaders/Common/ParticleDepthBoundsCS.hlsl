@@ -48,10 +48,10 @@ void main(uint3 Gid : SV_GroupID, uint GI : SV_GroupIndex, uint3 DTid : SV_Dispa
 	float2 UV3 = UV1 + float2(0, 2) * gRcpBufferDim;
 	float2 UV4 = UV1 + float2(2, 2) * gRcpBufferDim;
 
-	float4 ZQuad1 = g_Input.Gather(gSampPointClamp, UV1);
-	float4 ZQuad2 = g_Input.Gather(gSampPointClamp, UV2);
-	float4 ZQuad3 = g_Input.Gather(gSampPointClamp, UV3);
-	float4 ZQuad4 = g_Input.Gather(gSampPointClamp, UV4);
+	float4 ZQuad1 = g_Input.Gather(PointSampler, UV1);
+	float4 ZQuad2 = g_Input.Gather(PointSampler, UV2);
+	float4 ZQuad3 = g_Input.Gather(PointSampler, UV3);
+	float4 ZQuad4 = g_Input.Gather(PointSampler, UV4);
 
 	float4 MaxQuad = max(max(ZQuad1, ZQuad2), max(ZQuad3, ZQuad4));
 	float4 MinQuad = min(min(ZQuad1, ZQuad2), min(ZQuad3, ZQuad4));

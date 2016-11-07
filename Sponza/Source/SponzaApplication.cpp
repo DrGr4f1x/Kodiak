@@ -313,8 +313,8 @@ void SponzaApplication::CreateModel()
 		for (uint32_t j = 0; j < numParts; ++j)
 		{
 			auto material = mesh->GetMaterial(j);
-			material->GetResource("texSSAO")->SetSRV(m_ssaoFullscreen);
-			material->GetResource("texShadow")->SetSRV(m_shadowBuffer);
+			material->GetResource("texSSAO")->SetSRV(*m_ssaoFullscreen);
+			material->GetResource("texShadow")->SetSRV(*m_shadowBuffer);
 		}
 	}
 #endif

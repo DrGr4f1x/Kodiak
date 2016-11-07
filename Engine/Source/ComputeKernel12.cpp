@@ -211,6 +211,8 @@ void ComputeKernel::SetupKernel()
 
 			// Track the current descriptor index for the master CPU handle list
 			++currentDescriptor;
+
+			++rangeIndex;
 		}
 	}
 

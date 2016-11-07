@@ -29,7 +29,8 @@ public:
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV() const { return m_cpuDescriptorHandle; }
 
-	bool operator!() { return m_cpuDescriptorHandle.ptr == 0; }
+	operator bool() const { return m_cpuDescriptorHandle.ptr != 0 && m_cpuDescriptorHandle.ptr != ~0ull; }
+	bool operator!() const { return m_cpuDescriptorHandle.ptr == 0; }
 
 	static std::shared_ptr<Texture> Load(const std::string& path, bool sRGB, bool asyncLoad = true);
 	void Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData);

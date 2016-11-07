@@ -367,9 +367,12 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 			}
 		}
 
-		opaqueMaterial->GetResource("texDiffuse")->SetSRV(diffuseTexture);
-		opaqueMaterial->GetResource("texSpecular")->SetSRV(specularTexture);
-		opaqueMaterial->GetResource("texNormal")->SetSRV(normalTexture);
+		(diffuseTexture->loadTask && specularTexture->loadTask && normalTexture->loadTask).then([=]
+		{
+			opaqueMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
+			opaqueMaterial->GetResource("texSpecular")->SetSRV(*specularTexture);
+			opaqueMaterial->GetResource("texNormal")->SetSRV(*normalTexture);
+		});
 
 		// TODO move this stuff to per-view data
 		using namespace DirectX;
@@ -383,14 +386,20 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		depthMaterial->SetEffect(GetDefaultDepthEffect());
 		depthMaterial->SetRenderPass(GetDefaultDepthPass());
 
-		depthMaterial->GetResource("texDiffuse")->SetSRV(diffuseTexture);
-
+		diffuseTexture->loadTask.then([=]
+		{
+			depthMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
+		});
+		
 		// Setup shadow material
 		auto shadowMaterial = shadowMaterials[i] = make_shared<Material>();
 		shadowMaterial->SetEffect(GetDefaultShadowEffect());
 		shadowMaterial->SetRenderPass(GetDefaultShadowPass());
 
-		shadowMaterial->GetResource("texDiffuse")->SetSRV(diffuseTexture);
+		diffuseTexture->loadTask.then([=]
+		{
+			shadowMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
+		});
 	}
 
 	// Create meshes

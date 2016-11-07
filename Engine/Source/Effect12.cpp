@@ -160,6 +160,17 @@ void Effect::BuildPSO()
 }
 
 
+namespace
+{
+
+inline bool IsValidSize(uint32_t size)
+{
+	return (size != 0) && (size != kInvalid);
+}
+
+} // anonymous namespace
+
+
 void Effect::CreateRootSignature()
 {
 	uint32_t numRootParameters = 0;
@@ -174,8 +185,8 @@ void Effect::CreateRootSignature()
 		numRootParameters += (vsDescriptors > 0) ? 1 : 0;
 		numRootSamplers += sig.numSamplers;
 
-		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
-		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+		usePerViewData = usePerViewData || IsValidSize(sig.cbvPerViewData.sizeInBytes);
+		usePerObjectData = usePerObjectData || IsValidSize(sig.cbvPerObjectData.sizeInBytes);
 	}
 
 	if (m_hullShader)
@@ -185,8 +196,8 @@ void Effect::CreateRootSignature()
 		numRootParameters += (hsDescriptors > 0) ? 1 : 0;
 		numRootSamplers += sig.numSamplers;
 
-		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
-		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+		usePerViewData = usePerViewData || IsValidSize(sig.cbvPerViewData.sizeInBytes);
+		usePerObjectData = usePerObjectData || IsValidSize(sig.cbvPerObjectData.sizeInBytes);
 	}
 
 	if (m_domainShader)
@@ -196,8 +207,8 @@ void Effect::CreateRootSignature()
 		numRootParameters += (dsDescriptors > 0) ? 1 : 0;
 		numRootSamplers += sig.numSamplers;
 
-		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
-		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+		usePerViewData = usePerViewData || IsValidSize(sig.cbvPerViewData.sizeInBytes);
+		usePerObjectData = usePerObjectData || IsValidSize(sig.cbvPerObjectData.sizeInBytes);
 	}
 
 	if (m_geometryShader)
@@ -207,8 +218,8 @@ void Effect::CreateRootSignature()
 		numRootParameters += (gsDescriptors > 0) ? 1 : 0;
 		numRootSamplers += sig.numSamplers;
 
-		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
-		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+		usePerViewData = usePerViewData || IsValidSize(sig.cbvPerViewData.sizeInBytes);
+		usePerObjectData = usePerObjectData || IsValidSize(sig.cbvPerObjectData.sizeInBytes);
 	}
 
 	if (m_pixelShader)
@@ -218,8 +229,8 @@ void Effect::CreateRootSignature()
 		numRootParameters += (psDescriptors > 0) ? 1 : 0;
 		numRootSamplers += sig.numSamplers;
 
-		usePerViewData = usePerViewData || (sig.cbvPerViewData.sizeInBytes != 0);
-		usePerObjectData = usePerObjectData || (sig.cbvPerObjectData.sizeInBytes != 0);
+		usePerViewData = usePerViewData || IsValidSize(sig.cbvPerViewData.sizeInBytes);
+		usePerObjectData = usePerObjectData || IsValidSize(sig.cbvPerObjectData.sizeInBytes);
 	}
 
 	if (usePerViewData)

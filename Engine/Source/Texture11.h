@@ -31,7 +31,8 @@ public:
 	ID3D11ShaderResourceView* GetSRV() { return m_srv.Get(); }
 	const ID3D11ShaderResourceView* GetSRV() const { return m_srv.Get(); }
 
-	bool operator!() { return nullptr == m_srv.Get(); }
+	operator bool() const { return nullptr != m_srv.Get(); }
+	bool operator!() const { return nullptr == m_srv.Get(); }
 
 	static std::shared_ptr<Texture> Load(const std::string& path, bool sRGB, bool asyncLoad = true);
 	void Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData);

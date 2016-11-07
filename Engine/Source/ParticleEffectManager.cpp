@@ -740,10 +740,10 @@ void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, cons
 	m_particleRenderMaterial->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 		sizeof(CBChangesPerView),
 		reinterpret_cast<const byte*>(&cbData));
-	m_particleRenderMaterial->GetResource("g_VertexBuffer")->SetSRVImmediate(m_spriteVertexBuffer);
-	m_particleRenderMaterial->GetResource("ColorTex")->SetSRVImmediate(m_textureArray);
-	m_particleRenderMaterial->GetResource("g_IndexBuffer")->SetSRVImmediate(m_spriteIndexBuffer);
-	m_particleRenderMaterial->GetResource("LinearDepthTex")->SetSRVImmediate(linearDepth);
+	m_particleRenderMaterial->GetResource("g_VertexBuffer")->SetSRVImmediate(*m_spriteVertexBuffer);
+	m_particleRenderMaterial->GetResource("ColorTex")->SetSRVImmediate(*m_textureArray);
+	m_particleRenderMaterial->GetResource("g_IndexBuffer")->SetSRVImmediate(*m_spriteIndexBuffer);
+	m_particleRenderMaterial->GetResource("LinearDepthTex")->SetSRVImmediate(*linearDepth);
 
 	commandList.DrawIndirect(*m_drawIndirectArgs);
 
