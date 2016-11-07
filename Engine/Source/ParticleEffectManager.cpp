@@ -368,6 +368,8 @@ void ParticleEffectManager::Update(ComputeCommandList& commandList, float timeDe
 		return;
 	}
 
+	commandList.PIXBeginEvent("Update particles");
+
 	commandList.ResetCounter(*m_spriteVertexBuffer);
 	commandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::UnorderedAccess);
 
@@ -390,6 +392,8 @@ void ParticleEffectManager::Update(ComputeCommandList& commandList, float timeDe
 	}
 
 	SetFinalBuffers(commandList);
+
+	commandList.PIXEndEvent();
 }
 
 

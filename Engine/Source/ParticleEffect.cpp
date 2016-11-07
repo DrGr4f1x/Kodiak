@@ -165,6 +165,7 @@ void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<Structur
 
 	// Spawn to replace dead ones 
 	m_particleSpawnCs->GetResource("g_ResetData")->SetSRVImmediate(m_randomStateBuffer);
+	m_particleSpawnCs->GetResource("g_OutputBuffer")->SetUAVImmediate(m_stateBuffers[m_currentStateBuffer]);
 	UINT NumSpawnThreads = (UINT)(m_effectProperties.EmitRate * timeDelta);
 	m_particleSpawnCs->Dispatch(&commandList, (NumSpawnThreads + 63) / 64, 1, 1);
 

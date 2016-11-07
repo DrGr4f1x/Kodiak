@@ -456,13 +456,13 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 			m_mainScene->Update(commandList);
 			m_mainScene->Render(GetDefaultBasePass(), commandList);
 
-			if(false)
+			if(true)
 			{
 				PROFILE_BEGIN(itt_particles);
 
 				auto compCommandList = commandList->GetComputeCommandList();
 				m_particleEffectManager->Update(*compCommandList, m_elapsedTime);
-				m_particleEffectManager->Render(*compCommandList, m_camera, m_colorTarget, m_depthBuffer, m_linearDepthBuffer);
+				m_particleEffectManager->Render(*commandList, m_camera, m_colorTarget, m_depthBuffer, m_linearDepthBuffer);
 
 				PROFILE_END();
 			}
