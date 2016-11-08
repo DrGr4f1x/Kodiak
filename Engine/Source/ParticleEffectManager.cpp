@@ -18,18 +18,15 @@
 #include "ParticleEffectManager.h"
 
 #include "Camera.h"
-#include "ColorBuffer.h"
 #include "CommandList.h"
 #include "CommonStates.h"
 #include "ComputeConstantBuffer.h"
-#include "ComputeKernel.h"
 #include "ComputeParameter.h"
 #include "ComputeResource.h"
 #include "DepthBuffer.h"
 #include "DeviceManager.h"
 #include "Effect.h"
 #include "Format.h"
-#include "GpuBuffer.h"
 #include "Material.h"
 #include "MaterialConstantBuffer.h"
 #include "MaterialResource.h"
@@ -75,87 +72,38 @@ ParticleEffectManager::ParticleEffectManager()
 
 void ParticleEffectManager::Initialize(uint32_t width, uint32_t height)
 {
-	m_particleFinalDispatchIndirectArgsCs = make_shared<ComputeKernel>();
-	m_particleFinalDispatchIndirectArgsCs->SetComputeShaderPath("Engine\\ParticleFinalDispatchIndirectArgsCS");
-	auto waitTask = m_particleFinalDispatchIndirectArgsCs->loadTask;
+	auto waitTask = concurrency::create_task([] {});
 
-	m_particleLargeBinCullingCs = make_shared<ComputeKernel>();
-	m_particleLargeBinCullingCs->SetComputeShaderPath("Engine\\ParticleLargeBinCullingCS");
-	waitTask = waitTask && m_particleLargeBinCullingCs->loadTask;
-
-	m_particleBinCullingCs = make_shared<ComputeKernel>();
-	m_particleBinCullingCs->SetComputeShaderPath("Engine\\ParticleBinCullingCS");
-	waitTask = waitTask && m_particleBinCullingCs->loadTask;
-
-	m_particleTileCullingCs = make_shared<ComputeKernel>();
-	m_particleTileCullingCs->SetComputeShaderPath("Engine\\ParticleTileCullingCS");
-	waitTask = waitTask && m_particleTileCullingCs->loadTask;
-
+	m_particleFinalDispatchIndirectArgsCs.SetComputeShaderPath("Engine\\ParticleFinalDispatchIndirectArgsCS", waitTask);
+	m_particleLargeBinCullingCs.SetComputeShaderPath("Engine\\ParticleLargeBinCullingCS", waitTask);
+	m_particleBinCullingCs.SetComputeShaderPath("Engine\\ParticleBinCullingCS", waitTask);
+	m_particleTileCullingCs.SetComputeShaderPath("Engine\\ParticleTileCullingCS", waitTask);
+	
 	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
-		m_particleTileRenderSlowCs[0] = make_shared<ComputeKernel>();
-		m_particleTileRenderSlowCs[0]->SetComputeShaderPath("Engine\\ParticleTileRender2CS");
-		waitTask = waitTask && m_particleTileRenderSlowCs[0]->loadTask;
-
-		m_particleTileRenderSlowCs[1] = make_shared<ComputeKernel>();
-		m_particleTileRenderSlowCs[1]->SetComputeShaderPath("Engine\\ParticleTileRenderSlowLowRes2CS");
-		waitTask = waitTask && m_particleTileRenderSlowCs[1]->loadTask;
-
-		m_particleTileRenderSlowCs[2] = make_shared<ComputeKernel>();
-		m_particleTileRenderSlowCs[2]->SetComputeShaderPath("Engine\\ParticleTileRenderSlowDynamic2CS");
-		waitTask = waitTask && m_particleTileRenderSlowCs[2]->loadTask;
-
-		m_particleTileRenderFastCs[0] = make_shared<ComputeKernel>();
-		m_particleTileRenderFastCs[0]->SetComputeShaderPath("Engine\\ParticleTileRenderFast2CS");
-		waitTask = waitTask && m_particleTileRenderFastCs[0]->loadTask;
-
-		m_particleTileRenderFastCs[1] = make_shared<ComputeKernel>();
-		m_particleTileRenderFastCs[1]->SetComputeShaderPath("Engine\\ParticleTileRenderFastLowRes2CS");
-		waitTask = waitTask && m_particleTileRenderFastCs[1]->loadTask;
-
-		m_particleTileRenderFastCs[2] = make_shared<ComputeKernel>();
-		m_particleTileRenderFastCs[2]->SetComputeShaderPath("Engine\\ParticleTileRenderFastDynamic2CS");
-		waitTask = waitTask && m_particleTileRenderFastCs[2]->loadTask;
+		m_particleTileRenderSlowCs[0].SetComputeShaderPath("Engine\\ParticleTileRender2CS", waitTask);
+		m_particleTileRenderSlowCs[1].SetComputeShaderPath("Engine\\ParticleTileRenderSlowLowRes2CS", waitTask);
+		m_particleTileRenderSlowCs[2].SetComputeShaderPath("Engine\\ParticleTileRenderSlowDynamic2CS", waitTask);
+		
+		m_particleTileRenderFastCs[0].SetComputeShaderPath("Engine\\ParticleTileRenderFast2CS", waitTask);
+		m_particleTileRenderFastCs[1].SetComputeShaderPath("Engine\\ParticleTileRenderFastLowRes2CS", waitTask);
+		m_particleTileRenderFastCs[2].SetComputeShaderPath("Engine\\ParticleTileRenderFastDynamic2CS", waitTask);
 	}
 	else
 	{
-		m_particleTileRenderSlowCs[0] = make_shared<ComputeKernel>();
-		m_particleTileRenderSlowCs[0]->SetComputeShaderPath("Engine\\ParticleTileRenderCS");
-		waitTask = waitTask && m_particleTileRenderSlowCs[0]->loadTask;
+		m_particleTileRenderSlowCs[0].SetComputeShaderPath("Engine\\ParticleTileRenderCS", waitTask);
+		m_particleTileRenderSlowCs[1].SetComputeShaderPath("Engine\\ParticleTileRenderSlowLowResCS", waitTask);
+		m_particleTileRenderSlowCs[2].SetComputeShaderPath("Engine\\ParticleTileRenderSlowDynamicCS", waitTask);
 
-		m_particleTileRenderSlowCs[1] = make_shared<ComputeKernel>();
-		m_particleTileRenderSlowCs[1]->SetComputeShaderPath("Engine\\ParticleTileRenderSlowLowResCS");
-		waitTask = waitTask && m_particleTileRenderSlowCs[1]->loadTask;
-
-		m_particleTileRenderSlowCs[2] = make_shared<ComputeKernel>();
-		m_particleTileRenderSlowCs[2]->SetComputeShaderPath("Engine\\ParticleTileRenderSlowDynamicCS");
-		waitTask = waitTask && m_particleTileRenderSlowCs[2]->loadTask;
-
-		m_particleTileRenderFastCs[0] = make_shared<ComputeKernel>();
-		m_particleTileRenderFastCs[0]->SetComputeShaderPath("Engine\\ParticleTileRenderFastCS");
-		waitTask = waitTask && m_particleTileRenderFastCs[0]->loadTask;
-
-		m_particleTileRenderFastCs[1] = make_shared<ComputeKernel>();
-		m_particleTileRenderFastCs[1]->SetComputeShaderPath("Engine\\ParticleTileRenderFastLowResCS");
-		waitTask = waitTask && m_particleTileRenderFastCs[1]->loadTask;
-
-		m_particleTileRenderFastCs[2] = make_shared<ComputeKernel>();
-		m_particleTileRenderFastCs[2]->SetComputeShaderPath("Engine\\ParticleTileRenderFastDynamicCS");
-		waitTask = waitTask && m_particleTileRenderFastCs[2]->loadTask;
+		m_particleTileRenderFastCs[0].SetComputeShaderPath("Engine\\ParticleTileRenderFastCS", waitTask);
+		m_particleTileRenderFastCs[1].SetComputeShaderPath("Engine\\ParticleTileRenderFastLowResCS", waitTask);
+		m_particleTileRenderFastCs[2].SetComputeShaderPath("Engine\\ParticleTileRenderFastDynamicCS", waitTask);
 	}
 
-	m_particleDepthBoundsCs = make_shared<ComputeKernel>();
-	m_particleDepthBoundsCs->SetComputeShaderPath("Engine\\ParticleDepthBoundsCS");
-	waitTask = waitTask && m_particleDepthBoundsCs->loadTask;
-
-	m_particleSortIndirectArgsCs = make_shared<ComputeKernel>();
-	m_particleSortIndirectArgsCs->SetComputeShaderPath("Engine\\ParticleSortIndirectArgsCS");
-	waitTask = waitTask && m_particleSortIndirectArgsCs->loadTask;
-
-	m_particlePreSortCs = make_shared<ComputeKernel>();
-	m_particlePreSortCs->SetComputeShaderPath("Engine\\ParticlePreSortCS");
-	waitTask = waitTask && m_particlePreSortCs->loadTask;
-
+	m_particleDepthBoundsCs.SetComputeShaderPath("Engine\\ParticleDepthBoundsCS", waitTask);
+	m_particleSortIndirectArgsCs.SetComputeShaderPath("Engine\\ParticleSortIndirectArgsCS", waitTask);
+	m_particlePreSortCs.SetComputeShaderPath("Engine\\ParticlePreSortCS", waitTask);
+	
 	auto particleRenderEffect = make_shared<Effect>();
 	particleRenderEffect->SetName("Particle effect");
 	particleRenderEffect->SetRasterizerState(CommonStates::CullNone());
@@ -177,40 +125,25 @@ void ParticleEffectManager::Initialize(uint32_t width, uint32_t height)
 
 	for (uint32_t i = 0; i < 7; ++i)
 	{
-		m_particleInnerSortCs[i] = make_shared<ComputeKernel>();
-		m_particleInnerSortCs[i]->SetComputeShaderPath("Engine\\ParticleInnerSortCS");
-		waitTask = waitTask && m_particleInnerSortCs[i]->loadTask;
+		m_particleInnerSortCs[i].SetComputeShaderPath("Engine\\ParticleInnerSortCS", waitTask);
 	}
 
 	for (uint32_t i = 0; i < 28; ++i)
 	{
-		m_particleOuterSortCs[i] = make_shared<ComputeKernel>();
-		m_particleOuterSortCs[i]->SetComputeShaderPath("Engine\\ParticleOuterSortCS");
-		waitTask = waitTask && m_particleOuterSortCs[i]->loadTask;
+		m_particleOuterSortCs[i].SetComputeShaderPath("Engine\\ParticleOuterSortCS", waitTask);
 	}
 
-	m_drawIndirectArgs = make_shared<IndirectArgsBuffer>();
 	__declspec(align(16)) UINT initialDrawIndirectArgs[4] = { 4, 0, 0, 0 };
-	m_drawIndirectArgs->Create("ParticleEffects::DrawIndirectArgs", 1, 4 * sizeof(UINT), initialDrawIndirectArgs);
+	m_drawIndirectArgs.Create("ParticleEffects::DrawIndirectArgs", 1, 4 * sizeof(UINT), initialDrawIndirectArgs);
 
-	m_finalDispatchIndirectArgs = make_shared<IndirectArgsBuffer>();
 	__declspec(align(16)) UINT initialDispatchIndirectArgs[6] = { 0, 1, 1, 0, 1, 1 };
-	m_finalDispatchIndirectArgs->Create("ParticleEffects::FinalDispatchIndirectArgs", 1, 3 * sizeof(UINT), initialDispatchIndirectArgs);
+	m_finalDispatchIndirectArgs.Create("ParticleEffects::FinalDispatchIndirectArgs", 1, 3 * sizeof(UINT), initialDispatchIndirectArgs);
 
-	m_spriteVertexBuffer = make_shared<StructuredBuffer>();
-	m_spriteVertexBuffer->Create("ParticleEffects::SpriteVertexBuffer", MAX_TOTAL_PARTICLES, sizeof(ParticleVertex));
-
-	m_visibleParticleBuffer = make_shared<StructuredBuffer>();
-	m_visibleParticleBuffer->Create("ParticleEffects::VisibleParticleBuffer", MAX_TOTAL_PARTICLES, sizeof(ParticleScreenData));
-
-	m_spriteIndexBuffer = make_shared<StructuredBuffer>();
-	m_spriteIndexBuffer->Create("ParticleEffects::SpriteIndexBuffer", MAX_TOTAL_PARTICLES, sizeof(UINT));
-
-	m_sortIndirectArgs = make_shared<IndirectArgsBuffer>();
-	m_sortIndirectArgs->Create("ParticleEffects::SortIndirectArgs", 8, 3 * sizeof(UINT));
-
-	m_tileDrawDispatchIndirectArgs = make_shared<IndirectArgsBuffer>();
-	m_tileDrawDispatchIndirectArgs->Create("ParticleEffects::DrawPackets_IArgs", 2, 3 * sizeof(UINT), initialDispatchIndirectArgs);
+	m_spriteVertexBuffer.Create("ParticleEffects::SpriteVertexBuffer", MAX_TOTAL_PARTICLES, sizeof(ParticleVertex));
+	m_visibleParticleBuffer.Create("ParticleEffects::VisibleParticleBuffer", MAX_TOTAL_PARTICLES, sizeof(ParticleScreenData));
+	m_spriteIndexBuffer.Create("ParticleEffects::SpriteIndexBuffer", MAX_TOTAL_PARTICLES, sizeof(UINT));
+	m_sortIndirectArgs.Create("ParticleEffects::SortIndirectArgs", 8, 3 * sizeof(UINT));
+	m_tileDrawDispatchIndirectArgs.Create("ParticleEffects::DrawPackets_IArgs", 2, 3 * sizeof(UINT), initialDispatchIndirectArgs);
 
 	const uint32_t largeBinsPerRow = DivideByMultiple(width, 4 * BIN_SIZE_X);
 	const uint32_t largeBinsPerCol = DivideByMultiple(height, 4 * BIN_SIZE_Y);
@@ -225,30 +158,19 @@ void ParticleEffectManager::Initialize(uint32_t width, uint32_t height)
 	const uint32_t paddedTilesPerRow = AlignUp(tilesPerRow, TILES_PER_BIN_X * 4);
 	const uint32_t paddedTilesPerCol = AlignUp(tilesPerCol, TILES_PER_BIN_Y * 4);
 
-	m_binParticles[0] = make_shared<StructuredBuffer>();
-	m_binParticles[1] = make_shared<StructuredBuffer>();
-	m_binParticles[0]->Create("ParticleEffects::BinParticles[0]", particleBinCapacity, sizeof(UINT));
-	m_binParticles[1]->Create("ParticleEffects::BinParticles[0]", particleBinCapacity, sizeof(UINT));
+	m_binParticles[0].Create("ParticleEffects::BinParticles[0]", particleBinCapacity, sizeof(UINT));
+	m_binParticles[1].Create("ParticleEffects::BinParticles[1]", particleBinCapacity, sizeof(UINT));
 
-	m_binCounters[0] = make_shared<StructuredBuffer>();
-	m_binCounters[1] = make_shared<StructuredBuffer>();
-	m_binCounters[0]->Create("ParticleEffects::LargeBinCounters", largeBinsPerRow * largeBinsPerCol, sizeof(UINT));
-	m_binCounters[1]->Create("ParticleEffects::BinCounters", binsPerRow * binsPerCol, sizeof(UINT));
+	m_binCounters[0].Create("ParticleEffects::LargeBinCounters", largeBinsPerRow * largeBinsPerCol, sizeof(UINT));
+	m_binCounters[1].Create("ParticleEffects::BinCounters", binsPerRow * binsPerCol, sizeof(UINT));
 
-	m_tileCounters = make_shared<StructuredBuffer>();
-	m_tileCounters->Create("ParticleEffects::TileCounters", paddedTilesPerRow * paddedTilesPerCol, sizeof(UINT));
+	m_tileCounters.Create("ParticleEffects::TileCounters", paddedTilesPerRow * paddedTilesPerCol, sizeof(UINT));
+	m_tileHitMasks.Create("ParticleEffects::TileHitMasks", paddedTilesPerRow * paddedTilesPerCol, MAX_PARTICLES_PER_BIN / 8);
 
-	m_tileHitMasks = make_shared<ByteAddressBuffer>();
-	m_tileHitMasks->Create("ParticleEffects::TileHitMasks", paddedTilesPerRow * paddedTilesPerCol, MAX_PARTICLES_PER_BIN / 8);
+	m_tileDrawPackets.Create("ParticleEffects::DrawPackets", tilesPerRow * tilesPerCol, sizeof(UINT));
+	m_tileFastDrawPackets.Create("ParticleEffects::FastDrawPackets", tilesPerRow * tilesPerCol, sizeof(UINT));
 
-	m_tileDrawPackets = make_shared<StructuredBuffer>();
-	m_tileDrawPackets->Create("ParticleEffects::DrawPackets", tilesPerRow * tilesPerCol, sizeof(UINT));
-
-	m_tileFastDrawPackets = make_shared<StructuredBuffer>();
-	m_tileFastDrawPackets->Create("ParticleEffects::FastDrawPackets", tilesPerRow * tilesPerCol, sizeof(UINT));
-
-	m_textureArray = make_shared<Texture>();
-	m_textureArray->CreateArray(64, 64, 16, 4, ColorFormat::BC3_UNorm_sRGB);
+	m_textureArray.CreateArray(64, 64, 16, 4, ColorFormat::BC3_UNorm_sRGB);
 
 	const uint32_t bufferWidth3 = (width + 7) / 8;
 	const uint32_t bufferWidth4 = (width + 15) / 16;
@@ -257,14 +179,9 @@ void ParticleEffectManager::Initialize(uint32_t width, uint32_t height)
 	const uint32_t bufferHeight4 = (height + 15) / 16;
 	const uint32_t bufferHeight5 = (height + 31) / 32;
 
-	m_minMaxDepth8 = make_shared<ColorBuffer>();
-	m_minMaxDepth8->Create("ParticleEffects::MinMaxDepth 8x8", bufferWidth3, bufferHeight3, 1, ColorFormat::R32_UInt);
-
-	m_minMaxDepth16 = make_shared<ColorBuffer>();
-	m_minMaxDepth16->Create("ParticleEffects::MinMaxDepth 16x16", bufferWidth4, bufferHeight4, 1, ColorFormat::R32_UInt);
-
-	m_minMaxDepth32 = make_shared<ColorBuffer>();
-	m_minMaxDepth32->Create("ParticleEffects::MinMaxDepth 32x32", bufferWidth5, bufferHeight5, 1, ColorFormat::R32_UInt);
+	m_minMaxDepth8.Create("ParticleEffects::MinMaxDepth 8x8", bufferWidth3, bufferHeight3, 1, ColorFormat::R32_UInt);
+	m_minMaxDepth16.Create("ParticleEffects::MinMaxDepth 16x16", bufferWidth4, bufferHeight4, 1, ColorFormat::R32_UInt);
+	m_minMaxDepth32.Create("ParticleEffects::MinMaxDepth 32x32", bufferWidth5, bufferHeight5, 1, ColorFormat::R32_UInt);
 
 	if (m_reproFrame > 0)
 	{
@@ -370,8 +287,8 @@ void ParticleEffectManager::Update(ComputeCommandList& commandList, float timeDe
 
 	commandList.PIXBeginEvent("Update particles");
 
-	commandList.ResetCounter(*m_spriteVertexBuffer);
-	commandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::UnorderedAccess);
+	commandList.ResetCounter(m_spriteVertexBuffer);
+	commandList.TransitionResource(m_spriteVertexBuffer, ResourceState::UnorderedAccess);
 
 	for (size_t i = 0; i < m_particleEffectsActive.size(); ++i)
 	{
@@ -397,21 +314,21 @@ void ParticleEffectManager::Update(ComputeCommandList& commandList, float timeDe
 }
 
 
-void ParticleEffectManager::Render(CommandList& commandList, std::shared_ptr<Camera> camera, std::shared_ptr<ColorBuffer> colorTarget,
-	std::shared_ptr<DepthBuffer> depthBuffer, std::shared_ptr<ColorBuffer> linearDepth)
+void ParticleEffectManager::Render(CommandList& commandList, std::shared_ptr<Camera> camera, ColorBuffer& colorTarget,
+	DepthBuffer& depthBuffer, ColorBuffer& linearDepth)
 {
 	if (!m_enable || !m_initialized || m_particleEffectsActive.empty())
 	{
 		return;
 	}
 
-	auto width = colorTarget->GetWidth();
-	auto height = colorTarget->GetHeight();
+	auto width = colorTarget.GetWidth();
+	auto height = colorTarget.GetHeight();
 
-	assert_msg(width == depthBuffer->GetWidth() &&
-		height == depthBuffer->GetHeight() &&
-		width == linearDepth->GetWidth() &&
-		height == linearDepth->GetHeight(),
+	assert_msg(width == depthBuffer.GetWidth() &&
+		height == depthBuffer.GetHeight() &&
+		width == linearDepth.GetWidth() &&
+		height == linearDepth.GetHeight(),
 		"There is a mismatch in buffer dimensions for rendering particles");
 
 	uint32_t binsPerRow = 4 * DivideByMultiple(width, 4 * BIN_SIZE_X);
@@ -446,16 +363,16 @@ void ParticleEffectManager::Render(CommandList& commandList, std::shared_ptr<Cam
 	if (m_enableTiledRendering)
 	{
 		auto& compCommandList = commandList.GetComputeCommandList();
-		compCommandList.TransitionResource(*colorTarget, ResourceState::UnorderedAccess);
-		compCommandList.TransitionResource(*m_binCounters[0], ResourceState::UnorderedAccess);
-		compCommandList.TransitionResource(*m_binCounters[1], ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(colorTarget, ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(m_binCounters[0], ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(m_binCounters[1], ResourceState::UnorderedAccess);
 
-		compCommandList.ClearUAV(*m_binCounters[0]);
-		compCommandList.ClearUAV(*m_binCounters[1]);
+		compCommandList.ClearUAV(m_binCounters[0]);
+		compCommandList.ClearUAV(m_binCounters[1]);
 
 		RenderTiles(compCommandList, cbChangesPerView, colorTarget, depthBuffer, linearDepth);
 
-		compCommandList.InsertUAVBarrier(*colorTarget);
+		compCommandList.InsertUAVBarrier(colorTarget);
 	}
 	else
 	{
@@ -490,7 +407,7 @@ void ParticleEffectManager::MaintainTextureList(ParticleEffectProperties* effect
 	texture->loadTask.wait();
 
 	GpuResource& particleTexture = *texture;
-	CommandList::InitializeTextureArraySlice(*m_textureArray, textureID, particleTexture);
+	CommandList::InitializeTextureArraySlice(m_textureArray, textureID, particleTexture);
 }
 
 
@@ -498,50 +415,50 @@ void ParticleEffectManager::SetFinalBuffers(ComputeCommandList& commandList)
 {
 	commandList.PIXBeginEvent("Set final buffers");
 
-	commandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::GenericRead);
-	commandList.TransitionResource(*m_finalDispatchIndirectArgs, ResourceState::UnorderedAccess);
-	commandList.TransitionResource(*m_drawIndirectArgs, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(m_spriteVertexBuffer, ResourceState::GenericRead);
+	commandList.TransitionResource(m_finalDispatchIndirectArgs, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(m_drawIndirectArgs, ResourceState::UnorderedAccess);
 
-	m_particleFinalDispatchIndirectArgsCs->GetResource("g_FinalInstanceCounter")->SetSRVImmediate(*m_spriteVertexBuffer->GetCounterSRV(commandList));
-	m_particleFinalDispatchIndirectArgsCs->GetResource("g_NumThreadGroups")->SetUAVImmediate(*m_finalDispatchIndirectArgs);
-	m_particleFinalDispatchIndirectArgsCs->GetResource("g_DrawIndirectArgs")->SetUAVImmediate(*m_drawIndirectArgs);
+	m_particleFinalDispatchIndirectArgsCs.GetResource("g_FinalInstanceCounter")->SetSRVImmediate(*m_spriteVertexBuffer.GetCounterSRV(commandList));
+	m_particleFinalDispatchIndirectArgsCs.GetResource("g_NumThreadGroups")->SetUAVImmediate(m_finalDispatchIndirectArgs);
+	m_particleFinalDispatchIndirectArgsCs.GetResource("g_DrawIndirectArgs")->SetUAVImmediate(m_drawIndirectArgs);
 
-	m_particleFinalDispatchIndirectArgsCs->Dispatch(commandList, 1, 1, 1);
-	m_particleFinalDispatchIndirectArgsCs->UnbindUAVs(commandList);
+	m_particleFinalDispatchIndirectArgsCs.Dispatch(commandList, 1, 1, 1);
+	m_particleFinalDispatchIndirectArgsCs.UnbindUAVs(commandList);
 
 	commandList.PIXEndEvent();
 }
 
 
-void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const CBChangesPerView& cbData, shared_ptr<ColorBuffer> colorTarget,
-	shared_ptr<DepthBuffer> depthTarget, shared_ptr<ColorBuffer> linearDepth)
+void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const CBChangesPerView& cbData, ColorBuffer& colorTarget,
+	DepthBuffer& depthTarget, ColorBuffer& linearDepth)
 {
-	auto screenWidth = colorTarget->GetWidth();
-	auto screenHeight = colorTarget->GetHeight();
+	auto screenWidth = colorTarget.GetWidth();
+	auto screenHeight = colorTarget.GetHeight();
 
 	auto& deviceManager = DeviceManager::GetInstance();
-	assert_msg(colorTarget->GetFormat() == DXGI_FORMAT_R32_UINT || deviceManager.SupportsTypedUAVLoad_R11G11B10_FLOAT(),
+	assert_msg(colorTarget.GetFormat() == DXGI_FORMAT_R32_UINT || deviceManager.SupportsTypedUAVLoad_R11G11B10_FLOAT(),
 		"Without typed UAV loads, tiled particles must render to a R32_UINT buffer");
 
 	// Compute depth bounds
 	{
 		commandList.PIXBeginEvent("Compute depth bounds");
 
-		commandList.TransitionResource(*linearDepth, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_minMaxDepth8, ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_minMaxDepth16, ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_minMaxDepth32, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(linearDepth, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_minMaxDepth8, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_minMaxDepth16, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_minMaxDepth32, ResourceState::UnorderedAccess);
 
-		m_particleDepthBoundsCs->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
+		m_particleDepthBoundsCs.GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 			sizeof(CBChangesPerView),
 			reinterpret_cast<const byte*>(&cbData));
-		m_particleDepthBoundsCs->GetParameter("LogTilesPerLargeBin")->SetValueImmediate(DirectX::XMUINT2(5, 4));
-		m_particleDepthBoundsCs->GetResource("g_Input")->SetSRVImmediate(*linearDepth);
-		m_particleDepthBoundsCs->GetResource("g_Output8")->SetUAVImmediate(*m_minMaxDepth8);
-		m_particleDepthBoundsCs->GetResource("g_Output16")->SetUAVImmediate(*m_minMaxDepth16);
-		m_particleDepthBoundsCs->GetResource("g_Output32")->SetUAVImmediate(*m_minMaxDepth32);
+		m_particleDepthBoundsCs.GetParameter("LogTilesPerLargeBin")->SetValueImmediate(DirectX::XMUINT2(5, 4));
+		m_particleDepthBoundsCs.GetResource("g_Input")->SetSRVImmediate(linearDepth);
+		m_particleDepthBoundsCs.GetResource("g_Output8")->SetUAVImmediate(m_minMaxDepth8);
+		m_particleDepthBoundsCs.GetResource("g_Output16")->SetUAVImmediate(m_minMaxDepth16);
+		m_particleDepthBoundsCs.GetResource("g_Output32")->SetUAVImmediate(m_minMaxDepth32);
 
-		m_particleDepthBoundsCs->Dispatch2D(commandList, screenWidth, screenHeight, 32, 32);
+		m_particleDepthBoundsCs.Dispatch2D(commandList, screenWidth, screenHeight, 32, 32);
 
 		commandList.PIXEndEvent();
 	}
@@ -552,78 +469,78 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 
 		// The first step inserts each particle into all of the large bins it intersects.  Large bins
 		// are 512x256.
-		commandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_drawIndirectArgs, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_finalDispatchIndirectArgs, ResourceState::IndirectArgument);
-		commandList.TransitionResource(*m_binParticles[0], ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_binCounters[0], ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_visibleParticleBuffer, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_drawIndirectArgs, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_finalDispatchIndirectArgs, ResourceState::IndirectArgument);
+		commandList.TransitionResource(m_binParticles[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_binCounters[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_visibleParticleBuffer, ResourceState::UnorderedAccess);
 
-		m_particleLargeBinCullingCs->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
+		m_particleLargeBinCullingCs.GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 			sizeof(CBChangesPerView),
 			reinterpret_cast<const byte*>(&cbData));
-		m_particleLargeBinCullingCs->GetResource("g_LargeBinParticles")->SetUAVImmediate(*m_binParticles[0]);
-		m_particleLargeBinCullingCs->GetResource("g_LargeBinCounters")->SetUAVImmediate(*m_binCounters[0]);
-		m_particleLargeBinCullingCs->GetResource("g_VisibleParticles")->SetUAVImmediate(*m_visibleParticleBuffer);
-		m_particleLargeBinCullingCs->GetResource("g_VertexBuffer")->SetSRVImmediate(*m_spriteVertexBuffer);
-		m_particleLargeBinCullingCs->GetResource("g_VertexCount")->SetSRVImmediate(*m_drawIndirectArgs);
+		m_particleLargeBinCullingCs.GetResource("g_LargeBinParticles")->SetUAVImmediate(m_binParticles[0]);
+		m_particleLargeBinCullingCs.GetResource("g_LargeBinCounters")->SetUAVImmediate(m_binCounters[0]);
+		m_particleLargeBinCullingCs.GetResource("g_VisibleParticles")->SetUAVImmediate(m_visibleParticleBuffer);
+		m_particleLargeBinCullingCs.GetResource("g_VertexBuffer")->SetSRVImmediate(m_spriteVertexBuffer);
+		m_particleLargeBinCullingCs.GetResource("g_VertexCount")->SetSRVImmediate(m_drawIndirectArgs);
 
-		m_particleLargeBinCullingCs->DispatchIndirect(commandList, *m_finalDispatchIndirectArgs);
+		m_particleLargeBinCullingCs.DispatchIndirect(commandList, m_finalDispatchIndirectArgs);
 
 		// The second step refines the binning by inserting particles into the appropriate small bins.
 		// Small bins are 128x64.
-		commandList.TransitionResource(*m_visibleParticleBuffer, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_binParticles[0], ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_binCounters[0], ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_binParticles[1], ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_binCounters[1], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_visibleParticleBuffer, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_binParticles[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_binCounters[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_binParticles[1], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_binCounters[1], ResourceState::UnorderedAccess);
 
-		m_particleBinCullingCs->GetParameter("LogTilesPerBin")->SetValueImmediate(DirectX::XMUINT2(3, 2));
-		m_particleBinCullingCs->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
+		m_particleBinCullingCs.GetParameter("LogTilesPerBin")->SetValueImmediate(DirectX::XMUINT2(3, 2));
+		m_particleBinCullingCs.GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 			sizeof(CBChangesPerView),
 			reinterpret_cast<const byte*>(&cbData));
-		m_particleBinCullingCs->GetResource("g_VisibleParticles")->SetSRVImmediate(*m_visibleParticleBuffer);
-		m_particleBinCullingCs->GetResource("g_LargeBinParticles")->SetSRVImmediate(*m_binParticles[0]);
-		m_particleBinCullingCs->GetResource("g_LargeBinCounters")->SetSRVImmediate(*m_binCounters[0]);
-		m_particleBinCullingCs->GetResource("g_BinParticles")->SetUAVImmediate(*m_binParticles[1]);
-		m_particleBinCullingCs->GetResource("g_BinCounters")->SetUAVImmediate(*m_binCounters[1]);
+		m_particleBinCullingCs.GetResource("g_VisibleParticles")->SetSRVImmediate(m_visibleParticleBuffer);
+		m_particleBinCullingCs.GetResource("g_LargeBinParticles")->SetSRVImmediate(m_binParticles[0]);
+		m_particleBinCullingCs.GetResource("g_LargeBinCounters")->SetSRVImmediate(m_binCounters[0]);
+		m_particleBinCullingCs.GetResource("g_BinParticles")->SetUAVImmediate(m_binParticles[1]);
+		m_particleBinCullingCs.GetResource("g_BinCounters")->SetUAVImmediate(m_binCounters[1]);
 
-		m_particleBinCullingCs->Dispatch2D(commandList, screenWidth, screenHeight, 4 * BIN_SIZE_X, 4 * BIN_SIZE_Y);
+		m_particleBinCullingCs.Dispatch2D(commandList, screenWidth, screenHeight, 4 * BIN_SIZE_X, 4 * BIN_SIZE_Y);
 
 		// The final sorting step will perform a bitonic sort on each bin's particles (front to
 		// back).  Afterward, it will generate a bitmap for each tile indicating which of the bin's
 		// particles occupy the tile.  This allows each tile to iterate over a sorted list of particles
 		// ignoring the ones that do not intersect.
-		commandList.FillBuffer(*m_tileDrawDispatchIndirectArgs, 0, 0, sizeof(uint32_t));
-		commandList.FillBuffer(*m_tileDrawDispatchIndirectArgs, 12, 0, sizeof(uint32_t));
+		commandList.FillBuffer(m_tileDrawDispatchIndirectArgs, 0, 0, sizeof(uint32_t));
+		commandList.FillBuffer(m_tileDrawDispatchIndirectArgs, 12, 0, sizeof(uint32_t));
 
-		commandList.TransitionResource(*m_binParticles[0], ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_tileHitMasks, ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_tileDrawPackets, ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_tileFastDrawPackets, ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_tileDrawDispatchIndirectArgs, ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*m_binParticles[1], ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_binCounters[1], ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_minMaxDepth8, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_minMaxDepth16, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_minMaxDepth32, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_binParticles[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_tileHitMasks, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_tileDrawPackets, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_tileFastDrawPackets, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_tileDrawDispatchIndirectArgs, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(m_binParticles[1], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_binCounters[1], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_minMaxDepth8, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_minMaxDepth16, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_minMaxDepth32, ResourceState::NonPixelShaderResource);
 
-		m_particleTileCullingCs->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
+		m_particleTileCullingCs.GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 			sizeof(CBChangesPerView),
 			reinterpret_cast<const byte*>(&cbData));
 
-		m_particleTileCullingCs->GetResource("g_BinParticles")->SetSRVImmediate(*m_binParticles[1]);
-		m_particleTileCullingCs->GetResource("g_BinCounters")->SetSRVImmediate(*m_binCounters[1]);
-		m_particleTileCullingCs->GetResource("g_DepthBounds")->SetSRVImmediate(TILE_SIZE == 16 ? *m_minMaxDepth16 : *m_minMaxDepth32);
-		m_particleTileCullingCs->GetResource("g_VisibleParticles")->SetSRVImmediate(*m_visibleParticleBuffer);
+		m_particleTileCullingCs.GetResource("g_BinParticles")->SetSRVImmediate(m_binParticles[1]);
+		m_particleTileCullingCs.GetResource("g_BinCounters")->SetSRVImmediate(m_binCounters[1]);
+		m_particleTileCullingCs.GetResource("g_DepthBounds")->SetSRVImmediate(TILE_SIZE == 16 ? m_minMaxDepth16 : m_minMaxDepth32);
+		m_particleTileCullingCs.GetResource("g_VisibleParticles")->SetSRVImmediate(m_visibleParticleBuffer);
 
-		m_particleTileCullingCs->GetResource("g_SortedParticles")->SetUAVImmediate(*m_binParticles[0]);
-		m_particleTileCullingCs->GetResource("g_TileHitMasks")->SetUAVImmediate(*m_tileHitMasks);
-		m_particleTileCullingCs->GetResource("g_DrawPackets")->SetUAVImmediate(*m_tileDrawPackets);
-		m_particleTileCullingCs->GetResource("g_FastDrawPackets")->SetUAVImmediate(*m_tileFastDrawPackets);
-		m_particleTileCullingCs->GetResource("g_DrawPacketCount")->SetUAVImmediate(*m_tileDrawDispatchIndirectArgs);
+		m_particleTileCullingCs.GetResource("g_SortedParticles")->SetUAVImmediate(m_binParticles[0]);
+		m_particleTileCullingCs.GetResource("g_TileHitMasks")->SetUAVImmediate(m_tileHitMasks);
+		m_particleTileCullingCs.GetResource("g_DrawPackets")->SetUAVImmediate(m_tileDrawPackets);
+		m_particleTileCullingCs.GetResource("g_FastDrawPackets")->SetUAVImmediate(m_tileFastDrawPackets);
+		m_particleTileCullingCs.GetResource("g_DrawPacketCount")->SetUAVImmediate(m_tileDrawDispatchIndirectArgs);
 
-		m_particleTileCullingCs->Dispatch2D(commandList, screenWidth, screenHeight, BIN_SIZE_X, BIN_SIZE_Y);
+		m_particleTileCullingCs.Dispatch2D(commandList, screenWidth, screenHeight, BIN_SIZE_X, BIN_SIZE_Y);
 
 		commandList.PIXEndEvent();
 	}
@@ -632,60 +549,60 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 	{
 		commandList.PIXBeginEvent("Tiled rendering");
 
-		commandList.TransitionResource(*m_tileDrawDispatchIndirectArgs, ResourceState::IndirectArgument);
-		commandList.TransitionResource(*colorTarget, ResourceState::UnorderedAccess);
-		commandList.TransitionResource(*linearDepth, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_binParticles[0], ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_tileHitMasks, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_tileDrawPackets, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_tileFastDrawPackets, ResourceState::NonPixelShaderResource);
-		commandList.TransitionResource(*m_textureArray, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_tileDrawDispatchIndirectArgs, ResourceState::IndirectArgument);
+		commandList.TransitionResource(colorTarget, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(linearDepth, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_binParticles[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_tileHitMasks, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_tileDrawPackets, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_tileFastDrawPackets, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(m_textureArray, ResourceState::NonPixelShaderResource);
 
-		m_particleTileRenderSlowCs[m_tiledRes]->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
+		m_particleTileRenderSlowCs[m_tiledRes].GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 			sizeof(CBChangesPerView),
 			reinterpret_cast<const byte*>(&cbData));
 
 		// Slow pass
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_OutputColorBuffer")->SetUAVImmediate(*colorTarget);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_VisibleParticles")->SetSRVImmediate(*m_visibleParticleBuffer);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_HitMask")->SetSRVImmediate(*m_tileHitMasks);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_TexArray")->SetSRVImmediate(*m_textureArray);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_InputDepthBuffer")->SetSRVImmediate(*linearDepth);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_SortedParticles")->SetSRVImmediate(*m_binParticles[0]);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_DrawPackets")->SetSRVImmediate(*m_tileDrawPackets);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetResource("g_TileDepthBounds")->SetSRVImmediate(TILE_SIZE == 16 ? *m_minMaxDepth16 : *m_minMaxDepth32);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_OutputColorBuffer")->SetUAVImmediate(colorTarget);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_VisibleParticles")->SetSRVImmediate(m_visibleParticleBuffer);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_HitMask")->SetSRVImmediate(m_tileHitMasks);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_TexArray")->SetSRVImmediate(m_textureArray);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_InputDepthBuffer")->SetSRVImmediate(linearDepth);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_SortedParticles")->SetSRVImmediate(m_binParticles[0]);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_DrawPackets")->SetSRVImmediate(m_tileDrawPackets);
+		m_particleTileRenderSlowCs[m_tiledRes].GetResource("g_TileDepthBounds")->SetSRVImmediate(TILE_SIZE == 16 ? m_minMaxDepth16 : m_minMaxDepth32);
 
-		m_particleTileRenderSlowCs[m_tiledRes]->GetParameter("gDynamicResLevel")->SetValueImmediate(m_dynamicResLevel);
-		m_particleTileRenderSlowCs[m_tiledRes]->GetParameter("gMipBias")->SetValueImmediate(m_mipBias);
+		m_particleTileRenderSlowCs[m_tiledRes].GetParameter("gDynamicResLevel")->SetValueImmediate(m_dynamicResLevel);
+		m_particleTileRenderSlowCs[m_tiledRes].GetParameter("gMipBias")->SetValueImmediate(m_mipBias);
 
-		m_particleTileRenderSlowCs[m_tiledRes]->DispatchIndirect(commandList, *m_tileDrawDispatchIndirectArgs);
+		m_particleTileRenderSlowCs[m_tiledRes].DispatchIndirect(commandList, m_tileDrawDispatchIndirectArgs);
 
 		// Fast pass
-		m_particleTileRenderFastCs[m_tiledRes]->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
+		m_particleTileRenderFastCs[m_tiledRes].GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 			sizeof(CBChangesPerView),
 			reinterpret_cast<const byte*>(&cbData));
 
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_OutputColorBuffer")->SetUAVImmediate(*colorTarget);
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_VisibleParticles")->SetSRVImmediate(*m_visibleParticleBuffer);
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_HitMask")->SetSRVImmediate(*m_tileHitMasks);
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_TexArray")->SetSRVImmediate(*m_textureArray);
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_InputDepthBuffer")->SetSRVImmediate(*linearDepth);
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_SortedParticles")->SetSRVImmediate(*m_binParticles[0]);
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_DrawPackets")->SetSRVImmediate(*m_tileFastDrawPackets);
-		m_particleTileRenderFastCs[m_tiledRes]->GetResource("g_TileDepthBounds")->SetSRVImmediate(TILE_SIZE == 16 ? *m_minMaxDepth16 : *m_minMaxDepth32);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_OutputColorBuffer")->SetUAVImmediate(colorTarget);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_VisibleParticles")->SetSRVImmediate(m_visibleParticleBuffer);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_HitMask")->SetSRVImmediate(m_tileHitMasks);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_TexArray")->SetSRVImmediate(m_textureArray);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_InputDepthBuffer")->SetSRVImmediate(linearDepth);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_SortedParticles")->SetSRVImmediate(m_binParticles[0]);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_DrawPackets")->SetSRVImmediate(m_tileFastDrawPackets);
+		m_particleTileRenderFastCs[m_tiledRes].GetResource("g_TileDepthBounds")->SetSRVImmediate(TILE_SIZE == 16 ? m_minMaxDepth16 : m_minMaxDepth32);
 
-		m_particleTileRenderFastCs[m_tiledRes]->GetParameter("gDynamicResLevel")->SetValueImmediate(m_dynamicResLevel);
-		m_particleTileRenderFastCs[m_tiledRes]->GetParameter("gMipBias")->SetValueImmediate(m_mipBias);
+		m_particleTileRenderFastCs[m_tiledRes].GetParameter("gDynamicResLevel")->SetValueImmediate(m_dynamicResLevel);
+		m_particleTileRenderFastCs[m_tiledRes].GetParameter("gMipBias")->SetValueImmediate(m_mipBias);
 
-		m_particleTileRenderFastCs[m_tiledRes]->DispatchIndirect(commandList, *m_tileDrawDispatchIndirectArgs, 12);
+		m_particleTileRenderFastCs[m_tiledRes].DispatchIndirect(commandList, m_tileDrawDispatchIndirectArgs, 12);
 
 		commandList.PIXEndEvent();
 	}
 }
 
 
-void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, const CBChangesPerView& cbData, shared_ptr<ColorBuffer> colorTarget,
-	shared_ptr<DepthBuffer> depthTarget, shared_ptr<ColorBuffer> linearDepth)
+void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, const CBChangesPerView& cbData, ColorBuffer& colorTarget,
+	DepthBuffer& depthTarget, ColorBuffer& linearDepth)
 {
 	commandList.PIXBeginEvent("Render sprites");
 
@@ -695,26 +612,26 @@ void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, cons
 
 		auto& compCommandList = commandList.GetComputeCommandList();
 
-		compCommandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
-		compCommandList.TransitionResource(*m_sortIndirectArgs, ResourceState::UnorderedAccess);
-		compCommandList.TransitionResource(*m_drawIndirectArgs, ResourceState::NonPixelShaderResource);
+		compCommandList.TransitionResource(m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
+		compCommandList.TransitionResource(m_sortIndirectArgs, ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(m_drawIndirectArgs, ResourceState::NonPixelShaderResource);
 
-		m_particleSortIndirectArgsCs->GetResource("g_ActiveParticlesCount")->SetSRVImmediate(*m_drawIndirectArgs);
-		m_particleSortIndirectArgsCs->GetResource("g_IndirectArgsBuffer")->SetUAVImmediate(*m_sortIndirectArgs);
+		m_particleSortIndirectArgsCs.GetResource("g_ActiveParticlesCount")->SetSRVImmediate(m_drawIndirectArgs);
+		m_particleSortIndirectArgsCs.GetResource("g_IndirectArgsBuffer")->SetUAVImmediate(m_sortIndirectArgs);
 		
-		m_particleSortIndirectArgsCs->Dispatch(compCommandList, 1, 1, 1);
-		m_particleSortIndirectArgsCs->UnbindUAVs(compCommandList);
+		m_particleSortIndirectArgsCs.Dispatch(compCommandList, 1, 1, 1);
+		m_particleSortIndirectArgsCs.UnbindUAVs(compCommandList);
 
-		compCommandList.TransitionResource(*m_sortIndirectArgs, ResourceState::IndirectArgument);
-		compCommandList.TransitionResource(*m_spriteIndexBuffer, ResourceState::UnorderedAccess);
-		m_particlePreSortCs->GetResource("g_VertexBuffer")->SetSRVImmediate(*m_spriteVertexBuffer);
-		m_particlePreSortCs->GetResource("g_VertexCount")->SetSRVImmediate(*m_drawIndirectArgs);
-		m_particlePreSortCs->GetResource("g_SortBuffer")->SetUAVImmediate(*m_spriteIndexBuffer);
+		compCommandList.TransitionResource(m_sortIndirectArgs, ResourceState::IndirectArgument);
+		compCommandList.TransitionResource(m_spriteIndexBuffer, ResourceState::UnorderedAccess);
+		m_particlePreSortCs.GetResource("g_VertexBuffer")->SetSRVImmediate(m_spriteVertexBuffer);
+		m_particlePreSortCs.GetResource("g_VertexCount")->SetSRVImmediate(m_drawIndirectArgs);
+		m_particlePreSortCs.GetResource("g_SortBuffer")->SetUAVImmediate(m_spriteIndexBuffer);
 
-		m_particlePreSortCs->DispatchIndirect(compCommandList, *m_sortIndirectArgs);
-		m_particlePreSortCs->UnbindUAVs(compCommandList);
+		m_particlePreSortCs.DispatchIndirect(compCommandList, m_sortIndirectArgs);
+		m_particlePreSortCs.UnbindUAVs(compCommandList);
 
-		compCommandList.InsertUAVBarrier(*m_spriteIndexBuffer);
+		compCommandList.InsertUAVBarrier(m_spriteIndexBuffer);
 
 		commandList.PIXEndEvent();
 	}
@@ -722,38 +639,38 @@ void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, cons
 	Rectangle scissor;
 	scissor.left = 0;
 	scissor.top = 0;
-	scissor.right = colorTarget->GetWidth();
-	scissor.bottom = colorTarget->GetHeight();
+	scissor.right = colorTarget.GetWidth();
+	scissor.bottom = colorTarget.GetHeight();
 
 	Viewport viewport;
 	viewport.topLeftX = 0.0f;
 	viewport.topLeftY = 0.0f;
-	viewport.width = static_cast<float>(colorTarget->GetWidth());
-	viewport.height = static_cast<float>(colorTarget->GetHeight());
+	viewport.width = static_cast<float>(colorTarget.GetWidth());
+	viewport.height = static_cast<float>(colorTarget.GetHeight());
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
-	commandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
-	commandList.TransitionResource(*m_drawIndirectArgs, ResourceState::IndirectArgument);
-	commandList.TransitionResource(*m_textureArray, ResourceState::PixelShaderResource);
-	commandList.TransitionResource(*linearDepth, ResourceState::PixelShaderResource);
-	commandList.TransitionResource(*m_spriteIndexBuffer, ResourceState::PixelShaderResource);
-	commandList.TransitionResource(*colorTarget, ResourceState::RenderTarget);
-	commandList.TransitionResource(*depthTarget, ResourceState::DepthRead);
+	commandList.TransitionResource(m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(m_drawIndirectArgs, ResourceState::IndirectArgument);
+	commandList.TransitionResource(m_textureArray, ResourceState::PixelShaderResource);
+	commandList.TransitionResource(linearDepth, ResourceState::PixelShaderResource);
+	commandList.TransitionResource(m_spriteIndexBuffer, ResourceState::PixelShaderResource);
+	commandList.TransitionResource(colorTarget, ResourceState::RenderTarget);
+	commandList.TransitionResource(depthTarget, ResourceState::DepthRead);
 
 	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	commandList.SetRenderTarget(*colorTarget, *depthTarget, true);
+	commandList.SetRenderTarget(colorTarget, depthTarget, true);
 	commandList.SetViewportAndScissor(viewport, scissor);
 
 	m_particleRenderMaterial->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
 		sizeof(CBChangesPerView),
 		reinterpret_cast<const byte*>(&cbData));
-	m_particleRenderMaterial->GetResource("g_VertexBuffer")->SetSRVImmediate(*m_spriteVertexBuffer);
-	m_particleRenderMaterial->GetResource("ColorTex")->SetSRVImmediate(*m_textureArray);
-	m_particleRenderMaterial->GetResource("g_IndexBuffer")->SetSRVImmediate(*m_spriteIndexBuffer);
-	m_particleRenderMaterial->GetResource("LinearDepthTex")->SetSRVImmediate(*linearDepth);
+	m_particleRenderMaterial->GetResource("g_VertexBuffer")->SetSRVImmediate(m_spriteVertexBuffer);
+	m_particleRenderMaterial->GetResource("ColorTex")->SetSRVImmediate(m_textureArray);
+	m_particleRenderMaterial->GetResource("g_IndexBuffer")->SetSRVImmediate(m_spriteIndexBuffer);
+	m_particleRenderMaterial->GetResource("LinearDepthTex")->SetSRVImmediate(linearDepth);
 
-	commandList.DrawIndirect(*m_drawIndirectArgs);
+	commandList.DrawIndirect(m_drawIndirectArgs);
 
 	commandList.PIXEndEvent();
 }
@@ -769,21 +686,21 @@ void ParticleEffectManager::BitonicSort(ComputeCommandList& commandList)
 	{
 		for (uint32_t j = k / 2; j >= 2048; j /= 2)
 		{
-			m_particleOuterSortCs[outerIndex]->GetParameter("k")->SetValueImmediate(k);
-			m_particleOuterSortCs[outerIndex]->GetParameter("j")->SetValueImmediate(j);
-			m_particleOuterSortCs[outerIndex]->GetResource("g_SortBuffer")->SetUAVImmediate(*m_spriteIndexBuffer);
+			m_particleOuterSortCs[outerIndex].GetParameter("k")->SetValueImmediate(k);
+			m_particleOuterSortCs[outerIndex].GetParameter("j")->SetValueImmediate(j);
+			m_particleOuterSortCs[outerIndex].GetResource("g_SortBuffer")->SetUAVImmediate(m_spriteIndexBuffer);
 
-			m_particleOuterSortCs[outerIndex]->DispatchIndirect(commandList, *m_sortIndirectArgs, indirectArgsOffset);
-			commandList.InsertUAVBarrier(*m_spriteIndexBuffer);
+			m_particleOuterSortCs[outerIndex].DispatchIndirect(commandList, m_sortIndirectArgs, indirectArgsOffset);
+			commandList.InsertUAVBarrier(m_spriteIndexBuffer);
 
 			++outerIndex;
 		}
 
-		m_particleInnerSortCs[innerIndex]->GetParameter("k")->SetValueImmediate(k);
-		m_particleInnerSortCs[innerIndex]->GetResource("g_SortBuffer")->SetUAVImmediate(*m_spriteIndexBuffer);
+		m_particleInnerSortCs[innerIndex].GetParameter("k")->SetValueImmediate(k);
+		m_particleInnerSortCs[innerIndex].GetResource("g_SortBuffer")->SetUAVImmediate(m_spriteIndexBuffer);
 
-		m_particleInnerSortCs[innerIndex]->DispatchIndirect(commandList, *m_sortIndirectArgs, indirectArgsOffset);
-		commandList.InsertUAVBarrier(*m_spriteIndexBuffer);
+		m_particleInnerSortCs[innerIndex].DispatchIndirect(commandList, m_sortIndirectArgs, indirectArgsOffset);
+		commandList.InsertUAVBarrier(m_spriteIndexBuffer);
 
 		++innerIndex;
 		indirectArgsOffset += 12;

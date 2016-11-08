@@ -14,11 +14,9 @@
 
 #include "ColorBuffer.h"
 #include "CommandList.h"
-#include "ComputeKernel.h"
 #include "ComputeParameter.h"
 #include "ComputeResource.h"
 #include "DeviceManager.h"
-#include "GpuBuffer.h"
 
 
 using namespace Kodiak;

@@ -19,7 +19,6 @@
 
 #include "CommandList.h"
 #include "ComputeConstantBuffer.h"
-#include "ComputeKernel.h"
 #include "ComputeResource.h"
 #include "ComputeParameter.h"
 #include "Random.h"
@@ -63,18 +62,12 @@ inline static XMFLOAT3 RandSpread(const XMFLOAT3& s)
 
 void ParticleEffect::LoadDeviceResources()
 {
-	m_updateCs = make_shared<ComputeKernel>();
-	m_updateCs->SetComputeShaderPath("Engine\\ParticleUpdateCS");
-	auto waitTask = m_updateCs->loadTask;
-
-	m_particleSpawnCs = make_shared<ComputeKernel>();
-	m_particleSpawnCs->SetComputeShaderPath("Engine\\ParticleSpawnCS");
-	waitTask = waitTask && m_particleSpawnCs->loadTask;
-
-	m_dispatchIndirectArgsCs = make_shared<ComputeKernel>();
-	m_dispatchIndirectArgsCs->SetComputeShaderPath("Engine\\ParticleDispatchIndirectArgsCS");
-	waitTask = waitTask && m_dispatchIndirectArgsCs->loadTask;
-
+	auto waitTask = concurrency::create_task([] {});
+	
+	m_updateCs.SetComputeShaderPath("Engine\\ParticleUpdateCS", waitTask);
+	m_particleSpawnCs.SetComputeShaderPath("Engine\\ParticleSpawnCS", waitTask);
+	m_dispatchIndirectArgsCs.SetComputeShaderPath("Engine\\ParticleDispatchIndirectArgsCS", waitTask);
+	
 	m_originalEffectProperties = m_effectProperties; // In case we want to reset
 	
 	// Fill particle spawn data buffer
@@ -101,27 +94,22 @@ void ParticleEffect::LoadDeviceResources()
 		SpawnData.Random = g_rng.NextFloat();
 	}
 
-	m_randomStateBuffer = make_shared<StructuredBuffer>();
-	m_randomStateBuffer->Create("ParticleSystem::SpawnDataBuffer", m_effectProperties.EmitProperties.MaxParticles, sizeof(ParticleSpawnData), pSpawnData);
+	m_randomStateBuffer.Create("ParticleSystem::SpawnDataBuffer", m_effectProperties.EmitProperties.MaxParticles, sizeof(ParticleSpawnData), pSpawnData);
 	_freea(pSpawnData);
 
-	m_stateBuffers[0] = make_shared<StructuredBuffer>();
-	m_stateBuffers[0]->Create("ParticleSystem::Buffer0", m_effectProperties.EmitProperties.MaxParticles, sizeof(ParticleMotion));
-
-	m_stateBuffers[1] = make_shared<StructuredBuffer>();
-	m_stateBuffers[1]->Create("ParticleSystem::Buffer1", m_effectProperties.EmitProperties.MaxParticles, sizeof(ParticleMotion));
+	m_stateBuffers[0].Create("ParticleSystem::Buffer0", m_effectProperties.EmitProperties.MaxParticles, sizeof(ParticleMotion));
+	m_stateBuffers[1].Create("ParticleSystem::Buffer1", m_effectProperties.EmitProperties.MaxParticles, sizeof(ParticleMotion));
 	m_currentStateBuffer = 0;
 
 	// DispatchIndirect args buffer / number of thread groups
 	__declspec(align(16)) UINT DispatchIndirectData[3] = { 0, 1, 1 };
-	m_dispatchIndirectArgs = make_shared<IndirectArgsBuffer>();
-	m_dispatchIndirectArgs->Create("ParticleSystem::DispatchIndirectArgs", 1, 3 * sizeof(uint32_t), DispatchIndirectData);
+	m_dispatchIndirectArgs.Create("ParticleSystem::DispatchIndirectArgs", 1, 3 * sizeof(uint32_t), DispatchIndirectData);
 
 	waitTask.wait();
 }
 
 
-void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<StructuredBuffer> vertexBuffer, float timeDelta)
+void ParticleEffect::Update(ComputeCommandList& commandList, StructuredBuffer& vertexBuffer, float timeDelta)
 {
 	commandList.PIXBeginEvent("Particle effect update");
 
@@ -141,50 +129,50 @@ void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<Structur
 		m_effectProperties.EmitProperties.RandIndex[i].x = random;
 	}
 
-	m_updateCs->GetConstantBuffer("EmissionProperties")->SetDataImmediate(
+	m_updateCs.GetConstantBuffer("EmissionProperties")->SetDataImmediate(
 		sizeof(EmissionProperties),
 		reinterpret_cast<const byte*>(&m_effectProperties.EmitProperties));
 
-	commandList.TransitionResource(*m_stateBuffers[m_currentStateBuffer], ResourceState::NonPixelShaderResource);
-	m_updateCs->GetResource("g_ResetData")->SetSRVImmediate(*m_randomStateBuffer);
-	m_updateCs->GetResource("g_InputBuffer")->SetSRVImmediate(*m_stateBuffers[m_currentStateBuffer]);
-	m_updateCs->GetResource("g_VertexBuffer")->SetUAVImmediate(*vertexBuffer);
-	m_updateCs->GetParameter("gElapsedTime")->SetValueImmediate(timeDelta);
+	commandList.TransitionResource(m_stateBuffers[m_currentStateBuffer], ResourceState::NonPixelShaderResource);
+	m_updateCs.GetResource("g_ResetData")->SetSRVImmediate(m_randomStateBuffer);
+	m_updateCs.GetResource("g_InputBuffer")->SetSRVImmediate(m_stateBuffers[m_currentStateBuffer]);
+	m_updateCs.GetResource("g_VertexBuffer")->SetUAVImmediate(vertexBuffer);
+	m_updateCs.GetParameter("gElapsedTime")->SetValueImmediate(timeDelta);
 	m_currentStateBuffer ^= 1;
 
-	commandList.ResetCounter(*m_stateBuffers[m_currentStateBuffer]);
+	commandList.ResetCounter(m_stateBuffers[m_currentStateBuffer]);
 
-	commandList.TransitionResource(*m_stateBuffers[m_currentStateBuffer], ResourceState::UnorderedAccess);
-	commandList.TransitionResource(*m_dispatchIndirectArgs, ResourceState::IndirectArgument);
+	commandList.TransitionResource(m_stateBuffers[m_currentStateBuffer], ResourceState::UnorderedAccess);
+	commandList.TransitionResource(m_dispatchIndirectArgs, ResourceState::IndirectArgument);
 	
-	m_updateCs->GetResource("g_OutputBuffer")->SetUAVImmediate(*m_stateBuffers[m_currentStateBuffer]);
-	m_updateCs->DispatchIndirect(commandList, *m_dispatchIndirectArgs, 0);
+	m_updateCs.GetResource("g_OutputBuffer")->SetUAVImmediate(m_stateBuffers[m_currentStateBuffer]);
+	m_updateCs.DispatchIndirect(commandList, m_dispatchIndirectArgs, 0);
 
 	// Why need a barrier here so long as we are artificially clamping particle count.  This allows living
 	// particles to take precedence over new particles.  The current system always spawns a multiple of 64
 	// particles (To Be Fixed) until the total particle count reaches maximum.
-	commandList.InsertUAVBarrier(*m_stateBuffers[m_currentStateBuffer]);
+	commandList.InsertUAVBarrier(m_stateBuffers[m_currentStateBuffer]);
 
 	// Spawn to replace dead ones 
-	m_particleSpawnCs->GetResource("g_ResetData")->SetSRVImmediate(*m_randomStateBuffer);
-	m_particleSpawnCs->GetResource("g_OutputBuffer")->SetUAVImmediate(*m_stateBuffers[m_currentStateBuffer]);
+	m_particleSpawnCs.GetResource("g_ResetData")->SetSRVImmediate(m_randomStateBuffer);
+	m_particleSpawnCs.GetResource("g_OutputBuffer")->SetUAVImmediate(m_stateBuffers[m_currentStateBuffer]);
 	UINT NumSpawnThreads = (UINT)(m_effectProperties.EmitRate * timeDelta);
-	m_particleSpawnCs->Dispatch(commandList, (NumSpawnThreads + 63) / 64, 1, 1);
+	m_particleSpawnCs.Dispatch(commandList, (NumSpawnThreads + 63) / 64, 1, 1);
 
 	// Output number of thread groups into m_DispatchIndirectArgs	
-	commandList.TransitionResource(*m_dispatchIndirectArgs, ResourceState::UnorderedAccess);
-	commandList.TransitionResource(*m_stateBuffers[m_currentStateBuffer], ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(m_dispatchIndirectArgs, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(m_stateBuffers[m_currentStateBuffer], ResourceState::NonPixelShaderResource);
 
 #if DX12
-	commandList.TransitionResource(*m_stateBuffers[m_currentStateBuffer]->GetCounterBuffer(), ResourceState::GenericRead);
+	commandList.TransitionResource(*m_stateBuffers[m_currentStateBuffer].GetCounterBuffer(), ResourceState::GenericRead);
 #elif DX11
 	// This preserves the structured buffers' hidden counter values from the previous phase
 	m_stateBuffers[m_currentStateBuffer]->SetCounterInitialValue((uint32_t)-1);
 	commandList.CopyCounter(*m_stateBuffers[m_currentStateBuffer]->GetCounterBuffer(), 8, *m_stateBuffers[m_currentStateBuffer]);
 #endif
-	m_dispatchIndirectArgsCs->GetResource("g_ParticleInstance")->SetSRVImmediate(*m_stateBuffers[m_currentStateBuffer]->GetCounterBuffer());
-	m_dispatchIndirectArgsCs->GetResource("g_NumThreadGroups")->SetUAVImmediate(*m_dispatchIndirectArgs);
-	m_dispatchIndirectArgsCs->Dispatch(commandList, 1, 1, 1);
+	m_dispatchIndirectArgsCs.GetResource("g_ParticleInstance")->SetSRVImmediate(*m_stateBuffers[m_currentStateBuffer].GetCounterBuffer());
+	m_dispatchIndirectArgsCs.GetResource("g_NumThreadGroups")->SetUAVImmediate(m_dispatchIndirectArgs);
+	m_dispatchIndirectArgsCs.Dispatch(commandList, 1, 1, 1);
 
 	commandList.PIXEndEvent();
 }

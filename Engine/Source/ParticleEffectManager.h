@@ -15,27 +15,25 @@
 
 #pragma once
 
+#include "ColorBuffer.h"
+#include "ComputeKernel.h"
+#include "GpuBuffer.h"
 #include "ParticleEffectProperties.h"
 #include "RenderThread.h"
+#include "Texture.h"
 
 namespace Kodiak
 {
 
 // Forward declarations
-class ByteAddressBuffer;
 class Camera;
-class ColorBuffer;
 class CommandList;
 class ComputeCommandList;
-class ComputeKernel;
 class DepthBuffer;
 class GraphicsCommandList;
-class IndirectArgsBuffer;
 class Material;
 class ParticleEffect;
 class RenderPass;
-class StructuredBuffer;
-class Texture;
 
 
 enum EParticleResolution
@@ -58,8 +56,8 @@ public:
 	EffectHandle InstantiateEffect(ParticleEffectProperties* effectProperties = &ParticleEffectProperties());
 
 	void Update(ComputeCommandList& commandList, float timeDelta);
-	void Render(CommandList& commandList, std::shared_ptr<Camera> camera, std::shared_ptr<ColorBuffer> colorTarget,
-		std::shared_ptr<DepthBuffer> depthBuffer, std::shared_ptr<ColorBuffer> linearDepth);
+	void Render(CommandList& commandList, std::shared_ptr<Camera> camera, ColorBuffer& colorTarget,
+		DepthBuffer& depthBuffer, ColorBuffer& linearDepth);
 
 	// Feature toggles
 	ThreadParameter<bool> Enable;
@@ -95,50 +93,50 @@ private:
 		uint32_t TilesPerCol;
 	};
 
-	void RenderTiles(ComputeCommandList& commandList, const CBChangesPerView& cbData, std::shared_ptr<ColorBuffer> colorTarget,
-		std::shared_ptr<DepthBuffer> depthTarget, std::shared_ptr<ColorBuffer> linearDepth);
+	void RenderTiles(ComputeCommandList& commandList, const CBChangesPerView& cbData, ColorBuffer& colorTarget,
+		DepthBuffer& depthTarget, ColorBuffer& linearDepth);
 
-	void RenderSprites(GraphicsCommandList& commandList, const CBChangesPerView& cbData, std::shared_ptr<ColorBuffer> colorTarget,
-		std::shared_ptr<DepthBuffer> depthTarget, std::shared_ptr<ColorBuffer> linearDepth);
+	void RenderSprites(GraphicsCommandList& commandList, const CBChangesPerView& cbData, ColorBuffer& colorTarget,
+		DepthBuffer& depthTarget, ColorBuffer& linearDepth);
 
 	void BitonicSort(ComputeCommandList& commandList);
 
 private:
 	// Compute kernels
-	std::shared_ptr<ComputeKernel>	m_particleFinalDispatchIndirectArgsCs;
-	std::shared_ptr<ComputeKernel>	m_particleLargeBinCullingCs;
-	std::shared_ptr<ComputeKernel>	m_particleBinCullingCs;
-	std::shared_ptr<ComputeKernel>	m_particleTileCullingCs;
-	std::shared_ptr<ComputeKernel>	m_particleTileRenderSlowCs[3];
-	std::shared_ptr<ComputeKernel>	m_particleTileRenderFastCs[3];
-	std::shared_ptr<ComputeKernel>	m_particleDepthBoundsCs;
-	std::shared_ptr<ComputeKernel>	m_particleSortIndirectArgsCs;
-	std::shared_ptr<ComputeKernel>	m_particlePreSortCs;
-	std::shared_ptr<ComputeKernel>	m_particleInnerSortCs[7];
-	std::shared_ptr<ComputeKernel>	m_particleOuterSortCs[28];
+	ComputeKernel	m_particleFinalDispatchIndirectArgsCs;
+	ComputeKernel	m_particleLargeBinCullingCs;
+	ComputeKernel	m_particleBinCullingCs;
+	ComputeKernel	m_particleTileCullingCs;
+	ComputeKernel	m_particleTileRenderSlowCs[3];
+	ComputeKernel	m_particleTileRenderFastCs[3];
+	ComputeKernel	m_particleDepthBoundsCs;
+	ComputeKernel	m_particleSortIndirectArgsCs;
+	ComputeKernel	m_particlePreSortCs;
+	ComputeKernel	m_particleInnerSortCs[7];
+	ComputeKernel	m_particleOuterSortCs[28];
 
 	// Materials
 	std::shared_ptr<Material>		m_particleRenderMaterial;
 	std::shared_ptr<RenderPass>		m_particleRenderPass;
 
 	// Internal render targets and UAV buffers
-	std::shared_ptr<IndirectArgsBuffer> m_drawIndirectArgs;
-	std::shared_ptr<IndirectArgsBuffer> m_finalDispatchIndirectArgs;
-	std::shared_ptr<StructuredBuffer>	m_spriteVertexBuffer;
-	std::shared_ptr<StructuredBuffer>	m_visibleParticleBuffer;
-	std::shared_ptr<StructuredBuffer>	m_spriteIndexBuffer;
-	std::shared_ptr<IndirectArgsBuffer>	m_sortIndirectArgs;
-	std::shared_ptr<IndirectArgsBuffer>	m_tileDrawDispatchIndirectArgs;
-	std::shared_ptr<StructuredBuffer>	m_binParticles[2];
-	std::shared_ptr<StructuredBuffer>	m_binCounters[2];
-	std::shared_ptr<StructuredBuffer>	m_tileCounters;
-	std::shared_ptr<ByteAddressBuffer>	m_tileHitMasks;
-	std::shared_ptr<StructuredBuffer>	m_tileDrawPackets;
-	std::shared_ptr<StructuredBuffer>	m_tileFastDrawPackets;
-	std::shared_ptr<Texture>			m_textureArray;
-	std::shared_ptr<ColorBuffer>		m_minMaxDepth8;
-	std::shared_ptr<ColorBuffer>		m_minMaxDepth16;
-	std::shared_ptr<ColorBuffer>		m_minMaxDepth32;
+	IndirectArgsBuffer	m_drawIndirectArgs;
+	IndirectArgsBuffer	m_finalDispatchIndirectArgs;
+	StructuredBuffer	m_spriteVertexBuffer;
+	StructuredBuffer	m_visibleParticleBuffer;
+	StructuredBuffer	m_spriteIndexBuffer;
+	IndirectArgsBuffer	m_sortIndirectArgs;
+	IndirectArgsBuffer	m_tileDrawDispatchIndirectArgs;
+	StructuredBuffer	m_binParticles[2];
+	StructuredBuffer	m_binCounters[2];
+	StructuredBuffer	m_tileCounters;
+	ByteAddressBuffer	m_tileHitMasks;
+	StructuredBuffer	m_tileDrawPackets;
+	StructuredBuffer	m_tileFastDrawPackets;
+	Texture				m_textureArray;
+	ColorBuffer			m_minMaxDepth8;
+	ColorBuffer			m_minMaxDepth16;
+	ColorBuffer			m_minMaxDepth32;
 
 	// Feature toggles
 	bool m_enable{ true };

@@ -462,7 +462,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 
 				auto& compCommandList = commandList.GetComputeCommandList();
 				m_particleEffectManager->Update(compCommandList, m_elapsedTime);
-				m_particleEffectManager->Render(commandList, m_camera, m_colorTarget, m_depthBuffer, m_linearDepthBuffer);
+				m_particleEffectManager->Render(commandList, m_camera, *m_colorTarget, *m_depthBuffer, *m_linearDepthBuffer);
 
 				PROFILE_END();
 			}

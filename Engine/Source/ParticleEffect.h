@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include "ComputeKernel.h"
 #include "GpuBuffer.h"
 #include "ParticleEffectProperties.h"
 #include "ParticleShaderStructs.h"
@@ -25,8 +26,6 @@ namespace Kodiak
 
 // Forward declarations
 class ComputeCommandList;
-class ComputeKernel;
-class StructuredBuffer;
 
 
 class ParticleEffect
@@ -34,21 +33,21 @@ class ParticleEffect
 public:
 	ParticleEffect(ParticleEffectProperties* effectProperties = &ParticleEffectProperties());
 	void LoadDeviceResources();
-	void Update(ComputeCommandList& commandList, std::shared_ptr<StructuredBuffer> vertexBuffer, float timeDelta);
+	void Update(ComputeCommandList& commandList, StructuredBuffer& vertexBuffer, float timeDelta);
 	float GetLifetime() { return m_effectProperties.TotalActiveLifetime; }
 	float GetElapsedTime() { return m_elapsedTime; }
 	void Reset();
 
 private:
-	std::shared_ptr<ComputeKernel> m_updateCs;
-	std::shared_ptr<ComputeKernel> m_particleSpawnCs;
-	std::shared_ptr<ComputeKernel> m_dispatchIndirectArgsCs;
+	ComputeKernel m_updateCs;
+	ComputeKernel m_particleSpawnCs;
+	ComputeKernel m_dispatchIndirectArgsCs;
 
-	std::shared_ptr<StructuredBuffer> m_stateBuffers[2];
+	StructuredBuffer m_stateBuffers[2];
 	uint32_t m_currentStateBuffer;
-	std::shared_ptr<StructuredBuffer> m_randomStateBuffer;
-	std::shared_ptr<IndirectArgsBuffer> m_dispatchIndirectArgs;
-	std::shared_ptr<IndirectArgsBuffer> m_drawIndirectArgs;
+	StructuredBuffer m_randomStateBuffer;
+	IndirectArgsBuffer m_dispatchIndirectArgs;
+	IndirectArgsBuffer m_drawIndirectArgs;
 
 	ParticleEffectProperties m_effectProperties;
 	ParticleEffectProperties m_originalEffectProperties;
