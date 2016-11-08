@@ -456,7 +456,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 			m_mainScene->Update(commandList);
 			m_mainScene->Render(GetDefaultBasePass(), commandList);
 
-			if(true)
+			if(false)
 			{
 				PROFILE_BEGIN(itt_particles);
 

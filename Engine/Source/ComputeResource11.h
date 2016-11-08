@@ -31,52 +31,44 @@ public:
 
 	const std::string& GetName() const { return m_name; }
 
-	void SetSRV(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, false); }
-	void SetSRV(std::shared_ptr<DepthBuffer> buffer, bool stencil = false) { SetSRVInternal(buffer, stencil, false); }
-	void SetSRV(std::shared_ptr<ColorBuffer> buffer) { SetSRVInternal(buffer, false); }
-	void SetSRV(std::shared_ptr<GpuBuffer> buffer) { SetSRVInternal(buffer, false); }
+	void SetSRV(Texture& texture) { SetSRVInternal(texture, false); }
+	void SetSRV(DepthBuffer& buffer, bool stencil = false) { SetSRVInternal(buffer, stencil, false); }
+	void SetSRV(ColorBuffer& buffer) { SetSRVInternal(buffer, false); }
+	void SetSRV(GpuBuffer& buffer) { SetSRVInternal(buffer, false); }
 
-	void SetUAV(std::shared_ptr<ColorBuffer> buffer) { SetUAVInternal(buffer, false); }
-	void SetUAV(std::shared_ptr<GpuBuffer> buffer) { SetUAVInternal(buffer, false); }
+	void SetUAV(ColorBuffer& buffer) { SetUAVInternal(buffer, false); }
+	void SetUAV(GpuBuffer& buffer) { SetUAVInternal(buffer, false); }
 
-	void SetTextureImmediate(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, true); }
-	void SetSRVImmediate(std::shared_ptr<Texture> texture) { SetSRVInternal(texture, true); }
-	void SetSRVImmediate(std::shared_ptr<DepthBuffer> buffer, bool stencil = false) { SetSRVInternal(buffer, stencil, true); }
-	void SetSRVImmediate(std::shared_ptr<ColorBuffer> buffer) { SetSRVInternal(buffer, true); }
-	void SetSRVImmediate(std::shared_ptr<GpuBuffer> buffer) { SetSRVInternal(buffer, true); }
+	void SetSRVImmediate(Texture& texture) { SetSRVInternal(texture, true); }
+	void SetSRVImmediate(DepthBuffer& buffer, bool stencil = false) { SetSRVInternal(buffer, stencil, true); }
+	void SetSRVImmediate(ColorBuffer& buffer) { SetSRVInternal(buffer, true); }
+	void SetSRVImmediate(GpuBuffer& buffer) { SetSRVInternal(buffer, true); }
 
-	void SetUAVImmediate(std::shared_ptr<ColorBuffer> buffer) { SetUAVInternal(buffer, true); }
-	void SetUAVImmediate(std::shared_ptr<GpuBuffer> buffer) { SetUAVInternal(buffer, true); }
+	void SetUAVImmediate(ColorBuffer& buffer) { SetUAVInternal(buffer, true); }
+	void SetUAVImmediate(GpuBuffer& buffer) { SetUAVInternal(buffer, true); }
 
-	// SRV
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> materialData, const ShaderReflection::ResourceSRV<1>& resource);
-	// UAV
 	void CreateRenderThreadData(std::shared_ptr<RenderThread::ComputeData> materialData, const ShaderReflection::ResourceUAV<1>& resource);
 
 private:
-	void SetSRVInternal(std::shared_ptr<Texture> texture, bool bImmediate);
-	void SetSRVInternal(std::shared_ptr<DepthBuffer> buffer, bool stencil, bool bImmediate);
-	void SetSRVInternal(std::shared_ptr<ColorBuffer> buffer, bool bImmediate);
-	void SetSRVInternal(std::shared_ptr<GpuBuffer> buffer, bool bImmediate);
+	void SetSRVInternal(Texture& texture, bool immediate);
+	void SetSRVInternal(DepthBuffer& buffer, bool stencil, bool immediate);
+	void SetSRVInternal(ColorBuffer& buffer, bool immediate);
+	void SetSRVInternal(GpuBuffer& buffer, bool immediate);
 
-	void SetUAVInternal(std::shared_ptr<ColorBuffer> buffer, bool bImmediate);
-	void SetUAVInternal(std::shared_ptr<GpuBuffer> buffer, bool bImmediate);
+	void SetUAVInternal(ColorBuffer& buffer, bool immediate);
+	void SetUAVInternal(GpuBuffer& buffer, bool immediate);
 
 	void UpdateResourceOnRenderThread(RenderThread::ComputeData* materialData, ID3D11ShaderResourceView* srv);
 	void UpdateResourceOnRenderThread(RenderThread::ComputeData* materialData, ID3D11UnorderedAccessView* uav, uint32_t counterInitialValue);
 
 	void DispatchToRenderThread(ID3D11ShaderResourceView* srv, bool bImmediate);
 	void DispatchToRenderThread(ID3D11UnorderedAccessView* uav, uint32_t counterInitialValue, bool bImmediate);
-	void DispatchToRenderThreadNoLock(std::shared_ptr<RenderThread::ComputeData> materialData, ID3D11ShaderResourceView* srv, bool bImmediate);
-
-	inline void SetCachedResources(std::shared_ptr<Texture> texture, std::shared_ptr<ColorBuffer> colorBuffer,
-		std::shared_ptr<DepthBuffer> depthBuffer, std::shared_ptr<GpuBuffer> gpuBuffer, bool stencil)
+	
+	inline void SetCachedResources(ID3D11ShaderResourceView* srv, ID3D11UnorderedAccessView* uav)
 	{
-		m_texture = texture;
-		m_colorBuffer = colorBuffer;
-		m_depthBuffer = depthBuffer;
-		m_gpuBuffer = gpuBuffer;
-		m_stencil = stencil;
+		m_srv = srv;
+		m_uav = uav;
 	}
 
 private:
@@ -84,13 +76,11 @@ private:
 	ShaderResourceType				m_type;
 	ShaderResourceDimension			m_dimension;
 
-	std::shared_ptr<Texture>		m_texture;
-	std::shared_ptr<ColorBuffer>	m_colorBuffer;
-	std::shared_ptr<DepthBuffer>	m_depthBuffer;
-	std::shared_ptr<GpuBuffer>		m_gpuBuffer;
-	bool							m_stencil{ false };
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_srv;
+	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>	m_uav;
+	uint32_t											m_counterInitialValue{ 0 };
 
-												// Render thread data
+	// Render thread data
 	std::weak_ptr<RenderThread::ComputeData>	m_renderThreadData;
 	uint32_t									m_bindingTable{ kInvalid };
 	uint32_t									m_bindingSlot{ kInvalid };

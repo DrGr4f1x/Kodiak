@@ -235,8 +235,8 @@ void PostProcessing::FinalizePostProcessing(GraphicsCommandList& commandList)
 		compCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
 		compCommandList.TransitionResource(*m_postEffectsBuffer, ResourceState::NonPixelShaderResource);
 
-		m_copyPostToSceneCs->GetResource("SceneColor")->SetUAVImmediate(m_sceneColorBuffer);
-		m_copyPostToSceneCs->GetResource("PostBuffer")->SetSRVImmediate(m_postEffectsBuffer);
+		m_copyPostToSceneCs->GetResource("SceneColor")->SetUAVImmediate(*m_sceneColorBuffer);
+		m_copyPostToSceneCs->GetResource("PostBuffer")->SetSRVImmediate(*m_postEffectsBuffer);
 
 		m_copyPostToSceneCs->Dispatch2D(compCommandList, m_sceneColorBuffer->GetWidth(), m_sceneColorBuffer->GetHeight());
 		m_copyPostToSceneCs->UnbindUAVs(compCommandList);
@@ -258,9 +258,9 @@ void PostProcessing::RenderHistogram(GraphicsCommandList& commandList)
 		compCommandList.TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
 		compCommandList.TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-		m_debugDrawHistogramCs->GetResource("Histogram")->SetSRVImmediate(m_histogram);
-		m_debugDrawHistogramCs->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
-		m_debugDrawHistogramCs->GetResource("ColorBuffer")->SetUAVImmediate(m_sceneColorBuffer);
+		m_debugDrawHistogramCs->GetResource("Histogram")->SetSRVImmediate(*m_histogram);
+		m_debugDrawHistogramCs->GetResource("Exposure")->SetSRVImmediate(*m_exposureBuffer);
+		m_debugDrawHistogramCs->GetResource("ColorBuffer")->SetUAVImmediate(*m_sceneColorBuffer);
 
 		m_debugDrawHistogramCs->Dispatch(compCommandList, 1, 32);
 
@@ -309,24 +309,24 @@ void PostProcessing::ProcessHDR(ComputeCommandList& commandList)
 	// Separate out LDR result from its perceived luminance
 	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
-		computeKernel->GetResource("ColorRW")->SetUAVImmediate(m_sceneColorBuffer);
+		computeKernel->GetResource("ColorRW")->SetUAVImmediate(*m_sceneColorBuffer);
 	}
 	else
 	{
-		computeKernel->GetResource("DstColor")->SetUAVImmediate(m_postEffectsBuffer);
-		computeKernel->GetResource("SrcColor")->SetSRVImmediate(m_sceneColorBuffer);
+		computeKernel->GetResource("DstColor")->SetUAVImmediate(*m_postEffectsBuffer);
+		computeKernel->GetResource("SrcColor")->SetSRVImmediate(*m_sceneColorBuffer);
 	}
-	computeKernel->GetResource("OutLuma")->SetUAVImmediate(m_lumaBuffer);
+	computeKernel->GetResource("OutLuma")->SetUAVImmediate(*m_lumaBuffer);
 
 	// Read in original HDR value and blurred bloom buffer
-	computeKernel->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
+	computeKernel->GetResource("Exposure")->SetSRVImmediate(*m_exposureBuffer);
 	if (m_enableBloom)
 	{
-		computeKernel->GetResource("Bloom")->SetSRVImmediate(m_bloomUAV1[1]);
+		computeKernel->GetResource("Bloom")->SetSRVImmediate(*m_bloomUAV1[1]);
 	}
 	else
 	{
-		computeKernel->GetResource("Bloom")->SetSRVImmediate(m_defaultBlackTexture);
+		computeKernel->GetResource("Bloom")->SetSRVImmediate(*m_defaultBlackTexture);
 	}
 	
 	computeKernel->Dispatch2D(commandList, m_sceneColorBuffer->GetWidth(), m_sceneColorBuffer->GetHeight());
@@ -366,10 +366,10 @@ void PostProcessing::GenerateBloom(ComputeCommandList& commandList)
 	commandList.TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
 	commandList.TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-	computeKernel->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);
-	computeKernel->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
-	computeKernel->GetResource("BloomResult")->SetUAVImmediate(m_bloomUAV1[0]);
-	computeKernel->GetResource("LumaResult")->SetUAVImmediate(m_lumaLR);
+	computeKernel->GetResource("SourceTex")->SetSRVImmediate(*m_sceneColorBuffer);
+	computeKernel->GetResource("Exposure")->SetSRVImmediate(*m_exposureBuffer);
+	computeKernel->GetResource("BloomResult")->SetUAVImmediate(*m_bloomUAV1[0]);
+	computeKernel->GetResource("LumaResult")->SetUAVImmediate(*m_lumaLR);
 
 	computeKernel->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight);
 	computeKernel->UnbindUAVs(commandList);
@@ -385,11 +385,11 @@ void PostProcessing::GenerateBloom(ComputeCommandList& commandList)
 		commandList.TransitionResource(*m_bloomUAV5[0], ResourceState::UnorderedAccess);
 
 		m_downsampleBloom4Cs->GetParameter("g_inverseDimensions")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
-		m_downsampleBloom4Cs->GetResource("BloomBuf")->SetSRVImmediate(m_bloomUAV1[0]);
-		m_downsampleBloom4Cs->GetResource("Result1")->SetUAVImmediate(m_bloomUAV2[0]);
-		m_downsampleBloom4Cs->GetResource("Result2")->SetUAVImmediate(m_bloomUAV3[0]);
-		m_downsampleBloom4Cs->GetResource("Result3")->SetUAVImmediate(m_bloomUAV4[0]);
-		m_downsampleBloom4Cs->GetResource("Result4")->SetUAVImmediate(m_bloomUAV5[0]);
+		m_downsampleBloom4Cs->GetResource("BloomBuf")->SetSRVImmediate(*m_bloomUAV1[0]);
+		m_downsampleBloom4Cs->GetResource("Result1")->SetUAVImmediate(*m_bloomUAV2[0]);
+		m_downsampleBloom4Cs->GetResource("Result2")->SetUAVImmediate(*m_bloomUAV3[0]);
+		m_downsampleBloom4Cs->GetResource("Result3")->SetUAVImmediate(*m_bloomUAV4[0]);
+		m_downsampleBloom4Cs->GetResource("Result4")->SetUAVImmediate(*m_bloomUAV5[0]);
 
 		m_downsampleBloom4Cs->Dispatch2D(commandList, m_bloomWidth / 2, m_bloomHeight / 2);
 		m_downsampleBloom4Cs->UnbindUAVs(commandList);
@@ -414,9 +414,9 @@ void PostProcessing::GenerateBloom(ComputeCommandList& commandList)
 		commandList.TransitionResource(*m_bloomUAV5[0], ResourceState::UnorderedAccess);
 
 		m_downsampleBloom2Cs->GetParameter("g_inverseDimensions")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
-		m_downsampleBloom2Cs->GetResource("BloomBuf")->SetSRVImmediate(m_bloomUAV1[0]);
-		m_downsampleBloom2Cs->GetResource("Result1")->SetUAVImmediate(m_bloomUAV3[0]);
-		m_downsampleBloom2Cs->GetResource("Result2")->SetUAVImmediate(m_bloomUAV5[0]);
+		m_downsampleBloom2Cs->GetResource("BloomBuf")->SetSRVImmediate(*m_bloomUAV1[0]);
+		m_downsampleBloom2Cs->GetResource("Result1")->SetUAVImmediate(*m_bloomUAV3[0]);
+		m_downsampleBloom2Cs->GetResource("Result2")->SetUAVImmediate(*m_bloomUAV5[0]);
 
 		m_downsampleBloom2Cs->Dispatch2D(commandList, m_bloomWidth / 2, m_bloomHeight / 2);
 		m_downsampleBloom2Cs->UnbindUAVs(commandList);
@@ -444,8 +444,8 @@ void PostProcessing::ExtractLuma(ComputeCommandList& commandList)
 	const float invBloomHeight = 1.0f / static_cast<float>(m_bloomHeight);
 
 	m_extractLumaCs->GetParameter("g_inverseOutputSize")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
-	m_extractLumaCs->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);
-	m_extractLumaCs->GetResource("LumaResult")->SetUAVImmediate(m_lumaLR);
+	m_extractLumaCs->GetResource("SourceTex")->SetSRVImmediate(*m_sceneColorBuffer);
+	m_extractLumaCs->GetResource("LumaResult")->SetUAVImmediate(*m_lumaLR);
 
 	m_extractLumaCs->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight);
 	m_extractLumaCs->UnbindUAVs(commandList);
@@ -464,15 +464,15 @@ void PostProcessing::BlurBuffer(ComputeCommandList& commandList, uint32_t blurKe
 	computeKernel->GetParameter("g_inverseDimensions")->SetValueImmediate(XMFLOAT2(1.0f / bufferWidth, 1.0f / bufferHeight));
 	if (blurOnly)
 	{
-		computeKernel->GetResource("InputBuf")->SetSRVImmediate(buffer[0]);
-		computeKernel->GetResource("Result")->SetUAVImmediate(buffer[1]);
+		computeKernel->GetResource("InputBuf")->SetSRVImmediate(*buffer[0]);
+		computeKernel->GetResource("Result")->SetUAVImmediate(*buffer[1]);
 	}
 	else
 	{
 		computeKernel->GetParameter("g_upsampleBlendFactor")->SetValueImmediate(upsampleBlendFactor);
-		computeKernel->GetResource("HigherResBuf")->SetSRVImmediate(buffer[0]);
-		computeKernel->GetResource("LowerResBuf")->SetSRVImmediate(lowerResBuf);
-		computeKernel->GetResource("Result")->SetUAVImmediate(buffer[1]);
+		computeKernel->GetResource("HigherResBuf")->SetSRVImmediate(*buffer[0]);
+		computeKernel->GetResource("LowerResBuf")->SetSRVImmediate(*lowerResBuf);
+		computeKernel->GetResource("Result")->SetUAVImmediate(*buffer[1]);
 	}
 
 	computeKernel->Dispatch2D(commandList, bufferWidth, bufferHeight);
@@ -506,8 +506,8 @@ void PostProcessing::UpdateExposure(ComputeCommandList& commandList)
 	commandList.TransitionResource(*m_histogram, ResourceState::UnorderedAccess);
 	commandList.TransitionResource(*m_lumaLR, ResourceState::NonPixelShaderResource);
 
-	m_generateHistogramCs->GetResource("LumaBuf")->SetSRVImmediate(m_lumaLR);
-	m_generateHistogramCs->GetResource("Histogram")->SetUAVImmediate(m_histogram);
+	m_generateHistogramCs->GetResource("LumaBuf")->SetSRVImmediate(*m_lumaLR);
+	m_generateHistogramCs->GetResource("Histogram")->SetUAVImmediate(*m_histogram);
 
 	m_generateHistogramCs->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight, 16, 384);
 	m_generateHistogramCs->UnbindUAVs(commandList);
@@ -515,8 +515,8 @@ void PostProcessing::UpdateExposure(ComputeCommandList& commandList)
 	commandList.TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
 	commandList.TransitionResource(*m_exposureBuffer, ResourceState::UnorderedAccess);
 
-	m_adaptExposureCs->GetResource("Histogram")->SetSRVImmediate(m_histogram);
-	m_adaptExposureCs->GetResource("Exposure")->SetUAVImmediate(m_exposureBuffer);
+	m_adaptExposureCs->GetResource("Histogram")->SetSRVImmediate(*m_histogram);
+	m_adaptExposureCs->GetResource("Exposure")->SetUAVImmediate(*m_exposureBuffer);
 
 	m_adaptExposureCs->GetParameter("TargetLuminance")->SetValueImmediate(m_targetLuminance);
 	m_adaptExposureCs->GetParameter("AdaptationRate")->SetValueImmediate(m_adaptationRate);

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "GpuBuffer.h"
 #include "RenderThread.h"
 
 namespace Kodiak
@@ -19,9 +20,7 @@ namespace Kodiak
 class ColorBuffer;
 class ComputeKernel;
 class GraphicsCommandList;
-class IndirectArgsBuffer;
-class StructuredBuffer;
-class TypedBuffer;
+
 
 class FXAA
 {
@@ -62,11 +61,11 @@ private:
 	std::shared_ptr<ColorBuffer>			m_lumaBuffer;
 
 	// Internal render targets and UAV buffers
-	std::shared_ptr<StructuredBuffer>		m_fxaaWorkQueueH;
-	std::shared_ptr<StructuredBuffer>		m_fxaaWorkQueueV;
-	std::shared_ptr<TypedBuffer>			m_fxaaColorQueueH;
-	std::shared_ptr<TypedBuffer>			m_fxaaColorQueueV;
-	std::shared_ptr<IndirectArgsBuffer>		m_indirectParameters;
+	StructuredBuffer		m_fxaaWorkQueueH;
+	StructuredBuffer		m_fxaaWorkQueueV;
+	TypedBuffer				m_fxaaColorQueueH;
+	TypedBuffer				m_fxaaColorQueueV;
+	IndirectArgsBuffer		m_indirectParameters;
 
 	// Feature toggles
 	bool m_usePreComputedLuma{ true };

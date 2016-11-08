@@ -205,8 +205,8 @@ void SSAO::Render(GraphicsCommandList& commandList)
 		computeCommandList.TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
 
 		m_linearizeDepthCs->GetParameter("ZMagic")->SetValue(zMagic);
-		m_linearizeDepthCs->GetResource("Depth")->SetSRV(m_sceneDepthBuffer);
-		m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(m_linearDepth);
+		m_linearizeDepthCs->GetResource("Depth")->SetSRV(*m_sceneDepthBuffer);
+		m_linearizeDepthCs->GetResource("LinearZ")->SetUAV(*m_linearDepth);
 		
 		m_linearizeDepthCs->Dispatch2D(computeCommandList, m_linearDepth->GetWidth(), m_linearDepth->GetHeight(), 16, 16);
 		m_linearizeDepthCs->UnbindSRVs(computeCommandList);
@@ -219,8 +219,8 @@ void SSAO::Render(GraphicsCommandList& commandList)
 			computeCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
 			computeCommandList.TransitionResource(*m_linearDepth, ResourceState::NonPixelShaderResource);
 
-			m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRV(m_linearDepth);
-			m_debugSsaoCs->GetResource("OutColor")->SetUAV(m_sceneColorBuffer);
+			m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRV(*m_linearDepth);
+			m_debugSsaoCs->GetResource("OutColor")->SetUAV(*m_sceneColorBuffer);
 
 			m_debugSsaoCs->Dispatch2D(computeCommandList, m_ssaoFullscreen->GetWidth(), m_ssaoFullscreen->GetHeight());
 			m_debugSsaoCs->UnbindSRVs(computeCommandList);
@@ -245,7 +245,7 @@ void SSAO::Render(GraphicsCommandList& commandList)
 		computeCommandList.PIXBeginEvent("Decompress and downsample");
 
 		m_depthPrepare1Cs->GetParameter("ZMagic")->SetValueImmediate(zMagic);
-		m_depthPrepare1Cs->GetResource("Depth")->SetSRVImmediate(m_sceneDepthBuffer);
+		m_depthPrepare1Cs->GetResource("Depth")->SetSRVImmediate(*m_sceneDepthBuffer);
 
 		computeCommandList.TransitionResource(*m_linearDepth, ResourceState::UnorderedAccess);
 		computeCommandList.TransitionResource(*m_depthDownsize1, ResourceState::UnorderedAccess);
@@ -253,11 +253,11 @@ void SSAO::Render(GraphicsCommandList& commandList)
 		computeCommandList.TransitionResource(*m_depthDownsize2, ResourceState::UnorderedAccess);
 		computeCommandList.TransitionResource(*m_depthTiled2, ResourceState::UnorderedAccess);
 
-		m_depthPrepare1Cs->GetResource("LinearZ")->SetUAVImmediate(m_linearDepth);
-		m_depthPrepare1Cs->GetResource("DS2x")->SetUAVImmediate(m_depthDownsize1);
-		m_depthPrepare1Cs->GetResource("DS2xAtlas")->SetUAVImmediate(m_depthTiled1);
-		m_depthPrepare1Cs->GetResource("DS4x")->SetUAVImmediate(m_depthDownsize2);
-		m_depthPrepare1Cs->GetResource("DS4xAtlas")->SetUAVImmediate(m_depthTiled2);
+		m_depthPrepare1Cs->GetResource("LinearZ")->SetUAVImmediate(*m_linearDepth);
+		m_depthPrepare1Cs->GetResource("DS2x")->SetUAVImmediate(*m_depthDownsize1);
+		m_depthPrepare1Cs->GetResource("DS2xAtlas")->SetUAVImmediate(*m_depthTiled1);
+		m_depthPrepare1Cs->GetResource("DS4x")->SetUAVImmediate(*m_depthDownsize2);
+		m_depthPrepare1Cs->GetResource("DS4xAtlas")->SetUAVImmediate(*m_depthTiled2);
 
 		m_depthPrepare1Cs->Dispatch2D(computeCommandList, m_depthTiled2->GetWidth() * 8, m_depthTiled2->GetHeight() * 8);
 		m_depthPrepare1Cs->UnbindSRVs(computeCommandList);
@@ -274,11 +274,11 @@ void SSAO::Render(GraphicsCommandList& commandList)
 			computeCommandList.TransitionResource(*m_depthDownsize4, ResourceState::UnorderedAccess);
 			computeCommandList.TransitionResource(*m_depthTiled4, ResourceState::UnorderedAccess);
 
-			m_depthPrepare2Cs->GetResource("DS4x")->SetSRVImmediate(m_depthDownsize2);
-			m_depthPrepare2Cs->GetResource("DS8x")->SetUAVImmediate(m_depthDownsize3);
-			m_depthPrepare2Cs->GetResource("DS8xAtlas")->SetUAVImmediate(m_depthTiled3);
-			m_depthPrepare2Cs->GetResource("DS16x")->SetUAVImmediate(m_depthDownsize4);
-			m_depthPrepare2Cs->GetResource("DS16xAtlas")->SetUAVImmediate(m_depthTiled4);
+			m_depthPrepare2Cs->GetResource("DS4x")->SetSRVImmediate(*m_depthDownsize2);
+			m_depthPrepare2Cs->GetResource("DS8x")->SetUAVImmediate(*m_depthDownsize3);
+			m_depthPrepare2Cs->GetResource("DS8xAtlas")->SetUAVImmediate(*m_depthTiled3);
+			m_depthPrepare2Cs->GetResource("DS16x")->SetUAVImmediate(*m_depthDownsize4);
+			m_depthPrepare2Cs->GetResource("DS16xAtlas")->SetUAVImmediate(*m_depthTiled4);
 
 			m_depthPrepare2Cs->Dispatch2D(computeCommandList, m_depthTiled4->GetWidth() * 8, m_depthTiled4->GetHeight() * 8);
 			m_depthPrepare2Cs->UnbindSRVs(computeCommandList);
@@ -407,8 +407,8 @@ void SSAO::Render(GraphicsCommandList& commandList)
 		computeCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
 		computeCommandList.TransitionResource(*m_ssaoFullscreen, ResourceState::NonPixelShaderResource);
 
-		m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRVImmediate(m_ssaoFullscreen);
-		m_debugSsaoCs->GetResource("OutColor")->SetUAVImmediate(m_sceneColorBuffer);
+		m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRVImmediate(*m_ssaoFullscreen);
+		m_debugSsaoCs->GetResource("OutColor")->SetUAVImmediate(*m_sceneColorBuffer);
 
 		m_debugSsaoCs->Dispatch2D(computeCommandList, m_ssaoFullscreen->GetWidth(), m_ssaoFullscreen->GetHeight());
 		m_debugSsaoCs->UnbindSRVs(computeCommandList);
@@ -527,8 +527,8 @@ void SSAO::ComputeAO(ComputeCommandList& commandList, shared_ptr<ComputeKernel> 
 	kernel->GetParameter("gRejectFadeoff")->SetValueImmediate(ssaoCB[26]);
 	kernel->GetParameter("gRcpAccentuation")->SetValueImmediate(ssaoCB[27]);
 
-	kernel->GetResource("DepthTex")->SetSRVImmediate(depthBuffer);
-	kernel->GetResource("Occlusion")->SetUAVImmediate(destination);
+	kernel->GetResource("DepthTex")->SetSRVImmediate(*depthBuffer);
+	kernel->GetResource("Occlusion")->SetUAVImmediate(*destination);
 
 #if DX11
 	commandList.SetShaderSampler(1, m_linearBorderSampler.Get());
@@ -584,26 +584,26 @@ void SSAO::BlurAndUpsample(ComputeCommandList& commandList,
 	commandList.TransitionResource(*loResDepth, ResourceState::NonPixelShaderResource);
 	commandList.TransitionResource(*hiResDepth, ResourceState::NonPixelShaderResource);
 
-	kernel->GetResource("AoResult")->SetUAVImmediate(destination);
-	kernel->GetResource("LoResDB")->SetSRVImmediate(loResDepth);
-	kernel->GetResource("HiResDB")->SetSRVImmediate(hiResDepth);
+	kernel->GetResource("AoResult")->SetUAVImmediate(*destination);
+	kernel->GetResource("LoResDB")->SetSRVImmediate(*loResDepth);
+	kernel->GetResource("HiResDB")->SetSRVImmediate(*hiResDepth);
 
 	if (interleavedAO != nullptr)
 	{
 		commandList.TransitionResource(*interleavedAO, ResourceState::NonPixelShaderResource);
-		kernel->GetResource("LoResAO1")->SetSRVImmediate(interleavedAO);
+		kernel->GetResource("LoResAO1")->SetSRVImmediate(*interleavedAO);
 	}
 
 	if (highQualityAO != nullptr)
 	{
 		commandList.TransitionResource(*highQualityAO, ResourceState::NonPixelShaderResource);
-		kernel->GetResource("LoResAO2")->SetSRVImmediate(highQualityAO);
+		kernel->GetResource("LoResAO2")->SetSRVImmediate(*highQualityAO);
 	}
 
 	if (hiResAO != nullptr)
 	{
 		commandList.TransitionResource(*hiResAO, ResourceState::NonPixelShaderResource);
-		kernel->GetResource("HiResAO")->SetSRVImmediate(hiResAO);
+		kernel->GetResource("HiResAO")->SetSRVImmediate(*hiResAO);
 	}
 
 #if DX11
