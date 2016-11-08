@@ -92,45 +92,26 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 	const uint32_t bufferHeight5 = (height + 31) / 32;
 	const uint32_t bufferHeight6 = (height + 63) / 64;
 
-	m_depthDownsize1 = make_shared<ColorBuffer>();
-	m_depthDownsize2 = make_shared<ColorBuffer>();
-	m_depthDownsize3 = make_shared<ColorBuffer>();
-	m_depthDownsize4 = make_shared<ColorBuffer>();
-	m_depthTiled1 = make_shared<ColorBuffer>();
-	m_depthTiled2 = make_shared<ColorBuffer>();
-	m_depthTiled3 = make_shared<ColorBuffer>();
-	m_depthTiled4 = make_shared<ColorBuffer>();
-	m_depthDownsize1->Create("Depth downsized 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R32_Float);
-	m_depthDownsize2->Create("Depth downsized 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R32_Float);
-	m_depthDownsize3->Create("Depth downsized 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R32_Float);
-	m_depthDownsize4->Create("Depth downsized 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R32_Float);
-	m_depthTiled1->CreateArray("Depth de-interleaved 1", bufferWidth3, bufferHeight3, 16, ColorFormat::R16_Float);
-	m_depthTiled2->CreateArray("Depth de-interleaved 2", bufferWidth4, bufferHeight4, 16, ColorFormat::R16_Float);
-	m_depthTiled3->CreateArray("Depth de-interleaved 3", bufferWidth5, bufferHeight5, 16, ColorFormat::R16_Float);
-	m_depthTiled4->CreateArray("Depth de-interleaved 4", bufferWidth6, bufferHeight6, 16, ColorFormat::R16_Float);
+	m_depthDownsize1.Create("Depth downsized 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R32_Float);
+	m_depthDownsize2.Create("Depth downsized 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R32_Float);
+	m_depthDownsize3.Create("Depth downsized 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R32_Float);
+	m_depthDownsize4.Create("Depth downsized 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R32_Float);
+	m_depthTiled1.CreateArray("Depth de-interleaved 1", bufferWidth3, bufferHeight3, 16, ColorFormat::R16_Float);
+	m_depthTiled2.CreateArray("Depth de-interleaved 2", bufferWidth4, bufferHeight4, 16, ColorFormat::R16_Float);
+	m_depthTiled3.CreateArray("Depth de-interleaved 3", bufferWidth5, bufferHeight5, 16, ColorFormat::R16_Float);
+	m_depthTiled4.CreateArray("Depth de-interleaved 4", bufferWidth6, bufferHeight6, 16, ColorFormat::R16_Float);
 
-	m_aoMerged1 = make_shared<ColorBuffer>();
-	m_aoMerged2 = make_shared<ColorBuffer>();
-	m_aoMerged3 = make_shared<ColorBuffer>();
-	m_aoMerged4 = make_shared<ColorBuffer>();
-	m_aoSmooth1 = make_shared<ColorBuffer>();
-	m_aoSmooth2 = make_shared<ColorBuffer>();
-	m_aoSmooth3 = make_shared<ColorBuffer>();
-	m_aoHighQuality1 = make_shared<ColorBuffer>();
-	m_aoHighQuality2 = make_shared<ColorBuffer>();
-	m_aoHighQuality3 = make_shared<ColorBuffer>();
-	m_aoHighQuality4 = make_shared<ColorBuffer>();
-	m_aoMerged1->Create("AO re-interleaved 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R8_UNorm);
-	m_aoMerged2->Create("AO re-interleaved 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R8_UNorm);
-	m_aoMerged3->Create("AO re-interleaved 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R8_UNorm);
-	m_aoMerged4->Create("AO re-interleaved 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R8_UNorm);
-	m_aoSmooth1->Create("AO smoothed 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R8_UNorm);
-	m_aoSmooth2->Create("AO smoothed 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R8_UNorm);
-	m_aoSmooth3->Create("AO smoothed 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R8_UNorm);
-	m_aoHighQuality1->Create("AO high quality 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R8_UNorm);
-	m_aoHighQuality2->Create("AO high quality 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R8_UNorm);
-	m_aoHighQuality3->Create("AO high quality 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R8_UNorm);
-	m_aoHighQuality4->Create("AO high quality 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R8_UNorm);
+	m_aoMerged1.Create("AO re-interleaved 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R8_UNorm);
+	m_aoMerged2.Create("AO re-interleaved 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R8_UNorm);
+	m_aoMerged3.Create("AO re-interleaved 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R8_UNorm);
+	m_aoMerged4.Create("AO re-interleaved 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R8_UNorm);
+	m_aoSmooth1.Create("AO smoothed 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R8_UNorm);
+	m_aoSmooth2.Create("AO smoothed 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R8_UNorm);
+	m_aoSmooth3.Create("AO smoothed 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R8_UNorm);
+	m_aoHighQuality1.Create("AO high quality 1", bufferWidth1, bufferHeight1, 1, ColorFormat::R8_UNorm);
+	m_aoHighQuality2.Create("AO high quality 2", bufferWidth2, bufferHeight2, 1, ColorFormat::R8_UNorm);
+	m_aoHighQuality3.Create("AO high quality 3", bufferWidth3, bufferHeight3, 1, ColorFormat::R8_UNorm);
+	m_aoHighQuality4.Create("AO high quality 4", bufferWidth4, bufferHeight4, 1, ColorFormat::R8_UNorm);
 
 #if DX11
 	auto samplerDesc = CD3D11_SAMPLER_DESC(D3D11_DEFAULT);
@@ -226,39 +207,39 @@ void SSAO::Render(GraphicsCommandList& commandList)
 		m_depthPrepare1Cs.GetResource("Depth")->SetSRVImmediate(*m_sceneDepthBuffer);
 
 		computeCommandList.TransitionResource(*m_linearDepth, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_depthDownsize1, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_depthTiled1, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_depthDownsize2, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_depthTiled2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_depthDownsize1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_depthTiled1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_depthDownsize2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_depthTiled2, ResourceState::UnorderedAccess);
 
 		m_depthPrepare1Cs.GetResource("LinearZ")->SetUAVImmediate(*m_linearDepth);
-		m_depthPrepare1Cs.GetResource("DS2x")->SetUAVImmediate(*m_depthDownsize1);
-		m_depthPrepare1Cs.GetResource("DS2xAtlas")->SetUAVImmediate(*m_depthTiled1);
-		m_depthPrepare1Cs.GetResource("DS4x")->SetUAVImmediate(*m_depthDownsize2);
-		m_depthPrepare1Cs.GetResource("DS4xAtlas")->SetUAVImmediate(*m_depthTiled2);
+		m_depthPrepare1Cs.GetResource("DS2x")->SetUAVImmediate(m_depthDownsize1);
+		m_depthPrepare1Cs.GetResource("DS2xAtlas")->SetUAVImmediate(m_depthTiled1);
+		m_depthPrepare1Cs.GetResource("DS4x")->SetUAVImmediate(m_depthDownsize2);
+		m_depthPrepare1Cs.GetResource("DS4xAtlas")->SetUAVImmediate(m_depthTiled2);
 
-		m_depthPrepare1Cs.Dispatch2D(computeCommandList, m_depthTiled2->GetWidth() * 8, m_depthTiled2->GetHeight() * 8);
+		m_depthPrepare1Cs.Dispatch2D(computeCommandList, m_depthTiled2.GetWidth() * 8, m_depthTiled2.GetHeight() * 8);
 		m_depthPrepare1Cs.UnbindSRVs(computeCommandList);
 		m_depthPrepare1Cs.UnbindUAVs(computeCommandList);
 
 		if (m_hierarchyDepth > 2)
 		{
-			XMFLOAT2 invSize(1.0f / m_depthDownsize2->GetWidth(), 1.0f / m_depthDownsize2->GetHeight());
+			XMFLOAT2 invSize(1.0f / m_depthDownsize2.GetWidth(), 1.0f / m_depthDownsize2.GetHeight());
 			m_depthPrepare2Cs.GetParameter("InvSourceDimension")->SetValueImmediate(invSize);
 
-			computeCommandList.TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
-			computeCommandList.TransitionResource(*m_depthDownsize3, ResourceState::UnorderedAccess);
-			computeCommandList.TransitionResource(*m_depthTiled3, ResourceState::UnorderedAccess);
-			computeCommandList.TransitionResource(*m_depthDownsize4, ResourceState::UnorderedAccess);
-			computeCommandList.TransitionResource(*m_depthTiled4, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(m_depthDownsize2, ResourceState::NonPixelShaderResource);
+			computeCommandList.TransitionResource(m_depthDownsize3, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(m_depthTiled3, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(m_depthDownsize4, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(m_depthTiled4, ResourceState::UnorderedAccess);
 
-			m_depthPrepare2Cs.GetResource("DS4x")->SetSRVImmediate(*m_depthDownsize2);
-			m_depthPrepare2Cs.GetResource("DS8x")->SetUAVImmediate(*m_depthDownsize3);
-			m_depthPrepare2Cs.GetResource("DS8xAtlas")->SetUAVImmediate(*m_depthTiled3);
-			m_depthPrepare2Cs.GetResource("DS16x")->SetUAVImmediate(*m_depthDownsize4);
-			m_depthPrepare2Cs.GetResource("DS16xAtlas")->SetUAVImmediate(*m_depthTiled4);
+			m_depthPrepare2Cs.GetResource("DS4x")->SetSRVImmediate(m_depthDownsize2);
+			m_depthPrepare2Cs.GetResource("DS8x")->SetUAVImmediate(m_depthDownsize3);
+			m_depthPrepare2Cs.GetResource("DS8xAtlas")->SetUAVImmediate(m_depthTiled3);
+			m_depthPrepare2Cs.GetResource("DS16x")->SetUAVImmediate(m_depthDownsize4);
+			m_depthPrepare2Cs.GetResource("DS16xAtlas")->SetUAVImmediate(m_depthTiled4);
 
-			m_depthPrepare2Cs.Dispatch2D(computeCommandList, m_depthTiled4->GetWidth() * 8, m_depthTiled4->GetHeight() * 8);
+			m_depthPrepare2Cs.Dispatch2D(computeCommandList, m_depthTiled4.GetWidth() * 8, m_depthTiled4.GetHeight() * 8);
 			m_depthPrepare2Cs.UnbindSRVs(computeCommandList);
 			m_depthPrepare2Cs.UnbindUAVs(computeCommandList);
 		}
@@ -274,22 +255,22 @@ void SSAO::Render(GraphicsCommandList& commandList)
 
 		computeCommandList.PIXBeginEvent("Analyze depth volumes");
 
-		computeCommandList.TransitionResource(*m_aoMerged1, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_aoMerged2, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_aoMerged3, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_aoMerged4, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_aoHighQuality1, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_aoHighQuality2, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_aoHighQuality3, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_aoHighQuality4, ResourceState::UnorderedAccess);
-		computeCommandList.TransitionResource(*m_depthTiled1, ResourceState::NonPixelShaderResource);
-		computeCommandList.TransitionResource(*m_depthTiled2, ResourceState::NonPixelShaderResource);
-		computeCommandList.TransitionResource(*m_depthTiled3, ResourceState::NonPixelShaderResource);
-		computeCommandList.TransitionResource(*m_depthTiled4, ResourceState::NonPixelShaderResource);
-		computeCommandList.TransitionResource(*m_depthDownsize1, ResourceState::NonPixelShaderResource);
-		computeCommandList.TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
-		computeCommandList.TransitionResource(*m_depthDownsize3, ResourceState::NonPixelShaderResource);
-		computeCommandList.TransitionResource(*m_depthDownsize4, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_aoMerged1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_aoMerged2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_aoMerged3, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_aoMerged4, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_aoHighQuality1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_aoHighQuality2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_aoHighQuality3, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_aoHighQuality4, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(m_depthTiled1, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_depthTiled2, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_depthTiled3, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_depthTiled4, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_depthDownsize1, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_depthDownsize2, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_depthDownsize3, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(m_depthDownsize4, ResourceState::NonPixelShaderResource);
 
 		// Render SSAO for each sub-tile
 		if (m_hierarchyDepth > 3)
@@ -331,7 +312,7 @@ void SSAO::Render(GraphicsCommandList& commandList)
 	{
 		computeCommandList.PIXBeginEvent("Blur and upsample");
 
-		shared_ptr<ColorBuffer> nextSRV = m_aoMerged4;
+		auto* nextSRV = &m_aoMerged4;
 
 		m_currentBlurUpsampleBlend = 0;
 		m_currentBlurUpsampleFinal = 0;
@@ -339,41 +320,41 @@ void SSAO::Render(GraphicsCommandList& commandList)
 		if (m_hierarchyDepth > 3)
 		{
 			BlurAndUpsample(computeCommandList, m_aoSmooth3, m_depthDownsize3, m_depthDownsize4, nextSRV,
-				m_qualityLevel >= kSsaoQualityLow ? m_aoHighQuality4 : nullptr, m_aoMerged3);
+				m_qualityLevel >= kSsaoQualityLow ? &m_aoHighQuality4 : nullptr, &m_aoMerged3);
 
-			nextSRV = m_aoSmooth3;
+			nextSRV = &m_aoSmooth3;
 		}
 		else
 		{
-			nextSRV = m_aoMerged3;
+			nextSRV = &m_aoMerged3;
 		}
 
 		if (m_hierarchyDepth > 2)
 		{
 			BlurAndUpsample(computeCommandList, m_aoSmooth2, m_depthDownsize2, m_depthDownsize3, nextSRV,
-				m_qualityLevel >= kSsaoQualityMedium ? m_aoHighQuality3 : nullptr, m_aoMerged2);
+				m_qualityLevel >= kSsaoQualityMedium ? &m_aoHighQuality3 : nullptr, &m_aoMerged2);
 
-			nextSRV = m_aoSmooth2;
+			nextSRV = &m_aoSmooth2;
 		}
 		else
 		{
-			nextSRV = m_aoMerged2;
+			nextSRV = &m_aoMerged2;
 		}
 
 		if (m_hierarchyDepth > 1)
 		{
 			BlurAndUpsample(computeCommandList, m_aoSmooth1, m_depthDownsize1, m_depthDownsize2, nextSRV,
-				m_qualityLevel >= kSsaoQualityHigh ? m_aoHighQuality2 : nullptr, m_aoMerged1);
+				m_qualityLevel >= kSsaoQualityHigh ? &m_aoHighQuality2 : nullptr, &m_aoMerged1);
 
-			nextSRV = m_aoSmooth1;
+			nextSRV = &m_aoSmooth1;
 		}
 		else
 		{
-			nextSRV = m_aoMerged1;
+			nextSRV = &m_aoMerged1;
 		}
 
-		BlurAndUpsample(computeCommandList, m_ssaoFullscreen, m_linearDepth, m_depthDownsize1, nextSRV,
-			m_qualityLevel >= kSsaoQualityVeryHigh ? m_aoHighQuality1 : nullptr, nullptr);
+		BlurAndUpsample(computeCommandList, *m_ssaoFullscreen, *m_linearDepth, m_depthDownsize1, nextSRV,
+			m_qualityLevel >= kSsaoQualityVeryHigh ? &m_aoHighQuality1 : nullptr, nullptr);
 
 		computeCommandList.PIXEndEvent();
 	}
@@ -399,12 +380,12 @@ void SSAO::Render(GraphicsCommandList& commandList)
 }
 
 
-void SSAO::ComputeAO(ComputeCommandList& commandList, ComputeKernel& kernel, shared_ptr<ColorBuffer> destination,
-	shared_ptr<ColorBuffer> depthBuffer, const float tanHalfFovH)
+void SSAO::ComputeAO(ComputeCommandList& commandList, ComputeKernel& kernel, ColorBuffer& destination,
+	ColorBuffer& depthBuffer, const float tanHalfFovH)
 {
-	uint32_t bufferWidth = depthBuffer->GetWidth();
-	uint32_t bufferHeight = depthBuffer->GetHeight();
-	uint32_t arrayCount = depthBuffer->GetArraySize();
+	uint32_t bufferWidth = depthBuffer.GetWidth();
+	uint32_t bufferHeight = depthBuffer.GetHeight();
+	uint32_t arrayCount = depthBuffer.GetArraySize();
 
 	// Here we compute multipliers that convert the center depth value into (the reciprocal of)
 	// sphere thicknesses at each sample location.  This assumes a maximum sample radius of 5
@@ -505,8 +486,8 @@ void SSAO::ComputeAO(ComputeCommandList& commandList, ComputeKernel& kernel, sha
 	kernel.GetParameter("gRejectFadeoff")->SetValueImmediate(ssaoCB[26]);
 	kernel.GetParameter("gRcpAccentuation")->SetValueImmediate(ssaoCB[27]);
 
-	kernel.GetResource("DepthTex")->SetSRVImmediate(*depthBuffer);
-	kernel.GetResource("Occlusion")->SetUAVImmediate(*destination);
+	kernel.GetResource("DepthTex")->SetSRVImmediate(depthBuffer);
+	kernel.GetResource("Occlusion")->SetUAVImmediate(destination);
 
 #if DX11
 	commandList.SetShaderSampler(1, m_linearBorderSampler.Get());
@@ -526,13 +507,13 @@ void SSAO::ComputeAO(ComputeCommandList& commandList, ComputeKernel& kernel, sha
 
 
 void SSAO::BlurAndUpsample(ComputeCommandList& commandList,
-	shared_ptr<ColorBuffer> destination, shared_ptr<ColorBuffer> hiResDepth, shared_ptr<ColorBuffer> loResDepth,
-	shared_ptr<ColorBuffer> interleavedAO, shared_ptr<ColorBuffer> highQualityAO, shared_ptr<ColorBuffer> hiResAO)
+	ColorBuffer& destination, ColorBuffer& hiResDepth, ColorBuffer& loResDepth,
+	ColorBuffer* interleavedAO, ColorBuffer* highQualityAO, ColorBuffer* hiResAO)
 {
-	uint32_t loWidth = loResDepth->GetWidth();
-	uint32_t loHeight = loResDepth->GetHeight();
-	uint32_t hiWidth = hiResDepth->GetWidth();
-	uint32_t hiHeight = hiResDepth->GetHeight();
+	uint32_t loWidth = loResDepth.GetWidth();
+	uint32_t loHeight = loResDepth.GetHeight();
+	uint32_t hiWidth = hiResDepth.GetWidth();
+	uint32_t hiHeight = hiResDepth.GetHeight();
 
 	auto& kernel = (hiResAO == nullptr) ? 
 		m_blurUpsampleFinal[m_currentBlurUpsampleFinal++][highQualityAO == nullptr ? 0 : 1] :
@@ -550,13 +531,13 @@ void SSAO::BlurAndUpsample(ComputeCommandList& commandList,
 	kernel.GetParameter("kBlurTolerance")->SetValueImmediate(blurTolerance);
 	kernel.GetParameter("kUpsampleTolerance")->SetValueImmediate(upsampleTolerance);
 
-	commandList.TransitionResource(*destination, ResourceState::UnorderedAccess);
-	commandList.TransitionResource(*loResDepth, ResourceState::NonPixelShaderResource);
-	commandList.TransitionResource(*hiResDepth, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(destination, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(loResDepth, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(hiResDepth, ResourceState::NonPixelShaderResource);
 
-	kernel.GetResource("AoResult")->SetUAVImmediate(*destination);
-	kernel.GetResource("LoResDB")->SetSRVImmediate(*loResDepth);
-	kernel.GetResource("HiResDB")->SetSRVImmediate(*hiResDepth);
+	kernel.GetResource("AoResult")->SetUAVImmediate(destination);
+	kernel.GetResource("LoResDB")->SetSRVImmediate(loResDepth);
+	kernel.GetResource("HiResDB")->SetSRVImmediate(hiResDepth);
 
 	if (interleavedAO != nullptr)
 	{

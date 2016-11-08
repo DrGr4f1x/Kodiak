@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "ColorBuffer.h"
 #include "ComputeKernel.h"
 #include "RenderThread.h"
 
@@ -18,7 +19,6 @@ namespace Kodiak
 
 // Forward declarations
 class Camera;
-class ColorBuffer;
 class ComputeCommandList;
 class DepthBuffer;
 class GraphicsCommandList;
@@ -50,12 +50,12 @@ public:
 	void Render(GraphicsCommandList& commandList);
 
 private:
-	void ComputeAO(ComputeCommandList& commandList, ComputeKernel& kernel, std::shared_ptr<ColorBuffer> destination,
-		std::shared_ptr<ColorBuffer> depthBuffer, const float tanHalfFovH);
+	void ComputeAO(ComputeCommandList& commandList, ComputeKernel& kernel, ColorBuffer& destination,
+		ColorBuffer& depthBuffer, const float tanHalfFovH);
 
 	void BlurAndUpsample(ComputeCommandList& commandList,
-		std::shared_ptr<ColorBuffer> destination, std::shared_ptr<ColorBuffer> hiResDepth, std::shared_ptr<ColorBuffer> loResDepth,
-		std::shared_ptr<ColorBuffer> interleavedAO, std::shared_ptr<ColorBuffer> highQualityAO, std::shared_ptr<ColorBuffer> hiResAO);
+		ColorBuffer& destination, ColorBuffer& hiResDepth, ColorBuffer& loResDepth,
+		ColorBuffer* interleavedAO, ColorBuffer* highQualityAO, ColorBuffer* hiResAO);
 
 private:
 	// Compute shader kernels
@@ -67,8 +67,8 @@ private:
 	ComputeKernel	m_blurUpsampleFinal[4][2];
 	ComputeKernel	m_linearizeDepthCs;
 	ComputeKernel	m_debugSsaoCs;
-	uint32_t						m_currentBlurUpsampleBlend{ 0 };
-	uint32_t						m_currentBlurUpsampleFinal{ 0 };
+	uint32_t		m_currentBlurUpsampleBlend{ 0 };
+	uint32_t		m_currentBlurUpsampleFinal{ 0 };
 
 	// Render targets and UAV buffers
 	std::shared_ptr<ColorBuffer>	m_ssaoFullscreen;
@@ -77,25 +77,25 @@ private:
 	std::shared_ptr<ColorBuffer>	m_linearDepth;
 
 	// Internal render targets and UAV buffers
-	std::shared_ptr<ColorBuffer>	m_depthDownsize1;
-	std::shared_ptr<ColorBuffer>	m_depthDownsize2;
-	std::shared_ptr<ColorBuffer>	m_depthDownsize3;
-	std::shared_ptr<ColorBuffer>	m_depthDownsize4;
-	std::shared_ptr<ColorBuffer>	m_depthTiled1;
-	std::shared_ptr<ColorBuffer>	m_depthTiled2;
-	std::shared_ptr<ColorBuffer>	m_depthTiled3;
-	std::shared_ptr<ColorBuffer>	m_depthTiled4;
-	std::shared_ptr<ColorBuffer>	m_aoMerged1;
-	std::shared_ptr<ColorBuffer>	m_aoMerged2;
-	std::shared_ptr<ColorBuffer>	m_aoMerged3;
-	std::shared_ptr<ColorBuffer>	m_aoMerged4;
-	std::shared_ptr<ColorBuffer>	m_aoHighQuality1;
-	std::shared_ptr<ColorBuffer>	m_aoHighQuality2;
-	std::shared_ptr<ColorBuffer>	m_aoHighQuality3;
-	std::shared_ptr<ColorBuffer>	m_aoHighQuality4;
-	std::shared_ptr<ColorBuffer>	m_aoSmooth1;
-	std::shared_ptr<ColorBuffer>	m_aoSmooth2;
-	std::shared_ptr<ColorBuffer>	m_aoSmooth3;
+	ColorBuffer		m_depthDownsize1;
+	ColorBuffer		m_depthDownsize2;
+	ColorBuffer		m_depthDownsize3;
+	ColorBuffer		m_depthDownsize4;
+	ColorBuffer		m_depthTiled1;
+	ColorBuffer		m_depthTiled2;
+	ColorBuffer		m_depthTiled3;
+	ColorBuffer		m_depthTiled4;
+	ColorBuffer		m_aoMerged1;
+	ColorBuffer		m_aoMerged2;
+	ColorBuffer		m_aoMerged3;
+	ColorBuffer		m_aoMerged4;
+	ColorBuffer		m_aoHighQuality1;
+	ColorBuffer		m_aoHighQuality2;
+	ColorBuffer		m_aoHighQuality3;
+	ColorBuffer		m_aoHighQuality4;
+	ColorBuffer		m_aoSmooth1;
+	ColorBuffer		m_aoSmooth2;
+	ColorBuffer		m_aoSmooth3;
 
 #if DX11
 	// Semi-hacky way to set samplers
