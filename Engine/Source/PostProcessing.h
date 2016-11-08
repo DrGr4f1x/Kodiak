@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include "ColorBuffer.h"
+#include "ComputeKernel.h"
+#include "GpuBuffer.h"
 #include "RenderThread.h"
 
 namespace Kodiak
@@ -19,7 +22,6 @@ namespace Kodiak
 class ByteAddressBuffer;
 class ColorBuffer;
 class ComputeCommandList;
-class ComputeKernel;
 class GraphicsCommandList;
 class GraphicsPSO;
 class StructuredBuffer;
@@ -71,7 +73,7 @@ private:
 
 	void GenerateBloom(ComputeCommandList& commandList);
 	void ExtractLuma(ComputeCommandList& commandList);
-	void BlurBuffer(ComputeCommandList& commandList, uint32_t blurKernelIndex, std::shared_ptr<ColorBuffer> buffer[2], std::shared_ptr<ColorBuffer> lowerResBuf,
+	void BlurBuffer(ComputeCommandList& commandList, uint32_t blurKernelIndex, ColorBuffer buffer[2], ColorBuffer& lowerResBuf,
 		uint32_t bufferWidth, uint32_t bufferHeight, float upsampleBlendFactor);
 	void UpdateExposure(ComputeCommandList& commandList);
 
@@ -82,36 +84,36 @@ private:
 
 private:
 	// Compute kernels
-	std::shared_ptr<ComputeKernel>	m_bloomExtractAndDownsampleHdrCs;
-	std::shared_ptr<ComputeKernel>	m_bloomExtractAndDownsampleLdrCs;
-	std::shared_ptr<ComputeKernel>	m_extractLumaCs;
-	std::shared_ptr<ComputeKernel>	m_downsampleBloom4Cs;
-	std::shared_ptr<ComputeKernel>	m_downsampleBloom2Cs;
-	std::shared_ptr<ComputeKernel>	m_blurCs[5];
-	std::shared_ptr<ComputeKernel>	m_upsampleAndBlurCs[5];
-	std::shared_ptr<ComputeKernel>	m_toneMapCs;
-	std::shared_ptr<ComputeKernel>	m_toneMapHdrCs;
-	std::shared_ptr<ComputeKernel>	m_generateHistogramCs;
-	std::shared_ptr<ComputeKernel>	m_adaptExposureCs;
-	std::shared_ptr<ComputeKernel>	m_debugDrawHistogramCs;
-	std::shared_ptr<ComputeKernel>	m_debugLuminanceHdrCs;
-	std::shared_ptr<ComputeKernel>	m_debugLuminanceLdrCs;
-	std::shared_ptr<ComputeKernel>	m_copyPostToSceneCs;
+	ComputeKernel	m_bloomExtractAndDownsampleHdrCs;
+	ComputeKernel	m_bloomExtractAndDownsampleLdrCs;
+	ComputeKernel	m_extractLumaCs;
+	ComputeKernel	m_downsampleBloom4Cs;
+	ComputeKernel	m_downsampleBloom2Cs;
+	ComputeKernel	m_blurCs[5];
+	ComputeKernel	m_upsampleAndBlurCs[5];
+	ComputeKernel	m_toneMapCs;
+	ComputeKernel	m_toneMapHdrCs;
+	ComputeKernel	m_generateHistogramCs;
+	ComputeKernel	m_adaptExposureCs;
+	ComputeKernel	m_debugDrawHistogramCs;
+	ComputeKernel	m_debugLuminanceHdrCs;
+	ComputeKernel	m_debugLuminanceLdrCs;
+	ComputeKernel	m_copyPostToSceneCs;
 
 	// Render targets and UAV buffers
 	std::shared_ptr<ColorBuffer>	m_sceneColorBuffer;
 	std::shared_ptr<ColorBuffer>	m_postEffectsBuffer;
+	std::shared_ptr<ColorBuffer>	m_lumaBuffer;
 
 	// Internal render targets and UAV buffers
-	std::shared_ptr<ColorBuffer>		m_bloomUAV1[2];	//  640x384 (1/3)
-	std::shared_ptr<ColorBuffer>		m_bloomUAV2[2];	//  320x192 (1/6)
-	std::shared_ptr<ColorBuffer>		m_bloomUAV3[2];	//  160x96  (1/12)
-	std::shared_ptr<ColorBuffer>		m_bloomUAV4[2];    //  80x48   (1/24)
-	std::shared_ptr<ColorBuffer>		m_bloomUAV5[2];    //  40x24   (1/48)
-	std::shared_ptr<ColorBuffer>		m_lumaBuffer;
-	std::shared_ptr<ColorBuffer>		m_lumaLR;
-	std::shared_ptr<StructuredBuffer>	m_exposureBuffer;
-	std::shared_ptr<ByteAddressBuffer>	m_histogram;
+	ColorBuffer			m_bloomUAV1[2];	//  640x384 (1/3)
+	ColorBuffer			m_bloomUAV2[2];	//  320x192 (1/6)
+	ColorBuffer			m_bloomUAV3[2];	//  160x96  (1/12)
+	ColorBuffer			m_bloomUAV4[2]; //  80x48   (1/24)
+	ColorBuffer			m_bloomUAV5[2]; //  40x24   (1/48)
+	ColorBuffer			m_lumaLR;
+	StructuredBuffer	m_exposureBuffer;
+	ByteAddressBuffer	m_histogram;
 
 	// Default black texture
 	std::shared_ptr<Texture>			m_defaultBlackTexture;
