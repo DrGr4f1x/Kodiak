@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "ComputeKernel.h"
 #include "GpuBuffer.h"
 #include "RenderThread.h"
 
@@ -47,13 +48,13 @@ public:
 
 private:
 	// Compute kernels
-	std::shared_ptr<ComputeKernel>			m_pass1HdrCs;
-	std::shared_ptr<ComputeKernel>			m_pass1LdrCs;
-	std::shared_ptr<ComputeKernel>			m_resolveWorkCs;
-	std::shared_ptr<ComputeKernel>			m_pass2HDebugCs;
-	std::shared_ptr<ComputeKernel>			m_pass2HCs;
-	std::shared_ptr<ComputeKernel>			m_pass2VDebugCs;
-	std::shared_ptr<ComputeKernel>			m_pass2VCs;
+	ComputeKernel			m_pass1HdrCs;
+	ComputeKernel			m_pass1LdrCs;
+	ComputeKernel			m_resolveWorkCs;
+	ComputeKernel			m_pass2HDebugCs;
+	ComputeKernel			m_pass2HCs;
+	ComputeKernel			m_pass2VDebugCs;
+	ComputeKernel			m_pass2VCs;
 
 	// Render targets and UAV buffers
 	std::shared_ptr<ColorBuffer>			m_sceneColorBuffer;
@@ -74,7 +75,6 @@ private:
 	// Parameters
 	float m_contrastThreshold{ 0.175f };
 	float m_subpixelRemoval{ 0.5f };
-
 };
 
 } // namespace Kodiak

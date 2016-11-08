@@ -41,54 +41,43 @@ FXAA::FXAA()
 
 void FXAA::Initialize(uint32_t width, uint32_t height)
 {
-	m_resolveWorkCs = make_shared<ComputeKernel>();
-	m_resolveWorkCs->SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS");
-	auto waitTask = m_resolveWorkCs->loadTask;
+	m_resolveWorkCs.SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS");
+	auto waitTask = m_resolveWorkCs.loadTask;
 
 	if(DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{ 
-		m_pass1HdrCs = make_shared<ComputeKernel>();
-		m_pass1HdrCs->SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS");
-		waitTask = waitTask && m_pass1HdrCs->loadTask;
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS");
+		waitTask = waitTask && m_pass1HdrCs.loadTask;
 
-		m_pass1LdrCs = make_shared<ComputeKernel>();
-		m_pass1LdrCs->SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS");
-		waitTask = waitTask && m_pass1LdrCs->loadTask;
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS");
+		waitTask = waitTask && m_pass1LdrCs.loadTask;
 
-		m_pass2HCs = make_shared<ComputeKernel>();
-		m_pass2HCs->SetComputeShaderPath("Engine\\FXAAPass2H2CS");
-		waitTask = waitTask && m_pass2HCs->loadTask;
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2H2CS");
+		waitTask = waitTask && m_pass2HCs.loadTask;
 
-		m_pass2VCs = make_shared<ComputeKernel>();
-		m_pass2VCs->SetComputeShaderPath("Engine\\FXAAPass2V2CS");
-		waitTask = waitTask && m_pass2VCs->loadTask;
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2V2CS");
+		waitTask = waitTask && m_pass2VCs.loadTask;
 	}
 	else
 	{
-		m_pass1HdrCs = make_shared<ComputeKernel>();
-		m_pass1HdrCs->SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS");
-		waitTask = m_pass1HdrCs->loadTask;
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS");
+		waitTask = m_pass1HdrCs.loadTask;
 
-		m_pass1LdrCs = make_shared<ComputeKernel>();
-		m_pass1LdrCs->SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS");
-		waitTask = waitTask && m_pass1LdrCs->loadTask;
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS");
+		waitTask = waitTask && m_pass1LdrCs.loadTask;
 
-		m_pass2HCs = make_shared<ComputeKernel>();
-		m_pass2HCs->SetComputeShaderPath("Engine\\FXAAPass2HCS");
-		waitTask = waitTask && m_pass2HCs->loadTask;
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2HCS");
+		waitTask = waitTask && m_pass2HCs.loadTask;
 
-		m_pass2VCs = make_shared<ComputeKernel>();
-		m_pass2VCs->SetComputeShaderPath("Engine\\FXAAPass2VCS");
-		waitTask = waitTask && m_pass2VCs->loadTask;
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2VCS");
+		waitTask = waitTask && m_pass2VCs.loadTask;
 	}
 
-	m_pass2HDebugCs = make_shared<ComputeKernel>();
-	m_pass2HDebugCs->SetComputeShaderPath("Engine\\FXAAPass2HDebugCS");
-	waitTask = waitTask && m_pass2HDebugCs->loadTask;
+	m_pass2HDebugCs.SetComputeShaderPath("Engine\\FXAAPass2HDebugCS");
+	waitTask = waitTask && m_pass2HDebugCs.loadTask;
 
-	m_pass2VDebugCs = make_shared<ComputeKernel>();
-	m_pass2VDebugCs->SetComputeShaderPath("Engine\\FXAAPass2VDebugCS");
-	waitTask = waitTask && m_pass2VDebugCs->loadTask;
+	m_pass2VDebugCs.SetComputeShaderPath("Engine\\FXAAPass2VDebugCS");
+	waitTask = waitTask && m_pass2VDebugCs.loadTask;
 
 	m_fxaaWorkQueueH.Create("FXAA Horizontal Work Queue", 512 * 1024, 4);
 	m_fxaaWorkQueueV.Create("FXAA Vertical Work Queue", 512 * 1024, 4);
@@ -120,32 +109,32 @@ void FXAA::Render(GraphicsCommandList& commandList)
 		commandList.TransitionResource(m_fxaaColorQueueH, ResourceState::UnorderedAccess);
 		commandList.TransitionResource(m_fxaaColorQueueV, ResourceState::UnorderedAccess);
 
-		auto computeKernel = m_usePreComputedLuma ? m_pass1HdrCs : m_pass1LdrCs;
+		auto& computeKernel = m_usePreComputedLuma ? m_pass1HdrCs : m_pass1LdrCs;
 
-		computeKernel->GetResource("HWork")->SetUAVImmediate(m_fxaaWorkQueueH);
-		computeKernel->GetResource("VWork")->SetUAVImmediate(m_fxaaWorkQueueV);
-		computeKernel->GetResource("HColor")->SetUAVImmediate(m_fxaaColorQueueH);
-		computeKernel->GetResource("VColor")->SetUAVImmediate(m_fxaaColorQueueV);
-		computeKernel->GetResource("Color")->SetSRVImmediate(*target);
+		computeKernel.GetResource("HWork")->SetUAVImmediate(m_fxaaWorkQueueH);
+		computeKernel.GetResource("VWork")->SetUAVImmediate(m_fxaaWorkQueueV);
+		computeKernel.GetResource("HColor")->SetUAVImmediate(m_fxaaColorQueueH);
+		computeKernel.GetResource("VColor")->SetUAVImmediate(m_fxaaColorQueueV);
+		computeKernel.GetResource("Color")->SetSRVImmediate(*target);
 
-		computeKernel->GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
-		computeKernel->GetParameter("ContrastThreshold")->SetValueImmediate(m_contrastThreshold);
-		computeKernel->GetParameter("SubpixelRemoval")->SetValueImmediate(m_subpixelRemoval);
+		computeKernel.GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
+		computeKernel.GetParameter("ContrastThreshold")->SetValueImmediate(m_contrastThreshold);
+		computeKernel.GetParameter("SubpixelRemoval")->SetValueImmediate(m_subpixelRemoval);
 
 		if (m_usePreComputedLuma)
 		{
 			commandList.TransitionResource(*m_lumaBuffer, ResourceState::NonPixelShaderResource);
-			computeKernel->GetResource("Luma")->SetSRVImmediate(*m_lumaBuffer);
+			computeKernel.GetResource("Luma")->SetSRVImmediate(*m_lumaBuffer);
 		}
 		else
 		{
 			commandList.TransitionResource(*m_lumaBuffer, ResourceState::UnorderedAccess);
-			computeKernel->GetResource("Luma")->SetUAVImmediate(*m_lumaBuffer);
+			computeKernel.GetResource("Luma")->SetUAVImmediate(*m_lumaBuffer);
 		}
 
 		auto& compCommandList = commandList.GetComputeCommandList();
-		computeKernel->Dispatch2D(compCommandList, target->GetWidth(), target->GetHeight());
-		computeKernel->UnbindUAVs(compCommandList);
+		computeKernel.Dispatch2D(compCommandList, target->GetWidth(), target->GetHeight());
+		computeKernel.UnbindUAVs(compCommandList);
 
 		commandList.PIXEndEvent();
 	}
@@ -160,28 +149,28 @@ void FXAA::Render(GraphicsCommandList& commandList)
 
 #if DX11
 		// This preserves the structured buffers' hidden counter values from the previous phase
-		m_fxaaWorkQueueH->SetCounterInitialValue((uint32_t)-1);
-		m_fxaaWorkQueueV->SetCounterInitialValue((uint32_t)-1);
+		m_fxaaWorkQueueH.SetCounterInitialValue((uint32_t)-1);
+		m_fxaaWorkQueueV.SetCounterInitialValue((uint32_t)-1);
 #endif
 
-		m_resolveWorkCs->GetResource("IndirectParams")->SetUAVImmediate(m_indirectParameters);
-		m_resolveWorkCs->GetResource("WorkQueueH")->SetUAVImmediate(m_fxaaWorkQueueH);
-		m_resolveWorkCs->GetResource("WorkQueueV")->SetUAVImmediate(m_fxaaWorkQueueV);
+		m_resolveWorkCs.GetResource("IndirectParams")->SetUAVImmediate(m_indirectParameters);
+		m_resolveWorkCs.GetResource("WorkQueueH")->SetUAVImmediate(m_fxaaWorkQueueH);
+		m_resolveWorkCs.GetResource("WorkQueueV")->SetUAVImmediate(m_fxaaWorkQueueV);
 
 #if DX12
 		// Read the structured buffers' counter buffers directly
 		commandList.TransitionResource(*m_fxaaWorkQueueH.GetCounterBuffer(), ResourceState::GenericRead);
 		commandList.TransitionResource(*m_fxaaWorkQueueV.GetCounterBuffer(), ResourceState::GenericRead);
 #elif DX11
-		commandList.CopyCounter(*m_fxaaWorkQueueH->GetCounterBuffer(), 0, *m_fxaaWorkQueueH);
-		commandList.CopyCounter(*m_fxaaWorkQueueV->GetCounterBuffer(), 0, *m_fxaaWorkQueueV);
+		commandList.CopyCounter(*m_fxaaWorkQueueH.GetCounterBuffer(), 0, m_fxaaWorkQueueH);
+		commandList.CopyCounter(*m_fxaaWorkQueueV.GetCounterBuffer(), 0, m_fxaaWorkQueueV);
 #endif
-		m_resolveWorkCs->GetResource("WorkCounterH")->SetSRVImmediate(*m_fxaaWorkQueueH.GetCounterBuffer());
-		m_resolveWorkCs->GetResource("WorkCounterV")->SetSRVImmediate(*m_fxaaWorkQueueV.GetCounterBuffer());
+		m_resolveWorkCs.GetResource("WorkCounterH")->SetSRVImmediate(*m_fxaaWorkQueueH.GetCounterBuffer());
+		m_resolveWorkCs.GetResource("WorkCounterV")->SetSRVImmediate(*m_fxaaWorkQueueV.GetCounterBuffer());
 
 		auto& compCommandList = commandList.GetComputeCommandList();
-		m_resolveWorkCs->Dispatch(compCommandList, 1, 1, 1);
-		m_resolveWorkCs->UnbindUAVs(compCommandList);
+		m_resolveWorkCs.Dispatch(compCommandList, 1, 1, 1);
+		m_resolveWorkCs.UnbindUAVs(compCommandList);
 
 		commandList.TransitionResource(*target, ResourceState::UnorderedAccess);
 		commandList.TransitionResource(m_indirectParameters, ResourceState::IndirectArgument);
@@ -190,27 +179,34 @@ void FXAA::Render(GraphicsCommandList& commandList)
 		commandList.TransitionResource(m_fxaaColorQueueH, ResourceState::NonPixelShaderResource);
 		commandList.TransitionResource(m_fxaaColorQueueV, ResourceState::NonPixelShaderResource);
 
-		auto computeKernel = m_debugDraw ? m_pass2HDebugCs : m_pass2HCs;
+		// Horizontal pass
+		{
+			auto& computeKernel = m_debugDraw ? m_pass2HDebugCs : m_pass2HCs;
 
-		computeKernel->GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
-		computeKernel->GetResource("DstColor")->SetUAVImmediate(*target);
-		computeKernel->GetResource("Luma")->SetSRVImmediate(*m_lumaBuffer);
-		computeKernel->GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueH);
-		computeKernel->GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueH);
+			computeKernel.GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
+			computeKernel.GetResource("DstColor")->SetUAVImmediate(*target);
+			computeKernel.GetResource("Luma")->SetSRVImmediate(*m_lumaBuffer);
+			computeKernel.GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueH);
+			computeKernel.GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueH);
 
-		computeKernel->DispatchIndirect(compCommandList, m_indirectParameters, 0);
-		computeKernel->UnbindUAVs(compCommandList);
+			computeKernel.DispatchIndirect(compCommandList, m_indirectParameters, 0);
+			computeKernel.UnbindUAVs(compCommandList);
+		}
 
-		computeKernel = m_debugDraw ? m_pass2VDebugCs : m_pass2VCs;
 
-		computeKernel->GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
-		computeKernel->GetResource("DstColor")->SetUAVImmediate(*target);
-		computeKernel->GetResource("Luma")->SetSRVImmediate(*m_lumaBuffer);
-		computeKernel->GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueV);
-		computeKernel->GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueV);
+		// Vertical pass
+		{
+			auto& computeKernel = m_debugDraw ? m_pass2VDebugCs : m_pass2VCs;
 
-		computeKernel->DispatchIndirect(compCommandList, m_indirectParameters, 12);
-		computeKernel->UnbindUAVs(compCommandList);
+			computeKernel.GetParameter("RcpTextureSize")->SetValueImmediate(XMFLOAT2(1.0f / target->GetWidth(), 1.0f / target->GetHeight()));
+			computeKernel.GetResource("DstColor")->SetUAVImmediate(*target);
+			computeKernel.GetResource("Luma")->SetSRVImmediate(*m_lumaBuffer);
+			computeKernel.GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueV);
+			computeKernel.GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueV);
+
+			computeKernel.DispatchIndirect(compCommandList, m_indirectParameters, 12);
+			computeKernel.UnbindUAVs(compCommandList);
+		}
 
 		compCommandList.InsertUAVBarrier(*target);
 
