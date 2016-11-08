@@ -47,6 +47,13 @@ void ComputeKernel::SetComputeShaderPath(const string& shaderPath)
 }
 
 
+void ComputeKernel::SetComputeShaderPath(const string& shaderPath, concurrency::task<void>& waitTask)
+{
+	SetComputeShaderPath(shaderPath);
+	waitTask = waitTask && loadTask;
+}
+
+
 shared_ptr<ComputeConstantBuffer> ComputeKernel::GetConstantBuffer(const string& name)
 {
 	lock_guard<mutex> CS(m_constantBufferLock);

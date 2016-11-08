@@ -41,44 +41,28 @@ FXAA::FXAA()
 
 void FXAA::Initialize(uint32_t width, uint32_t height)
 {
-	m_resolveWorkCs.SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS");
-	auto waitTask = m_resolveWorkCs.loadTask;
+	auto waitTask = concurrency::create_task([] {});
+
+	m_resolveWorkCs.SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS", waitTask);
 
 	if(DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{ 
-		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS");
-		waitTask = waitTask && m_pass1HdrCs.loadTask;
-
-		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS");
-		waitTask = waitTask && m_pass1LdrCs.loadTask;
-
-		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2H2CS");
-		waitTask = waitTask && m_pass2HCs.loadTask;
-
-		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2V2CS");
-		waitTask = waitTask && m_pass2VCs.loadTask;
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS", waitTask);
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS", waitTask);
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2H2CS", waitTask);
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2V2CS", waitTask);
 	}
 	else
 	{
-		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS");
-		waitTask = m_pass1HdrCs.loadTask;
-
-		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS");
-		waitTask = waitTask && m_pass1LdrCs.loadTask;
-
-		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2HCS");
-		waitTask = waitTask && m_pass2HCs.loadTask;
-
-		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2VCS");
-		waitTask = waitTask && m_pass2VCs.loadTask;
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS", waitTask);
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS", waitTask);
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2HCS", waitTask);
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2VCS", waitTask);
 	}
 
-	m_pass2HDebugCs.SetComputeShaderPath("Engine\\FXAAPass2HDebugCS");
-	waitTask = waitTask && m_pass2HDebugCs.loadTask;
-
-	m_pass2VDebugCs.SetComputeShaderPath("Engine\\FXAAPass2VDebugCS");
-	waitTask = waitTask && m_pass2VDebugCs.loadTask;
-
+	m_pass2HDebugCs.SetComputeShaderPath("Engine\\FXAAPass2HDebugCS", waitTask);
+	m_pass2VDebugCs.SetComputeShaderPath("Engine\\FXAAPass2VDebugCS", waitTask);
+	
 	m_fxaaWorkQueueH.Create("FXAA Horizontal Work Queue", 512 * 1024, 4);
 	m_fxaaWorkQueueV.Create("FXAA Vertical Work Queue", 512 * 1024, 4);
 	m_fxaaColorQueueH.Create("FXAA Horizontal Color Queue", 512 * 1024, 4);
