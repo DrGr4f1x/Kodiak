@@ -67,7 +67,7 @@ void CommandList::CopyCounter(GpuBuffer& dest, size_t destOffset, StructuredBuff
 
 void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src)
 {
-	CommandList* commandList = CommandList::Begin();
+	auto& commandList = CommandList::Begin();
 
 	auto destResource = dest.GetResource();
 	auto srcResource = src.GetResource();
@@ -101,7 +101,7 @@ void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex
 
 	for (UINT i = 0; i < destDesc.MipLevels; ++i)
 	{
-		commandList->m_context->CopySubresourceRegion(
+		commandList.m_context->CopySubresourceRegion(
 			destResource,
 			subresourceIndex + i,
 			0,
@@ -112,7 +112,7 @@ void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex
 			nullptr);
 	}
 
-	commandList->CloseAndExecute(true);
+	commandList.CloseAndExecute(true);
 }
 
 
@@ -168,10 +168,10 @@ void CommandList::ResetCounter(StructuredBuffer& buf, uint32_t value)
 }
 
 
-CommandList* CommandList::Begin()
+CommandList& CommandList::Begin()
 {
 	CommandList* newCommandList = CommandList::AllocateCommandList();
-	return newCommandList;
+	return *newCommandList;
 }
 
 

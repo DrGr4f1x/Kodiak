@@ -50,8 +50,8 @@ private:
 	void CreateWindowSizeDependentResources();
 	void CreatePresentState();
 
-	void PreparePresentLDR(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource);
-	void PreparePresentHDR(GraphicsCommandList* commandList, std::shared_ptr<ColorBuffer> presentSource, const struct PresentParameters& params);
+	void PreparePresentLDR(GraphicsCommandList& commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresentHDR(GraphicsCommandList& commandList, std::shared_ptr<ColorBuffer> presentSource, const struct PresentParameters& params);
 
 private:
 	// Direct3D objects

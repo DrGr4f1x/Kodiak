@@ -46,7 +46,7 @@ void PixelBuffer::AssociateWithResource(const string& name, ID3D12Resource* reso
 	m_resource = resource;
 	m_usageState = currentState;
 
-	m_width = resourceDesc.Width;
+	m_width = static_cast<uint32_t>(resourceDesc.Width);
 	m_height = resourceDesc.Height;
 	m_arraySize = resourceDesc.DepthOrArraySize;
 	m_format = resourceDesc.Format;

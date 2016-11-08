@@ -108,23 +108,23 @@ void FXAA::Initialize(uint32_t width, uint32_t height)
 }
 
 
-void FXAA::Render(GraphicsCommandList* commandList)
+void FXAA::Render(GraphicsCommandList& commandList)
 {
-	commandList->PIXBeginEvent("FXAA");
+	commandList.PIXBeginEvent("FXAA");
 
 	auto target = DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT() ? m_sceneColorBuffer : m_postEffectsBuffer;
 
 	{
-		commandList->PIXBeginEvent("Pass 1");
+		commandList.PIXBeginEvent("Pass 1");
 
-		commandList->ResetCounter(*m_fxaaWorkQueueH);
-		commandList->ResetCounter(*m_fxaaWorkQueueV);
+		commandList.ResetCounter(*m_fxaaWorkQueueH);
+		commandList.ResetCounter(*m_fxaaWorkQueueV);
 
-		commandList->TransitionResource(*target, ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_fxaaWorkQueueH, ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_fxaaWorkQueueV, ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_fxaaColorQueueH, ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_fxaaColorQueueV, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*target, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_fxaaWorkQueueH, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_fxaaWorkQueueV, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_fxaaColorQueueH, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_fxaaColorQueueV, ResourceState::UnorderedAccess);
 
 		auto computeKernel = m_usePreComputedLuma ? m_pass1HdrCs : m_pass1LdrCs;
 
@@ -140,29 +140,29 @@ void FXAA::Render(GraphicsCommandList* commandList)
 
 		if (m_usePreComputedLuma)
 		{
-			commandList->TransitionResource(*m_lumaBuffer, ResourceState::NonPixelShaderResource);
+			commandList.TransitionResource(*m_lumaBuffer, ResourceState::NonPixelShaderResource);
 			computeKernel->GetResource("Luma")->SetSRVImmediate(m_lumaBuffer);
 		}
 		else
 		{
-			commandList->TransitionResource(*m_lumaBuffer, ResourceState::UnorderedAccess);
+			commandList.TransitionResource(*m_lumaBuffer, ResourceState::UnorderedAccess);
 			computeKernel->GetResource("Luma")->SetUAVImmediate(m_lumaBuffer);
 		}
 
-		auto computeCommandList = commandList->GetComputeCommandList();
-		computeKernel->Dispatch2D(computeCommandList, target->GetWidth(), target->GetHeight());
-		computeKernel->UnbindUAVs(computeCommandList);
+		auto& compCommandList = commandList.GetComputeCommandList();
+		computeKernel->Dispatch2D(compCommandList, target->GetWidth(), target->GetHeight());
+		computeKernel->UnbindUAVs(compCommandList);
 
-		commandList->PIXEndEvent();
+		commandList.PIXEndEvent();
 	}
 
 	{
-		commandList->PIXBeginEvent("Pass 2");
+		commandList.PIXBeginEvent("Pass 2");
 
 		// The next phase involves converting the work queues to DispatchIndirect parameters.
 		// The queues are also padded out to 64 elements to simplify the final consume logic.
 
-		commandList->TransitionResource(*m_indirectParameters, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_indirectParameters, ResourceState::UnorderedAccess);
 
 #if DX11
 		// This preserves the structured buffers' hidden counter values from the previous phase
@@ -176,25 +176,25 @@ void FXAA::Render(GraphicsCommandList* commandList)
 
 #if DX12
 		// Read the structured buffers' counter buffers directly
-		commandList->TransitionResource(*m_fxaaWorkQueueH->GetCounterBuffer(), ResourceState::GenericRead);
-		commandList->TransitionResource(*m_fxaaWorkQueueV->GetCounterBuffer(), ResourceState::GenericRead);
+		commandList.TransitionResource(*m_fxaaWorkQueueH->GetCounterBuffer(), ResourceState::GenericRead);
+		commandList.TransitionResource(*m_fxaaWorkQueueV->GetCounterBuffer(), ResourceState::GenericRead);
 #elif DX11
-		commandList->CopyCounter(*m_fxaaWorkQueueH->GetCounterBuffer(), 0, *m_fxaaWorkQueueH);
-		commandList->CopyCounter(*m_fxaaWorkQueueV->GetCounterBuffer(), 0, *m_fxaaWorkQueueV);
+		commandList.CopyCounter(*m_fxaaWorkQueueH->GetCounterBuffer(), 0, *m_fxaaWorkQueueH);
+		commandList.CopyCounter(*m_fxaaWorkQueueV->GetCounterBuffer(), 0, *m_fxaaWorkQueueV);
 #endif
 		m_resolveWorkCs->GetResource("WorkCounterH")->SetSRVImmediate(m_fxaaWorkQueueH->GetCounterBuffer());
 		m_resolveWorkCs->GetResource("WorkCounterV")->SetSRVImmediate(m_fxaaWorkQueueV->GetCounterBuffer());
 
-		auto computeCommandList = commandList->GetComputeCommandList();
-		m_resolveWorkCs->Dispatch(computeCommandList, 1, 1, 1);
-		m_resolveWorkCs->UnbindUAVs(computeCommandList);
+		auto& compCommandList = commandList.GetComputeCommandList();
+		m_resolveWorkCs->Dispatch(compCommandList, 1, 1, 1);
+		m_resolveWorkCs->UnbindUAVs(compCommandList);
 
-		commandList->TransitionResource(*target, ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_indirectParameters, ResourceState::IndirectArgument);
-		commandList->TransitionResource(*m_fxaaWorkQueueH, ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_fxaaWorkQueueV, ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_fxaaColorQueueH, ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_fxaaColorQueueV, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*target, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_indirectParameters, ResourceState::IndirectArgument);
+		commandList.TransitionResource(*m_fxaaWorkQueueH, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_fxaaWorkQueueV, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_fxaaColorQueueH, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_fxaaColorQueueV, ResourceState::NonPixelShaderResource);
 
 		auto computeKernel = m_debugDraw ? m_pass2HDebugCs : m_pass2HCs;
 
@@ -204,8 +204,8 @@ void FXAA::Render(GraphicsCommandList* commandList)
 		computeKernel->GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueH);
 		computeKernel->GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueH);
 
-		computeKernel->DispatchIndirect(computeCommandList, *m_indirectParameters, 0);
-		computeKernel->UnbindUAVs(computeCommandList);
+		computeKernel->DispatchIndirect(compCommandList, *m_indirectParameters, 0);
+		computeKernel->UnbindUAVs(compCommandList);
 
 		computeKernel = m_debugDraw ? m_pass2VDebugCs : m_pass2VCs;
 
@@ -215,13 +215,13 @@ void FXAA::Render(GraphicsCommandList* commandList)
 		computeKernel->GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueV);
 		computeKernel->GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueV);
 
-		computeKernel->DispatchIndirect(computeCommandList, *m_indirectParameters, 12);
-		computeKernel->UnbindUAVs(computeCommandList);
+		computeKernel->DispatchIndirect(compCommandList, *m_indirectParameters, 12);
+		computeKernel->UnbindUAVs(compCommandList);
 
-		computeCommandList->InsertUAVBarrier(*target);
+		compCommandList.InsertUAVBarrier(*target);
 
-		commandList->PIXEndEvent();
+		commandList.PIXEndEvent();
 	}
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }

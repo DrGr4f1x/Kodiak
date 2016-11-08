@@ -279,18 +279,18 @@ shared_ptr<RootRenderTask> BasicApplication::SetupFrame()
 	rootTask->SetName("Root task");
 	rootTask->Render = [this]
 	{
-		auto commandList = GraphicsCommandList::Begin();
+		auto& commandList = GraphicsCommandList::Begin();
 
-		commandList->SetRenderTarget(*m_colorTarget, *m_depthBuffer);
-		commandList->SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-		commandList->SetScissor(0, 0, m_width, m_height);
-		commandList->ClearColor(*m_colorTarget);
-		commandList->ClearDepth(*m_depthBuffer);
+		commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+		commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+		commandList.SetScissor(0, 0, m_width, m_height);
+		commandList.ClearColor(*m_colorTarget);
+		commandList.ClearDepth(*m_depthBuffer);
 
 		m_mainScene->Update(commandList);
 		m_mainScene->Render(GetDefaultBasePass(), commandList);
 
-		commandList->CloseAndExecute();
+		commandList.CloseAndExecute();
 	};
 	
 

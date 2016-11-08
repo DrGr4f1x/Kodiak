@@ -60,20 +60,20 @@ public:
 	ThreadParameter<float> ToeStrength;
 
 	// Render post effects
-	void Render(GraphicsCommandList* commandList);
+	void Render(GraphicsCommandList& commandList);
 	
-	void FinalizePostProcessing(GraphicsCommandList* commandList);
-	void RenderHistogram(GraphicsCommandList* commandList);
+	void FinalizePostProcessing(GraphicsCommandList& commandList);
+	void RenderHistogram(GraphicsCommandList& commandList);
 
 private:
-	void ProcessHDR(ComputeCommandList* commandList);
-	void ProcessLDR(ComputeCommandList* commandList);
+	void ProcessHDR(ComputeCommandList& commandList);
+	void ProcessLDR(ComputeCommandList& commandList);
 
-	void GenerateBloom(ComputeCommandList* commandList);
-	void ExtractLuma(ComputeCommandList* commandList);
-	void BlurBuffer(ComputeCommandList* commandList, uint32_t blurKernelIndex, std::shared_ptr<ColorBuffer> buffer[2], std::shared_ptr<ColorBuffer> lowerResBuf,
+	void GenerateBloom(ComputeCommandList& commandList);
+	void ExtractLuma(ComputeCommandList& commandList);
+	void BlurBuffer(ComputeCommandList& commandList, uint32_t blurKernelIndex, std::shared_ptr<ColorBuffer> buffer[2], std::shared_ptr<ColorBuffer> lowerResBuf,
 		uint32_t bufferWidth, uint32_t bufferHeight, float upsampleBlendFactor);
-	void UpdateExposure(ComputeCommandList* commandList);
+	void UpdateExposure(ComputeCommandList& commandList);
 
 #if DX11
 	void InitializeSamplers();

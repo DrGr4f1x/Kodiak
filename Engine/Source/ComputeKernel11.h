@@ -46,15 +46,15 @@ public:
 
 	void SetConstantBufferDataImmediate(const std::string& cbufferName, const byte* data, size_t dataSizeInBytes);
 
-	void Dispatch(ComputeCommandList* commandList, size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
-	void Dispatch1D(ComputeCommandList* commandList, size_t threadCountX, size_t groupSizeX = 64);
-	void Dispatch2D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
-	void Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, 
+	void Dispatch(ComputeCommandList& commandList, size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
+	void Dispatch1D(ComputeCommandList& commandList, size_t threadCountX, size_t groupSizeX = 64);
+	void Dispatch2D(ComputeCommandList& commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
+	void Dispatch3D(ComputeCommandList& commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, 
 		size_t groupSizeY, size_t groupSizeZ);
-	void DispatchIndirect(ComputeCommandList* commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
+	void DispatchIndirect(ComputeCommandList& commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 
-	void UnbindSRVs(ComputeCommandList* commandList);
-	void UnbindUAVs(ComputeCommandList* commandList);
+	void UnbindSRVs(ComputeCommandList& commandList);
+	void UnbindUAVs(ComputeCommandList& commandList);
 
 private:
 	void SetupKernel();
@@ -88,9 +88,9 @@ struct ComputeData
 		_aligned_free(cbufferData);
 	}
 
-	void Commit(ComputeCommandList* commandList);
-	void UnbindSRVs(ComputeCommandList* commandList);
-	void UnbindUAVs(ComputeCommandList* commandList);
+	void Commit(ComputeCommandList& commandList);
+	void UnbindSRVs(ComputeCommandList& commandList);
+	void UnbindUAVs(ComputeCommandList& commandList);
 
 	std::shared_ptr<ComputePSO>		pso;
 

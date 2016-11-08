@@ -190,34 +190,34 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 }
 
 
-void PostProcessing::Render(GraphicsCommandList* commandList)
+void PostProcessing::Render(GraphicsCommandList& commandList)
 {
-	ComputeCommandList* computeCommandList = commandList->GetComputeCommandList();
+	auto& compCommandList = commandList.GetComputeCommandList();
 
-	computeCommandList->PIXBeginEvent("Post Effects");
+	compCommandList.PIXBeginEvent("Post Effects");
 
-	computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::ShaderResourceGeneric);
+	compCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::ShaderResourceGeneric);
 #if DX11
 	ColorBuffer nullRenderTarget;
-	commandList->SetRenderTarget(nullRenderTarget);
+	commandList.SetRenderTarget(nullRenderTarget);
 #endif
 
 	if(m_enableHDR && !m_debugDrawSSAO)
 	{ 
-		ProcessHDR(computeCommandList);
+		ProcessHDR(compCommandList);
 	}
 	else
 	{
-		ProcessLDR(computeCommandList);
+		ProcessLDR(compCommandList);
 	}
 
 	
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }
 
 
-void PostProcessing::FinalizePostProcessing(GraphicsCommandList* commandList)
+void PostProcessing::FinalizePostProcessing(GraphicsCommandList& commandList)
 {
 	// In the case where we've been doing post processing in a separate buffer, we need to copy it
 	// back to the original buffer.  It is possible to skip this step if the next shader knows to
@@ -228,58 +228,58 @@ void PostProcessing::FinalizePostProcessing(GraphicsCommandList* commandList)
 
 	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
-		ComputeCommandList* computeCommandList = commandList->GetComputeCommandList();
+		auto& compCommandList = commandList.GetComputeCommandList();
 
-		computeCommandList->PIXBeginEvent("Copy Post back to Scene");
+		compCommandList.PIXBeginEvent("Copy Post back to Scene");
 
-		computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_postEffectsBuffer, ResourceState::NonPixelShaderResource);
+		compCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(*m_postEffectsBuffer, ResourceState::NonPixelShaderResource);
 
 		m_copyPostToSceneCs->GetResource("SceneColor")->SetUAVImmediate(m_sceneColorBuffer);
 		m_copyPostToSceneCs->GetResource("PostBuffer")->SetSRVImmediate(m_postEffectsBuffer);
 
-		m_copyPostToSceneCs->Dispatch2D(computeCommandList, m_sceneColorBuffer->GetWidth(), m_sceneColorBuffer->GetHeight());
-		m_copyPostToSceneCs->UnbindUAVs(computeCommandList);
+		m_copyPostToSceneCs->Dispatch2D(compCommandList, m_sceneColorBuffer->GetWidth(), m_sceneColorBuffer->GetHeight());
+		m_copyPostToSceneCs->UnbindUAVs(compCommandList);
 
-		computeCommandList->PIXEndEvent();
+		compCommandList.PIXEndEvent();
 	}
 }
 
 
-void PostProcessing::RenderHistogram(GraphicsCommandList* commandList)
+void PostProcessing::RenderHistogram(GraphicsCommandList& commandList)
 {
 	if (m_drawHistogram)
 	{
-		ComputeCommandList* computeCommandList = commandList->GetComputeCommandList();
+		auto& compCommandList = commandList.GetComputeCommandList();
 
-		computeCommandList->PIXBeginEvent("Debug Histogram");
+		compCommandList.PIXBeginEvent("Debug Histogram");
 
-		computeCommandList->InsertUAVBarrier(*m_sceneColorBuffer);
-		computeCommandList->TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+		compCommandList.InsertUAVBarrier(*m_sceneColorBuffer);
+		compCommandList.TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
+		compCommandList.TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
 		m_debugDrawHistogramCs->GetResource("Histogram")->SetSRVImmediate(m_histogram);
 		m_debugDrawHistogramCs->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
 		m_debugDrawHistogramCs->GetResource("ColorBuffer")->SetUAVImmediate(m_sceneColorBuffer);
 
-		m_debugDrawHistogramCs->Dispatch(computeCommandList, 1, 32);
+		m_debugDrawHistogramCs->Dispatch(compCommandList, 1, 32);
 
-		computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
-		m_debugDrawHistogramCs->UnbindUAVs(computeCommandList);
+		compCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
+		m_debugDrawHistogramCs->UnbindUAVs(compCommandList);
 
-		computeCommandList->PIXEndEvent();
+		compCommandList.PIXEndEvent();
 	}
 }
 
 
-void PostProcessing::ProcessHDR(ComputeCommandList* commandList)
+void PostProcessing::ProcessHDR(ComputeCommandList& commandList)
 {
-	commandList->PIXBeginEvent("HDR Tone Mapping");
+	commandList.PIXBeginEvent("HDR Tone Mapping");
 
 	if (m_enableBloom)
 	{
 		GenerateBloom(commandList);
-		commandList->TransitionResource(*m_bloomUAV1[1], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_bloomUAV1[1], ResourceState::NonPixelShaderResource);
 	}
 	else if (m_enableAdaptation)
 	{
@@ -288,14 +288,14 @@ void PostProcessing::ProcessHDR(ComputeCommandList* commandList)
 
 	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
-		commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
 	}
 	else
 	{
-		commandList->TransitionResource(*m_postEffectsBuffer, ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_postEffectsBuffer, ResourceState::UnorderedAccess);
 	}
-	commandList->TransitionResource(*m_lumaBuffer, ResourceState::UnorderedAccess);
-	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*m_lumaBuffer, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
 	auto computeKernel = m_debugLuminance ? m_debugLuminanceHdrCs : (false ? m_toneMapHdrCs : m_toneMapCs);
 
@@ -336,23 +336,23 @@ void PostProcessing::ProcessHDR(ComputeCommandList* commandList)
 	// Do this last so that the bright pass uses the same exposure as tone mapping
 	UpdateExposure(commandList);
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }
 
 
-void PostProcessing::ProcessLDR(ComputeCommandList* commandList)
+void PostProcessing::ProcessLDR(ComputeCommandList& commandList)
 {
-	commandList->PIXBeginEvent("LDR Processing");
+	commandList.PIXBeginEvent("LDR Processing");
 
 	// TODO: implement this
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }
 
 
-void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
+void PostProcessing::GenerateBloom(ComputeCommandList& commandList)
 {
-	commandList->PIXBeginEvent("Generate Bloom");
+	commandList.PIXBeginEvent("Generate Bloom");
 
 	auto computeKernel = m_enableHDR ? m_bloomExtractAndDownsampleHdrCs : m_bloomExtractAndDownsampleLdrCs;
 
@@ -362,10 +362,9 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 	computeKernel->GetParameter("g_inverseOutputSize")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
 	computeKernel->GetParameter("g_bloomThreshold")->SetValueImmediate(m_bloomThreshold);
 
-	commandList->TransitionResource(*m_bloomUAV1[0], ResourceState::UnorderedAccess);
-	commandList->TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
-	//commandList->TransitionResource(*m_sceneColorBuffer, ResourceState::NonPixelShaderResource);
-	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*m_bloomUAV1[0], ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
 	computeKernel->GetResource("SourceTex")->SetSRVImmediate(m_sceneColorBuffer);
 	computeKernel->GetResource("Exposure")->SetSRVImmediate(m_exposureBuffer);
@@ -376,14 +375,14 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 	computeKernel->UnbindUAVs(commandList);
 	computeKernel->UnbindSRVs(commandList);
 
-	commandList->TransitionResource(*m_bloomUAV1[0], ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*m_bloomUAV1[0], ResourceState::NonPixelShaderResource);
 
 	if (m_highQualityBloom)
 	{
-		commandList->TransitionResource(*m_bloomUAV2[0], ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_bloomUAV3[0], ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_bloomUAV4[0], ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_bloomUAV5[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_bloomUAV2[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_bloomUAV3[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_bloomUAV4[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_bloomUAV5[0], ResourceState::UnorderedAccess);
 
 		m_downsampleBloom4Cs->GetParameter("g_inverseDimensions")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
 		m_downsampleBloom4Cs->GetResource("BloomBuf")->SetSRVImmediate(m_bloomUAV1[0]);
@@ -395,10 +394,10 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 		m_downsampleBloom4Cs->Dispatch2D(commandList, m_bloomWidth / 2, m_bloomHeight / 2);
 		m_downsampleBloom4Cs->UnbindUAVs(commandList);
 
-		commandList->TransitionResource(*m_bloomUAV2[0], ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_bloomUAV3[0], ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_bloomUAV4[0], ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_bloomUAV5[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_bloomUAV2[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_bloomUAV3[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_bloomUAV4[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_bloomUAV5[0], ResourceState::NonPixelShaderResource);
 
 		float upsampleBlendFactor = m_bloomUpsampleFactor;
 
@@ -411,8 +410,8 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 	}
 	else
 	{
-		commandList->TransitionResource(*m_bloomUAV3[0], ResourceState::UnorderedAccess);
-		commandList->TransitionResource(*m_bloomUAV5[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_bloomUAV3[0], ResourceState::UnorderedAccess);
+		commandList.TransitionResource(*m_bloomUAV5[0], ResourceState::UnorderedAccess);
 
 		m_downsampleBloom2Cs->GetParameter("g_inverseDimensions")->SetValueImmediate(XMFLOAT2(invBloomWidth, invBloomHeight));
 		m_downsampleBloom2Cs->GetResource("BloomBuf")->SetSRVImmediate(m_bloomUAV1[0]);
@@ -422,8 +421,8 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 		m_downsampleBloom2Cs->Dispatch2D(commandList, m_bloomWidth / 2, m_bloomHeight / 2);
 		m_downsampleBloom2Cs->UnbindUAVs(commandList);
 
-		commandList->TransitionResource(*m_bloomUAV3[0], ResourceState::NonPixelShaderResource);
-		commandList->TransitionResource(*m_bloomUAV5[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_bloomUAV3[0], ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*m_bloomUAV5[0], ResourceState::NonPixelShaderResource);
 
 		float upsampleBlendFactor = m_bloomUpsampleFactor * 2.0f / 3.0f;
 
@@ -433,13 +432,13 @@ void PostProcessing::GenerateBloom(ComputeCommandList* commandList)
 		BlurBuffer(commandList, 2, m_bloomUAV1, m_bloomUAV3[1], m_bloomWidth, m_bloomHeight, upsampleBlendFactor);
 	}
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }
 
 
-void PostProcessing::ExtractLuma(ComputeCommandList* commandList)
+void PostProcessing::ExtractLuma(ComputeCommandList& commandList)
 {
-	commandList->TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*m_lumaLR, ResourceState::UnorderedAccess);
 
 	const float invBloomWidth = 1.0f / static_cast<float>(m_bloomWidth);
 	const float invBloomHeight = 1.0f / static_cast<float>(m_bloomHeight);
@@ -453,14 +452,14 @@ void PostProcessing::ExtractLuma(ComputeCommandList* commandList)
 }
 
 
-void PostProcessing::BlurBuffer(ComputeCommandList* commandList, uint32_t blurKernelIndex, std::shared_ptr<ColorBuffer> buffer[2],
+void PostProcessing::BlurBuffer(ComputeCommandList& commandList, uint32_t blurKernelIndex, std::shared_ptr<ColorBuffer> buffer[2],
 	std::shared_ptr<ColorBuffer> lowerResBuf, uint32_t bufferWidth, uint32_t bufferHeight, float upsampleBlendFactor)
 {
 	// Select compute kernel: upsample-and-blur, or just blur
 	const bool blurOnly = (buffer[0] == lowerResBuf);
 	auto computeKernel = blurOnly ? m_blurCs[blurKernelIndex] : m_upsampleAndBlurCs[blurKernelIndex];
 
-	commandList->TransitionResource(*buffer[1], ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*buffer[1], ResourceState::UnorderedAccess);
 
 	computeKernel->GetParameter("g_inverseDimensions")->SetValueImmediate(XMFLOAT2(1.0f / bufferWidth, 1.0f / bufferHeight));
 	if (blurOnly)
@@ -479,13 +478,13 @@ void PostProcessing::BlurBuffer(ComputeCommandList* commandList, uint32_t blurKe
 	computeKernel->Dispatch2D(commandList, bufferWidth, bufferHeight);
 	computeKernel->UnbindUAVs(commandList);
 
-	commandList->TransitionResource(*buffer[1], ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*buffer[1], ResourceState::NonPixelShaderResource);
 }
 
 
-void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
+void PostProcessing::UpdateExposure(ComputeCommandList& commandList)
 {
-	commandList->PIXBeginEvent("Update Exposure");
+	commandList.PIXBeginEvent("Update Exposure");
 
 	if (!m_enableAdaptation)
 	{
@@ -495,17 +494,17 @@ void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
 			m_initialMinLog, m_initialMaxLog, m_initialMaxLog - m_initialMinLog, 1.0f / (m_initialMaxLog - m_initialMinLog)
 		};
 
-		commandList->WriteBuffer(*m_exposureBuffer, 0, initExposure, sizeof(initExposure));
-		commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+		commandList.WriteBuffer(*m_exposureBuffer, 0, initExposure, sizeof(initExposure));
+		commandList.TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-		commandList->PIXEndEvent();
+		commandList.PIXEndEvent();
 
 		return;
 	}
 
-	commandList->ClearUAV(*m_histogram);
-	commandList->TransitionResource(*m_histogram, ResourceState::UnorderedAccess);
-	commandList->TransitionResource(*m_lumaLR, ResourceState::NonPixelShaderResource);
+	commandList.ClearUAV(*m_histogram);
+	commandList.TransitionResource(*m_histogram, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*m_lumaLR, ResourceState::NonPixelShaderResource);
 
 	m_generateHistogramCs->GetResource("LumaBuf")->SetSRVImmediate(m_lumaLR);
 	m_generateHistogramCs->GetResource("Histogram")->SetUAVImmediate(m_histogram);
@@ -513,8 +512,8 @@ void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
 	m_generateHistogramCs->Dispatch2D(commandList, m_bloomWidth, m_bloomHeight, 16, 384);
 	m_generateHistogramCs->UnbindUAVs(commandList);
 
-	commandList->TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
-	commandList->TransitionResource(*m_exposureBuffer, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*m_histogram, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*m_exposureBuffer, ResourceState::UnorderedAccess);
 
 	m_adaptExposureCs->GetResource("Histogram")->SetSRVImmediate(m_histogram);
 	m_adaptExposureCs->GetResource("Exposure")->SetUAVImmediate(m_exposureBuffer);
@@ -528,9 +527,9 @@ void PostProcessing::UpdateExposure(ComputeCommandList* commandList)
 	m_adaptExposureCs->Dispatch(commandList);
 	m_adaptExposureCs->UnbindUAVs(commandList);
 
-	commandList->TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*m_exposureBuffer, ResourceState::NonPixelShaderResource);
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }
 
 

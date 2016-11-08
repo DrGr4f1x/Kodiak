@@ -85,7 +85,7 @@ void DeviceManager::Finalize()
 
 void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource, bool bHDRPresent, const PresentParameters& params)
 {
-	auto commandList = GraphicsCommandList::Begin();
+	auto& commandList = GraphicsCommandList::Begin();
 
 	if(bHDRPresent)
 	{ 
@@ -96,9 +96,8 @@ void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource, bool bHDRPres
 		PreparePresentLDR(commandList, presentSource);
 	}
 
-	commandList->CloseAndExecute();
-	commandList = nullptr;
-
+	commandList.CloseAndExecute();
+	
 	// TODO: better vsync logic here
 	m_swapChain->Present(1, 0);
 
@@ -416,48 +415,48 @@ void DeviceManager::CreatePresentState()
 }
 
 
-void DeviceManager::PreparePresentLDR(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::PreparePresentLDR(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
 {
 	// Transition the present source so we can read from it
-	commandList->TransitionResource(*presentSource, ResourceState::PixelShaderResource);
+	commandList.TransitionResource(*presentSource, ResourceState::PixelShaderResource);
 
-	commandList->SetRootSignature(m_presentRS);
-	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList.SetRootSignature(m_presentRS);
+	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Copy and convert the LDR present source to the current back buffer
-	commandList->SetRenderTarget(m_backbuffers[g_currentFrame]);
-	commandList->SetDynamicDescriptor(0, 0, presentSource->GetSRV());
+	commandList.SetRenderTarget(m_backbuffers[g_currentFrame]);
+	commandList.SetDynamicDescriptor(0, 0, presentSource->GetSRV());
 
-	commandList->SetPipelineState(m_convertLDRToDisplayPSO);
-	commandList->SetViewportAndScissor(0, 0, m_width, m_height);
+	commandList.SetPipelineState(m_convertLDRToDisplayPSO);
+	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
 
-	commandList->Draw(3);
+	commandList.Draw(3);
 
 	// Transition the current back buffer to present mode
-	commandList->TransitionResource(m_backbuffers[g_currentFrame], ResourceState::Present);
+	commandList.TransitionResource(m_backbuffers[g_currentFrame], ResourceState::Present);
 }
 
 
-void DeviceManager::PreparePresentHDR(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource, const PresentParameters& params)
+void DeviceManager::PreparePresentHDR(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource, const PresentParameters& params)
 {
-	commandList->TransitionResource(*presentSource, ResourceState::PixelShaderResource);
+	commandList.TransitionResource(*presentSource, ResourceState::PixelShaderResource);
 
-	commandList->SetRootSignature(m_presentRS);
-	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList.SetRootSignature(m_presentRS);
+	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Copy and convert the HDR present source to the current back buffer
-	commandList->SetRenderTarget(m_backbuffers[g_currentFrame]);
-	commandList->SetDynamicDescriptor(0, 0, presentSource->GetSRV());
+	commandList.SetRenderTarget(m_backbuffers[g_currentFrame]);
+	commandList.SetDynamicDescriptor(0, 0, presentSource->GetSRV());
 
 	float toeStrength = params.ToeStrength < 1e-6f ? 1e32f : 1.0f / params.ToeStrength;
 
-	commandList->SetConstants(1, (float)params.PaperWhite, (float)params.MaxBrightness, (float)toeStrength, (int)params.DebugMode);
+	commandList.SetConstants(1, (float)params.PaperWhite, (float)params.MaxBrightness, (float)toeStrength, (int)params.DebugMode);
 
-	commandList->SetPipelineState(m_convertHDRToDisplayPSO);
-	commandList->SetViewportAndScissor(0, 0, m_width, m_height);
+	commandList.SetPipelineState(m_convertHDRToDisplayPSO);
+	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
 
-	commandList->Draw(3);
+	commandList.Draw(3);
 
 	// Transition the current back buffer to present mode
-	commandList->TransitionResource(m_backbuffers[g_currentFrame], ResourceState::Present);
+	commandList.TransitionResource(m_backbuffers[g_currentFrame], ResourceState::Present);
 }

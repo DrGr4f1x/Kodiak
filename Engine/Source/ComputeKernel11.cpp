@@ -118,53 +118,53 @@ void ComputeKernel::SetConstantBufferDataImmediate(const string& cbufferName, co
 }
 
 
-void ComputeKernel::Dispatch(ComputeCommandList* commandList, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+void ComputeKernel::Dispatch(ComputeCommandList& commandList, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+	commandList.Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
 
-void ComputeKernel::Dispatch1D(ComputeCommandList* commandList, size_t threadCountX, size_t groupSizeX)
+void ComputeKernel::Dispatch1D(ComputeCommandList& commandList, size_t threadCountX, size_t groupSizeX)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch1D(threadCountX, groupSizeX);
+	commandList.Dispatch1D(threadCountX, groupSizeX);
 }
 
 
-void ComputeKernel::Dispatch2D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+void ComputeKernel::Dispatch2D(ComputeCommandList& commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch2D(threadCountX, threadCountY, groupSizeX, groupSizeY);
+	commandList.Dispatch2D(threadCountX, threadCountY, groupSizeX, groupSizeY);
 }
 
 
-void ComputeKernel::Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
+void ComputeKernel::Dispatch3D(ComputeCommandList& commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
 	size_t groupSizeY, size_t groupSizeZ)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
+	commandList.Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
 }
 
 
-void ComputeKernel::DispatchIndirect(ComputeCommandList* commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+void ComputeKernel::DispatchIndirect(ComputeCommandList& commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->DispatchIndirect(argumentBuffer, argumentBufferOffset);
+	commandList.DispatchIndirect(argumentBuffer, argumentBufferOffset);
 }
 
 
-void ComputeKernel::UnbindSRVs(ComputeCommandList* commandList)
+void ComputeKernel::UnbindSRVs(ComputeCommandList& commandList)
 {
 	assert(m_renderThreadData);
 
@@ -172,7 +172,7 @@ void ComputeKernel::UnbindSRVs(ComputeCommandList* commandList)
 }
 
 
-void ComputeKernel::UnbindUAVs(ComputeCommandList* commandList)
+void ComputeKernel::UnbindUAVs(ComputeCommandList& commandList)
 {
 	assert(m_renderThreadData);
 
@@ -335,25 +335,25 @@ void ComputeKernel::SetupKernel()
 }
 
 
-void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
+void RenderThread::ComputeData::Commit(ComputeCommandList& commandList)
 {
 	// Update the cbuffer
 	if (cbufferDirty && cbufferSize > 0)
 	{
-		auto dest = commandList->MapConstants(*cbuffer);
+		auto dest = commandList.MapConstants(*cbuffer);
 		memcpy(dest, cbufferData, cbufferSize);
-		commandList->UnmapConstants(*cbuffer);
+		commandList.UnmapConstants(*cbuffer);
 
 		cbufferDirty = false;
 	}
 
 	// Set the PSO for this kernel
-	commandList->SetPipelineState(*pso);
+	commandList.SetPipelineState(*pso);
 
 	// Bind cbuffers
 	if (cbufferBinding.numBuffers > 0)
 	{
-		commandList->SetShaderConstants(
+		commandList.SetShaderConstants(
 			cbufferBinding.startSlot,
 			cbufferBinding.numBuffers,
 			&cbufferBinding.cbuffers[0],
@@ -364,30 +364,30 @@ void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
 	// Bind SRVs
 	for (const auto& layout : srvTables.layouts)
 	{
-		commandList->SetShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList.SetShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 
 	// Bind UAVs
 	for (const auto& layout : uavTables.layouts)
 	{
-		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0], &layout.counterInitialValues[0]);
+		commandList.SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0], &layout.counterInitialValues[0]);
 	}
 }
 
 
-void RenderThread::ComputeData::UnbindSRVs(ComputeCommandList* commandList)
+void RenderThread::ComputeData::UnbindSRVs(ComputeCommandList& commandList)
 {
 	for (const auto& layout : nullSRVTables.layouts)
 	{
-		commandList->SetShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList.SetShaderResources(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 }
 
 
-void RenderThread::ComputeData::UnbindUAVs(ComputeCommandList* commandList)
+void RenderThread::ComputeData::UnbindUAVs(ComputeCommandList& commandList)
 {
 	for (const auto& layout : nullUAVTables.layouts)
 	{
-		commandList->SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0]);
+		commandList.SetShaderUAVs(layout.shaderRegister, layout.numItems, &layout.resources[0]);
 	}
 }

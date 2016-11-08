@@ -44,7 +44,7 @@ public:
 	ThreadParameter<float> SubpixelRemoval;
 
 	// Render FXAA
-	void Render(GraphicsCommandList* commandList);
+	void Render(GraphicsCommandList& commandList);
 
 private:
 	// Compute kernels

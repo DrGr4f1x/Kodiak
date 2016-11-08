@@ -97,49 +97,49 @@ shared_ptr<ComputeResource> ComputeKernel::GetResource(const string& name)
 }
 
 
-void ComputeKernel::Dispatch(ComputeCommandList* commandList, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+void ComputeKernel::Dispatch(ComputeCommandList& commandList, size_t groupCountX, size_t groupCountY, size_t groupCountZ)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+	commandList.Dispatch(groupCountX, groupCountY, groupCountZ);
 }
 
 
-void ComputeKernel::Dispatch1D(ComputeCommandList* commandList, size_t threadCountX, size_t groupSizeX)
+void ComputeKernel::Dispatch1D(ComputeCommandList& commandList, size_t threadCountX, size_t groupSizeX)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch1D(threadCountX, groupSizeX);
+	commandList.Dispatch1D(threadCountX, groupSizeX);
 }
 
 
-void ComputeKernel::Dispatch2D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+void ComputeKernel::Dispatch2D(ComputeCommandList& commandList, size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch2D(threadCountX, threadCountY, groupSizeX, groupSizeY);
+	commandList.Dispatch2D(threadCountX, threadCountY, groupSizeX, groupSizeY);
 }
 
 
-void ComputeKernel::Dispatch3D(ComputeCommandList* commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
+void ComputeKernel::Dispatch3D(ComputeCommandList& commandList, size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX,
 	size_t groupSizeY, size_t groupSizeZ)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
+	commandList.Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
 }
 
 
-void ComputeKernel::DispatchIndirect(ComputeCommandList* commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+void ComputeKernel::DispatchIndirect(ComputeCommandList& commandList, GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
 {
 	assert(m_renderThreadData);
 
 	m_renderThreadData->Commit(commandList);
-	commandList->DispatchIndirect(argumentBuffer, argumentBufferOffset);
+	commandList.DispatchIndirect(argumentBuffer, argumentBufferOffset);
 }
 
 
@@ -358,10 +358,10 @@ void ComputeKernel::SetupKernel()
 }
 
 
-void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
+void RenderThread::ComputeData::Commit(ComputeCommandList& commandList)
 {
-	commandList->SetRootSignature(*rootSignature);
-	commandList->SetPipelineState(*pso);
+	commandList.SetRootSignature(*rootSignature);
+	commandList.SetPipelineState(*pso);
 
 	const uint32_t numParams = static_cast<uint32_t>(rootParameters.size());
 	uint32_t rootIndex = kInvalid;
@@ -378,11 +378,11 @@ void RenderThread::ComputeData::Commit(ComputeCommandList* commandList)
 
 		if (rootParam.numElements == kInvalid)
 		{
-			commandList->SetDynamicDescriptor(rootParam.rootIndex, 0, cpuHandles[rootParam.startSlot]);
+			commandList.SetDynamicDescriptor(rootParam.rootIndex, 0, cpuHandles[rootParam.startSlot]);
 		}
 		else
 		{
-			commandList->SetDynamicDescriptors(rootParam.rootIndex, offset, rootParam.numElements, &cpuHandles[rootParam.startSlot]);
+			commandList.SetDynamicDescriptors(rootParam.rootIndex, offset, rootParam.numElements, &cpuHandles[rootParam.startSlot]);
 			offset += rootParam.numElements;
 		}
 	}

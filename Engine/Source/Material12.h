@@ -83,8 +83,8 @@ namespace RenderThread
 
 struct MaterialData
 {
-	void Update(GraphicsCommandList* commandList);
-	void Commit(GraphicsCommandList* commandList);
+	void Update(GraphicsCommandList& commandList);
+	void Commit(GraphicsCommandList& commandList);
 	bool IsReady();
 
 	// Render pass

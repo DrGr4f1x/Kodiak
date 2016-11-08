@@ -47,13 +47,13 @@ public:
 	void SetCamera(std::shared_ptr<Camera> camera);
 
 	// Render AO
-	void Render(GraphicsCommandList* commandList);
+	void Render(GraphicsCommandList& commandList);
 
 private:
-	void ComputeAO(ComputeCommandList* commandList, std::shared_ptr<ComputeKernel> kernel, std::shared_ptr<ColorBuffer> destination,
+	void ComputeAO(ComputeCommandList& commandList, std::shared_ptr<ComputeKernel> kernel, std::shared_ptr<ColorBuffer> destination,
 		std::shared_ptr<ColorBuffer> depthBuffer, const float tanHalfFovH);
 
-	void BlurAndUpsample(ComputeCommandList* commandList,
+	void BlurAndUpsample(ComputeCommandList& commandList,
 		std::shared_ptr<ColorBuffer> destination, std::shared_ptr<ColorBuffer> hiResDepth, std::shared_ptr<ColorBuffer> loResDepth,
 		std::shared_ptr<ColorBuffer> interleavedAO, std::shared_ptr<ColorBuffer> highQualityAO, std::shared_ptr<ColorBuffer> hiResAO);
 

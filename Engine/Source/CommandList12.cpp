@@ -64,10 +64,10 @@ void CommandList::DestroyAllCommandLists()
 }
 
 
-CommandList* CommandList::Begin()
+CommandList& CommandList::Begin()
 {
 	CommandList* newCommandList = CommandList::AllocateCommandList();
-	return newCommandList;
+	return *newCommandList;
 }
 
 
@@ -92,7 +92,7 @@ void CommandList::InitializeTexture(GpuResource& dest, UINT numSubresources, D3D
 
 	UINT64 uploadBufferSize = GetRequiredIntermediateSize(dest.GetResource(), 0, numSubresources);
 
-	auto commandList = CommandList::Begin();
+	auto& commandList = CommandList::Begin();
 
 	D3D12_HEAP_PROPERTIES heapProps;
 	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -123,12 +123,12 @@ void CommandList::InitializeTexture(GpuResource& dest, UINT numSubresources, D3D
 		IID_PPV_ARGS(&uploadBuffer)));
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
-	commandList->TransitionResource(dest, ResourceState::CopyDest, true);
-	UpdateSubresources(commandList->m_commandList, dest.GetResource(), uploadBuffer, 0, 0, numSubresources, subData);
-	commandList->TransitionResource(dest, ResourceState::GenericRead, true);
+	commandList.TransitionResource(dest, ResourceState::CopyDest, true);
+	UpdateSubresources(commandList.m_commandList, dest.GetResource(), uploadBuffer, 0, 0, numSubresources, subData);
+	commandList.TransitionResource(dest, ResourceState::GenericRead, true);
 
 	// Execute the command list and wait for it to finish so we can release the upload buffer
-	commandList->Finish(true);
+	commandList.Finish(true);
 
 	uploadBuffer->Release();
 }
@@ -138,7 +138,7 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 {
 	ID3D12Resource* uploadBuffer = nullptr;
 
-	auto initContext = CommandList::Begin();
+	auto& commandList = CommandList::Begin();
 
 	D3D12_HEAP_PROPERTIES heapProps;
 	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -174,12 +174,12 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 	uploadBuffer->Unmap(0, nullptr);
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
-	initContext->TransitionResource(dest, ResourceState::CopyDest, true);
-	initContext->m_commandList->CopyResource(dest.GetResource(), uploadBuffer);
-	initContext->TransitionResource(dest, ResourceState::GenericRead, true);
+	commandList.TransitionResource(dest, ResourceState::CopyDest, true);
+	commandList.m_commandList->CopyResource(dest.GetResource(), uploadBuffer);
+	commandList.TransitionResource(dest, ResourceState::GenericRead, true);
 
 	// Execute the command list and wait for it to finish so we can release the upload buffer
-	initContext->CloseAndExecute(true);
+	commandList.CloseAndExecute(true);
 
 	uploadBuffer->Release();
 }
@@ -187,10 +187,10 @@ void CommandList::InitializeBuffer(GpuResource& dest, const void* bufferData, si
 
 void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src)
 {
-	CommandList* commandList = CommandList::Begin();
+	auto& commandList = CommandList::Begin();
 
-	commandList->TransitionResource(dest, ResourceState::CopyDest);
-	commandList->FlushResourceBarriers();
+	commandList.TransitionResource(dest, ResourceState::CopyDest);
+	commandList.FlushResourceBarriers();
 
 	const D3D12_RESOURCE_DESC& destDesc = dest.GetResource()->GetDesc();
 	const D3D12_RESOURCE_DESC& srcDesc = src.GetResource()->GetDesc();
@@ -220,10 +220,10 @@ void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex
 			i
 		};
 
-		commandList->m_commandList->CopyTextureRegion(&destCopyLocation, 0, 0, 0, &srcCopyLocation, nullptr);
+		commandList.m_commandList->CopyTextureRegion(&destCopyLocation, 0, 0, 0, &srcCopyLocation, nullptr);
 	}
 
-	commandList->Finish();
+	commandList.Finish();
 }
 
 
@@ -332,8 +332,7 @@ void CommandList::InsertUAVBarrier(GpuResource& resource, bool flushImmediate)
 
 	if (flushImmediate)
 	{
-		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
-		m_numBarriersToFlush = 0;
+		FlushResourceBarriers();
 	}
 }
 
@@ -350,8 +349,7 @@ void CommandList::InsertAliasBarrier(GpuResource& before, GpuResource& after, bo
 
 	if (flushImmediate)
 	{
-		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
-		m_numBarriersToFlush = 0;
+		FlushResourceBarriers();
 	}
 }
 

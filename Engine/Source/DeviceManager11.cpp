@@ -116,7 +116,7 @@ void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource, bool bHDRPres
 {
 	PROFILE_BEGIN(itt_present);
 
-	auto commandList = GraphicsCommandList::Begin();
+	auto& commandList = GraphicsCommandList::Begin();
 
 	if (bHDRPresent)
 	{
@@ -127,8 +127,7 @@ void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource, bool bHDRPres
 		PreparePresentLDR(commandList, presentSource);
 	}
 
-	commandList->CloseAndExecute();
-	commandList = nullptr;
+	commandList.CloseAndExecute();
 
 	// The first argument instructs DXGI to block until VSync, putting the application
 	// to sleep until the next VSync. This ensures we don't waste any cycles rendering
@@ -458,52 +457,52 @@ void DeviceManager::CreatePresentState()
 }
 
 
-void DeviceManager::PreparePresentLDR(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::PreparePresentLDR(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
 {
-	commandList->PIXBeginEvent("PreparePresent");
-	commandList->UnbindRenderTargets();
+	commandList.PIXBeginEvent("PreparePresent");
+	commandList.UnbindRenderTargets();
 
-	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->SetPipelineState(m_convertLDRToDisplayPSO);
+	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList.SetPipelineState(m_convertLDRToDisplayPSO);
 
 	// Copy and convert the LDR present source to the current back buffer
-	commandList->SetRenderTarget(*m_backBuffer);
-	commandList->SetPixelShaderResource(0, presentSource->GetSRV());
+	commandList.SetRenderTarget(*m_backBuffer);
+	commandList.SetPixelShaderResource(0, presentSource->GetSRV());
 
-	commandList->SetViewportAndScissor(0, 0, m_width, m_height);
+	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
 
-	commandList->Draw(3);
+	commandList.Draw(3);
 
-	commandList->SetPixelShaderResource(0, nullptr);
-	commandList->PIXEndEvent();
+	commandList.SetPixelShaderResource(0, nullptr);
+	commandList.PIXEndEvent();
 }
 
 
-void DeviceManager::PreparePresentHDR(GraphicsCommandList* commandList, shared_ptr<ColorBuffer> presentSource, const PresentParameters& params)
+void DeviceManager::PreparePresentHDR(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource, const PresentParameters& params)
 {
-	commandList->PIXBeginEvent("PreparePresent");
-	commandList->UnbindRenderTargets();
+	commandList.PIXBeginEvent("PreparePresent");
+	commandList.UnbindRenderTargets();
 
-	commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->SetPipelineState(m_convertHDRToDisplayPSO);
+	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList.SetPipelineState(m_convertHDRToDisplayPSO);
 
 	// Copy and convert the LDR present source to the current back buffer
-	commandList->SetRenderTarget(*m_backBuffer);
-	commandList->SetViewportAndScissor(0, 0, m_width, m_height);
+	commandList.SetRenderTarget(*m_backBuffer);
+	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
 
 	float toeStrength = params.ToeStrength < 1e-6f ? 1e32f : 1.0f / params.ToeStrength;
 	__declspec(align(16)) float presentData[4] = {params.PaperWhite, params.MaxBrightness, toeStrength, (float)params.DebugMode};
 
-	byte* dest = commandList->MapConstants(m_presentHDRConstants);
+	byte* dest = commandList.MapConstants(m_presentHDRConstants);
 	memcpy(dest, presentData, 16);
-	commandList->UnmapConstants(m_presentHDRConstants);
+	commandList.UnmapConstants(m_presentHDRConstants);
 
-	commandList->SetPixelShaderConstants(0, m_presentHDRConstants);
-	commandList->SetPixelShaderResource(0, presentSource->GetSRV());
+	commandList.SetPixelShaderConstants(0, m_presentHDRConstants);
+	commandList.SetPixelShaderResource(0, presentSource->GetSRV());
 
-	commandList->Draw(3);
+	commandList.Draw(3);
 
-	commandList->SetPixelShaderResource(0, nullptr);
+	commandList.SetPixelShaderResource(0, nullptr);
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }

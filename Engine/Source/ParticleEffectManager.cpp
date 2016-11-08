@@ -445,23 +445,23 @@ void ParticleEffectManager::Render(CommandList& commandList, std::shared_ptr<Cam
 
 	if (m_enableTiledRendering)
 	{
-		ComputeCommandList* compCommandList = commandList.GetComputeCommandList();
-		compCommandList->TransitionResource(*colorTarget, ResourceState::UnorderedAccess);
-		compCommandList->TransitionResource(*m_binCounters[0], ResourceState::UnorderedAccess);
-		compCommandList->TransitionResource(*m_binCounters[1], ResourceState::UnorderedAccess);
+		auto& compCommandList = commandList.GetComputeCommandList();
+		compCommandList.TransitionResource(*colorTarget, ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(*m_binCounters[0], ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(*m_binCounters[1], ResourceState::UnorderedAccess);
 
-		compCommandList->ClearUAV(*m_binCounters[0]);
-		compCommandList->ClearUAV(*m_binCounters[1]);
+		compCommandList.ClearUAV(*m_binCounters[0]);
+		compCommandList.ClearUAV(*m_binCounters[1]);
 
-		RenderTiles(*compCommandList, cbChangesPerView, colorTarget, depthBuffer, linearDepth);
+		RenderTiles(compCommandList, cbChangesPerView, colorTarget, depthBuffer, linearDepth);
 
-		compCommandList->InsertUAVBarrier(*colorTarget);
+		compCommandList.InsertUAVBarrier(*colorTarget);
 	}
 	else
 	{
-		GraphicsCommandList* gfxCommandList = commandList.GetGraphicsCommandList();
+		auto& gfxCommandList = commandList.GetGraphicsCommandList();
 
-		RenderSprites(*gfxCommandList, cbChangesPerView, colorTarget, depthBuffer, linearDepth);
+		RenderSprites(gfxCommandList, cbChangesPerView, colorTarget, depthBuffer, linearDepth);
 	}
 
 	commandList.PIXEndEvent();
@@ -496,6 +496,8 @@ void ParticleEffectManager::MaintainTextureList(ParticleEffectProperties* effect
 
 void ParticleEffectManager::SetFinalBuffers(ComputeCommandList& commandList)
 {
+	commandList.PIXBeginEvent("Set final buffers");
+
 	commandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::GenericRead);
 	commandList.TransitionResource(*m_finalDispatchIndirectArgs, ResourceState::UnorderedAccess);
 	commandList.TransitionResource(*m_drawIndirectArgs, ResourceState::UnorderedAccess);
@@ -504,8 +506,10 @@ void ParticleEffectManager::SetFinalBuffers(ComputeCommandList& commandList)
 	m_particleFinalDispatchIndirectArgsCs->GetResource("g_NumThreadGroups")->SetUAVImmediate(m_finalDispatchIndirectArgs);
 	m_particleFinalDispatchIndirectArgsCs->GetResource("g_DrawIndirectArgs")->SetUAVImmediate(m_drawIndirectArgs);
 
-	m_particleFinalDispatchIndirectArgsCs->Dispatch(&commandList, 1, 1, 1);
-	m_particleFinalDispatchIndirectArgsCs->UnbindUAVs(&commandList);
+	m_particleFinalDispatchIndirectArgsCs->Dispatch(commandList, 1, 1, 1);
+	m_particleFinalDispatchIndirectArgsCs->UnbindUAVs(commandList);
+
+	commandList.PIXEndEvent();
 }
 
 
@@ -537,7 +541,7 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 		m_particleDepthBoundsCs->GetResource("g_Output16")->SetUAVImmediate(m_minMaxDepth16);
 		m_particleDepthBoundsCs->GetResource("g_Output32")->SetUAVImmediate(m_minMaxDepth32);
 
-		m_particleDepthBoundsCs->Dispatch2D(&commandList, screenWidth, screenHeight, 32, 32);
+		m_particleDepthBoundsCs->Dispatch2D(commandList, screenWidth, screenHeight, 32, 32);
 
 		commandList.PIXEndEvent();
 	}
@@ -564,7 +568,7 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 		m_particleLargeBinCullingCs->GetResource("g_VertexBuffer")->SetSRVImmediate(m_spriteVertexBuffer);
 		m_particleLargeBinCullingCs->GetResource("g_VertexCount")->SetSRVImmediate(m_drawIndirectArgs);
 
-		m_particleLargeBinCullingCs->DispatchIndirect(&commandList, *m_finalDispatchIndirectArgs);
+		m_particleLargeBinCullingCs->DispatchIndirect(commandList, *m_finalDispatchIndirectArgs);
 
 		// The second step refines the binning by inserting particles into the appropriate small bins.
 		// Small bins are 128x64.
@@ -584,7 +588,7 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 		m_particleBinCullingCs->GetResource("g_BinParticles")->SetUAVImmediate(m_binParticles[1]);
 		m_particleBinCullingCs->GetResource("g_BinCounters")->SetUAVImmediate(m_binCounters[1]);
 
-		m_particleBinCullingCs->Dispatch2D(&commandList, screenWidth, screenHeight, 4 * BIN_SIZE_X, 4 * BIN_SIZE_Y);
+		m_particleBinCullingCs->Dispatch2D(commandList, screenWidth, screenHeight, 4 * BIN_SIZE_X, 4 * BIN_SIZE_Y);
 
 		// The final sorting step will perform a bitonic sort on each bin's particles (front to
 		// back).  Afterward, it will generate a bitmap for each tile indicating which of the bin's
@@ -619,7 +623,7 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 		m_particleTileCullingCs->GetResource("g_FastDrawPackets")->SetUAVImmediate(m_tileFastDrawPackets);
 		m_particleTileCullingCs->GetResource("g_DrawPacketCount")->SetUAVImmediate(m_tileDrawDispatchIndirectArgs);
 
-		m_particleTileCullingCs->Dispatch2D(&commandList, screenWidth, screenHeight, BIN_SIZE_X, BIN_SIZE_Y);
+		m_particleTileCullingCs->Dispatch2D(commandList, screenWidth, screenHeight, BIN_SIZE_X, BIN_SIZE_Y);
 
 		commandList.PIXEndEvent();
 	}
@@ -654,7 +658,7 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 		m_particleTileRenderSlowCs[m_tiledRes]->GetParameter("gDynamicResLevel")->SetValueImmediate(m_dynamicResLevel);
 		m_particleTileRenderSlowCs[m_tiledRes]->GetParameter("gMipBias")->SetValueImmediate(m_mipBias);
 
-		m_particleTileRenderSlowCs[m_tiledRes]->DispatchIndirect(&commandList, *m_tileDrawDispatchIndirectArgs);
+		m_particleTileRenderSlowCs[m_tiledRes]->DispatchIndirect(commandList, *m_tileDrawDispatchIndirectArgs);
 
 		// Fast pass
 		m_particleTileRenderFastCs[m_tiledRes]->GetConstantBuffer("CBChangesPerView")->SetDataImmediate(
@@ -673,7 +677,7 @@ void ParticleEffectManager::RenderTiles(ComputeCommandList& commandList, const C
 		m_particleTileRenderFastCs[m_tiledRes]->GetParameter("gDynamicResLevel")->SetValueImmediate(m_dynamicResLevel);
 		m_particleTileRenderFastCs[m_tiledRes]->GetParameter("gMipBias")->SetValueImmediate(m_mipBias);
 
-		m_particleTileRenderFastCs[m_tiledRes]->DispatchIndirect(&commandList, *m_tileDrawDispatchIndirectArgs, 12);
+		m_particleTileRenderFastCs[m_tiledRes]->DispatchIndirect(commandList, *m_tileDrawDispatchIndirectArgs, 12);
 
 		commandList.PIXEndEvent();
 	}
@@ -689,11 +693,11 @@ void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, cons
 	{
 		commandList.PIXBeginEvent("Sort particles");
 
-		ComputeCommandList* compCommandList = commandList.GetComputeCommandList();
+		auto& compCommandList = commandList.GetComputeCommandList();
 
-		compCommandList->TransitionResource(*m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
-		compCommandList->TransitionResource(*m_sortIndirectArgs, ResourceState::UnorderedAccess);
-		compCommandList->TransitionResource(*m_drawIndirectArgs, ResourceState::NonPixelShaderResource);
+		compCommandList.TransitionResource(*m_spriteVertexBuffer, ResourceState::NonPixelShaderResource);
+		compCommandList.TransitionResource(*m_sortIndirectArgs, ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(*m_drawIndirectArgs, ResourceState::NonPixelShaderResource);
 
 		m_particleSortIndirectArgsCs->GetResource("g_ActiveParticlesCount")->SetSRVImmediate(m_drawIndirectArgs);
 		m_particleSortIndirectArgsCs->GetResource("g_IndirectArgsBuffer")->SetUAVImmediate(m_sortIndirectArgs);
@@ -701,8 +705,8 @@ void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, cons
 		m_particleSortIndirectArgsCs->Dispatch(compCommandList, 1, 1, 1);
 		m_particleSortIndirectArgsCs->UnbindUAVs(compCommandList);
 
-		compCommandList->TransitionResource(*m_sortIndirectArgs, ResourceState::IndirectArgument);
-		compCommandList->TransitionResource(*m_spriteIndexBuffer, ResourceState::UnorderedAccess);
+		compCommandList.TransitionResource(*m_sortIndirectArgs, ResourceState::IndirectArgument);
+		compCommandList.TransitionResource(*m_spriteIndexBuffer, ResourceState::UnorderedAccess);
 		m_particlePreSortCs->GetResource("g_VertexBuffer")->SetSRVImmediate(m_spriteVertexBuffer);
 		m_particlePreSortCs->GetResource("g_VertexCount")->SetSRVImmediate(m_drawIndirectArgs);
 		m_particlePreSortCs->GetResource("g_SortBuffer")->SetUAVImmediate(m_spriteIndexBuffer);
@@ -710,7 +714,7 @@ void ParticleEffectManager::RenderSprites(GraphicsCommandList& commandList, cons
 		m_particlePreSortCs->DispatchIndirect(compCommandList, *m_sortIndirectArgs);
 		m_particlePreSortCs->UnbindUAVs(compCommandList);
 
-		compCommandList->InsertUAVBarrier(*m_spriteIndexBuffer);
+		compCommandList.InsertUAVBarrier(*m_spriteIndexBuffer);
 
 		commandList.PIXEndEvent();
 	}
@@ -769,7 +773,7 @@ void ParticleEffectManager::BitonicSort(ComputeCommandList& commandList)
 			m_particleOuterSortCs[outerIndex]->GetParameter("j")->SetValueImmediate(j);
 			m_particleOuterSortCs[outerIndex]->GetResource("g_SortBuffer")->SetUAVImmediate(m_spriteIndexBuffer);
 
-			m_particleOuterSortCs[outerIndex]->DispatchIndirect(&commandList, *m_sortIndirectArgs, indirectArgsOffset);
+			m_particleOuterSortCs[outerIndex]->DispatchIndirect(commandList, *m_sortIndirectArgs, indirectArgsOffset);
 			commandList.InsertUAVBarrier(*m_spriteIndexBuffer);
 
 			++outerIndex;
@@ -778,7 +782,7 @@ void ParticleEffectManager::BitonicSort(ComputeCommandList& commandList)
 		m_particleInnerSortCs[innerIndex]->GetParameter("k")->SetValueImmediate(k);
 		m_particleInnerSortCs[innerIndex]->GetResource("g_SortBuffer")->SetUAVImmediate(m_spriteIndexBuffer);
 
-		m_particleInnerSortCs[innerIndex]->DispatchIndirect(&commandList, *m_sortIndirectArgs, indirectArgsOffset);
+		m_particleInnerSortCs[innerIndex]->DispatchIndirect(commandList, *m_sortIndirectArgs, indirectArgsOffset);
 		commandList.InsertUAVBarrier(*m_spriteIndexBuffer);
 
 		++innerIndex;

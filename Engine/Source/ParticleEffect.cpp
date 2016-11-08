@@ -123,6 +123,8 @@ void ParticleEffect::LoadDeviceResources()
 
 void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<StructuredBuffer> vertexBuffer, float timeDelta)
 {
+	commandList.PIXBeginEvent("Particle effect update");
+
 	m_elapsedTime += timeDelta;
 	m_effectProperties.EmitProperties.LastEmitPosW = m_effectProperties.EmitProperties.EmitPosW;
 
@@ -156,7 +158,7 @@ void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<Structur
 	commandList.TransitionResource(*m_dispatchIndirectArgs, ResourceState::IndirectArgument);
 	
 	m_updateCs->GetResource("g_OutputBuffer")->SetUAVImmediate(m_stateBuffers[m_currentStateBuffer]);
-	m_updateCs->DispatchIndirect(&commandList, *m_dispatchIndirectArgs, 0);
+	m_updateCs->DispatchIndirect(commandList, *m_dispatchIndirectArgs, 0);
 
 	// Why need a barrier here so long as we are artificially clamping particle count.  This allows living
 	// particles to take precedence over new particles.  The current system always spawns a multiple of 64
@@ -167,7 +169,7 @@ void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<Structur
 	m_particleSpawnCs->GetResource("g_ResetData")->SetSRVImmediate(m_randomStateBuffer);
 	m_particleSpawnCs->GetResource("g_OutputBuffer")->SetUAVImmediate(m_stateBuffers[m_currentStateBuffer]);
 	UINT NumSpawnThreads = (UINT)(m_effectProperties.EmitRate * timeDelta);
-	m_particleSpawnCs->Dispatch(&commandList, (NumSpawnThreads + 63) / 64, 1, 1);
+	m_particleSpawnCs->Dispatch(commandList, (NumSpawnThreads + 63) / 64, 1, 1);
 
 	// Output number of thread groups into m_DispatchIndirectArgs	
 	commandList.TransitionResource(*m_dispatchIndirectArgs, ResourceState::UnorderedAccess);
@@ -182,7 +184,9 @@ void ParticleEffect::Update(ComputeCommandList& commandList, shared_ptr<Structur
 #endif
 	m_dispatchIndirectArgsCs->GetResource("g_ParticleInstance")->SetSRVImmediate(m_stateBuffers[m_currentStateBuffer]->GetCounterBuffer());
 	m_dispatchIndirectArgsCs->GetResource("g_NumThreadGroups")->SetUAVImmediate(m_dispatchIndirectArgs);
-	m_dispatchIndirectArgsCs->Dispatch(&commandList, 1, 1, 1);
+	m_dispatchIndirectArgsCs->Dispatch(commandList, 1, 1, 1);
+
+	commandList.PIXEndEvent();
 }
 
 

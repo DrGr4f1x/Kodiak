@@ -182,27 +182,27 @@ void SSAO::SetCamera(shared_ptr<Camera> camera)
 }
 
 
-void SSAO::Render(GraphicsCommandList* commandList)
+void SSAO::Render(GraphicsCommandList& commandList)
 {
 	auto cameraProxy = m_camera->GetProxy();
 	const float zMagic = (cameraProxy->FarClip - cameraProxy->NearClip) / cameraProxy->NearClip;
 	
 	if (!m_enabled)
 	{
-		commandList->PIXBeginEvent("Generate SSAO");
+		commandList.PIXBeginEvent("Generate SSAO");
 
-		commandList->ClearColor(*m_ssaoFullscreen);
-		commandList->TransitionResource(*m_ssaoFullscreen, ResourceState::PixelShaderResource);
+		commandList.ClearColor(*m_ssaoFullscreen);
+		commandList.TransitionResource(*m_ssaoFullscreen, ResourceState::PixelShaderResource);
 
 		if (!m_computeLinearZ)
 		{
-			commandList->PIXEndEvent();
+			commandList.PIXEndEvent();
 			return;
 		}
 
-		auto computeCommandList = commandList->GetComputeCommandList();
+		auto& computeCommandList = commandList.GetComputeCommandList();
 
-		computeCommandList->TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
 
 		m_linearizeDepthCs->GetParameter("ZMagic")->SetValue(zMagic);
 		m_linearizeDepthCs->GetResource("Depth")->SetSRV(m_sceneDepthBuffer);
@@ -214,10 +214,10 @@ void SSAO::Render(GraphicsCommandList* commandList)
 
 		if (m_debugDraw)
 		{
-			computeCommandList->PIXBeginEvent("Debug draw");
+			computeCommandList.PIXBeginEvent("Debug draw");
 
-			computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
-			computeCommandList->TransitionResource(*m_linearDepth, ResourceState::NonPixelShaderResource);
+			computeCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(*m_linearDepth, ResourceState::NonPixelShaderResource);
 
 			m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRV(m_linearDepth);
 			m_debugSsaoCs->GetResource("OutColor")->SetUAV(m_sceneColorBuffer);
@@ -226,32 +226,32 @@ void SSAO::Render(GraphicsCommandList* commandList)
 			m_debugSsaoCs->UnbindSRVs(computeCommandList);
 			m_debugSsaoCs->UnbindUAVs(computeCommandList);
 
-			computeCommandList->PIXEndEvent();
+			computeCommandList.PIXEndEvent();
 		}
 
-		commandList->PIXEndEvent();
+		commandList.PIXEndEvent();
 		return;
 	}
 
-	commandList->PIXBeginEvent("Generate SSAO");
+	commandList.PIXBeginEvent("Generate SSAO");
 
-	commandList->TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
-	commandList->TransitionResource(*m_ssaoFullscreen, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*m_sceneDepthBuffer, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*m_ssaoFullscreen, ResourceState::UnorderedAccess);
 
-	auto computeCommandList = commandList->GetComputeCommandList();
+	auto& computeCommandList = commandList.GetComputeCommandList();
 
 	// Decompress and downsample
 	{
-		computeCommandList->PIXBeginEvent("Decompress and downsample");
+		computeCommandList.PIXBeginEvent("Decompress and downsample");
 
 		m_depthPrepare1Cs->GetParameter("ZMagic")->SetValueImmediate(zMagic);
 		m_depthPrepare1Cs->GetResource("Depth")->SetSRVImmediate(m_sceneDepthBuffer);
 
-		computeCommandList->TransitionResource(*m_linearDepth, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_depthDownsize1, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_depthTiled1, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_depthDownsize2, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_depthTiled2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_linearDepth, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_depthDownsize1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_depthTiled1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_depthDownsize2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_depthTiled2, ResourceState::UnorderedAccess);
 
 		m_depthPrepare1Cs->GetResource("LinearZ")->SetUAVImmediate(m_linearDepth);
 		m_depthPrepare1Cs->GetResource("DS2x")->SetUAVImmediate(m_depthDownsize1);
@@ -268,11 +268,11 @@ void SSAO::Render(GraphicsCommandList* commandList)
 			XMFLOAT2 invSize(1.0f / m_depthDownsize2->GetWidth(), 1.0f / m_depthDownsize2->GetHeight());
 			m_depthPrepare2Cs->GetParameter("InvSourceDimension")->SetValueImmediate(invSize);
 
-			computeCommandList->TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
-			computeCommandList->TransitionResource(*m_depthDownsize3, ResourceState::UnorderedAccess);
-			computeCommandList->TransitionResource(*m_depthTiled3, ResourceState::UnorderedAccess);
-			computeCommandList->TransitionResource(*m_depthDownsize4, ResourceState::UnorderedAccess);
-			computeCommandList->TransitionResource(*m_depthTiled4, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
+			computeCommandList.TransitionResource(*m_depthDownsize3, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(*m_depthTiled3, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(*m_depthDownsize4, ResourceState::UnorderedAccess);
+			computeCommandList.TransitionResource(*m_depthTiled4, ResourceState::UnorderedAccess);
 
 			m_depthPrepare2Cs->GetResource("DS4x")->SetSRVImmediate(m_depthDownsize2);
 			m_depthPrepare2Cs->GetResource("DS8x")->SetUAVImmediate(m_depthDownsize3);
@@ -285,7 +285,7 @@ void SSAO::Render(GraphicsCommandList* commandList)
 			m_depthPrepare2Cs->UnbindUAVs(computeCommandList);
 		}
 
-		computeCommandList->PIXEndEvent();
+		computeCommandList.PIXEndEvent();
 	}
 
 	// Analyze depth volumes
@@ -294,24 +294,24 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		const auto& projMat = cameraProxy->Base.ProjMatrix;
 		const float fovTangent = 1.0f / (projMat.GetX().GetX());
 
-		computeCommandList->PIXBeginEvent("Analyze depth volumes");
+		computeCommandList.PIXBeginEvent("Analyze depth volumes");
 
-		computeCommandList->TransitionResource(*m_aoMerged1, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_aoMerged2, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_aoMerged3, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_aoMerged4, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_aoHighQuality1, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_aoHighQuality2, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_aoHighQuality3, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_aoHighQuality4, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_depthTiled1, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_depthTiled2, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_depthTiled3, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_depthTiled4, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_depthDownsize1, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_depthDownsize3, ResourceState::NonPixelShaderResource);
-		computeCommandList->TransitionResource(*m_depthDownsize4, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_aoMerged1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_aoMerged2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_aoMerged3, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_aoMerged4, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_aoHighQuality1, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_aoHighQuality2, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_aoHighQuality3, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_aoHighQuality4, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_depthTiled1, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_depthTiled2, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_depthTiled3, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_depthTiled4, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_depthDownsize1, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_depthDownsize2, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_depthDownsize3, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_depthDownsize4, ResourceState::NonPixelShaderResource);
 
 		// Render SSAO for each sub-tile
 		if (m_hierarchyDepth > 3)
@@ -346,12 +346,12 @@ void SSAO::Render(GraphicsCommandList* commandList)
 			}
 		}
 
-		computeCommandList->PIXEndEvent();
+		computeCommandList.PIXEndEvent();
 	}
 
 	// Blur and upsample
 	{
-		computeCommandList->PIXBeginEvent("Blur and upsample");
+		computeCommandList.PIXBeginEvent("Blur and upsample");
 
 		shared_ptr<ColorBuffer> nextSRV = m_aoMerged4;
 
@@ -397,15 +397,15 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		BlurAndUpsample(computeCommandList, m_ssaoFullscreen, m_linearDepth, m_depthDownsize1, nextSRV,
 			m_qualityLevel >= kSsaoQualityVeryHigh ? m_aoHighQuality1 : nullptr, nullptr);
 
-		computeCommandList->PIXEndEvent();
+		computeCommandList.PIXEndEvent();
 	}
 
 	if(m_debugDraw)
 	{
-		computeCommandList->PIXBeginEvent("Debug draw");
+		computeCommandList.PIXBeginEvent("Debug draw");
 
-		computeCommandList->TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
-		computeCommandList->TransitionResource(*m_ssaoFullscreen, ResourceState::NonPixelShaderResource);
+		computeCommandList.TransitionResource(*m_sceneColorBuffer, ResourceState::UnorderedAccess);
+		computeCommandList.TransitionResource(*m_ssaoFullscreen, ResourceState::NonPixelShaderResource);
 
 		m_debugSsaoCs->GetResource("SsaoBuffer")->SetSRVImmediate(m_ssaoFullscreen);
 		m_debugSsaoCs->GetResource("OutColor")->SetUAVImmediate(m_sceneColorBuffer);
@@ -414,14 +414,14 @@ void SSAO::Render(GraphicsCommandList* commandList)
 		m_debugSsaoCs->UnbindSRVs(computeCommandList);
 		m_debugSsaoCs->UnbindUAVs(computeCommandList);
 
-		computeCommandList->PIXEndEvent();
+		computeCommandList.PIXEndEvent();
 	}
 
-	commandList->PIXEndEvent();
+	commandList.PIXEndEvent();
 }
 
 
-void SSAO::ComputeAO(ComputeCommandList* commandList, shared_ptr<ComputeKernel> kernel, shared_ptr<ColorBuffer> destination,
+void SSAO::ComputeAO(ComputeCommandList& commandList, shared_ptr<ComputeKernel> kernel, shared_ptr<ColorBuffer> destination,
 	shared_ptr<ColorBuffer> depthBuffer, const float tanHalfFovH)
 {
 	uint32_t bufferWidth = depthBuffer->GetWidth();
@@ -531,7 +531,7 @@ void SSAO::ComputeAO(ComputeCommandList* commandList, shared_ptr<ComputeKernel> 
 	kernel->GetResource("Occlusion")->SetUAVImmediate(destination);
 
 #if DX11
-	commandList->SetShaderSampler(1, m_linearBorderSampler.Get());
+	commandList.SetShaderSampler(1, m_linearBorderSampler.Get());
 #endif
 
 	if (arrayCount == 1)
@@ -547,7 +547,7 @@ void SSAO::ComputeAO(ComputeCommandList* commandList, shared_ptr<ComputeKernel> 
 }
 
 
-void SSAO::BlurAndUpsample(ComputeCommandList* commandList,
+void SSAO::BlurAndUpsample(ComputeCommandList& commandList,
 	shared_ptr<ColorBuffer> destination, shared_ptr<ColorBuffer> hiResDepth, shared_ptr<ColorBuffer> loResDepth,
 	shared_ptr<ColorBuffer> interleavedAO, shared_ptr<ColorBuffer> highQualityAO, shared_ptr<ColorBuffer> hiResAO)
 {
@@ -580,9 +580,9 @@ void SSAO::BlurAndUpsample(ComputeCommandList* commandList,
 	kernel->GetParameter("kBlurTolerance")->SetValueImmediate(blurTolerance);
 	kernel->GetParameter("kUpsampleTolerance")->SetValueImmediate(upsampleTolerance);
 
-	commandList->TransitionResource(*destination, ResourceState::UnorderedAccess);
-	commandList->TransitionResource(*loResDepth, ResourceState::NonPixelShaderResource);
-	commandList->TransitionResource(*hiResDepth, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*destination, ResourceState::UnorderedAccess);
+	commandList.TransitionResource(*loResDepth, ResourceState::NonPixelShaderResource);
+	commandList.TransitionResource(*hiResDepth, ResourceState::NonPixelShaderResource);
 
 	kernel->GetResource("AoResult")->SetUAVImmediate(destination);
 	kernel->GetResource("LoResDB")->SetSRVImmediate(loResDepth);
@@ -590,24 +590,24 @@ void SSAO::BlurAndUpsample(ComputeCommandList* commandList,
 
 	if (interleavedAO != nullptr)
 	{
-		commandList->TransitionResource(*interleavedAO, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*interleavedAO, ResourceState::NonPixelShaderResource);
 		kernel->GetResource("LoResAO1")->SetSRVImmediate(interleavedAO);
 	}
 
 	if (highQualityAO != nullptr)
 	{
-		commandList->TransitionResource(*highQualityAO, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*highQualityAO, ResourceState::NonPixelShaderResource);
 		kernel->GetResource("LoResAO2")->SetSRVImmediate(highQualityAO);
 	}
 
 	if (hiResAO != nullptr)
 	{
-		commandList->TransitionResource(*hiResAO, ResourceState::NonPixelShaderResource);
+		commandList.TransitionResource(*hiResAO, ResourceState::NonPixelShaderResource);
 		kernel->GetResource("HiResAO")->SetSRVImmediate(hiResAO);
 	}
 
 #if DX11
-	commandList->SetShaderSampler(0, m_linearClampSampler.Get());
+	commandList.SetShaderSampler(0, m_linearClampSampler.Get());
 #endif
 	
 	kernel->Dispatch2D(commandList, hiWidth + 2, hiHeight + 2, 16, 16);
