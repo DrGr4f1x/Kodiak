@@ -19,7 +19,6 @@ namespace Kodiak
 
 // Forward declarations
 class ColorBuffer;
-class ComputeKernel;
 class GraphicsCommandList;
 
 

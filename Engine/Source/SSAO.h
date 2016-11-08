@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "ComputeKernel.h"
 #include "RenderThread.h"
 
 namespace Kodiak
@@ -19,7 +20,6 @@ namespace Kodiak
 class Camera;
 class ColorBuffer;
 class ComputeCommandList;
-class ComputeKernel;
 class DepthBuffer;
 class GraphicsCommandList;
 class RenderTask;
@@ -50,7 +50,7 @@ public:
 	void Render(GraphicsCommandList& commandList);
 
 private:
-	void ComputeAO(ComputeCommandList& commandList, std::shared_ptr<ComputeKernel> kernel, std::shared_ptr<ColorBuffer> destination,
+	void ComputeAO(ComputeCommandList& commandList, ComputeKernel& kernel, std::shared_ptr<ColorBuffer> destination,
 		std::shared_ptr<ColorBuffer> depthBuffer, const float tanHalfFovH);
 
 	void BlurAndUpsample(ComputeCommandList& commandList,
@@ -59,14 +59,14 @@ private:
 
 private:
 	// Compute shader kernels
-	std::shared_ptr<ComputeKernel>	m_depthPrepare1Cs;
-	std::shared_ptr<ComputeKernel>	m_depthPrepare2Cs;
-	std::shared_ptr<ComputeKernel>	m_render1Cs[4];
-	std::shared_ptr<ComputeKernel>	m_render2Cs[4];
-	std::shared_ptr<ComputeKernel>	m_blurUpsampleBlend[4][2];
-	std::shared_ptr<ComputeKernel>	m_blurUpsampleFinal[4][2];
-	std::shared_ptr<ComputeKernel>	m_linearizeDepthCs;
-	std::shared_ptr<ComputeKernel>	m_debugSsaoCs;
+	ComputeKernel	m_depthPrepare1Cs;
+	ComputeKernel	m_depthPrepare2Cs;
+	ComputeKernel	m_render1Cs[4];
+	ComputeKernel	m_render2Cs[4];
+	ComputeKernel	m_blurUpsampleBlend[4][2];
+	ComputeKernel	m_blurUpsampleFinal[4][2];
+	ComputeKernel	m_linearizeDepthCs;
+	ComputeKernel	m_debugSsaoCs;
 	uint32_t						m_currentBlurUpsampleBlend{ 0 };
 	uint32_t						m_currentBlurUpsampleFinal{ 0 };
 
