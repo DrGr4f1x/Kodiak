@@ -293,6 +293,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\Filesystem.h" />
     <ClInclude Include="Source\Format.h" />
     <ClInclude Include="Source\FXAA.h" />
     <ClInclude Include="Source\GpuBuffer.h" />
@@ -476,6 +477,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Source\Filesystem.cpp" />
     <ClCompile Include="Source\FXAA.cpp" />
     <ClCompile Include="Source\InputState.cpp" />
     <ClCompile Include="Source\LinearAllocator12.cpp">

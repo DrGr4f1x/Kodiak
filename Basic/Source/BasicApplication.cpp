@@ -20,6 +20,7 @@
 #include "Engine\Source\DepthBuffer.h"
 #include "Engine\Source\DeviceManager.h"
 #include "Engine\Source\Effect.h"
+#include "Engine\Source\Filesystem.h"
 #include "Engine\Source\Format.h"
 #include "Engine\Source\InputState.h"
 #include "Engine\Source\Log.h"
@@ -51,6 +52,9 @@ BasicApplication::BasicApplication(uint32_t width, uint32_t height, const std::w
 void BasicApplication::OnStartup()
 {
 	// Setup file system
+	auto& filesystem = Filesystem::GetInstance();
+	filesystem.SetBinaryPath("Bin");
+	filesystem.Mount("Shaders");
 
 	// Setup renderer
 	auto& renderer = Renderer::GetInstance();
