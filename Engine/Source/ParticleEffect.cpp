@@ -167,8 +167,8 @@ void ParticleEffect::Update(ComputeCommandList& commandList, StructuredBuffer& v
 	commandList.TransitionResource(*m_stateBuffers[m_currentStateBuffer].GetCounterBuffer(), ResourceState::GenericRead);
 #elif DX11
 	// This preserves the structured buffers' hidden counter values from the previous phase
-	m_stateBuffers[m_currentStateBuffer]->SetCounterInitialValue((uint32_t)-1);
-	commandList.CopyCounter(*m_stateBuffers[m_currentStateBuffer]->GetCounterBuffer(), 8, *m_stateBuffers[m_currentStateBuffer]);
+	m_stateBuffers[m_currentStateBuffer].SetCounterInitialValue((uint32_t)-1);
+	commandList.CopyCounter(*m_stateBuffers[m_currentStateBuffer].GetCounterBuffer(), 8, m_stateBuffers[m_currentStateBuffer]);
 #endif
 	m_dispatchIndirectArgsCs.GetResource("g_ParticleInstance")->SetSRVImmediate(*m_stateBuffers[m_currentStateBuffer].GetCounterBuffer());
 	m_dispatchIndirectArgsCs.GetResource("g_NumThreadGroups")->SetUAVImmediate(m_dispatchIndirectArgs);

@@ -11,7 +11,7 @@
 
 #include "DeviceManager11.h"
 
-#include "ColorBuffer11.h"
+#include "ColorBuffer.h"
 #include "CommandList11.h"
 #include "CommandListManager11.h"
 #include "DepthBuffer.h"

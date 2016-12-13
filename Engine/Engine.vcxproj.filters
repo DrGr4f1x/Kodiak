@@ -112,12 +112,6 @@
     <ClInclude Include="Source\CommandListManager11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ColorBuffer11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ColorBuffer12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ColorBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>

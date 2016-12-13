@@ -12,7 +12,7 @@
 
 #include "CommandList12.h"
 
-#include "ColorBuffer12.h"
+#include "ColorBuffer.h"
 #include "CommandListManager12.h"
 #include "ConstantBuffer12.h"
 #include "DepthBuffer.h"

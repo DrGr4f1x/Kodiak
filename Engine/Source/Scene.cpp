@@ -136,7 +136,10 @@ void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& comma
 					{
 						commandList.SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
 					}
-					commandList.SetPixelShaderResource(4, m_shadowBuffer->GetSRV());
+					if (m_shadowBuffer)
+					{
+						commandList.SetPixelShaderResource(4, m_shadowBuffer->GetSRV());
+					}
 #endif
 					
 					commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);

@@ -11,7 +11,7 @@
 
 #include "MaterialResource12.h"
 
-#include "ColorBuffer12.h"
+#include "ColorBuffer.h"
 #include "DepthBuffer.h"
 #include "GpuBuffer.h"
 #include "Material12.h"

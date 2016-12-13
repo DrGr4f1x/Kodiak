@@ -190,14 +190,6 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     <ClInclude Include="Source\CameraController.h" />
     <ClInclude Include="Source\Color.h" />
     <ClInclude Include="Source\ColorBuffer.h" />
-    <ClInclude Include="Source\ColorBuffer11.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Source\ColorBuffer12.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="Source\CommandList.h" />
     <ClInclude Include="Source\CommandList11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>

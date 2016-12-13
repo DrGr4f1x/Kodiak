@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "ColorBuffer12.h"
+#include "ColorBuffer.h"
 #include "DescriptorHeap12.h"
 #include "PipelineState12.h"
 #include "RootSignature12.h"

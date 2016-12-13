@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "ColorBuffer12.h"
+#include "ColorBuffer.h"
 
 #include "DeviceManager.h"
 #include "DXGIUtility.h"
@@ -23,11 +23,11 @@ using namespace std;
 ColorBuffer::ColorBuffer(const DirectX::XMVECTORF32& clearColor)
 	: m_clearColor(clearColor)
 {
-	m_srvHandle.ptr = ~0ull;
-	m_rtvHandle.ptr = ~0ull;
+	InitializeSRV(m_srv);
+	InitializeRTV(m_rtv);
 	for (uint32_t i = 0; i < 12; ++i)
 	{
-		m_uavHandle[i].ptr = ~0ull;
+		InitializeUAV(m_uav[i]);
 	}
 }
 
@@ -41,8 +41,8 @@ void ColorBuffer::CreateFromSwapChain(DeviceManager* deviceManager, const string
 	//CreateDerivedViews(Graphics::g_Device, BaseResource->GetDesc().Format, 1);
 
 	// WORKAROUND:  Just create a typical RTV
-	m_rtvHandle = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	deviceManager->GetDevice()->CreateRenderTargetView(m_resource.Get(), nullptr, m_rtvHandle);
+	m_rtv = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	deviceManager->GetDevice()->CreateRenderTargetView(m_resource.Get(), nullptr, m_rtv);
 }
 
 
@@ -128,28 +128,28 @@ void ColorBuffer::CreateDerivedViews(uint32_t arraySize, uint32_t numMips)
 		srvDesc.Texture2D.MostDetailedMip = 0;
 	}
 
-	if (~0ull == m_srvHandle.ptr)
+	if (~0ull == m_srv.ptr)
 	{	
-		m_rtvHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		m_srvHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_rtv = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		m_srv = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	ID3D12Resource* resource = m_resource.Get();
 
 	// Create the render target view
-	g_device->CreateRenderTargetView(resource, &rtvDesc, m_rtvHandle);
+	g_device->CreateRenderTargetView(resource, &rtvDesc, m_rtv);
 
 	// Create the shader resource view
-	g_device->CreateShaderResourceView(resource, &srvDesc, m_srvHandle);
+	g_device->CreateShaderResourceView(resource, &srvDesc, m_srv);
 
 	for (uint32_t i = 0; i < numMips; ++i)
 	{
-		if (m_uavHandle[i].ptr = ~0ull)
+		if (m_uav[i].ptr = ~0ull)
 		{
-			m_uavHandle[i] = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			m_uav[i] = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		}
 
-		g_device->CreateUnorderedAccessView(resource, nullptr, &uavDesc, m_uavHandle[i]);
+		g_device->CreateUnorderedAccessView(resource, nullptr, &uavDesc, m_uav[i]);
 		uavDesc.Texture2D.MipSlice++;
 	}
 }

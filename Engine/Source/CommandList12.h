@@ -32,7 +32,6 @@ class GpuResource;
 class GraphicsCommandList;
 class GraphicsPSO;
 class IndexBuffer;
-class RenderTargetView;
 class RootSignature;
 class VertexBuffer;
 struct Rectangle;

@@ -24,7 +24,6 @@ class GpuResource;
 class GraphicsCommandList;
 class GraphicsPSO;
 class IndexBuffer;
-class RenderTargetView;
 class StructuredBuffer;
 class VertexBuffer;
 struct Rectangle;

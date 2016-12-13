@@ -11,7 +11,7 @@
 
 #include "ComputeResource12.h"
 
-#include "ColorBuffer12.h"
+#include "ColorBuffer.h"
 #include "ComputeKernel12.h"
 #include "DepthBuffer.h"
 #include "RenderEnums.h"

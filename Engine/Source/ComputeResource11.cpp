@@ -11,7 +11,7 @@
 
 #include "ComputeResource11.h"
 
-#include "ColorBuffer11.h"
+#include "ColorBuffer.h"
 #include "ComputeKernel11.h"
 #include "DepthBuffer.h"
 #include "GpuBuffer11.h"

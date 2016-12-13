@@ -11,7 +11,7 @@
 
 #include "CommandList11.h"
 
-#include "ColorBuffer11.h"
+#include "ColorBuffer.h"
 #include "CommandListManager11.h"
 #include "ConstantBuffer11.h"
 #include "DepthBuffer.h"

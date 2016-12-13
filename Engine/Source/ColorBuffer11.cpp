@@ -9,7 +9,7 @@
 
 #include "Stdafx.h"
 
-#include "ColorBuffer11.h"
+#include "ColorBuffer.h"
 
 #include "DeviceManager.h"
 #include "DXGIUtility.h"
