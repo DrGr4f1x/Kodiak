@@ -28,6 +28,7 @@ public:
 
 protected:
 	// Application event handlers
+	virtual void OnStartup() = 0;
 	virtual void OnInit() = 0;
 	virtual void OnUpdate(StepTimer* timer) = 0;
 	virtual void OnRender() = 0;
@@ -65,6 +66,7 @@ protected:
 
 private:
 	void ParseCommandLineArgs();
+	void Initialize();
 	void Update();
 	bool Render();
 

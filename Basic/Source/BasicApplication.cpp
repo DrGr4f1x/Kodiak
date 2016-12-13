@@ -48,10 +48,19 @@ BasicApplication::BasicApplication(uint32_t width, uint32_t height, const std::w
 }
 
 
+void BasicApplication::OnStartup()
+{
+	// Setup file system
+
+	// Setup renderer
+	auto& renderer = Renderer::GetInstance();
+	renderer.EnableRenderThread(false);
+}
+
+
 void BasicApplication::OnInit()
 {
 	LOG_INFO << "BasicApplication initialize";
-	DeviceManager::GetInstance().SetWindow(m_width, m_height, m_hwnd);
 	
 	CreateResources();
 
@@ -170,10 +179,11 @@ void BasicApplication::OnDestroy()
 
 void BasicApplication::CreateResources()
 {
-	m_colorTarget = CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float,
-		DirectX::Colors::CornflowerBlue);
+	m_colorTarget = make_shared<ColorBuffer>(DirectX::Colors::CornflowerBlue);
+	m_colorTarget->Create("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float);
 
-	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32, 0.0f);
+	m_depthBuffer = make_shared<DepthBuffer>(0.0f);
+	m_depthBuffer->Create("Main depth buffer", m_width, m_height, DepthFormat::D32);
 }
 
 

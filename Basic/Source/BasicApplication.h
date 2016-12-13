@@ -31,6 +31,7 @@ public:
 	BasicApplication(uint32_t width, uint32_t height, const std::wstring& name);
 
 protected:
+	void OnStartup() override;
 	void OnInit() override;
 	void OnUpdate(StepTimer* timer) override;
 	void OnRender() override;

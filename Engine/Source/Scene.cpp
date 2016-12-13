@@ -70,10 +70,10 @@ void Scene::Update(GraphicsCommandList& commandList)
 
 	// Update per-view constants
 	auto cameraProxy = m_camera->GetProxy();
-	auto shadowCameraProxy = m_shadowCamera->GetProxy();
+	auto shadowCameraProxy = m_shadowCamera ? m_shadowCamera->GetProxy() : nullptr;
 
 	m_perViewConstants.viewProjection = cameraProxy->Base.ViewProjMatrix;
-	m_perViewConstants.modelToShadow = shadowCameraProxy->ShadowMatrix;
+	m_perViewConstants.modelToShadow = shadowCameraProxy ? shadowCameraProxy->ShadowMatrix : Matrix4(kIdentity);
 	m_perViewConstants.viewPosition = cameraProxy->Base.Position;
 
 	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);

@@ -157,30 +157,3 @@ void Renderer::UpdateStaticModels()
 {
 	
 }
-
-
-namespace Kodiak
-{
-
-shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
-	const DirectX::XMVECTORF32& clearColor)
-{
-	auto colorBuffer = make_shared<ColorBuffer>(clearColor);
-
-	colorBuffer->Create(name, width, height, 1, format);
-
-	return colorBuffer;
-}
-
-
-shared_ptr<DepthBuffer> CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth,
-	uint32_t clearStencil)
-{
-	auto depthBuffer = make_shared<DepthBuffer>(clearDepth, clearStencil);
-
-	depthBuffer->Create(name, width, height, format);
-
-	return depthBuffer;
-}
-
-} // namespace Kodiak

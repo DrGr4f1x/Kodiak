@@ -30,17 +30,11 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 {
 	SetThreadRole(ThreadRole::Main);
 
-	InitializeProfiling();
-	InitializeLogging();
-
 	m_width = width;
 	m_height = height;
 	m_title = name;
 
 	m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-	
-	// Start up renderer
-	Renderer::GetInstance().Initialize();
 
 	// Create step timer
 	m_timer = make_unique<StepTimer>();
@@ -89,8 +83,8 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 	m_inputState = make_shared<InputState>();
 	m_inputState->Initialize(m_hwnd);
 
-	// Initialize the sample. OnInit is defined in each child-implementation of Application.
-	OnInit();
+	// Initialize the sample.
+	Initialize();
 
 	// Main sample loop.
 	MSG msg = { 0 };
@@ -254,6 +248,24 @@ void Application::ParseCommandLineArgs()
 		OnCommandlineArgument(argv[i], wcslen(argv[i]));
 	}
 	LocalFree(argv);
+}
+
+
+void Application::Initialize()
+{
+	// User-defined pre-initialization
+	OnStartup();
+
+	// Startup core systems
+	InitializeProfiling();
+	InitializeLogging();
+
+	// Start up renderer
+	Renderer::GetInstance().Initialize();
+	DeviceManager::GetInstance().SetWindow(m_width, m_height, m_hwnd);
+
+	// User-defined initialization
+	OnInit();
 }
 
 

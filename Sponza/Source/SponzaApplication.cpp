@@ -65,10 +65,22 @@ SponzaApplication::SponzaApplication(uint32_t width, uint32_t height, const std:
 {}
 
 
+void SponzaApplication::OnStartup()
+{
+	LOG_INFO << "SponzaApplication initialize";
+
+	// Setup file system
+
+	// Setup renderer
+	auto& renderer = Renderer::GetInstance();
+	renderer.EnableRenderThread(false);
+}
+
+
 void SponzaApplication::OnInit()
 {
 	LOG_INFO << "SponzaApplication initialize";
-	DeviceManager::GetInstance().SetWindow(m_width, m_height, m_hwnd);
+	
 
 #if defined(PROFILING) && (PROFILING == 1)
 	itt_frame_setup = __itt_string_handle_create("Frame setup");
@@ -125,6 +137,14 @@ void SponzaApplication::OnRender()
 }
 
 
+/*
+void SponzaApplication::OnRender()
+{
+
+}
+*/
+
+
 void SponzaApplication::OnDestroy()
 {
 	Renderer::GetInstance().Finalize();
@@ -141,13 +161,17 @@ void SponzaApplication::OnDestroy()
 
 void SponzaApplication::CreateResources()
 {
-	m_colorTarget = CreateColorBuffer("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float,
-		DirectX::Colors::Black);
+	m_colorTarget = make_shared<ColorBuffer>();
+	m_colorTarget->Create("Main color buffer", m_width, m_height, 1, ColorFormat::R11G11B10_Float);
 
-	m_depthBuffer = CreateDepthBuffer("Main depth buffer", m_width, m_height, DepthFormat::D32, 0.0f);
+	m_depthBuffer = make_shared<DepthBuffer>();
+	m_depthBuffer->Create("Main depth buffer", m_width, m_height, DepthFormat::D32);
 
-	m_linearDepthBuffer = CreateColorBuffer("Linear depth buffer", m_width, m_height, 1, ColorFormat::R16_Float, DirectX::Colors::Black);
-	m_ssaoFullscreen = CreateColorBuffer("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm, DirectX::Colors::Black);
+	m_linearDepthBuffer = make_shared<ColorBuffer>();
+	m_linearDepthBuffer->Create("Linear depth buffer", m_width, m_height, 1, ColorFormat::R16_Float);
+
+	m_ssaoFullscreen = make_shared<ColorBuffer>();
+	m_ssaoFullscreen->Create("SSAO full res", m_width, m_height, 1, ColorFormat::R8_UNorm);
 
 	m_lumaBuffer = make_shared<ColorBuffer>();
 	m_lumaBuffer->Create("Luminance", m_width, m_height, 1, ColorFormat::R8_UNorm);
@@ -178,7 +202,9 @@ void SponzaApplication::CreateResources()
 
 	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
-		m_postEffectsBuffer = CreateColorBuffer("Post Effects Buffer", m_width, m_height, 1, ColorFormat::R32_UInt, DirectX::Colors::Black);
+		m_postEffectsBuffer = make_shared<ColorBuffer>();
+		m_postEffectsBuffer->Create("Post Effects Buffer", m_width, m_height, 1, ColorFormat::R32_UInt);
+
 		m_postProcessing->PostEffectsBuffer = m_postEffectsBuffer;
 		m_fxaa->PostEffectsBuffer = m_postEffectsBuffer;
 	}
@@ -456,7 +482,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 			m_mainScene->Update(commandList);
 			m_mainScene->Render(GetDefaultBasePass(), commandList);
 
-			if(false)
+			if(true)
 			{
 				PROFILE_BEGIN(itt_particles);
 

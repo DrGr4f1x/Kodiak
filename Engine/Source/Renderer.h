@@ -38,6 +38,7 @@ struct RenderTaskEnvironment
 	std::atomic<bool> frameCompleted{ true };
 };
 
+
 struct PresentParameters
 {
 	float PaperWhite;
@@ -45,13 +46,6 @@ struct PresentParameters
 	float ToeStrength;
 	uint32_t DebugMode;
 };
-
-// TODO: Move this shit elsewhere
-std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
-	const DirectX::XMVECTORF32& clearColor);
-
-std::shared_ptr<DepthBuffer> CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth = 1.0f,
-	uint32_t clearStencil = 0);
 
 
 class Renderer
@@ -61,6 +55,8 @@ public:
 
 	void Initialize();
 	void Finalize();
+
+	void EnableRenderThread(bool enable) { /* TODO */ }
 
 	void EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback);
 
