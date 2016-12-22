@@ -53,8 +53,17 @@ void BasicApplication::OnStartup()
 {
 	// Setup file system
 	auto& filesystem = Filesystem::GetInstance();
-	filesystem.SetBinaryPath("Bin");
-	filesystem.Mount("Shaders");
+
+	auto binDir = filesystem.GetBinaryDir();
+	string rootDir = binDir;
+	auto pos = binDir.find("Bin");
+	if (pos != binDir.npos)
+	{
+		rootDir = binDir.substr(0, pos);
+	}
+	filesystem.SetRootDir(rootDir);
+
+	filesystem.AddSearchPath("Shaders");
 
 	// Setup renderer
 	auto& renderer = Renderer::GetInstance();

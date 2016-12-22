@@ -63,8 +63,6 @@ inline void InitializeRTV(RenderTargetViewPtr& rtv) { rtv.Reset(); }
 inline void InitializeUAV(UnorderedAccessViewPtr& uav) { uav.Reset(); }
 
 #elif defined(VK)
-#
-
 
 #else
 #error No graphics API defined!

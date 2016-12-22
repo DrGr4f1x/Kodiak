@@ -43,6 +43,7 @@ enum EParticleResolution
 	kParticleResolution_Dynamic
 };
 
+#if 0
 class ParticleEffectManager
 {
 public:
@@ -69,7 +70,7 @@ public:
 	ThreadParameter<float> MipBias;
 
 private:
-	void MaintainTextureList(ParticleEffectProperties* effectProperties);
+	//void MaintainTextureList(ParticleEffectProperties* effectProperties);
 	void SetFinalBuffers(ComputeCommandList& commandList);
 
 	struct CBChangesPerView
@@ -157,5 +158,6 @@ private:
 	std::vector<ParticleEffect*>					m_particleEffectsActive;
 	std::vector<std::string>						m_textureNameArray;
 };
+#endif
 
 } // namespace Kodiak

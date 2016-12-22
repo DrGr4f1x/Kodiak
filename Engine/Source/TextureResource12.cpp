@@ -9,17 +9,16 @@
 
 #include "Stdafx.h"
 
-#include "Texture12.h"
+#include "TextureResource.h"
 
 #include "CommandList12.h"
 #include "DDSTextureLoader12.h"
-#include "DXGIUtility.h"
 #include "DeviceManager12.h"
+#include "DXGIUtility.h"
+#include "Filesystem.h"
 #include "Format.h"
-#include "Paths.h"
+#include "LoaderEnums.h"
 #include "RenderUtils.h"
-
-#include <Shlwapi.h>
 
 
 using namespace Kodiak;
@@ -28,7 +27,6 @@ using namespace std;
 
 namespace
 {
-map<string, shared_ptr<Texture>>	s_textureMap;
 
 enum class TextureFormat : uint32_t
 {
@@ -43,59 +41,50 @@ const string s_formatString[] =
 	"none",
 	"dds",
 };
+
 } // anonymous namespace
 
 
-shared_ptr<Texture> Texture::Load(const string& path, bool sRGB, bool asyncLoad)
+TextureResource::TextureResource()
+	: m_format(ColorFormat::Unknown)
+	, m_loadState(LoadState::LoadNotStarted)
 {
-	shared_ptr<Texture> texture;
-
-	{
-		static mutex textureMutex;
-		lock_guard<mutex> CS(textureMutex);
-
-		auto iter = s_textureMap.find(path);
-
-		if (iter == s_textureMap.end())
-		{
-			if (!PathFileExistsA(path.c_str()))
-			{
-				return nullptr;
-			}
-
-			texture = make_shared<Texture>();
-			s_textureMap[path] = texture;
-
-			if (asyncLoad)
-			{
-				// Non-blocking asynchronous load
-				texture->loadTask = concurrency::create_task([texture, sRGB, path]()
-				{
-					LoadInternal(texture, sRGB, path);
-				});
-			}
-			else
-			{
-				// Blocking synchronous create
-				texture->loadTask = concurrency::create_task([] {});
-				LoadInternal(texture, sRGB, path);
-			}
-		}
-		else
-		{
-			texture = iter->second;
-		}
-	}
-
-	return texture;
+	InitializeSRV(m_srv);
 }
 
 
-void Texture::Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData)
+TextureResource::TextureResource(bool isSRGB)
+	: m_isSRGB(isSRGB)
+	, m_format(ColorFormat::Unknown)
+	, m_loadState(LoadState::LoadNotStarted)
 {
-	loadTask = concurrency::create_task([] {});
+	InitializeSRV(m_srv);
+}
 
+
+TextureResource::TextureResource(ShaderResourceView srv)
+	: m_srv(srv)
+	, m_format(ColorFormat::Unknown)
+	, m_loadState(LoadState::LoadNotStarted)
+{}
+
+
+ColorFormat TextureResource::GetFormat() const
+{
+	return m_format;
+}
+
+
+void TextureResource::Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData)
+{
 	m_usageState = D3D12_RESOURCE_STATE_COMMON;
+
+	m_width = width;
+	m_height = height;
+	m_depth = 1;
+	m_arraySize = 1;
+	m_mipLevels = 1;
+	m_format = format;
 
 	DXGI_FORMAT dxgiFormat = DXGIUtility::ConvertToDXGI(format);
 
@@ -130,19 +119,26 @@ void Texture::Create(uint32_t width, uint32_t height, ColorFormat format, const 
 
 	CommandList::InitializeTexture(*this, 1, &texResource);
 
-	if (m_cpuDescriptorHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	if (m_srv.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		m_cpuDescriptorHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_srv = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
-	g_device->CreateShaderResourceView(m_resource.Get(), nullptr, m_cpuDescriptorHandle);
+	g_device->CreateShaderResourceView(m_resource.Get(), nullptr, m_srv);
+
+	m_loadState = LoadState::LoadSucceeded;
 }
 
 
-void Texture::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData)
+void TextureResource::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData)
 {
-	loadTask = concurrency::create_task([] {});
-
 	m_usageState = D3D12_RESOURCE_STATE_COMMON;
+
+	m_width = width;
+	m_height = height;
+	m_depth = 1;
+	m_arraySize = arraySize;
+	m_mipLevels = numMips;
+	m_format = format;
 
 	DXGI_FORMAT dxgiFormat = DXGIUtility::ConvertToDXGI(format);
 
@@ -181,9 +177,9 @@ void Texture::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, u
 		CommandList::InitializeTexture(*this, 1, &texResource);
 	}
 
-	if (m_cpuDescriptorHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	if (m_srv.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		m_cpuDescriptorHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_srv = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -193,21 +189,22 @@ void Texture::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, u
 	srvDesc.Texture2DArray.MipLevels = 4;
 	srvDesc.Texture2DArray.ArraySize = 16;
 
-	g_device->CreateShaderResourceView(m_resource.Get(), &srvDesc, m_cpuDescriptorHandle);
+	g_device->CreateShaderResourceView(m_resource.Get(), &srvDesc, m_srv);
+
+	m_loadState = LoadState::LoadSucceeded;
 }
 
 
-void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string& path)
+bool TextureResource::DoLoad()
 {
+	m_loadState = LoadState::Loading;
+	
 	TextureFormat format = TextureFormat::None;
 
-	string extension;
-	bool appendExtension = false;
-
-	auto sepIndex = path.rfind('.');
+	auto sepIndex = m_resourcePath.rfind('.');
 	if (sepIndex != string::npos)
 	{
-		string extension = path.substr(sepIndex + 1);
+		string extension = m_resourcePath.substr(sepIndex + 1);
 		transform(begin(extension), end(extension), begin(extension), ::tolower);
 
 		for (uint32_t i = 0; i < static_cast<uint32_t>(TextureFormat::NumFormats); ++i)
@@ -219,29 +216,69 @@ void Texture::LoadInternal(shared_ptr<Texture> texture, bool sRGB, const string&
 			}
 		}
 	}
-	else
+
+	if (format == TextureFormat::None)
 	{
-		// Assume .dds if there is no extension
-		format = TextureFormat::DDS;
-		extension = ".dds";
-		appendExtension = true;
+		m_loadState = LoadState::LoadFailed;
+		return false;
 	}
 
-	if (format != TextureFormat::None)
-	{
-		switch (format)
-		{
-		case TextureFormat::DDS:
-				
-			texture->m_cpuDescriptorHandle = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto& filesystem = Filesystem::GetInstance();
+	string fullpath = filesystem.GetFullPath(m_resourcePath);
+	assert(!fullpath.empty());
 
-			ThrowIfFailed(CreateDDSTextureFromFile(g_device,
-				path,
-				0, // maxsize
-				sRGB,
-				texture->m_resource.GetAddressOf(),
-				texture->m_cpuDescriptorHandle));
-			break;
-		}
+	switch (format)
+	{
+	case TextureFormat::DDS:
+
+		m_srv = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+		ThrowIfFailed(CreateDDSTextureFromFile(g_device,
+			fullpath,
+			0, // maxsize
+			m_isSRGB,
+			m_resource.GetAddressOf(),
+			m_srv));
+		break;
 	}
+
+	m_loadState = LoadState::LoadSucceeded;
+	return true;
+}
+
+
+bool TextureResource::IsReady() const
+{
+	return m_loadState == LoadState::LoadSucceeded;
+}
+
+
+bool TextureResource::IsLoadFinished() const
+{
+	LoadState curState = m_loadState;
+	return (curState == LoadState::LoadFailed) || (curState == LoadState::LoadSucceeded);
+}
+
+
+void TextureResource::AddPostLoadCallback(function<void()> callback)
+{
+	LoadState curState = m_loadState;
+	if (curState == LoadState::LoadSucceeded)
+	{
+		callback();
+	}
+	else if (curState != LoadState::LoadFailed)
+	{
+		m_callbacks.push_back(callback);
+	}
+}
+
+
+void TextureResource::ExecutePostLoadCallbacks()
+{
+	for (auto& callback : m_callbacks)
+	{
+		callback();
+	}
+	m_callbacks.clear();
 }

@@ -9,12 +9,41 @@
 
 #pragma once
 
-#if defined(DX12)
-#include "Texture12.h"
-#elif defined(DX11)
-#include "Texture11.h"
-#elif defined(VK)
-#include "TextureVk.h"
-#else
-#error No graphics API defined!
-#endif
+namespace Kodiak
+{
+
+// Forward declarations
+enum class ColorFormat;
+class TextureResource;
+
+class Texture
+{
+public:
+	uint32_t GetWidth() const;
+	uint32_t GetHeight() const;
+	uint32_t GetDepth() const;
+	uint32_t GetArraySize() const;
+	uint32_t GetMipLevels() const;
+	ColorFormat GetFormat() const;
+
+	const std::string& GetName() const { return m_name; }
+
+	ShaderResourceView GetSRV();
+
+	bool IsReady() const;
+
+	static std::shared_ptr<Texture> Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData);
+	static std::shared_ptr<Texture> Create(const std::string& name, uint32_t width, uint32_t height, ColorFormat format, const void* initData);
+	static std::shared_ptr<Texture> CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData = nullptr);
+	static std::shared_ptr<Texture> CreateArray(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData = nullptr);
+
+	static std::shared_ptr<Texture> Load(const std::string& path, bool isSRGB);
+
+	void AddPostLoadCallback(std::function<void()> callback);
+
+private:
+	std::shared_ptr<TextureResource> m_resource;
+	std::string m_name;
+};
+
+} // namespace Kodiak

@@ -47,7 +47,9 @@ protected:
 private:
 	// Creation/setup helpers
 	void CreateResources();
+#if 0
 	void CreateParticleEffects();
+#endif
 	void CreateEffects();
 	void CreateModel();
 	void SetupScene();

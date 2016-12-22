@@ -22,8 +22,10 @@
 #include "Profile.h"
 #include "RenderTask.h"
 #include "RenderUtils.h"
+#include "ResourceLoader.h"
 #include "SamplerManager.h"
 #include "Scene.h"
+#include "TextureResource.h"
 
 using namespace Kodiak;
 using namespace Microsoft::WRL;
@@ -67,6 +69,12 @@ void Renderer::EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback)
 	{
 		m_renderTaskQueue.push(callback);
 	}
+}
+
+
+void Renderer::Update()
+{
+	ResourceLoader<TextureResource>::GetInstance().Update();
 }
 
 

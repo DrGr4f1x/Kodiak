@@ -13,11 +13,11 @@
 
 #include "BinaryReader.h"
 #include "Defaults.h"
+#include "Filesystem.h"
 #include "IndexBuffer.h"
 #include "Material.h"
 #include "MaterialParameter.h"
 #include "MaterialResource.h"
-#include "Paths.h"
 #include "RenderEnums.h"
 #include "Texture.h"
 #include "VertexBuffer.h"
@@ -229,7 +229,8 @@ namespace
 
 string BuildTexturePath(const string& basePath)
 {
-	string fullPath = Paths::GetInstance().TextureDir() + basePath;
+	string ret = basePath;
+
 	bool appendExtension = false;
 	string extension;
 
@@ -237,9 +238,33 @@ string BuildTexturePath(const string& basePath)
 	if (sepIndex == string::npos)
 	{
 		// Assume DDS
-		fullPath += ".dds";
+		ret += ".dds";
 	}
-	return fullPath;
+	return ret;
+}
+
+shared_ptr<Texture> LoadTexture(const string& path, bool isSrgb, shared_ptr<Texture> defaultTexture)
+{
+	auto& filesystem = Filesystem::GetInstance();
+	if (filesystem.IsRegularFile(path))
+	{
+		return Texture::Load(path, isSrgb);
+	}
+	return defaultTexture;
+}
+
+shared_ptr<Texture> LoadTexture2(const string& path, const string& path2, bool isSrgb, shared_ptr<Texture> defaultTexture)
+{
+	auto& filesystem = Filesystem::GetInstance();
+	if (filesystem.IsRegularFile(path))
+	{
+		return Texture::Load(path, isSrgb);
+	}
+	else if (filesystem.IsRegularFile(path2))
+	{
+		return Texture::Load(path2, isSrgb);
+	}
+	return defaultTexture;
 }
 
 } // anonymous namespace
@@ -318,9 +343,14 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 	bool asyncLoad = false;
 
 	// Textures and materials
-	std::vector<std::shared_ptr<Material>> opaqueMaterials(header.materialCount);
-	std::vector<std::shared_ptr<Material>> shadowMaterials(header.materialCount);
-	std::vector<std::shared_ptr<Material>> depthMaterials(header.materialCount);
+	shared_ptr<Texture> defDiffuse = Texture::Load("default.DDS", true);
+	shared_ptr<Texture> defSpecular = Texture::Load("default_specular.DDS", true);
+	shared_ptr<Texture> defNormal = Texture::Load("default_normal.DDS", false);
+
+	vector<shared_ptr<Material>> opaqueMaterials(header.materialCount);
+	vector<shared_ptr<Material>> shadowMaterials(header.materialCount);
+	vector<shared_ptr<Material>> depthMaterials(header.materialCount);
+
 	for (uint32_t i = 0; i < header.materialCount; ++i)
 	{
 		// Setup opaque base-pass material
@@ -328,51 +358,32 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		opaqueMaterial->SetEffect(GetDefaultBaseEffect());
 		opaqueMaterial->SetRenderPass(GetDefaultBasePass());
 
-		shared_ptr<Texture> diffuseTexture;
-		shared_ptr<Texture> specularTexture;
-		shared_ptr<Texture> normalTexture;
-
+		// Diffuse texture
 		string diffusePath = BuildTexturePath(materials[i].texDiffusePath);
-		diffuseTexture = Texture::Load(diffusePath, true, asyncLoad);
-		if (!diffuseTexture)
-		{
-			diffusePath = BuildTexturePath("default.dds");
-			diffuseTexture = Texture::Load(diffusePath, true, asyncLoad);
-
-		}
-		
-		string specularPath = BuildTexturePath(materials[i].texSpecularPath);
-		specularTexture = Texture::Load(specularPath, true, asyncLoad);
-		if (!specularTexture)
-		{
-			specularPath = BuildTexturePath(materials[i].texDiffusePath + "_specular");
-			specularTexture = Texture::Load(specularPath, true, asyncLoad);
-			if (!specularTexture)
-			{
-				specularPath = BuildTexturePath("default_specular");
-				specularTexture = Texture::Load(specularPath, true, asyncLoad);
-			}
-		}
-
-		string normalPath = BuildTexturePath(materials[i].texNormalPath);
-		normalTexture = Texture::Load(normalPath, false, asyncLoad);
-		if (!normalTexture)
-		{
-			normalPath = BuildTexturePath(materials[i].texDiffusePath + "_normal");
-			normalTexture = Texture::Load(normalPath, false, asyncLoad);
-			if (!normalTexture)
-			{
-				normalPath = BuildTexturePath("default_normal");
-				normalTexture = Texture::Load(normalPath, false, asyncLoad);
-			}
-		}
-
-		(diffuseTexture->loadTask && specularTexture->loadTask && normalTexture->loadTask).then([=]
+		auto diffuseTexture = LoadTexture(diffusePath, true, defDiffuse);
+		diffuseTexture->AddPostLoadCallback([opaqueMaterial, diffuseTexture]()
 		{
 			opaqueMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
+		});
+
+		// Specular texture
+		string specularPath1 = BuildTexturePath(materials[i].texSpecularPath);
+		string specularPath2 = BuildTexturePath(materials[i].texDiffusePath + "_specular");
+		auto specularTexture = LoadTexture2(specularPath1, specularPath2, true, defSpecular);
+		specularTexture->AddPostLoadCallback([opaqueMaterial, specularTexture]()
+		{
 			opaqueMaterial->GetResource("texSpecular")->SetSRV(*specularTexture);
+		});
+		
+		// Normal texture
+		string normalPath1 = BuildTexturePath(materials[i].texNormalPath);
+		string normalPath2 = BuildTexturePath(materials[i].texDiffusePath + "_normal");
+		auto normalTexture = LoadTexture2(normalPath1, normalPath2, false, defNormal);
+		normalTexture->AddPostLoadCallback([opaqueMaterial, normalTexture]()
+		{
 			opaqueMaterial->GetResource("texNormal")->SetSRV(*normalTexture);
 		});
+
 
 		// TODO move this stuff to per-view data
 		using namespace DirectX;
@@ -386,7 +397,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		depthMaterial->SetEffect(GetDefaultDepthEffect());
 		depthMaterial->SetRenderPass(GetDefaultDepthPass());
 
-		diffuseTexture->loadTask.then([=]
+		diffuseTexture->AddPostLoadCallback([depthMaterial, diffuseTexture]()
 		{
 			depthMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
 		});
@@ -396,7 +407,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		shadowMaterial->SetEffect(GetDefaultShadowEffect());
 		shadowMaterial->SetRenderPass(GetDefaultShadowPass());
 
-		diffuseTexture->loadTask.then([=]
+		diffuseTexture->AddPostLoadCallback([shadowMaterial, diffuseTexture]()
 		{
 			shadowMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
 		});

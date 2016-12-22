@@ -60,6 +60,7 @@ public:
 
 	void EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback);
 
+	void Update();
 	void Render(std::shared_ptr<RootRenderTask> rootTask, bool bHDRPresent, const PresentParameters& params);
 
 private:

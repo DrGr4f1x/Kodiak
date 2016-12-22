@@ -20,6 +20,7 @@
 #include "Engine\Source\DepthBuffer.h"
 #include "Engine\Source\DeviceManager.h"
 #include "Engine\Source\Effect.h"
+#include "Engine\Source\Filesystem.h"
 #include "Engine\Source\Format.h"
 #include "Engine\Source\FXAA.h"
 #include "Engine\Source\InputState.h"
@@ -70,6 +71,20 @@ void SponzaApplication::OnStartup()
 	LOG_INFO << "SponzaApplication initialize";
 
 	// Setup file system
+	auto& filesystem = Filesystem::GetInstance();
+
+	auto binDir = filesystem.GetBinaryDir();
+	string rootDir = binDir;
+	auto pos = binDir.find("Bin");
+	if (pos != binDir.npos)
+	{
+		rootDir = binDir.substr(0, pos);
+	}
+	filesystem.SetRootDir(rootDir);
+
+	filesystem.AddSearchPath("Shaders");
+	filesystem.AddSearchPath("Textures");
+	filesystem.AddSearchPath("Models");
 
 	// Setup renderer
 	auto& renderer = Renderer::GetInstance();
@@ -94,7 +109,9 @@ void SponzaApplication::OnInit()
 #endif
 
 	CreateResources();
+#if 0
 	CreateParticleEffects();
+#endif
 
 	CreateEffects();
 	CreateModel();
@@ -214,6 +231,7 @@ void SponzaApplication::CreateResources()
 }
 
 
+#if 0
 void SponzaApplication::CreateParticleEffects()
 {
 	m_particleEffectManager = make_shared<ParticleEffectManager>();
@@ -270,6 +288,7 @@ void SponzaApplication::CreateParticleEffects()
 	fire.Spread.y = 60.0f;
 	m_particleEffectManager->InstantiateEffect(&fire);
 }
+#endif
 
 
 void SponzaApplication::CreateEffects()
@@ -482,6 +501,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 			m_mainScene->Update(commandList);
 			m_mainScene->Render(GetDefaultBasePass(), commandList);
 
+#if 0
 			if(true)
 			{
 				PROFILE_BEGIN(itt_particles);
@@ -492,6 +512,7 @@ shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
 
 				PROFILE_END();
 			}
+#endif
 
 			commandList.CloseAndExecute();
 			PROFILE_END();

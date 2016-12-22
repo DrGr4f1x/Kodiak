@@ -57,10 +57,12 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <shared_mutex>
 #include <sstream>
 #include <stdint.h>
 #include <string>
 #include <thread>
+#include <unordered_map>
 
 // Engine globals
 extern bool g_singleThreadedRenderer;

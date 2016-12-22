@@ -17,7 +17,7 @@
 #include "RenderEnums.h"
 #include "Renderer.h"
 #include "RenderThread.h"
-#include "Texture12.h"
+#include "Texture.h"
 
 
 using namespace Kodiak;
@@ -45,7 +45,7 @@ void ComputeResource::SetSRVInternal(Texture& texture, bool immediate)
 	}
 
 	// Texture must be fully loaded at this point
-	assert(texture != false);
+	assert(texture.IsReady());
 
 	m_cpuHandle = texture.GetSRV();
 

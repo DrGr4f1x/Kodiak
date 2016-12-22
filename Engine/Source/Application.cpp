@@ -279,6 +279,9 @@ void Application::Update()
 		// Update the input state
 		m_inputState->Update(static_cast<float>(m_timer->GetElapsedSeconds()));
 
+		// Update the renderer
+		Renderer::GetInstance().Update();
+
 		// Subclasses implement OnUpdate to supply their own scene update logic
 		OnUpdate(m_timer.get());
 	});

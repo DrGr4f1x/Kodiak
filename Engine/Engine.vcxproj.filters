@@ -289,12 +289,6 @@
     <ClInclude Include="Source\Texture.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Texture11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Texture12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Source\DDSTextureLoader12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
@@ -435,6 +429,11 @@
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\Filesystem.h" />
+    <ClInclude Include="Source\ResourceLoader.h" />
+    <ClInclude Include="Source\TextureResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LoaderEnums.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -581,12 +580,6 @@
     <ClCompile Include="Source\VertexBuffer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Texture11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Texture12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Source\DDSTextureLoader12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
@@ -683,6 +676,16 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\Filesystem.cpp" />
+    <ClCompile Include="Source\ResourceLoader.cpp" />
+    <ClCompile Include="Source\TextureResource11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TextureResource12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Texture.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">

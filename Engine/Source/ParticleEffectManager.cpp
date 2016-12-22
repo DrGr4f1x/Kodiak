@@ -59,6 +59,7 @@ using namespace std;
 #define TILES_PER_BIN (TILES_PER_BIN_X * TILES_PER_BIN_Y)
 
 
+#if 0
 ParticleEffectManager::ParticleEffectManager()
 	: Enable(m_enable)
 	, PauseSim(m_pauseSim)
@@ -706,3 +707,4 @@ void ParticleEffectManager::BitonicSort(ComputeCommandList& commandList)
 		indirectArgsOffset += 12;
 	}
 }
+#endif

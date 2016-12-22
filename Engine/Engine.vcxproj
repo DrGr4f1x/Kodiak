@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8D709DA5-8AE1-4508-99DA-AA03741084EC}</ProjectGuid>
     <RootNamespace>Kodiak2</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
     <ProjectName>Engine</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -329,6 +329,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\LoaderEnums.h" />
     <ClInclude Include="Source\Log.h" />
     <ClInclude Include="Source\Material.h" />
     <ClInclude Include="Source\Material11.h">
@@ -399,6 +400,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     <ClInclude Include="Source\RenderThread.h" />
     <ClInclude Include="Source\RenderUtils.h" />
     <ClInclude Include="Source\RenderTask.h" />
+    <ClInclude Include="Source\ResourceLoader.h" />
     <ClInclude Include="Source\RootSignature12.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
@@ -521,14 +523,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     <ClInclude Include="Source\Stdafx.h" />
     <ClInclude Include="Source\StepTimer.h" />
     <ClInclude Include="Source\Texture.h" />
-    <ClInclude Include="Source\Texture11.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Source\Texture12.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="Source\TextureResource.h" />
     <ClInclude Include="Source\Transform.h" />
     <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\Vector.h" />
@@ -639,6 +634,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\RenderTask.cpp" />
     <ClCompile Include="Source\RenderThread.cpp" />
+    <ClCompile Include="Source\ResourceLoader.cpp" />
     <ClCompile Include="Source\RootSignature12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
@@ -672,13 +668,14 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Texture11.cpp">
+    <ClCompile Include="Source\Texture.cpp" />
+    <ClCompile Include="Source\TextureResource11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source\Texture12.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
+    <ClCompile Include="Source\TextureResource12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\Utility.cpp" />
     <ClCompile Include="Source\VertexBuffer.cpp" />

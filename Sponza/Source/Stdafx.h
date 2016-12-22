@@ -50,6 +50,7 @@
 #include <map>
 #include <memory>
 #include <queue>
+#include <shared_mutex>
 #include <sstream>
 #include <stdint.h>
 #include <string>
