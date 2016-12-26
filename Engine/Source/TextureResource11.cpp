@@ -111,7 +111,7 @@ void TextureResource::Create(uint32_t width, uint32_t height, ColorFormat format
 }
 
 
-void TextureResource::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData = nullptr)
+void TextureResource::CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData)
 {
 	D3D11_TEXTURE2D_DESC desc{};
 	

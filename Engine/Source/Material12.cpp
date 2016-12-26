@@ -18,6 +18,7 @@
 #include "MaterialResource12.h"
 #include "RenderPass.h"
 #include "RootSignature12.h"
+#include "Texture.h"
 
 
 using namespace Kodiak;
@@ -106,6 +107,15 @@ shared_ptr<MaterialConstantBuffer> Material::GetConstantBuffer(const string& nam
 	m_constantBuffers[name] = cbuffer;
 
 	return cbuffer;
+}
+
+
+void Material::SetResource(const string& name, shared_ptr<Texture> texture)
+{
+	m_textures[name] = texture;
+
+	auto resource = GetResource(name);
+	resource->SetSRV(*texture);
 }
 
 

@@ -51,6 +51,8 @@ public:
 	std::shared_ptr<MaterialResource> GetResource(const std::string& name);
 	std::shared_ptr<MaterialConstantBuffer> GetConstantBuffer(const std::string& name);
 
+	void SetResource(const std::string& name, std::shared_ptr<Texture> texture);
+
 	std::shared_ptr<RenderThread::MaterialData> GetRenderThreadData() { return m_renderThreadData; }
 
 	std::shared_ptr<Material> Clone();
@@ -74,6 +76,8 @@ private:
 
 	std::mutex														m_constantBufferLock;
 	std::map<std::string, std::shared_ptr<MaterialConstantBuffer>>	m_constantBuffers;
+
+	std::map<std::string, std::shared_ptr<Texture>>				m_textures;
 
 	std::shared_ptr<RenderThread::MaterialData>					m_renderThreadData;
 };

@@ -113,6 +113,15 @@ shared_ptr<MaterialConstantBuffer> Material::GetConstantBuffer(const string& nam
 }
 
 
+void Material::SetResource(const string& name, shared_ptr<Texture> texture)
+{
+	m_textures[name] = texture;
+
+	auto resource = GetResource(name);
+	resource->SetSRV(*texture);
+}
+
+
 shared_ptr<Material> Material::Clone()
 {
 	auto clone = make_shared<Material>();

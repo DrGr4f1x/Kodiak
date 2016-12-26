@@ -363,7 +363,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		auto diffuseTexture = LoadTexture(diffusePath, true, defDiffuse);
 		diffuseTexture->AddPostLoadCallback([opaqueMaterial, diffuseTexture]()
 		{
-			opaqueMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
+			opaqueMaterial->SetResource("texDiffuse", diffuseTexture);
 		});
 
 		// Specular texture
@@ -372,7 +372,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		auto specularTexture = LoadTexture2(specularPath1, specularPath2, true, defSpecular);
 		specularTexture->AddPostLoadCallback([opaqueMaterial, specularTexture]()
 		{
-			opaqueMaterial->GetResource("texSpecular")->SetSRV(*specularTexture);
+			opaqueMaterial->SetResource("texSpecular", specularTexture);
 		});
 		
 		// Normal texture
@@ -381,7 +381,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 		auto normalTexture = LoadTexture2(normalPath1, normalPath2, false, defNormal);
 		normalTexture->AddPostLoadCallback([opaqueMaterial, normalTexture]()
 		{
-			opaqueMaterial->GetResource("texNormal")->SetSRV(*normalTexture);
+			opaqueMaterial->SetResource("texNormal", normalTexture);
 		});
 
 
@@ -399,7 +399,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 
 		diffuseTexture->AddPostLoadCallback([depthMaterial, diffuseTexture]()
 		{
-			depthMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
+			depthMaterial->SetResource("texDiffuse", diffuseTexture);
 		});
 		
 		// Setup shadow material
@@ -409,7 +409,7 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 
 		diffuseTexture->AddPostLoadCallback([shadowMaterial, diffuseTexture]()
 		{
-			shadowMaterial->GetResource("texDiffuse")->SetSRV(*diffuseTexture);
+			shadowMaterial->SetResource("texDiffuse", diffuseTexture);
 		});
 	}
 
