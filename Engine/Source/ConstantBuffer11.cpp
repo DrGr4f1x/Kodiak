@@ -25,8 +25,7 @@ void ConstantBuffer::Create(size_t size, Usage usage)
 	size = Math::AlignUp(size, 16);
 
 	// Fill in a buffer description
-	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+	D3D11_BUFFER_DESC desc{};
 	desc.ByteWidth = static_cast<UINT>(size);
 	desc.Usage = (D3D11_USAGE)usage;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;

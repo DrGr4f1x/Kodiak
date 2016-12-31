@@ -64,8 +64,8 @@ shared_ptr<IndexBuffer> IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data
 void IndexBuffer::CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, std::shared_ptr<BaseIndexBufferData> data, Usage usage)
 {
 	// Fill in a buffer description
-	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+	D3D11_BUFFER_DESC desc{};
+	
 	desc.ByteWidth = static_cast<UINT>(data->GetDataSize());
 	desc.Usage = (D3D11_USAGE)usage;
 	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;

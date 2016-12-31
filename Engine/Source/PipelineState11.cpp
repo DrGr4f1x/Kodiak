@@ -132,10 +132,8 @@ DepthStencilStateDesc::DepthStencilStateDesc(bool enable, bool writeEnable)
 {}
 
 
-GraphicsPSO::GraphicsPSO()
-{
-	ZeroMemory(&m_desc, sizeof(GraphicsPSODesc));
-}
+GraphicsPSO::GraphicsPSO() : m_desc{}
+{}
 
 
 void GraphicsPSO::SetBlendState(const BlendStateDesc& blendDesc)

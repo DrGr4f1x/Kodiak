@@ -120,9 +120,8 @@ void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* 
 {
 	ComPtr<ID3D11Buffer> staging;
 
-	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-
+	D3D11_BUFFER_DESC desc{};
+	
 	desc.ByteWidth = static_cast<UINT>(numBytes);
 	desc.BindFlags = 0;
 	desc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -143,9 +142,8 @@ void CommandList::FillBuffer(GpuResource& dest, size_t destOffset, DWParam value
 {
 	ComPtr<ID3D11Buffer> staging;
 
-	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-
+	D3D11_BUFFER_DESC desc{};
+	
 	desc.ByteWidth = 4;
 	desc.BindFlags = 0;
 	desc.Usage = D3D11_USAGE_IMMUTABLE;

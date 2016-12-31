@@ -57,8 +57,8 @@ shared_ptr<VertexBuffer> VertexBuffer::Create(std::shared_ptr<BaseVertexBufferDa
 void VertexBuffer::CreateInternal(shared_ptr<VertexBuffer> buffer, shared_ptr<BaseVertexBufferData> data, Usage usage)
 {
 	// Fill in a buffer description
-	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+	D3D11_BUFFER_DESC desc{};
+	
 	desc.ByteWidth = static_cast<UINT>(data->GetDataSize());
 	desc.Usage = (D3D11_USAGE)usage;
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
