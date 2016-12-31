@@ -24,17 +24,9 @@ using namespace Kodiak;
 using namespace std;
 
 
-ComputeKernel::ComputeKernel()
-{
-	loadTask = concurrency::create_task([] {});
-}
-
-
 ComputeKernel::ComputeKernel(const string& name)
 	: m_name(name)
-{
-	loadTask = concurrency::create_task([] {});
-}
+{}
 
 
 void ComputeKernel::SetComputeShaderPath(const string& shaderPath, bool immediate)
@@ -43,6 +35,7 @@ void ComputeKernel::SetComputeShaderPath(const string& shaderPath, bool immediat
 	if (immediate)
 	{
 		m_computeShader = ComputeShader::LoadImmediate(shaderPath);
+		SetupKernel();
 	}
 	else
 	{

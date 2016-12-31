@@ -31,10 +31,7 @@ namespace RenderThread { struct ComputeData; }
 class ComputeKernel
 {
 public:
-	concurrency::task<void> loadTask;
-
-public:
-	ComputeKernel();
+	ComputeKernel() = default;
 	ComputeKernel(const std::string& name);
 
 	void SetName(const std::string& name) { m_name = name; }

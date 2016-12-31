@@ -309,8 +309,8 @@ void SponzaApplication::CreateEffects()
 
 	// Default effects
 	auto baseEffect = make_shared<Effect>("Base");
-	baseEffect->SetVertexShaderPath("BaseVS");
-	baseEffect->SetPixelShaderPath("BasePS");
+	baseEffect->SetVertexShaderPath("BaseVS.dx.cso");
+	baseEffect->SetPixelShaderPath("BasePS.dx.cso");
 	baseEffect->SetBlendState(CommonStates::Opaque());
 	baseEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
 	baseEffect->SetDepthStencilState(CommonStates::DepthReadEqual());
@@ -320,8 +320,8 @@ void SponzaApplication::CreateEffects()
 	SetDefaultBaseEffect(baseEffect);
 
 	auto depthEffect = make_shared<Effect>("Depth");
-	depthEffect->SetVertexShaderPath("DepthVS");
-	depthEffect->SetPixelShaderPath("DepthPS");
+	depthEffect->SetVertexShaderPath("DepthVS.dx.cso");
+	depthEffect->SetPixelShaderPath("DepthPS.dx.cso");
 	depthEffect->SetBlendState(CommonStates::Opaque());
 	depthEffect->SetRasterizerState(CommonStates::CullCounterClockwise());
 	depthEffect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
@@ -331,8 +331,8 @@ void SponzaApplication::CreateEffects()
 	SetDefaultDepthEffect(depthEffect);
 
 	auto shadowEffect = make_shared<Effect>("Shadow");
-	shadowEffect->SetVertexShaderPath("DepthVS");
-	shadowEffect->SetPixelShaderPath("DepthPS");
+	shadowEffect->SetVertexShaderPath("DepthVS.dx.cso");
+	shadowEffect->SetPixelShaderPath("DepthPS.dx.cso");
 	shadowEffect->SetBlendState(CommonStates::Opaque());
 	shadowEffect->SetRasterizerState(CommonStates::Shadow());
 	shadowEffect->SetDepthStencilState(CommonStates::DepthGreaterEqual());

@@ -58,24 +58,24 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 
 	const bool immediate = true;
 
-	m_depthPrepare1Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers1CS", immediate);
-	m_depthPrepare2Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers2CS", immediate);
+	m_depthPrepare1Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers1CS.dx.cso", immediate);
+	m_depthPrepare2Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers2CS.dx.cso", immediate);
 	
 	for (int32_t i = 0; i < 4; ++i)
 	{
-		m_render1Cs[i].SetComputeShaderPath("Engine\\AoRender1CS", immediate);
-		m_render2Cs[i].SetComputeShaderPath("Engine\\AoRender2CS", immediate);
+		m_render1Cs[i].SetComputeShaderPath("Engine\\AoRender1CS.dx.cso", immediate);
+		m_render2Cs[i].SetComputeShaderPath("Engine\\AoRender2CS.dx.cso", immediate);
 		
-		m_blurUpsampleBlend[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleBlendOutCS", immediate);
-		m_blurUpsampleBlend[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinBlendOutCS", immediate);
+		m_blurUpsampleBlend[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleBlendOutCS.dx.cso", immediate);
+		m_blurUpsampleBlend[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinBlendOutCS.dx.cso", immediate);
 		
-		m_blurUpsampleFinal[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleCS", immediate);
-		m_blurUpsampleFinal[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinCS", immediate);
+		m_blurUpsampleFinal[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleCS.dx.cso", immediate);
+		m_blurUpsampleFinal[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinCS.dx.cso", immediate);
 	}
 
-	m_linearizeDepthCs.SetComputeShaderPath("Engine\\LinearizeDepthCS", immediate);
+	m_linearizeDepthCs.SetComputeShaderPath("Engine\\LinearizeDepthCS.dx.cso", immediate);
 	
-	m_debugSsaoCs.SetComputeShaderPath("Engine\\DebugSSAOCS", immediate);
+	m_debugSsaoCs.SetComputeShaderPath("Engine\\DebugSSAOCS.dx.cso", immediate);
 	
 	const uint32_t bufferWidth1 = (width + 1) / 2;
 	const uint32_t bufferWidth2 = (width + 3) / 4;

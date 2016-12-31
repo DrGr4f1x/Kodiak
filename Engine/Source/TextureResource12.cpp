@@ -47,7 +47,6 @@ const string s_formatString[] =
 
 TextureResource::TextureResource()
 	: m_format(ColorFormat::Unknown)
-	, m_loadState(LoadState::LoadNotStarted)
 {
 	InitializeSRV(m_srv);
 }
@@ -56,7 +55,6 @@ TextureResource::TextureResource()
 TextureResource::TextureResource(bool isSRGB)
 	: m_isSRGB(isSRGB)
 	, m_format(ColorFormat::Unknown)
-	, m_loadState(LoadState::LoadNotStarted)
 {
 	InitializeSRV(m_srv);
 }
@@ -65,7 +63,6 @@ TextureResource::TextureResource(bool isSRGB)
 TextureResource::TextureResource(ShaderResourceView srv)
 	: m_srv(srv)
 	, m_format(ColorFormat::Unknown)
-	, m_loadState(LoadState::LoadNotStarted)
 {}
 
 

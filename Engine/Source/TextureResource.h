@@ -53,11 +53,6 @@ private:
 	bool m_isSRGB{ false };
 
 	ShaderResourceViewPtr m_srv;
-
-	// Resource loader state
-	std::string							m_resourcePath;
-	std::atomic<LoadState>				m_loadState;
-	std::vector<std::function<void()>>	m_callbacks;
 };
 
 } // namespace Kodiak

@@ -59,40 +59,40 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 
 	const bool immediate = true;
 	
-	m_bloomExtractAndDownsampleHdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleHdrCS", immediate);
-	m_bloomExtractAndDownsampleLdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleLdrCS", immediate);
+	m_bloomExtractAndDownsampleHdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleHdrCS.dx.cso", immediate);
+	m_bloomExtractAndDownsampleLdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleLdrCS.dx.cso", immediate);
 	
-	m_extractLumaCs.SetComputeShaderPath("Engine\\ExtractLumaCS", immediate);
+	m_extractLumaCs.SetComputeShaderPath("Engine\\ExtractLumaCS.dx.cso", immediate);
 	
-	m_downsampleBloom4Cs.SetComputeShaderPath("Engine\\DownsampleBloomAllCS", immediate);
+	m_downsampleBloom4Cs.SetComputeShaderPath("Engine\\DownsampleBloomAllCS.dx.cso", immediate);
 	
-	m_downsampleBloom2Cs.SetComputeShaderPath("Engine\\DownsampleBloomCS", immediate);
+	m_downsampleBloom2Cs.SetComputeShaderPath("Engine\\DownsampleBloomCS.dx.cso", immediate);
 	
 	for (uint32_t i = 0; i < 5; ++i)
 	{
-		m_blurCs[i].SetComputeShaderPath("Engine\\BlurCS", immediate);
-		m_upsampleAndBlurCs[i].SetComputeShaderPath("Engine\\UpsampleAndBlurCS", immediate);
+		m_blurCs[i].SetComputeShaderPath("Engine\\BlurCS.dx.cso", immediate);
+		m_upsampleAndBlurCs[i].SetComputeShaderPath("Engine\\UpsampleAndBlurCS.dx.cso", immediate);
 	}
 
 	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
-		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMap2CS", immediate);
-		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdr2CS", immediate);
-		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdr2CS", immediate);
-		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdr2CS", immediate);
+		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMap2CS.dx.cso", immediate);
+		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdr2CS.dx.cso", immediate);
+		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdr2CS.dx.cso", immediate);
+		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdr2CS.dx.cso", immediate);
 	}
 	else
 	{
-		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMapCS", immediate);
-		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdrCS", immediate);
-		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdrCS", immediate);
-		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdrCS", immediate);
+		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMapCS.dx.cso", immediate);
+		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdrCS.dx.cso", immediate);
+		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdrCS.dx.cso", immediate);
+		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdrCS.dx.cso", immediate);
 	}
 
-	m_generateHistogramCs.SetComputeShaderPath("Engine\\GenerateHistogramCS", immediate);
-	m_adaptExposureCs.SetComputeShaderPath("Engine\\AdaptExposureCS", immediate);
-	m_debugDrawHistogramCs.SetComputeShaderPath("Engine\\DebugDrawHistogramCS", immediate);
-	m_copyPostToSceneCs.SetComputeShaderPath("Engine\\CopyBackPostBufferCS", immediate);
+	m_generateHistogramCs.SetComputeShaderPath("Engine\\GenerateHistogramCS.dx.cso", immediate);
+	m_adaptExposureCs.SetComputeShaderPath("Engine\\AdaptExposureCS.dx.cso", immediate);
+	m_debugDrawHistogramCs.SetComputeShaderPath("Engine\\DebugDrawHistogramCS.dx.cso", immediate);
+	m_copyPostToSceneCs.SetComputeShaderPath("Engine\\CopyBackPostBufferCS.dx.cso", immediate);
 	
 	m_bloomUAV1[1].Create("Bloom Buffer", m_bloomWidth, m_bloomHeight, 1, ColorFormat::R11G11B10_Float);
 	m_bloomUAV1[0].Create("Bloom Buffer 1a", m_bloomWidth, m_bloomHeight, 1, ColorFormat::R11G11B10_Float);

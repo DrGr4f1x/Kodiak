@@ -41,25 +41,25 @@ void FXAA::Initialize(uint32_t width, uint32_t height)
 {
 	const bool immediate = true;
 
-	m_resolveWorkCs.SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS", immediate);
+	m_resolveWorkCs.SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS.dx.cso", immediate);
 
 	if(DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{ 
-		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS", immediate);
-		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS", immediate);
-		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2H2CS", immediate);
-		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2V2CS", immediate);
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS.dx.cso", immediate);
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS.dx.cso", immediate);
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2H2CS.dx.cso", immediate);
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2V2CS.dx.cso", immediate);
 	}
 	else
 	{
-		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS", immediate);
-		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS", immediate);
-		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2HCS", immediate);
-		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2VCS", immediate);
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS.dx.cso", immediate);
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS.dx.cso", immediate);
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2HCS.dx.cso", immediate);
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2VCS.dx.cso", immediate);
 	}
 
-	m_pass2HDebugCs.SetComputeShaderPath("Engine\\FXAAPass2HDebugCS", immediate);
-	m_pass2VDebugCs.SetComputeShaderPath("Engine\\FXAAPass2VDebugCS", immediate);
+	m_pass2HDebugCs.SetComputeShaderPath("Engine\\FXAAPass2HDebugCS.dx.cso", immediate);
+	m_pass2VDebugCs.SetComputeShaderPath("Engine\\FXAAPass2VDebugCS.dx.cso", immediate);
 	
 	m_fxaaWorkQueueH.Create("FXAA Horizontal Work Queue", 512 * 1024, 4);
 	m_fxaaWorkQueueV.Create("FXAA Vertical Work Queue", 512 * 1024, 4);
