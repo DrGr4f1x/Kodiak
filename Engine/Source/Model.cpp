@@ -300,7 +300,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 	}
 
 	// Create vertex buffer
-	auto vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
+	auto vbuffer = VertexBuffer::Create(*vdata, Usage::Immutable);
 
 	// Create the mesh and mesh parts
 	auto mesh = make_shared<StaticMesh>();
@@ -309,8 +309,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 	{
 		// -X face
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 0, 1, 2, 3 }));
+			IndexBufferData16 idata{ { 0, 1, 2, 3 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -320,8 +319,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 		// +X face
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 4, 5, 6, 7 }));
+			IndexBufferData16 idata{ { 4, 5, 6, 7 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -331,8 +329,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 		// -Y face
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 8, 9, 10, 11 }));
+			IndexBufferData16 idata{ { 8, 9, 10, 11 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -342,8 +339,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 		// +Y face
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 12, 13, 14, 15 }));
+			IndexBufferData16 idata{ { 12, 13, 14, 15 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -353,8 +349,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 		// -Z face
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 16, 17, 18, 19 }));
+			IndexBufferData16 idata{ { 16, 17, 18, 19 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -364,8 +359,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 		// +Z face
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 20, 21, 22, 23 }));
+			IndexBufferData16 idata{ { 20, 21, 22, 23 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -377,8 +371,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 	{
 		// Body
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 }));
+			IndexBufferData16 idata{ { 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -388,8 +381,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 		// Top
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 6, 0, 4, 2 }));
+			IndexBufferData16 idata{ { 6, 0, 4, 2 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
@@ -399,8 +391,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 		// Bottom
 		{
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 5, 3, 7, 1 }));
+			IndexBufferData16 idata{ { 5, 3, 7, 1 } };
 
 			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 

@@ -25,10 +25,10 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 	DXGI_FORMAT format;
 	
-	static std::shared_ptr<IndexBuffer> Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage);
+	static std::shared_ptr<IndexBuffer> Create(const BaseIndexBufferData& data, Usage usage);
 
 private:
-	static void CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, std::shared_ptr<BaseIndexBufferData> data, Usage usage);
+	static void CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, const BaseIndexBufferData& data, Usage usage);
 };
 
 

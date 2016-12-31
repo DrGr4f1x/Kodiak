@@ -25,9 +25,9 @@ map<size_t, shared_ptr<VertexBuffer>>	s_vertexBufferMap;
 }
 
 
-shared_ptr<VertexBuffer> VertexBuffer::Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage)
+shared_ptr<VertexBuffer> VertexBuffer::Create(const BaseVertexBufferData& data, Usage usage)
 {
-	const auto hashCode = data->GetId();
+	const auto hashCode = data.GetId();
 
 	shared_ptr<VertexBuffer> vbuffer;
 
@@ -54,12 +54,12 @@ shared_ptr<VertexBuffer> VertexBuffer::Create(std::shared_ptr<BaseVertexBufferDa
 }
 
 
-void VertexBuffer::CreateInternal(shared_ptr<VertexBuffer> buffer, shared_ptr<BaseVertexBufferData> data, Usage usage)
+void VertexBuffer::CreateInternal(shared_ptr<VertexBuffer> buffer, const BaseVertexBufferData& data, Usage usage)
 {
 	// Fill in a buffer description
 	D3D11_BUFFER_DESC desc{};
 	
-	desc.ByteWidth = static_cast<UINT>(data->GetDataSize());
+	desc.ByteWidth = static_cast<UINT>(data.GetDataSize());
 	desc.Usage = (D3D11_USAGE)usage;
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	desc.CPUAccessFlags = (usage == Usage::Dynamic) ? D3D11_CPU_ACCESS_WRITE : 0;
@@ -68,15 +68,15 @@ void VertexBuffer::CreateInternal(shared_ptr<VertexBuffer> buffer, shared_ptr<Ba
 
 	// Fill in the subresource data
 	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = data->GetData();
+	initData.pSysMem = data.GetData();
 	initData.SysMemPitch = 0;
 	initData.SysMemSlicePitch = 0;
 
 	// Create the buffer
 	ComPtr<ID3D11Buffer> d3dBuffer;
-	ThrowIfFailed(g_device->CreateBuffer(&desc, (data->GetData() ? &initData : nullptr), &d3dBuffer));
+	ThrowIfFailed(g_device->CreateBuffer(&desc, (data.GetData() ? &initData : nullptr), &d3dBuffer));
 
-	const auto& debugName = data->GetDebugName();
+	const auto& debugName = data.GetDebugName();
 	if (!debugName.empty())
 	{
 		d3dBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(debugName.size()), debugName.c_str());
@@ -84,5 +84,5 @@ void VertexBuffer::CreateInternal(shared_ptr<VertexBuffer> buffer, shared_ptr<Ba
 
 	// Setup our data
 	buffer->vertexBuffer = d3dBuffer;
-	buffer->stride = static_cast<uint32_t>(data->GetStride());
+	buffer->stride = static_cast<uint32_t>(data.GetStride());
 }

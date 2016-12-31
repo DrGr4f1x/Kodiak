@@ -29,15 +29,12 @@ public:
 
 	void Destroy();
 
-	static std::shared_ptr<VertexBuffer> Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, bool async = true);
+	static std::shared_ptr<VertexBuffer> Create(const BaseVertexBufferData& data, Usage usage);
 
 	const D3D12_VERTEX_BUFFER_VIEW& GetVBV() const { return m_vbv; }
 
-public:
-	concurrency::task<void> loadTask;
-
 private:
-	static void CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, std::shared_ptr<BaseVertexBufferData> data, Usage usage);
+	static void CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, const BaseVertexBufferData& data, Usage usage);
 
 	D3D12_RESOURCE_DESC DescribeBuffer(size_t numElements, size_t elementSize);
 

@@ -32,9 +32,9 @@ map<size_t, shared_ptr<IndexBuffer>>	s_indexBufferMap;
 } // anonymous namespace
 
 
-shared_ptr<IndexBuffer> IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data, Usage usage)
+shared_ptr<IndexBuffer> IndexBuffer::Create(const BaseIndexBufferData& data, Usage usage)
 {
-	const auto hashCode = data->GetId();
+	const auto hashCode = data.GetId();
 
 	shared_ptr<IndexBuffer> ibuffer;
 
@@ -61,12 +61,12 @@ shared_ptr<IndexBuffer> IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data
 }
 
 
-void IndexBuffer::CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, std::shared_ptr<BaseIndexBufferData> data, Usage usage)
+void IndexBuffer::CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, const BaseIndexBufferData& data, Usage usage)
 {
 	// Fill in a buffer description
 	D3D11_BUFFER_DESC desc{};
 	
-	desc.ByteWidth = static_cast<UINT>(data->GetDataSize());
+	desc.ByteWidth = static_cast<UINT>(data.GetDataSize());
 	desc.Usage = (D3D11_USAGE)usage;
 	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	desc.CPUAccessFlags = 0;
@@ -74,16 +74,16 @@ void IndexBuffer::CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, std::share
 	desc.StructureByteStride = 0;
 
 	// Fill in the subresource data
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = data->GetData();
+	D3D11_SUBRESOURCE_DATA initData{};
+	initData.pSysMem = data.GetData();
 	initData.SysMemPitch = 0;
 	initData.SysMemSlicePitch = 0;
 
 	// Create the buffer
 	ComPtr<ID3D11Buffer> buffer;
-	ThrowIfFailed(g_device->CreateBuffer(&desc, (data->GetData() ? &initData : nullptr), &buffer));
+	ThrowIfFailed(g_device->CreateBuffer(&desc, (data.GetData() ? &initData : nullptr), &buffer));
 
-	const auto& debugName = data->GetDebugName();
+	const auto& debugName = data.GetDebugName();
 	if (!debugName.empty())
 	{
 		buffer->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(debugName.size()), debugName.c_str());
@@ -91,5 +91,5 @@ void IndexBuffer::CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, std::share
 
 	// Setup our data
 	ibuffer->indexBuffer = buffer;
-	ibuffer->format = data->GetFormat();
+	ibuffer->format = data.GetFormat();
 }

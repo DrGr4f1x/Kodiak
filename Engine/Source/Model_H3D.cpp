@@ -301,26 +301,22 @@ shared_ptr<StaticModel> LoadModelH3D(const string& fullPath)
 
 	// Vertex buffer
 	const byte* vb_data = reader.ReadArray<byte>(header.vertexDataByteSize);
-	shared_ptr<BaseVertexBufferData> vbData;
-	vbData.reset(new VertexBufferDataRaw(vb_data, vertexStride, header.vertexDataByteSize));
+	VertexBufferDataRaw vbData{ vb_data, vertexStride, header.vertexDataByteSize };
 	auto vbuffer = VertexBuffer::Create(vbData, Usage::Immutable);
 
 	// Index buffer
 	const byte* ib_data = reader.ReadArray<byte>(header.indexDataByteSize);
-	shared_ptr<BaseIndexBufferData> ibData;
-	ibData.reset(new IndexBufferData16(ib_data, header.indexDataByteSize));
+	IndexBufferData16 ibData{ ib_data, header.indexDataByteSize };
 	auto ibuffer = IndexBuffer::Create(ibData, Usage::Immutable);
 
 	// Vertex buffer (depth)
 	const byte* vb_data_depth = reader.ReadArray<byte>(header.vertexDataByteSizeDepth);
-	shared_ptr<BaseVertexBufferData> vbDataDepth;
-	vbDataDepth.reset(new VertexBufferDataRaw(vb_data_depth, vertexStrideDepth, header.vertexDataByteSizeDepth));
+	VertexBufferDataRaw vbDataDepth{ vb_data_depth, vertexStrideDepth, header.vertexDataByteSizeDepth };
 	auto vbufferDepth = VertexBuffer::Create(vbDataDepth, Usage::Immutable);
 
 	// Index buffer (depth)
 	const byte* ib_data_depth = reader.ReadArray<byte>(header.indexDataByteSize);
-	shared_ptr<BaseIndexBufferData> ibDataDepth;
-	ibDataDepth.reset(new IndexBufferData16(ib_data_depth, header.indexDataByteSize));
+	IndexBufferData16 ibDataDepth{ ib_data_depth, header.indexDataByteSize };
 	auto ibufferDepth = IndexBuffer::Create(ibDataDepth, Usage::Immutable);
 
 	// Create model

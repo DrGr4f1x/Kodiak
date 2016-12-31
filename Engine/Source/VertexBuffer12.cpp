@@ -35,9 +35,9 @@ void VertexBuffer::Destroy()
 }
 
 
-shared_ptr<VertexBuffer> VertexBuffer::Create(shared_ptr<BaseVertexBufferData> data, Usage usage, bool async)
+shared_ptr<VertexBuffer> VertexBuffer::Create(const BaseVertexBufferData& data, Usage usage)
 {
-	const auto hashCode = data->GetId();
+	const auto hashCode = data.GetId();
 
 	shared_ptr<VertexBuffer> vbuffer;
 
@@ -52,20 +52,7 @@ shared_ptr<VertexBuffer> VertexBuffer::Create(shared_ptr<BaseVertexBufferData> d
 			vbuffer = make_shared<VertexBuffer>();
 			s_vertexBufferMap[hashCode] = vbuffer;
 
-			if (async)
-			{
-				// Non-blocking asynchronous create
-				vbuffer->loadTask = concurrency::create_task([vbuffer, data, usage]()
-				{
-					VertexBuffer::CreateInternal(vbuffer, data, usage);
-				});
-			}
-			else
-			{
-				// Blocking synchronous create
-				vbuffer->loadTask = concurrency::create_task([] {});
-				CreateInternal(vbuffer, data, usage);
-			}
+			CreateInternal(vbuffer, data, usage);
 		}
 		else
 		{
@@ -77,13 +64,13 @@ shared_ptr<VertexBuffer> VertexBuffer::Create(shared_ptr<BaseVertexBufferData> d
 }
 
 
-void VertexBuffer::CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, std::shared_ptr<BaseVertexBufferData> data, Usage usage)
+void VertexBuffer::CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, const BaseVertexBufferData& data, Usage usage)
 {
-	D3D12_RESOURCE_DESC resourceDesc = vbuffer->DescribeBuffer(data->GetNumElements(), data->GetElementSize());
+	D3D12_RESOURCE_DESC resourceDesc = vbuffer->DescribeBuffer(data.GetNumElements(), data.GetElementSize());
 
 	vbuffer->m_usageState = D3D12_RESOURCE_STATE_COMMON;
 
-	D3D12_HEAP_PROPERTIES heapProps;
+	D3D12_HEAP_PROPERTIES heapProps{};
 	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
 	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
@@ -100,13 +87,13 @@ void VertexBuffer::CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, std::sh
 
 	vbuffer->m_gpuVirtualAddress = vbuffer->m_resource->GetGPUVirtualAddress();
 
-	if (data->GetData())
+	if (data.GetData())
 	{
-		CommandList::InitializeBuffer(*vbuffer, data->GetData(), data->GetDataSize());
+		CommandList::InitializeBuffer(*vbuffer, data.GetData(), data.GetDataSize());
 	}
 
 	// Set debug name
-	const auto& debugName = data->GetDebugName();
+	const auto& debugName = data.GetDebugName();
 	if (!debugName.empty())
 	{
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
@@ -117,8 +104,8 @@ void VertexBuffer::CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, std::sh
 
 	// Create the VBV
 	vbuffer->m_vbv.BufferLocation = vbuffer->m_gpuVirtualAddress;
-	vbuffer->m_vbv.StrideInBytes = (UINT)data->GetStride();
-	vbuffer->m_vbv.SizeInBytes = (UINT)data->GetDataSize();
+	vbuffer->m_vbv.StrideInBytes = (UINT)data.GetStride();
+	vbuffer->m_vbv.SizeInBytes = (UINT)data.GetDataSize();
 }
 
 
@@ -128,18 +115,18 @@ D3D12_RESOURCE_DESC VertexBuffer::DescribeBuffer(size_t numElements, size_t elem
 	m_elementCount = numElements;
 	m_elementSize = elementSize;
 
-	D3D12_RESOURCE_DESC Desc = {};
-	Desc.Alignment = 0;
-	Desc.DepthOrArraySize = 1;
-	Desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	Desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-	Desc.Format = DXGI_FORMAT_UNKNOWN;
-	Desc.Height = 1;
-	Desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	Desc.MipLevels = 1;
-	Desc.SampleDesc.Count = 1;
-	Desc.SampleDesc.Quality = 0;
-	Desc.Width = (UINT64)(numElements * elementSize);
+	D3D12_RESOURCE_DESC desc{};
+	desc.Alignment = 0;
+	desc.DepthOrArraySize = 1;
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	desc.Format = DXGI_FORMAT_UNKNOWN;
+	desc.Height = 1;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	desc.MipLevels = 1;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Width = (UINT64)(numElements * elementSize);
 
-	return Desc;
+	return desc;
 }
