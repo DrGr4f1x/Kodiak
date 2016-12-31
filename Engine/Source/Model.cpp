@@ -188,7 +188,7 @@ namespace Kodiak
 
 shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 {
-	shared_ptr<BaseVertexBufferData> vdata;
+	shared_ptr<VertexBuffer> vbuffer;
 
 	auto material = make_shared<Material>();
 	material->SetEffect(GetDefaultBaseEffect());
@@ -196,7 +196,7 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 
 	if (desc.genNormals && desc.genColors)
 	{
-		vdata.reset(new VertexBufferData<VertexPositionNormalColor>(
+		VertexBufferData<VertexPositionNormalColor> vdata
 		{
 			// -X face
 			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[1]) },
@@ -228,12 +228,13 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[6]) },
 			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[5]) },
 			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[4]) }
-		}
-		));
+		};
+
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else if (desc.genNormals)
 	{
-		vdata.reset(new VertexBufferData<VertexPositionNormal>(
+		VertexBufferData<VertexPositionNormal> vdata
 		{
 			// -X face
 			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
@@ -265,12 +266,13 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
 			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
 			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) }
-		}
-		));
+		};
+
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else if (desc.genColors)
 	{
-		vdata.reset(new VertexBufferData<VertexPositionColor>(
+		VertexBufferData<VertexPositionColor> vdata
 		{
 			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[0]) },
 			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[1]) },
@@ -280,12 +282,13 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[5]) },
 			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[6]) },
 			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[7]) }
-		}
-		));
+		};
+
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else
 	{
-		vdata.reset(new VertexBufferData<VertexPosition>(
+		VertexBufferData<VertexPosition> vdata
 		{
 			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
 			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
@@ -295,12 +298,10 @@ shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
 			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
 			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) }
-		}
-		));
-	}
+		};
 
-	// Create vertex buffer
-	auto vbuffer = VertexBuffer::Create(*vdata, Usage::Immutable);
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
+	}
 
 	// Create the mesh and mesh parts
 	auto mesh = make_shared<StaticMesh>();
