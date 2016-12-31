@@ -40,15 +40,11 @@ Material::Material(const string& name)
 void Material::SetEffect(shared_ptr<Effect> effect)
 {
 	assert(effect);
+	assert(effect->IsFinalized());
 
 	m_effect = effect;
 
-	auto thisMaterial = shared_from_this();
-
-	prepareTask = effect->loadTask.then([thisMaterial, effect]
-	{
-		thisMaterial->CreateRenderThreadData();
-	});
+	CreateRenderThreadData();
 }
 
 

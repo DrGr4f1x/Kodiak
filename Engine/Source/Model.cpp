@@ -65,13 +65,11 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 	m_meshParts.emplace_back(part);
 
 	auto thisMesh = shared_from_this();
-	(part.indexBuffer->loadTask && part.vertexBuffer->loadTask && part.material->prepareTask).then([thisMesh, part]
+	
+	Renderer::GetInstance().EnqueueTask([thisMesh, part](RenderTaskEnvironment& rte)
 	{
-		Renderer::GetInstance().EnqueueTask([thisMesh, part](RenderTaskEnvironment& rte)
-		{
-			RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.material->GetRenderThreadData(), part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
-			thisMesh->m_renderThreadData->meshParts.emplace_back(data);
-		});
+		RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.material->GetRenderThreadData(), part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
+		thisMesh->m_renderThreadData->meshParts.emplace_back(data);
 	});
 }
 

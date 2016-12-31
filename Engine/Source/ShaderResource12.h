@@ -9,49 +9,42 @@
 
 #pragma once
 
+#include "IAsyncResource.h"
 #include "InputLayout12.h"
 #include "RenderEnums.h"
 #include "ShaderReflection.h"
 
-#include <ppltasks.h>
-
 namespace Kodiak
 {
 
-// Forward declarations
-class InputLayout;
-
-class Shader
+class ShaderResource : public IAsyncResource
 {
-	friend class ShaderManager;
-
 public:
-	const uint8_t* GetByteCode() const { return m_byteCode.get(); }
-	size_t GetByteCodeSize() const { return m_byteCodeSize; }
-
-	bool IsReady() const { return m_isReady; }
 	virtual ShaderType GetType() const = 0;
+
+	// Resource loader interface
+	bool DoLoad() final override;
+
+	const byte* GetByteCode() const { return m_byteCode.get(); }
+	size_t GetByteCodeSize() const { return m_byteCodeSize; }
 
 	// Reflection info
 	uint32_t GetPerViewDataSize() const { return m_signature.cbvPerViewData.sizeInBytes; }
 	uint32_t GetPerObjectDataSize() const { return m_signature.cbvPerObjectData.sizeInBytes; }
 	const struct ShaderReflection::Signature& GetSignature() const { return m_signature; }
 
-	concurrency::task<void> loadTask;
-
 protected:
 	virtual void Finalize();
 
 protected:
-	std::unique_ptr<uint8_t[]>		m_byteCode;
+	std::unique_ptr<byte[]>			m_byteCode;
 	size_t							m_byteCodeSize;
-	
+
 	ShaderReflection::Signature		m_signature;
-	bool							m_isReady{ false };
 };
 
 
-class VertexShader : public Shader
+class VertexShaderResource : public ShaderResource
 {
 	friend class ShaderManager;
 
@@ -61,7 +54,7 @@ public:
 	ShaderType GetType() const override { return ShaderType::Vertex; }
 
 private:
-	void Finalize() override;
+	void Finalize() final override;
 	void CreateInputLayout(ID3D12ShaderReflection* reflector);
 
 private:
@@ -69,39 +62,38 @@ private:
 };
 
 
-class PixelShader : public Shader
+class PixelShaderResource : public ShaderResource
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Pixel; }
 };
 
 
-class DomainShader : public Shader
+class DomainShaderResource : public ShaderResource
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Domain; }
 };
 
 
-class HullShader : public Shader
+class HullShaderResource : public ShaderResource
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Hull; }
 };
 
 
-class GeometryShader : public Shader
+class GeometryShaderResource : public ShaderResource
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Geometry; }
 };
 
 
-class ComputeShader : public Shader
+class ComputeShaderResource : public ShaderResource
 {
 public:
 	ShaderType GetType() const override { return ShaderType::Compute; }
 };
-
 
 } // namespace Kodiak

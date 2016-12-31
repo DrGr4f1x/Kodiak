@@ -32,7 +32,7 @@ map<size_t, shared_ptr<IndexBuffer>>	s_indexBufferMap;
 } // anonymous namespace
 
 
-shared_ptr<IndexBuffer> IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data, Usage usage, bool async)
+shared_ptr<IndexBuffer> IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data, Usage usage)
 {
 	const auto hashCode = data->GetId();
 
@@ -49,20 +49,7 @@ shared_ptr<IndexBuffer> IndexBuffer::Create(shared_ptr<BaseIndexBufferData> data
 			ibuffer = make_shared<IndexBuffer>();
 			s_indexBufferMap[hashCode] = ibuffer;
 
-			if (async)
-			{
-				// Non-blocking asynchronous create
-				ibuffer->loadTask = concurrency::create_task([ibuffer, data, usage]()
-				{
-					IndexBuffer::CreateInternal(ibuffer, data, usage);
-				});
-			}
-			else
-			{
-				// Blocking synchronous create
-				ibuffer->loadTask = concurrency::create_task([] {});
-				CreateInternal(ibuffer, data, usage);
-			}
+			CreateInternal(ibuffer, data, usage);
 		}
 		else
 		{

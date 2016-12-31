@@ -9,26 +9,64 @@
 
 #include "Stdafx.h"
 
-#include "Shader.h"
+#include "ShaderResource11.h"
 
+#include "BinaryReader.h"
 #include "DeviceManager11.h"
-#include "Material.h"
-#include "Paths.h"
-#include "RenderEnums.h"
+#include "Filesystem.h"
+#include "LoaderEnums.h"
 #include "RenderUtils.h"
 
-#include <algorithm>
-#include <d3d11shader.h>
 
-using namespace Kodiak;
 using namespace std;
+using namespace Kodiak;
 using namespace Microsoft::WRL;
 
 
-void VertexShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+namespace
+{
+
+bool LoadShaderFile(const string& path, unique_ptr<byte[]>& data, size_t& dataSize)
+{
+	auto& filesystem = Filesystem::GetInstance();
+	string fullpath = filesystem.GetFullPath(path);
+	auto res = BinaryReader::ReadEntireFile(fullpath, data, &dataSize);
+		
+	return (res == S_OK);
+}
+
+} // anonymous namespace
+
+
+
+bool ShaderResource::DoLoad()
+{
+	m_loadState = LoadState::Loading;
+
+	// Load the compiled shader file
+	unique_ptr<uint8_t[]> data;
+	size_t dataSize;
+
+	auto res = LoadShaderFile(m_resourcePath, data, dataSize);
+	if (res)
+	{
+		Create(data, dataSize);
+
+		m_loadState = LoadState::LoadSucceeded;
+		return true;
+	}
+	else
+	{
+		m_loadState = LoadState::LoadFailed;
+		return false;
+	}
+}
+
+
+void VertexShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateVertexShader(data.get(), dataSize, nullptr, &m_shader));
-	
+
 	ComPtr<ID3D11ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
 
@@ -37,7 +75,7 @@ void VertexShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 }
 
 
-void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_ptr<uint8_t[]>& data, size_t dataSize)
+void VertexShaderResource::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_ptr<uint8_t[]>& data, size_t dataSize)
 {
 	std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
 
@@ -63,7 +101,7 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 		string upper = elementDesc.SemanticName;
 		transform(begin(upper), end(upper), begin(upper), ::toupper);
 
-		if(upper == "SV_INSTANCEID" || upper == "SV_VERTEXID" || upper == "SV_PRIMITIVEID")
+		if (upper == "SV_INSTANCEID" || upper == "SV_VERTEXID" || upper == "SV_PRIMITIVEID")
 		{
 			continue;
 		}
@@ -147,40 +185,8 @@ void VertexShader::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_p
 }
 
 
-void PixelShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
-{
-	ThrowIfFailed(g_device->CreatePixelShader(data.get(), dataSize, nullptr, &m_shader));
 
-	ComPtr<ID3D11ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_signature);
-}
-
-
-void GeometryShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
-{
-	ThrowIfFailed(g_device->CreateGeometryShader(data.get(), dataSize, nullptr, &m_shader));
-
-	ComPtr<ID3D11ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_signature);
-}
-
-
-void DomainShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
-{
-	ThrowIfFailed(g_device->CreateDomainShader(data.get(), dataSize, nullptr, &m_shader));
-
-	ComPtr<ID3D11ShaderReflection> reflector;
-	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
-
-	Introspect(reflector.Get(), m_signature);
-}
-
-
-void HullShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void HullShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateHullShader(data.get(), dataSize, nullptr, &m_shader));
 
@@ -191,7 +197,40 @@ void HullShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 }
 
 
-void ComputeShader::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void DomainShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+{
+	ThrowIfFailed(g_device->CreateDomainShader(data.get(), dataSize, nullptr, &m_shader));
+
+	ComPtr<ID3D11ShaderReflection> reflector;
+	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
+
+	Introspect(reflector.Get(), m_signature);
+}
+
+
+void GeometryShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+{
+	ThrowIfFailed(g_device->CreateGeometryShader(data.get(), dataSize, nullptr, &m_shader));
+
+	ComPtr<ID3D11ShaderReflection> reflector;
+	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
+
+	Introspect(reflector.Get(), m_signature);
+}
+
+
+void PixelShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+{
+	ThrowIfFailed(g_device->CreatePixelShader(data.get(), dataSize, nullptr, &m_shader));
+
+	ComPtr<ID3D11ShaderReflection> reflector;
+	ThrowIfFailed(D3DReflect(data.get(), dataSize, IID_ID3D11ShaderReflection, &reflector));
+
+	Introspect(reflector.Get(), m_signature);
+}
+
+
+void ComputeShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateComputeShader(data.get(), dataSize, nullptr, &m_shader));
 

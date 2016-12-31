@@ -306,6 +306,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Source\IAsyncResource.h" />
     <ClInclude Include="Source\IndexBuffer.h" />
     <ClInclude Include="Source\IndexBuffer11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
@@ -473,6 +474,7 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     </ClCompile>
     <ClCompile Include="Source\Filesystem.cpp" />
     <ClCompile Include="Source\FXAA.cpp" />
+    <ClCompile Include="Source\IAsyncResource.cpp" />
     <ClCompile Include="Source\InputState.cpp" />
     <ClCompile Include="Source\LinearAllocator12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
@@ -507,16 +509,16 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     <ClCompile Include="Source\RenderEnums.cpp" />
     <ClCompile Include="Source\RenderPass.cpp" />
     <ClInclude Include="Source\Shader.h" />
-    <ClInclude Include="Source\Shader11.h">
+    <ClInclude Include="Source\ShaderReflection.h" />
+    <ClInclude Include="Source\ShaderResource.h" />
+    <ClInclude Include="Source\ShaderResource11.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Source\Shader12.h">
+    <ClInclude Include="Source\ShaderResource12.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Source\ShaderManager.h" />
-    <ClInclude Include="Source\ShaderReflection.h" />
     <ClInclude Include="Source\ShadowBuffer.h" />
     <ClInclude Include="Source\ShadowCamera.h" />
     <ClInclude Include="Source\SSAO.h" />
@@ -649,16 +651,16 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
     </ClCompile>
     <ClCompile Include="Source\SamplerManager.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
-    <ClCompile Include="Source\Shader11.cpp">
+    <ClCompile Include="Source\Shader.cpp" />
+    <ClCompile Include="Source\ShaderReflection.cpp" />
+    <ClCompile Include="Source\ShaderResource11.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source\Shader12.cpp">
+    <ClCompile Include="Source\ShaderResource12.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source\ShaderManager.cpp" />
-    <ClCompile Include="Source\ShaderReflection.cpp" />
     <ClCompile Include="Source\ShadowBuffer.cpp" />
     <ClCompile Include="Source\ShadowCamera.cpp" />
     <ClCompile Include="Source\SSAO.cpp" />
@@ -1743,18 +1745,6 @@ copy "$(ProjectDir)..\Engine\CompiledShaders\*.*" "$(ProjectDir)..\Sponza\Shader
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">$(OutDir)..\CompiledShaders\%(Filename).dx.cso</ObjectFileOutput>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Source\ShaderManager11.inl">
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug12|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="Source\ShaderManager12.inl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">true</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">true</ExcludedFromBuild>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Functions.inl" />

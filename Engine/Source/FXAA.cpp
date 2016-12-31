@@ -39,27 +39,27 @@ FXAA::FXAA()
 
 void FXAA::Initialize(uint32_t width, uint32_t height)
 {
-	auto waitTask = concurrency::create_task([] {});
+	const bool immediate = true;
 
-	m_resolveWorkCs.SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS", waitTask);
+	m_resolveWorkCs.SetComputeShaderPath("Engine\\FXAAResolveWorkQueueCS", immediate);
 
 	if(DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{ 
-		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS", waitTask);
-		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS", waitTask);
-		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2H2CS", waitTask);
-		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2V2CS", waitTask);
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma2_CS", immediate);
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB2_CS", immediate);
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2H2CS", immediate);
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2V2CS", immediate);
 	}
 	else
 	{
-		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS", waitTask);
-		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS", waitTask);
-		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2HCS", waitTask);
-		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2VCS", waitTask);
+		m_pass1HdrCs.SetComputeShaderPath("Engine\\FXAAPass1_Luma_CS", immediate);
+		m_pass1LdrCs.SetComputeShaderPath("Engine\\FXAAPass1_RGB_CS", immediate);
+		m_pass2HCs.SetComputeShaderPath("Engine\\FXAAPass2HCS", immediate);
+		m_pass2VCs.SetComputeShaderPath("Engine\\FXAAPass2VCS", immediate);
 	}
 
-	m_pass2HDebugCs.SetComputeShaderPath("Engine\\FXAAPass2HDebugCS", waitTask);
-	m_pass2VDebugCs.SetComputeShaderPath("Engine\\FXAAPass2VDebugCS", waitTask);
+	m_pass2HDebugCs.SetComputeShaderPath("Engine\\FXAAPass2HDebugCS", immediate);
+	m_pass2VDebugCs.SetComputeShaderPath("Engine\\FXAAPass2VDebugCS", immediate);
 	
 	m_fxaaWorkQueueH.Create("FXAA Horizontal Work Queue", 512 * 1024, 4);
 	m_fxaaWorkQueueV.Create("FXAA Vertical Work Queue", 512 * 1024, 4);
@@ -68,8 +68,6 @@ void FXAA::Initialize(uint32_t width, uint32_t height)
 
 	__declspec(align(16)) const uint32_t initArgs[6] = { 0, 1, 1, 0, 1, 1 };
 	m_indirectParameters.Create("FXAA Indirect Parameters", 2, 3 * sizeof(uint32_t), initArgs);
-
-	waitTask.wait();
 }
 
 

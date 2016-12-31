@@ -13,7 +13,6 @@
 
 #include "Material.h"
 #include "RenderEnums.h"
-#include "ShaderManager.h"
 
 
 using namespace Kodiak;
@@ -22,8 +21,6 @@ using namespace std;
 
 BaseEffect::BaseEffect()
 {
-	loadTask = concurrency::create_task([] {});
-
 	m_topology = PrimitiveTopologyType::Triangle;
 	for (uint32_t i = 0; i < 8; ++i)
 	{
@@ -36,8 +33,6 @@ BaseEffect::BaseEffect()
 
 BaseEffect::BaseEffect(const string& name) : m_name(name)
 {
-	loadTask = concurrency::create_task([] {});
-
 	m_topology = PrimitiveTopologyType::Triangle;
 	for (uint32_t i = 0; i < 8; ++i)
 	{
@@ -48,54 +43,54 @@ BaseEffect::BaseEffect(const string& name) : m_name(name)
 }
 
 
-
 void BaseEffect::SetVertexShaderPath(const string& shaderPath)
 {
-	m_shaderPaths[0] = shaderPath;
-	m_vertexShader = ShaderManager::GetInstance().LoadVertexShader(shaderPath);
+	assert(!m_isFinalized);
 
-	loadTask = loadTask && m_vertexShader->loadTask;
+	m_shaderPaths[0] = shaderPath;
+	m_vertexShader = VertexShader::Load(shaderPath);
 }
 
 
 void BaseEffect::SetDomainShaderPath(const string& shaderPath)
 {
+	assert(!m_isFinalized);
+
 	m_shaderPaths[1] = shaderPath;
-	m_domainShader = ShaderManager::GetInstance().LoadDomainShader(shaderPath);
-	
-	loadTask = loadTask && m_domainShader->loadTask;
+	m_domainShader = DomainShader::Load(shaderPath);
 }
 
 
 void BaseEffect::SetHullShaderPath(const string& shaderPath)
 {
+	assert(!m_isFinalized);
+
 	m_shaderPaths[2] = shaderPath;
-	m_hullShader = ShaderManager::GetInstance().LoadHullShader(shaderPath);
-	
-	loadTask = loadTask && m_hullShader->loadTask;
+	m_hullShader = HullShader::Load(shaderPath);
 }
 
 
 void BaseEffect::SetGeometryShaderPath(const string& shaderPath)
 {
+	assert(!m_isFinalized);
+
 	m_shaderPaths[3] = shaderPath;
-	m_geometryShader = ShaderManager::GetInstance().LoadGeometryShader(shaderPath);
-	
-	loadTask = loadTask && m_geometryShader->loadTask;
+	m_geometryShader = GeometryShader::Load(shaderPath);
 }
 
 
 void BaseEffect::SetPixelShaderPath(const string& shaderPath)
 {
+	assert(!m_isFinalized);
+
 	m_shaderPaths[4] = shaderPath;
-	m_pixelShader = ShaderManager::GetInstance().LoadPixelShader(shaderPath);
-	
-	loadTask = loadTask && m_pixelShader->loadTask;
+	m_pixelShader = PixelShader::Load(shaderPath);
 }
 
 
 void BaseEffect::SetPrimitiveTopology(PrimitiveTopologyType topology)
 {
+	assert(!m_isFinalized);
 	m_topology = topology;
 }
 
@@ -104,6 +99,8 @@ void BaseEffect::SetRenderTargetFormats(uint32_t numRTVs, const ColorFormat* col
 	uint32_t msaaQuality)
 {
 	assert(numRTVs == 0 || colorFormats != nullptr);
+	assert(!m_isFinalized);
+
 	m_numRenderTargets = numRTVs;
 	for (uint32_t i = 0; i < numRTVs; ++i)
 	{

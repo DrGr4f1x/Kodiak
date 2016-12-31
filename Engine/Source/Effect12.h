@@ -16,7 +16,7 @@ namespace Kodiak
 // Forward declarations
 class GraphicsPSO;
 class RootSignature;
-class Shader;
+class IShader;
 enum class ShaderType;
 
 
@@ -66,7 +66,8 @@ private:
 	void BuildPSO();
 
 	void CreateRootSignature();
-	void ProcessShaderBindings(uint32_t& rootIndex, Shader* shader);
+	void ProcessShaderBindings(uint32_t& rootIndex, IShader* shader);
+	void TryWaitShader(IShader* shader);
 	D3D12_ROOT_SIGNATURE_FLAGS GetRootSignatureFlags();
 
 private:

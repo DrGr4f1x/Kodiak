@@ -12,7 +12,8 @@
 #include "Effect.h"
 
 #include "PipelineState11.h"
-#include "Shader11.h"
+#include "Shader.h"
+#include "ShaderResource11.h"
 
 
 using namespace Kodiak;
@@ -27,11 +28,18 @@ Effect::Effect(const string& name) : BaseEffect(name) {}
 
 void Effect::Finalize()
 {
-	loadTask = loadTask.then([this]
-	{
-		BuildEffectSignature();
-		BuildPSO();
-	});
+	if (m_isFinalized) return;
+
+	TryWaitShader(m_vertexShader.get());
+	TryWaitShader(m_hullShader.get());
+	TryWaitShader(m_domainShader.get());
+	TryWaitShader(m_geometryShader.get());
+	TryWaitShader(m_pixelShader.get());
+
+	BuildEffectSignature();
+	BuildPSO();
+	
+	m_isFinalized = true;
 }
 
 
@@ -108,7 +116,8 @@ void Effect::BuildPSO()
 
 	assert(m_vertexShader.get()); // Vertex shader is mandatory
 	m_pso->SetVertexShader(m_vertexShader.get());
-	m_pso->SetInputLayout(m_vertexShader->GetInputLayout());
+	auto resource = m_vertexShader->GetResource();
+	m_pso->SetInputLayout(resource->GetInputLayout());
 
 	if (m_domainShader)
 	{
@@ -138,7 +147,7 @@ void Effect::BuildPSO()
 }
 
 
-void Effect::ProcessShaderBindings(Shader* shader)
+void Effect::ProcessShaderBindings(IShader* shader)
 {
 	using namespace ShaderReflection;
 
@@ -238,5 +247,14 @@ void Effect::ProcessShaderBindings(Shader* shader)
 		{
 			it->second.Assign(shaderIndex, sampler);
 		}
+	}
+}
+
+
+void Effect::TryWaitShader(IShader* shader)
+{
+	if (shader)
+	{
+		shader->Wait();
 	}
 }

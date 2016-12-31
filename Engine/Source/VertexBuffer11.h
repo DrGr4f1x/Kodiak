@@ -22,9 +22,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	uint32_t stride{ 0 };
 
-	concurrency::task<void> loadTask;
-
-	static std::shared_ptr<VertexBuffer> Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, bool async = true);
+	static std::shared_ptr<VertexBuffer> Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage);
 
 private:
 	static void CreateInternal(std::shared_ptr<VertexBuffer> buffer, std::shared_ptr<BaseVertexBufferData> data, Usage usage);

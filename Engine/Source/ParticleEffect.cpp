@@ -62,11 +62,11 @@ inline static XMFLOAT3 RandSpread(const XMFLOAT3& s)
 
 void ParticleEffect::LoadDeviceResources()
 {
-	auto waitTask = concurrency::create_task([] {});
+	const bool immediate = true;
 	
-	m_updateCs.SetComputeShaderPath("Engine\\ParticleUpdateCS", waitTask);
-	m_particleSpawnCs.SetComputeShaderPath("Engine\\ParticleSpawnCS", waitTask);
-	m_dispatchIndirectArgsCs.SetComputeShaderPath("Engine\\ParticleDispatchIndirectArgsCS", waitTask);
+	m_updateCs.SetComputeShaderPath("Engine\\ParticleUpdateCS", immediate);
+	m_particleSpawnCs.SetComputeShaderPath("Engine\\ParticleSpawnCS", immediate);
+	m_dispatchIndirectArgsCs.SetComputeShaderPath("Engine\\ParticleDispatchIndirectArgsCS", immediate);
 	
 	m_originalEffectProperties = m_effectProperties; // In case we want to reset
 	
@@ -104,8 +104,6 @@ void ParticleEffect::LoadDeviceResources()
 	// DispatchIndirect args buffer / number of thread groups
 	__declspec(align(16)) UINT DispatchIndirectData[3] = { 0, 1, 1 };
 	m_dispatchIndirectArgs.Create("ParticleSystem::DispatchIndirectArgs", 1, 3 * sizeof(uint32_t), DispatchIndirectData);
-
-	waitTask.wait();
 }
 
 

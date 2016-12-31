@@ -23,11 +23,8 @@ namespace Kodiak
 enum class PrimitiveTopologyType;
 
 
-class BaseEffect
+class BaseEffect : public std::enable_shared_from_this<BaseEffect>
 {
-public:
-	concurrency::task<void> loadTask;
-
 public:
 	// Constructor/destructor
 	BaseEffect();
@@ -58,6 +55,8 @@ public:
 
 	// Finalize, doing any additional work after data fields are assigned
 	virtual void Finalize() {}
+	bool IsFinalized() const { return m_isFinalized; }
+
 
 protected:
 	std::string							m_name;
@@ -73,6 +72,8 @@ protected:
 	BlendStateDesc						m_blendStateDesc;
 	DepthStencilStateDesc				m_depthStencilStateDesc;
 	RasterizerStateDesc					m_rasterizerStateDesc;
+
+	bool								m_isFinalized{ false };
 
 	// Miscellaneous fields (mostly for DX12)
 	uint32_t							m_sampleMask{ 0xFFFFFFFFu };

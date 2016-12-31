@@ -210,8 +210,8 @@ void BasicApplication::CreateMaterials()
 	// Base effect
 	auto effect = make_shared<Effect>();
 	effect->SetName("Base effect");
-	effect->SetVertexShaderPath("Engine\\SimpleVertexShader");
-	effect->SetPixelShaderPath("Engine\\SimplePixelShader");
+	effect->SetVertexShaderPath("Engine\\SimpleVertexShader.dx.cso");
+	effect->SetPixelShaderPath("Engine\\SimplePixelShader.dx.cso");
 	effect->SetBlendState(CommonStates::Opaque());
 	effect->SetDepthStencilState(CommonStates::DepthGreaterEqual());
 	effect->SetRasterizerState(CommonStates::CullClockwise());

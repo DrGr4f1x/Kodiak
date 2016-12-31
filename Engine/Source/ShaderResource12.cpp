@@ -9,23 +9,56 @@
 
 #include "Stdafx.h"
 
-#include "Shader.h"
+#include "ShaderResource12.h"
 
-#include "InputLayout12.h"
-#include "Material.h"
-#include "Paths.h"
-#include "RenderEnums.h"
+#include "BinaryReader.h"
+#include "Filesystem.h"
+#include "LoaderEnums.h"
 #include "RenderUtils.h"
 
-#include <algorithm>
-#include <d3d12shader.h>
 
 using namespace Kodiak;
 using namespace std;
 using namespace Microsoft::WRL;
 
 
-void Shader::Finalize()
+namespace
+{
+
+bool LoadShaderFile(const string& path, unique_ptr<byte[]>& data, size_t& dataSize)
+{
+	auto& filesystem = Filesystem::GetInstance();
+
+	string fullpath = filesystem.GetFullPath(path);
+	auto res = BinaryReader::ReadEntireFile(fullpath, data, &dataSize);
+	
+	return (res == S_OK);
+}
+
+} // anonymous namespace
+
+
+bool ShaderResource::DoLoad()
+{
+	m_loadState = LoadState::Loading;
+
+	auto res = LoadShaderFile(m_resourcePath, m_byteCode, m_byteCodeSize);
+	if (res)
+	{
+		Finalize();
+
+		m_loadState = LoadState::LoadSucceeded;
+		return true;
+	}
+	else
+	{
+		m_loadState = LoadState::LoadFailed;
+		return false;
+	}
+}
+
+
+void ShaderResource::Finalize()
 {
 	ComPtr<ID3D12ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
@@ -34,7 +67,7 @@ void Shader::Finalize()
 }
 
 
-void VertexShader::Finalize()
+void VertexShaderResource::Finalize()
 {
 	ComPtr<ID3D12ShaderReflection> reflector;
 	ThrowIfFailed(D3DReflect(m_byteCode.get(), m_byteCodeSize, IID_ID3D12ShaderReflection, &reflector));
@@ -44,7 +77,7 @@ void VertexShader::Finalize()
 }
 
 
-void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
+void VertexShaderResource::CreateInputLayout(ID3D12ShaderReflection* reflector)
 {
 	// Get shader info
 	D3D12_SHADER_DESC shaderDesc;
@@ -60,7 +93,7 @@ void VertexShader::CreateInputLayout(ID3D12ShaderReflection* reflector)
 
 		// Fill out input element desc
 		D3D12_INPUT_ELEMENT_DESC elementDesc;
-		
+
 		// NOTE: if we simply do:
 		//   elementDesc.SemanticName = paramDesc.SemanticName;
 		// then we have a lifetime problem with the string on elementDesc.  Store a copy of the string

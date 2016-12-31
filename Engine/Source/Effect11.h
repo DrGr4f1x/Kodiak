@@ -16,7 +16,7 @@ namespace Kodiak
 
 // Forward declarations
 class GraphicsPSO;
-class Shader;
+class IShader;
 enum class ShaderType;
 
 
@@ -61,7 +61,8 @@ public:
 private:
 	void BuildEffectSignature();
 	void BuildPSO();
-	void ProcessShaderBindings(Shader* shader);
+	void ProcessShaderBindings(IShader* shader);
+	void TryWaitShader(IShader* shader);
 
 private:
 	std::shared_ptr<GraphicsPSO>	m_pso;

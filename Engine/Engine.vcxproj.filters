@@ -181,17 +181,11 @@
     <ClInclude Include="Source\Shader.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Shader11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\DepthBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\BinaryReader.h" />
     <ClInclude Include="Source\PipelineState12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Shader12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\InputLayout.h">
@@ -227,9 +221,6 @@
     <ClInclude Include="Source\ConstantBuffer11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ShaderManager.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ConstantBuffer12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
@@ -242,9 +233,6 @@
     </ClInclude>
     <ClInclude Include="Source\Utility.h">
       <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ShaderManager11.inl">
-      <Filter>Rendering\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Source\Camera.h">
       <Filter>Rendering</Filter>
@@ -272,9 +260,6 @@
     </ClInclude>
     <ClInclude Include="Source\ShaderReflection.h">
       <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ShaderManager12.inl">
-      <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="..\External\Remotery\lib\Remotery.h">
       <Filter>External\Remotery</Filter>
@@ -434,6 +419,18 @@
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\LoaderEnums.h" />
+    <ClInclude Include="Source\ShaderResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderResource11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderResource12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\IAsyncResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -503,17 +500,11 @@
     <ClCompile Include="Source\PipelineState11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Shader11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
     <ClCompile Include="Source\DXGIUtility.cpp">
       <Filter>Rendering\DXCommon</Filter>
     </ClCompile>
     <ClCompile Include="Source\BinaryReader.cpp" />
     <ClCompile Include="Source\PipelineState12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Shader12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\IndexBuffer11.cpp">
@@ -545,9 +536,6 @@
     </ClCompile>
     <ClCompile Include="Source\Material12.cpp">
       <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ShaderManager.cpp">
-      <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\Material.cpp">
       <Filter>Rendering</Filter>
@@ -684,6 +672,18 @@
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\Texture.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shader.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderResource11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderResource12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\IAsyncResource.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>

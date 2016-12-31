@@ -17,7 +17,6 @@
 #include "ComputeResource11.h"
 #include "ConstantBuffer11.h"
 #include "PipelineState11.h"
-#include "ShaderManager.h"
 #include "ShaderReflection.h"
 
 
@@ -38,19 +37,17 @@ ComputeKernel::ComputeKernel(const string& name)
 }
 
 
-void ComputeKernel::SetComputeShaderPath(const string& shaderPath)
+void ComputeKernel::SetComputeShaderPath(const string& shaderPath, bool immediate)
 {
 	m_shaderPath = shaderPath;
-	m_computeShader = ShaderManager::GetInstance().LoadComputeShader(shaderPath);
-
-	loadTask = m_computeShader->loadTask.then([this] { SetupKernel(); });
-}
-
-
-void ComputeKernel::SetComputeShaderPath(const string& shaderPath, concurrency::task<void>& waitTask)
-{
-	SetComputeShaderPath(shaderPath);
-	waitTask = waitTask && loadTask;
+	if (immediate)
+	{
+		m_computeShader = ComputeShader::LoadImmediate(shaderPath);
+	}
+	else
+	{
+		m_computeShader = ComputeShader::Load(shaderPath);
+	}
 }
 
 

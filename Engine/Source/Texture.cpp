@@ -128,7 +128,7 @@ shared_ptr<Texture> Texture::Load(const string& path, bool isSRGB)
 
 	texture->m_name = "<Unnamed Texture>";
 
-	texture->m_resource = ResourceLoader<TextureResource>::GetInstance().Load(path, isSRGB);
+	texture->m_resource = ResourceLoader::GetInstance().Load<TextureResource>(path, isSRGB);
 
 	return texture;
 }

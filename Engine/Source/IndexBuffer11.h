@@ -25,9 +25,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 	DXGI_FORMAT format;
 	
-	concurrency::task<void> loadTask;
-
-	static std::shared_ptr<IndexBuffer> Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage, bool async = true);
+	static std::shared_ptr<IndexBuffer> Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage);
 
 private:
 	static void CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, std::shared_ptr<BaseIndexBufferData> data, Usage usage);

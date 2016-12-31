@@ -10,12 +10,12 @@
 #pragma once
 
 #include "Filesystem.h"
+#include "IAsyncResource.h"
 
 namespace Kodiak
 {
 
 
-template <class TResource>
 class ResourceLoader
 {
 public:
@@ -28,13 +28,17 @@ public:
 	bool IsAsyncLoadEnabled() const { return m_asyncLoadEnabled; }
 	void SetAsyncLoadEnabled(bool enable) { m_asyncLoadEnabled = enable; }
 
-	template<class... U>
+	template<class TResource, class... U>
 	std::shared_ptr<TResource> Load(const std::string& path, U&&... u)
 	{
 		// See if we already have a resource with the given path
-		auto resource = FindObject(path);
+		auto resource = std::dynamic_pointer_cast<TResource>(FindObject(path));
 		if (resource)
 		{
+			if (!m_asyncLoadEnabled)
+			{
+				resource->Wait();
+			}
 			return resource;
 		}
 
@@ -56,13 +60,51 @@ public:
 		else
 		{
 			resource->DoLoad();
+
+			std::unique_lock<std::shared_mutex> CS(m_mutex);
+			m_readyQueue[path] = resource;
 		}
+		return resource;
+	}
+
+
+	template<class TResource, class... U>
+	std::shared_ptr<TResource> LoadImmediate(const std::string& path, U&&... u)
+	{
+		// See if we already have a resource with the given path
+		auto resource = std::dynamic_pointer_cast<TResource>(FindObject(path));
+		if (resource)
+		{
+			// If we have a previous async load request in flight, wait on it here
+			resource->Wait();
+			return resource;
+		}
+
+		// Verify that the path to the resource is valid
+		auto& filesystem = Filesystem::GetInstance();
+		if (!filesystem.Exists(path))
+		{
+			return nullptr;
+		}
+
+		// Didn't find one, so queue up an async load (or load immediately)
+		resource = make_shared<TResource>(std::forward<U>(u)...);
+		resource->SetResourcePath(path);
+
+		resource->DoLoad();
+		{
+			std::unique_lock<std::shared_mutex> CS(m_mutex);
+			m_readyQueue[path] = resource;
+		}
+
 		return resource;
 	}
 
 
 	void Update()
 	{
+		std::unique_lock<std::shared_mutex> CS(m_mutex);
+
 		auto it = std::begin(m_pendingQueue);
 		while (it != std::end(m_pendingQueue))
 		{
@@ -109,20 +151,26 @@ public:
 
 
 private:
-	void Queue(const std::string& path, std::shared_ptr<TResource> resource)
+	void Queue(const std::string& path, std::shared_ptr<IAsyncResource> resource)
 	{
-		weak_ptr<TResource> weak = resource;
+		std::weak_ptr<IAsyncResource> weak = resource;
 		
 		// Add to pending work queue
-		m_pendingQueue[path] = weak;
+		{
+			std::unique_lock<std::shared_mutex> CS(m_mutex);
+			m_pendingQueue[path] = weak;
 
-		// Launch async background task
-		std::async(std::launch::async, [resource]() { resource->DoLoad(); });
+			// Launch async background task
+			auto fut = std::async(std::launch::async, [resource]() { resource->DoLoad(); });
+			resource->AcquireThreadResult(std::move(fut));
+		}
 	}
 
 
-	std::shared_ptr<TResource> FindObject(const std::string& path)
+	std::shared_ptr<IAsyncResource> FindObject(const std::string& path)
 	{
+		std::shared_lock<std::shared_mutex> CS(m_mutex);
+
 		// Check ready queue first
 		{
 			auto res = m_readyQueue.find(path);
@@ -146,9 +194,10 @@ private:
 
 
 private:
-	bool m_asyncLoadEnabled{ true };
-	std::unordered_map<std::string, std::weak_ptr<TResource>> m_pendingQueue;
-	std::unordered_map<std::string, std::weak_ptr<TResource>> m_readyQueue;
+	bool				m_asyncLoadEnabled{ true };
+	std::shared_mutex	m_mutex;
+	std::unordered_map<std::string, std::weak_ptr<IAsyncResource>> m_pendingQueue;
+	std::unordered_map<std::string, std::weak_ptr<IAsyncResource>> m_readyQueue;
 };
 
 } // namespace Kodiak

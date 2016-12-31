@@ -19,11 +19,14 @@
 #include "RenderEnums12.h"
 #include "RenderUtils.h"
 #include "RootSignature12.h"
-#include "Shader12.h"
+#include "Shader.h"
+#include "ShaderResource12.h"
+
 
 using namespace Kodiak;
 using namespace std;
 using namespace Microsoft::WRL;
+
 
 namespace
 {
@@ -294,7 +297,8 @@ void GraphicsPSO::SetVertexShader(VertexShader* vertexShader)
 {
 	if (vertexShader)
 	{
-		m_psoDesc.VS = CD3D12_SHADER_BYTECODE(vertexShader->GetByteCode(), vertexShader->GetByteCodeSize());
+		auto resource = vertexShader->GetResource();
+		m_psoDesc.VS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
 	}
 }
 
@@ -303,7 +307,8 @@ void GraphicsPSO::SetPixelShader(PixelShader* pixelShader)
 {
 	if (pixelShader)
 	{
-		m_psoDesc.PS = CD3D12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
+		auto resource = pixelShader->GetResource();
+		m_psoDesc.PS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
 	}
 }
 
@@ -312,7 +317,8 @@ void GraphicsPSO::SetGeometryShader(GeometryShader* geometryShader)
 {
 	if (geometryShader)
 	{
-		m_psoDesc.GS = CD3D12_SHADER_BYTECODE(geometryShader->GetByteCode(), geometryShader->GetByteCodeSize());
+		auto resource = geometryShader->GetResource();
+		m_psoDesc.GS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
 	}
 }
 
@@ -321,7 +327,8 @@ void GraphicsPSO::SetDomainShader(DomainShader* domainShader)
 {
 	if (domainShader)
 	{
-		m_psoDesc.DS = CD3D12_SHADER_BYTECODE(domainShader->GetByteCode(), domainShader->GetByteCodeSize());
+		auto resource = domainShader->GetResource();
+		m_psoDesc.DS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
 	}
 }
 
@@ -330,7 +337,8 @@ void GraphicsPSO::SetHullShader(HullShader* hullShader)
 {
 	if (hullShader)
 	{
-		m_psoDesc.HS = CD3D12_SHADER_BYTECODE(hullShader->GetByteCode(), hullShader->GetByteCodeSize());
+		auto resource = hullShader->GetResource();
+		m_psoDesc.HS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
 	}
 }
 
@@ -390,7 +398,11 @@ ComputePSO::ComputePSO()
 
 void ComputePSO::SetComputeShader(ComputeShader* computeShader)
 {
-	m_psoDesc.CS = CD3D12_SHADER_BYTECODE(computeShader->GetByteCode(), computeShader->GetByteCodeSize());
+	if (computeShader)
+	{
+		auto resource = computeShader->GetResource();
+		m_psoDesc.CS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
+	}
 }
 
 

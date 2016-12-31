@@ -25,7 +25,7 @@ map<size_t, shared_ptr<VertexBuffer>>	s_vertexBufferMap;
 }
 
 
-shared_ptr<VertexBuffer> VertexBuffer::Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, bool async)
+shared_ptr<VertexBuffer> VertexBuffer::Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage)
 {
 	const auto hashCode = data->GetId();
 
@@ -42,20 +42,7 @@ shared_ptr<VertexBuffer> VertexBuffer::Create(std::shared_ptr<BaseVertexBufferDa
 			vbuffer = make_shared<VertexBuffer>();
 			s_vertexBufferMap[hashCode] = vbuffer;
 
-			if (async)
-			{
-				// Non-blocking asynchronous create
-				vbuffer->loadTask = concurrency::create_task([vbuffer, data, usage]()
-				{
-					VertexBuffer::CreateInternal(vbuffer, data, usage);
-				});
-			}
-			else
-			{
-				// Blocking synchronous create
-				vbuffer->loadTask = concurrency::create_task([] {});
-				CreateInternal(vbuffer, data, usage);
-			}
+			CreateInternal(vbuffer, data, usage);
 		}
 		else
 		{

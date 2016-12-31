@@ -10,6 +10,7 @@
 #pragma once
 
 #include "GpuResource.h"
+#include "IAsyncResource.h"
 
 namespace Kodiak
 {
@@ -20,7 +21,7 @@ enum class ColorFormat;
 enum class LoadState;
 
 
-class TextureResource : public GpuResource
+class TextureResource : public GpuResource, public IAsyncResource
 {
 public:
 	TextureResource();
@@ -39,14 +40,8 @@ public:
 	void Create(uint32_t width, uint32_t height, ColorFormat format, const void* initData);
 	void CreateArray(uint32_t width, uint32_t height, uint32_t arraySize, uint32_t numMips, ColorFormat format, const void* initData = nullptr);
 
-	// Resource loader interface
-	void SetResourcePath(const std::string& path) { m_resourcePath = path; }
-	bool DoLoad();
-	bool IsReady() const;
-	bool IsLoadFinished() const;
-	LoadState GetLoadState() const { return m_loadState; }
-	void AddPostLoadCallback(std::function<void()> callback);
-	void ExecutePostLoadCallbacks();
+	// IAsyncResource interface
+	bool DoLoad() final override;
 
 private:
 	uint32_t m_width{ 0 };

@@ -74,7 +74,7 @@ void Renderer::EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback)
 
 void Renderer::Update()
 {
-	ResourceLoader<TextureResource>::GetInstance().Update();
+	ResourceLoader::GetInstance().Update();
 }
 
 

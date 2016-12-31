@@ -18,8 +18,8 @@
 #include "DeviceManager.h"
 #include "Format.h"
 #include "PipelineState.h"
-#include "ShaderManager.h"
 #include "RenderEnums.h"
+#include "RenderUtils.h"
 #include "Texture.h"
 
 
@@ -57,42 +57,42 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 	m_width = width;
 	m_height = height;
 
-	auto waitTask = concurrency::create_task([] {});
-
-	m_bloomExtractAndDownsampleHdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleHdrCS", waitTask);
-	m_bloomExtractAndDownsampleLdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleLdrCS", waitTask);
+	const bool immediate = true;
 	
-	m_extractLumaCs.SetComputeShaderPath("Engine\\ExtractLumaCS", waitTask);
+	m_bloomExtractAndDownsampleHdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleHdrCS", immediate);
+	m_bloomExtractAndDownsampleLdrCs.SetComputeShaderPath("Engine\\BloomExtractAndDownsampleLdrCS", immediate);
 	
-	m_downsampleBloom4Cs.SetComputeShaderPath("Engine\\DownsampleBloomAllCS", waitTask);
+	m_extractLumaCs.SetComputeShaderPath("Engine\\ExtractLumaCS", immediate);
 	
-	m_downsampleBloom2Cs.SetComputeShaderPath("Engine\\DownsampleBloomCS", waitTask);
+	m_downsampleBloom4Cs.SetComputeShaderPath("Engine\\DownsampleBloomAllCS", immediate);
+	
+	m_downsampleBloom2Cs.SetComputeShaderPath("Engine\\DownsampleBloomCS", immediate);
 	
 	for (uint32_t i = 0; i < 5; ++i)
 	{
-		m_blurCs[i].SetComputeShaderPath("Engine\\BlurCS", waitTask);
-		m_upsampleAndBlurCs[i].SetComputeShaderPath("Engine\\UpsampleAndBlurCS", waitTask);
+		m_blurCs[i].SetComputeShaderPath("Engine\\BlurCS", immediate);
+		m_upsampleAndBlurCs[i].SetComputeShaderPath("Engine\\UpsampleAndBlurCS", immediate);
 	}
 
 	if (DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
 	{
-		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMap2CS", waitTask);
-		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdr2CS", waitTask);
-		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdr2CS", waitTask);
-		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdr2CS", waitTask);
+		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMap2CS", immediate);
+		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdr2CS", immediate);
+		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdr2CS", immediate);
+		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdr2CS", immediate);
 	}
 	else
 	{
-		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMapCS", waitTask);
-		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdrCS", waitTask);
-		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdrCS", waitTask);
-		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdrCS", waitTask);
+		m_toneMapCs.SetComputeShaderPath("Engine\\ToneMapCS", immediate);
+		m_toneMapHdrCs.SetComputeShaderPath("Engine\\ToneMapHdrCS", immediate);
+		m_debugLuminanceHdrCs.SetComputeShaderPath("Engine\\DebugLuminanceHdrCS", immediate);
+		m_debugLuminanceLdrCs.SetComputeShaderPath("Engine\\DebugLuminanceLdrCS", immediate);
 	}
 
-	m_generateHistogramCs.SetComputeShaderPath("Engine\\GenerateHistogramCS", waitTask);
-	m_adaptExposureCs.SetComputeShaderPath("Engine\\AdaptExposureCS", waitTask);
-	m_debugDrawHistogramCs.SetComputeShaderPath("Engine\\DebugDrawHistogramCS", waitTask);
-	m_copyPostToSceneCs.SetComputeShaderPath("Engine\\CopyBackPostBufferCS", waitTask);
+	m_generateHistogramCs.SetComputeShaderPath("Engine\\GenerateHistogramCS", immediate);
+	m_adaptExposureCs.SetComputeShaderPath("Engine\\AdaptExposureCS", immediate);
+	m_debugDrawHistogramCs.SetComputeShaderPath("Engine\\DebugDrawHistogramCS", immediate);
+	m_copyPostToSceneCs.SetComputeShaderPath("Engine\\CopyBackPostBufferCS", immediate);
 	
 	m_bloomUAV1[1].Create("Bloom Buffer", m_bloomWidth, m_bloomHeight, 1, ColorFormat::R11G11B10_Float);
 	m_bloomUAV1[0].Create("Bloom Buffer 1a", m_bloomWidth, m_bloomHeight, 1, ColorFormat::R11G11B10_Float);
@@ -123,8 +123,6 @@ void PostProcessing::Initialize(uint32_t width, uint32_t height)
 #if DX11
 	InitializeSamplers();
 #endif
-
-	waitTask.wait();
 }
 
 

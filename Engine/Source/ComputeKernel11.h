@@ -38,8 +38,7 @@ public:
 	void SetName(const std::string& name) { m_name = name; }
 	const std::string& GetName() const { return m_name; }
 
-	void SetComputeShaderPath(const std::string& path);
-	void SetComputeShaderPath(const std::string& path, concurrency::task<void>& waitTask);
+	void SetComputeShaderPath(const std::string& path, bool immediate = false);
 
 	std::shared_ptr<ComputeConstantBuffer> GetConstantBuffer(const std::string& name);
 	std::shared_ptr<ComputeParameter> GetParameter(const std::string& name);

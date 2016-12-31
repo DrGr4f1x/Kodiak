@@ -17,6 +17,8 @@
 #include "RootSignature12.h"
 #include "SamplerManager.h"
 #include "Shader.h"
+#include "ShaderResource12.h"
+
 
 using namespace Kodiak;
 using namespace std;
@@ -53,11 +55,18 @@ Effect::Effect(const string& name) : BaseEffect(name) {}
 
 void Effect::Finalize()
 {
-	loadTask = loadTask.then([this]
-	{
-		BuildEffectSignature();
-		BuildPSO();
-	});
+	if (m_isFinalized) return;
+
+	TryWaitShader(m_vertexShader.get());
+	TryWaitShader(m_hullShader.get());
+	TryWaitShader(m_domainShader.get());
+	TryWaitShader(m_geometryShader.get());
+	TryWaitShader(m_pixelShader.get());
+
+	BuildEffectSignature();
+	BuildPSO();
+
+	m_isFinalized = true;
 }
 
 
@@ -148,7 +157,8 @@ void Effect::BuildPSO()
 
 	m_pso->SetRenderTargetFormats(m_numRenderTargets, &m_colorFormats[0], m_depthFormat, m_msaaCount, m_msaaQuality);
 	
-	m_pso->SetInputLayout(m_vertexShader->GetInputLayout());
+	auto resource = m_vertexShader->GetResource();
+	m_pso->SetInputLayout(resource->GetInputLayout());
 
 	m_pso->SetVertexShader(m_vertexShader.get());
 	m_pso->SetDomainShader(m_domainShader.get());
@@ -247,7 +257,7 @@ void Effect::CreateRootSignature()
 }
 
 
-void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
+void Effect::ProcessShaderBindings(uint32_t& rootIndex, IShader* shader)
 {
 	using namespace ShaderReflection;
 
@@ -466,11 +476,21 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, Shader* shader)
 }
 
 
+void Effect::TryWaitShader(IShader* shader)
+{
+	if (shader)
+	{
+		shader->Wait();
+	}
+}
+
+
 D3D12_ROOT_SIGNATURE_FLAGS Effect::GetRootSignatureFlags()
 {
 	D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
-	if (!m_vertexShader->GetInputLayout().elements.empty())
+	auto resource = m_vertexShader->GetResource();
+	if (!resource->GetInputLayout().elements.empty())
 	{
 		flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	}

@@ -22,7 +22,6 @@
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
 #include "Shader.h"
-#include "ShaderManager.h"
 
 
 using namespace Kodiak;
@@ -433,10 +432,9 @@ void DeviceManager::CreatePresentState()
 	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
 
 	// Load shaders
-	auto screenQuadVs = ShaderManager::GetInstance().LoadVertexShader("Engine\\ScreenQuadVS");
-	auto convertLDRToDisplayPs = ShaderManager::GetInstance().LoadPixelShader("Engine\\ConvertLDRToDisplayPS");
-	auto convertHDRToDisplayPs = ShaderManager::GetInstance().LoadPixelShader("Engine\\ConvertHDRToDisplayPS");
-	(screenQuadVs->loadTask && convertLDRToDisplayPs->loadTask && convertHDRToDisplayPs->loadTask).wait();
+	auto screenQuadVs = VertexShader::LoadImmediate("Engine\\ScreenQuadVS.dx.cso");
+	auto convertLDRToDisplayPs = PixelShader::LoadImmediate("Engine\\ConvertLDRToDisplayPS.dx.cso");
+	auto convertHDRToDisplayPs = PixelShader::LoadImmediate("Engine\\ConvertHDRToDisplayPS.dx.cso");
 	
 	// Configure PSO
 	m_convertLDRToDisplayPSO.SetBlendState(defaultBlendState);

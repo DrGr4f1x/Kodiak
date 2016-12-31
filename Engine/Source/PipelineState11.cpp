@@ -15,7 +15,8 @@
 #include "InputLayout11.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
-#include "Shader11.h"
+#include "Shader.h"
+#include "ShaderResource11.h"
 
 #include <ppltasks.h>
 
@@ -201,7 +202,7 @@ void GraphicsPSO::SetInputLayout(ID3D11InputLayout* inputLayout)
 
 void GraphicsPSO::SetVertexShader(VertexShader* vertexShader)
 {
-	auto d3dVS = vertexShader->GetShader();
+	auto d3dVS = vertexShader->GetResource()->GetShader();
 	m_desc.vertexShader = d3dVS;
 	m_vertexShader = d3dVS;
 }
@@ -209,7 +210,7 @@ void GraphicsPSO::SetVertexShader(VertexShader* vertexShader)
 
 void GraphicsPSO::SetPixelShader(PixelShader* pixelShader)
 {
-	auto d3dPS = pixelShader->GetShader();
+	auto d3dPS = pixelShader->GetResource()->GetShader();
 	m_desc.pixelShader = d3dPS;
 	m_pixelShader = d3dPS;
 }
@@ -217,7 +218,7 @@ void GraphicsPSO::SetPixelShader(PixelShader* pixelShader)
 
 void GraphicsPSO::SetGeometryShader(GeometryShader* geometryShader)
 {
-	auto d3dGS = geometryShader->GetShader();
+	auto d3dGS = geometryShader->GetResource()->GetShader();
 	m_desc.geometryShader = d3dGS;
 	m_geometryShader = d3dGS;
 }
@@ -225,7 +226,7 @@ void GraphicsPSO::SetGeometryShader(GeometryShader* geometryShader)
 
 void GraphicsPSO::SetHullShader(HullShader* hullShader)
 {
-	auto d3dHS = hullShader->GetShader();
+	auto d3dHS = hullShader->GetResource()->GetShader();
 	m_desc.hullShader = d3dHS;
 	m_hullShader = d3dHS;
 }
@@ -233,7 +234,7 @@ void GraphicsPSO::SetHullShader(HullShader* hullShader)
 
 void GraphicsPSO::SetDomainShader(DomainShader* domainShader)
 {
-	auto d3dDS = domainShader->GetShader();
+	auto d3dDS = domainShader->GetResource()->GetShader();
 	m_desc.domainShader = d3dDS;
 	m_domainShader = d3dDS;
 }
@@ -373,5 +374,5 @@ void GraphicsPSO::CompileDepthStencilState()
 
 void ComputePSO::SetComputeShader(ComputeShader* computeShader)
 {
-	m_computeShader = computeShader->GetShader();
+	m_computeShader = computeShader->GetResource()->GetShader();
 }

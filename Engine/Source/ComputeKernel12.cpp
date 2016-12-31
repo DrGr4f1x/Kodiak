@@ -18,7 +18,7 @@
 #include "PipelineState12.h"
 #include "RootSignature12.h"
 #include "SamplerManager.h"
-#include "ShaderManager.h"
+
 
 using namespace Kodiak;
 using namespace std;
@@ -37,19 +37,17 @@ ComputeKernel::ComputeKernel(const string& name)
 }
 
 
-void ComputeKernel::SetComputeShaderPath(const string& path)
+void ComputeKernel::SetComputeShaderPath(const string& path, bool immediate)
 {
 	m_shaderPath = path;
-	m_computeShader = ShaderManager::GetInstance().LoadComputeShader(path);
-
-	loadTask = m_computeShader->loadTask.then([this] { SetupKernel(); });
-}
-
-
-void ComputeKernel::SetComputeShaderPath(const string& path, concurrency::task<void>& waitTask)
-{
-	SetComputeShaderPath(path);
-	waitTask = waitTask && loadTask;
+	if (immediate)
+	{
+		m_computeShader = ComputeShader::LoadImmediate(path);
+	}
+	else
+	{
+		m_computeShader = ComputeShader::Load(path);
+	}
 }
 
 

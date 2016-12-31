@@ -43,8 +43,6 @@ SSAO::SSAO()
 
 void SSAO::Initialize(uint32_t width, uint32_t height)
 {
-	auto waitTask = concurrency::create_task([] {});
-
 	m_sampleThickness[0] = sqrt(1.0f - 0.2f * 0.2f);
 	m_sampleThickness[1] = sqrt(1.0f - 0.4f * 0.4f);
 	m_sampleThickness[2] = sqrt(1.0f - 0.6f * 0.6f);
@@ -58,24 +56,26 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 	m_sampleThickness[10] = sqrt(1.0f - 0.4f * 0.4f - 0.8f * 0.8f);
 	m_sampleThickness[11] = sqrt(1.0f - 0.6f * 0.6f - 0.6f * 0.6f);
 
-	m_depthPrepare1Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers1CS", waitTask);
-	m_depthPrepare2Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers2CS", waitTask);
+	const bool immediate = true;
+
+	m_depthPrepare1Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers1CS", immediate);
+	m_depthPrepare2Cs.SetComputeShaderPath("Engine\\AoPrepareDepthBuffers2CS", immediate);
 	
 	for (int32_t i = 0; i < 4; ++i)
 	{
-		m_render1Cs[i].SetComputeShaderPath("Engine\\AoRender1CS", waitTask);
-		m_render2Cs[i].SetComputeShaderPath("Engine\\AoRender2CS", waitTask);
+		m_render1Cs[i].SetComputeShaderPath("Engine\\AoRender1CS", immediate);
+		m_render2Cs[i].SetComputeShaderPath("Engine\\AoRender2CS", immediate);
 		
-		m_blurUpsampleBlend[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleBlendOutCS", waitTask);
-		m_blurUpsampleBlend[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinBlendOutCS", waitTask);
+		m_blurUpsampleBlend[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleBlendOutCS", immediate);
+		m_blurUpsampleBlend[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinBlendOutCS", immediate);
 		
-		m_blurUpsampleFinal[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleCS", waitTask);
-		m_blurUpsampleFinal[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinCS", waitTask);
+		m_blurUpsampleFinal[i][0].SetComputeShaderPath("Engine\\AoBlurUpsampleCS", immediate);
+		m_blurUpsampleFinal[i][1].SetComputeShaderPath("Engine\\AoBlurUpsamplePreMinCS", immediate);
 	}
 
-	m_linearizeDepthCs.SetComputeShaderPath("Engine\\LinearizeDepthCS", waitTask);
+	m_linearizeDepthCs.SetComputeShaderPath("Engine\\LinearizeDepthCS", immediate);
 	
-	m_debugSsaoCs.SetComputeShaderPath("Engine\\DebugSSAOCS", waitTask);
+	m_debugSsaoCs.SetComputeShaderPath("Engine\\DebugSSAOCS", immediate);
 	
 	const uint32_t bufferWidth1 = (width + 1) / 2;
 	const uint32_t bufferWidth2 = (width + 3) / 4;
@@ -128,8 +128,6 @@ void SSAO::Initialize(uint32_t width, uint32_t height)
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_linearClampSampler.GetAddressOf()));
 #endif
-
-	waitTask.wait();
 }
 
 

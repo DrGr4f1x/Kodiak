@@ -57,8 +57,6 @@ public:
 
 	std::shared_ptr<Material> Clone();
 
-	concurrency::task<void> prepareTask;
-
 private:
 	void CreateRenderThreadData();
 
