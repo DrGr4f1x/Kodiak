@@ -44,7 +44,7 @@ bool ShaderResource::DoLoad()
 	m_loadState = LoadState::Loading;
 
 	// Load the compiled shader file
-	unique_ptr<uint8_t[]> data;
+	unique_ptr<byte[]> data;
 	size_t dataSize;
 
 	auto res = LoadShaderFile(m_resourcePath, data, dataSize);
@@ -63,7 +63,7 @@ bool ShaderResource::DoLoad()
 }
 
 
-void VertexShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void VertexShaderResource::Create(unique_ptr<byte[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateVertexShader(data.get(), dataSize, nullptr, &m_shader));
 
@@ -75,7 +75,7 @@ void VertexShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 }
 
 
-void VertexShaderResource::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_ptr<uint8_t[]>& data, size_t dataSize)
+void VertexShaderResource::CreateInputLayout(ID3D11ShaderReflection* reflector, unique_ptr<byte[]>& data, size_t dataSize)
 {
 	std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
 
@@ -186,7 +186,7 @@ void VertexShaderResource::CreateInputLayout(ID3D11ShaderReflection* reflector, 
 
 
 
-void HullShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void HullShaderResource::Create(unique_ptr<byte[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateHullShader(data.get(), dataSize, nullptr, &m_shader));
 
@@ -197,7 +197,7 @@ void HullShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 }
 
 
-void DomainShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void DomainShaderResource::Create(unique_ptr<byte[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateDomainShader(data.get(), dataSize, nullptr, &m_shader));
 
@@ -208,7 +208,7 @@ void DomainShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 }
 
 
-void GeometryShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void GeometryShaderResource::Create(unique_ptr<byte[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateGeometryShader(data.get(), dataSize, nullptr, &m_shader));
 
@@ -219,7 +219,7 @@ void GeometryShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize
 }
 
 
-void PixelShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void PixelShaderResource::Create(unique_ptr<byte[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreatePixelShader(data.get(), dataSize, nullptr, &m_shader));
 
@@ -230,7 +230,7 @@ void PixelShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
 }
 
 
-void ComputeShaderResource::Create(unique_ptr<uint8_t[]>& data, size_t dataSize)
+void ComputeShaderResource::Create(unique_ptr<byte[]>& data, size_t dataSize)
 {
 	ThrowIfFailed(g_device->CreateComputeShader(data.get(), dataSize, nullptr, &m_shader));
 

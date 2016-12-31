@@ -31,7 +31,7 @@ public:
 	bool DoLoad() final override;
 
 protected:
-	virtual void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize) = 0;
+	virtual void Create(std::unique_ptr<byte[]>& data, size_t dataSize) = 0;
 
 protected:
 	ShaderReflection::Signature			m_signature;
@@ -47,8 +47,8 @@ public:
 	ShaderType GetType() const final override { return ShaderType::Vertex; }
 
 private:
-	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize) final override;
-	void CreateInputLayout(ID3D11ShaderReflection* reflector, std::unique_ptr<uint8_t[]>& data, size_t dataSize);
+	void Create(std::unique_ptr<byte[]>& data, size_t dataSize) final override;
+	void CreateInputLayout(ID3D11ShaderReflection* reflector, std::unique_ptr<byte[]>& data, size_t dataSize);
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_shader;
@@ -64,7 +64,7 @@ public:
 	ShaderType GetType() const final override { return ShaderType::Hull; }
 
 private:
-	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize) final override;
+	void Create(std::unique_ptr<byte[]>& data, size_t dataSize) final override;
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11HullShader>	m_shader;
@@ -79,7 +79,7 @@ public:
 	ShaderType GetType() const final override { return ShaderType::Domain; }
 
 private:
-	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize) final override;
+	void Create(std::unique_ptr<byte[]>& data, size_t dataSize) final override;
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11DomainShader>	m_shader;
@@ -94,7 +94,7 @@ public:
 	ShaderType GetType() const final override { return ShaderType::Geometry; }
 
 private:
-	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize) final override;
+	void Create(std::unique_ptr<byte[]>& data, size_t dataSize) final override;
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11GeometryShader>	m_shader;
@@ -109,7 +109,7 @@ public:
 	ShaderType GetType() const final override { return ShaderType::Pixel; }
 
 private:
-	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize) final override;
+	void Create(std::unique_ptr<byte[]>& data, size_t dataSize) final override;
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_shader;
@@ -124,7 +124,7 @@ public:
 	ShaderType GetType() const final override { return ShaderType::Compute; }
 
 private:
-	void Create(std::unique_ptr<uint8_t[]>& data, size_t dataSize) final override;
+	void Create(std::unique_ptr<byte[]>& data, size_t dataSize) final override;
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11ComputeShader>	m_shader;

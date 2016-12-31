@@ -63,7 +63,7 @@ public:
 	}
 
 
-	IndexBufferData16(uint8_t* data, size_t sizeInBytes)
+	IndexBufferData16(const byte* data, size_t sizeInBytes)
 	{
 		m_id = s_baseId++;
 
@@ -100,8 +100,8 @@ public:
 	size_t GetElementSize() const override { return sizeof(uint16_t); }
 
 private:
-	uint16_t*	m_data{ nullptr };
-	static std::atomic_size_t		s_baseId;
+	uint16_t*					m_data{ nullptr };
+	static std::atomic_size_t	s_baseId;
 };
 
 
@@ -123,7 +123,7 @@ public:
 	}
 
 
-	IndexBufferData32(uint8_t* data, size_t sizeInBytes)
+	IndexBufferData32(const byte* data, size_t sizeInBytes)
 	{
 		m_id = s_baseId++;
 
@@ -160,8 +160,8 @@ public:
 	size_t GetElementSize() const override { return sizeof(uint32_t); }
 
 private:
-	uint32_t*	m_data{ nullptr };
-	static std::atomic_size_t		s_baseId;
+	uint32_t*					m_data{ nullptr };
+	static std::atomic_size_t	s_baseId;
 };
 
 } // namespace Kodiak

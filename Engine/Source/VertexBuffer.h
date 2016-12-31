@@ -85,14 +85,13 @@ private:
 class VertexBufferDataRaw : public BaseVertexBufferData
 {
 public:
-	VertexBufferDataRaw(uint8_t* data, size_t stride, size_t sizeInBytes)
-		: m_data(data)
+	VertexBufferDataRaw(const byte* data, size_t stride, size_t sizeInBytes)
 	{
 		m_id = s_baseId++;
 
 		m_elementSize = stride;
 		m_numElements = sizeInBytes / stride;
-		m_data = (uint8_t*)_aligned_malloc(m_elementSize * m_numElements, 16);
+		m_data = (byte*)_aligned_malloc(m_elementSize * m_numElements, 16);
 
 		assert(m_data);
 		if (m_data)
@@ -112,7 +111,7 @@ public:
 	}
 
 private:
-	uint8_t*					m_data;  // TODO: use a unique_ptr, move it into this object to avoid a memcpy
+	byte*						m_data{ nullptr };  // TODO: use a unique_ptr, move it into this object to avoid a memcpy
 	static std::atomic_size_t	s_baseId;
 };
 
