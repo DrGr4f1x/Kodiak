@@ -11,15 +11,17 @@
 
 #include "DeviceManager11.h"
 
-#include "ColorBuffer11.h"
+#include "ColorBuffer.h"
 #include "CommandList11.h"
 #include "CommandListManager11.h"
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
+#include "DXGIUtility.h"
 #include "Format.h"
+#include "Profile.h"
+#include "Renderer.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
-#include "Shader11.h"
-#include "ShaderManager11.h"
+#include "Shader.h"
 
 
 using namespace Kodiak;
@@ -59,8 +61,17 @@ namespace
 } // anonymous namespace
 
 
+DeviceManager& DeviceManager::GetInstance()
+{
+	static DeviceManager instance;
+	return instance;
+}
+
+
 DeviceManager::DeviceManager()
 {
+	m_swapChainFormat = ColorFormat::R10G10B10A2_UNorm;
+
 	CreateDeviceIndependentResources();
 	CreateDeviceResources();
 }
@@ -95,16 +106,25 @@ void DeviceManager::BeginFrame()
 		// Discard the contents of the render target.
 		// This is a valid operation only when the existing contents will be entirely
 		// overwritten. If dirty or scroll rects are used, this call should be removed.
-		m_d3dContext1->DiscardView(m_backBuffer->GetRTV());
+		//m_d3dContext1->DiscardView(m_backBuffer->GetRTV());
 	}
 }
 
 
-void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource, bool bHDRPresent, const PresentParameters& params)
 {
+	PROFILE_BEGIN(itt_present);
+
 	auto& commandList = GraphicsCommandList::Begin();
 
-	PreparePresent(commandList, presentSource);
+	if (bHDRPresent)
+	{
+		PreparePresentHDR(commandList, presentSource, params);
+	}
+	else
+	{
+		PreparePresentLDR(commandList, presentSource);
+	}
 
 	commandList.CloseAndExecute();
 
@@ -123,6 +143,8 @@ void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 	{
 		ThrowIfFailed(hr);
 	}
+
+	PROFILE_END();
 }
 
 
@@ -130,9 +152,8 @@ void DeviceManager::Present(shared_ptr<ColorBuffer> presentSource)
 void DeviceManager::CreateDeviceIndependentResources()
 {
 	// Initialize Direct2D resources.
-	D2D1_FACTORY_OPTIONS options;
-	ZeroMemory(&options, sizeof(D2D1_FACTORY_OPTIONS));
-
+	D2D1_FACTORY_OPTIONS options{};
+	
 #if defined(_DEBUG)
 	// If the project is in a debug build, enable Direct2D debugging via SDK Layers.
 	options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
@@ -251,6 +272,7 @@ void DeviceManager::CreateDeviceResources()
 	CreatePresentState();
 
 	// Create the Direct2D device object and a corresponding context.
+#if 0
 	ComPtr<IDXGIDevice3> dxgiDevice;
 	ThrowIfFailed(
 		m_d3dDevice.As(&dxgiDevice)
@@ -266,6 +288,7 @@ void DeviceManager::CreateDeviceResources()
 			&m_d2dContext
 			)
 		);
+#endif
 }
 
 
@@ -275,8 +298,10 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	ID3D11RenderTargetView* nullViews[] = { nullptr };
 	m_d3dContext->OMSetRenderTargets(ARRAYSIZE(nullViews), nullViews, nullptr);
 	m_backBuffer = nullptr;
+#if 0
 	m_d2dContext->SetTarget(nullptr);
 	m_d2dTargetBitmap = nullptr;
+#endif
 	m_d3dContext->Flush();
 
 	if (m_swapChain != nullptr)
@@ -286,7 +311,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 			2, // Double-buffered swap chain.
 			m_width,
 			m_height,
-			DXGI_FORMAT_B8G8R8A8_UNORM,
+			DXGIUtility::ConvertToDXGI(m_swapChainFormat),
 			0
 			);
 
@@ -311,7 +336,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 		swapChainDesc.Width = m_width; // Match the size of the window.
 		swapChainDesc.Height = m_height;
-		swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // This is the most common swap chain format.
+		swapChainDesc.Format = DXGIUtility::ConvertToDXGI(m_swapChainFormat); // This is the most common swap chain format.
 		swapChainDesc.Stereo = false;
 		swapChainDesc.SampleDesc.Count = 1; // Don't use multi-sampling.
 		swapChainDesc.SampleDesc.Quality = 0;
@@ -362,6 +387,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	m_backBuffer = make_shared<ColorBuffer>();
 	m_backBuffer->CreateFromSwapChain(this, "BackBuffer", backBuffer.Get());
 
+#if 0
 	// Create a Direct2D target bitmap associated with the
 	// swap chain back buffer and set it as the current target.
 	D2D1_BITMAP_PROPERTIES1 bitmapProperties =
@@ -389,6 +415,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 	// Grayscale text anti-aliasing is recommended for all Windows Store apps.
 	m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+#endif
 }
 
 
@@ -404,23 +431,32 @@ void DeviceManager::CreatePresentState()
 	RasterizerStateDesc rasterizerState(CullMode::None, FillMode::Solid);
 
 	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine", "ScreenQuadVS.cso");
-	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine", "BufferCopyPS.cso");
-	(vs->loadTask && ps->loadTask).wait();
+	auto screenQuadVs = VertexShader::LoadImmediate("Engine\\ScreenQuadVS.dx.cso");
+	auto convertLDRToDisplayPs = PixelShader::LoadImmediate("Engine\\ConvertLDRToDisplayPS.dx.cso");
+	auto convertHDRToDisplayPs = PixelShader::LoadImmediate("Engine\\ConvertHDRToDisplayPS.dx.cso");
 	
 	// Configure PSO
 	m_convertLDRToDisplayPSO.SetBlendState(defaultBlendState);
 	m_convertLDRToDisplayPSO.SetRasterizerState(rasterizerState);
 	m_convertLDRToDisplayPSO.SetDepthStencilState(depthStencilState);
-	m_convertLDRToDisplayPSO.SetVertexShader(vs.get());
-	m_convertLDRToDisplayPSO.SetPixelShader(ps.get());
-
+	m_convertLDRToDisplayPSO.SetVertexShader(screenQuadVs.get());
+	m_convertLDRToDisplayPSO.SetPixelShader(convertLDRToDisplayPs.get());
 	m_convertLDRToDisplayPSO.Finalize();
+
+	m_convertHDRToDisplayPSO.SetBlendState(defaultBlendState);
+	m_convertHDRToDisplayPSO.SetRasterizerState(rasterizerState);
+	m_convertHDRToDisplayPSO.SetDepthStencilState(depthStencilState);
+	m_convertHDRToDisplayPSO.SetVertexShader(screenQuadVs.get());
+	m_convertHDRToDisplayPSO.SetPixelShader(convertHDRToDisplayPs.get());
+	m_convertHDRToDisplayPSO.Finalize();
+
+	m_presentHDRConstants.Create(16, Usage::Dynamic);
 }
 
 
-void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
+void DeviceManager::PreparePresentLDR(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource)
 {
+	commandList.PIXBeginEvent("PreparePresent");
 	commandList.UnbindRenderTargets();
 
 	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -435,4 +471,35 @@ void DeviceManager::PreparePresent(GraphicsCommandList& commandList, shared_ptr<
 	commandList.Draw(3);
 
 	commandList.SetPixelShaderResource(0, nullptr);
+	commandList.PIXEndEvent();
+}
+
+
+void DeviceManager::PreparePresentHDR(GraphicsCommandList& commandList, shared_ptr<ColorBuffer> presentSource, const PresentParameters& params)
+{
+	commandList.PIXBeginEvent("PreparePresent");
+	commandList.UnbindRenderTargets();
+
+	commandList.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList.SetPipelineState(m_convertHDRToDisplayPSO);
+
+	// Copy and convert the LDR present source to the current back buffer
+	commandList.SetRenderTarget(*m_backBuffer);
+	commandList.SetViewportAndScissor(0, 0, m_width, m_height);
+
+	float toeStrength = params.ToeStrength < 1e-6f ? 1e32f : 1.0f / params.ToeStrength;
+	__declspec(align(16)) float presentData[4] = {params.PaperWhite, params.MaxBrightness, toeStrength, (float)params.DebugMode};
+
+	byte* dest = commandList.MapConstants(m_presentHDRConstants);
+	memcpy(dest, presentData, 16);
+	commandList.UnmapConstants(m_presentHDRConstants);
+
+	commandList.SetPixelShaderConstants(0, m_presentHDRConstants);
+	commandList.SetPixelShaderResource(0, presentSource->GetSRV());
+
+	commandList.Draw(3);
+
+	commandList.SetPixelShaderResource(0, nullptr);
+
+	commandList.PIXEndEvent();
 }

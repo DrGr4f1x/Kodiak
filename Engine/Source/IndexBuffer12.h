@@ -29,16 +29,15 @@ public:
 
 	void Destroy();
 
-	void Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage, const std::string& debugName);
+	static std::shared_ptr<IndexBuffer> Create(const BaseIndexBufferData& data, Usage usage);
 
 	const D3D12_INDEX_BUFFER_VIEW& GetIBV() const { return m_ibv; }
 	
-public:
-	concurrency::task<void> loadTask;
-
 private:
+	static void CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, const BaseIndexBufferData& data, Usage usage);
 	D3D12_RESOURCE_DESC DescribeBuffer(size_t numElements, size_t elementSize);
 
+private:
 	D3D12_INDEX_BUFFER_VIEW		m_ibv;
 	size_t						m_bufferSize;
 	size_t						m_elementCount;

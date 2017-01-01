@@ -15,9 +15,9 @@
 #include "InputLayout11.h"
 #include "RenderEnums11.h"
 #include "RenderUtils.h"
-#include "Shader11.h"
+#include "Shader.h"
+#include "ShaderResource11.h"
 
-#include <map>
 #include <ppltasks.h>
 
 using namespace Kodiak;
@@ -75,7 +75,7 @@ BlendStateDesc::BlendStateDesc(Blend srcBlend, Blend dstBlend)
 RasterizerStateDesc::RasterizerStateDesc()
 	: cullMode(CullMode::Back)
 	, fillMode(FillMode::Solid)
-	, frontCounterClockwise(false)
+	, frontCounterClockwise(true)
 	, depthBias(0)
 	, slopeScaledDepthBias(0.0f)
 	, depthBiasClamp(0.0f)
@@ -89,7 +89,7 @@ RasterizerStateDesc::RasterizerStateDesc()
 RasterizerStateDesc::RasterizerStateDesc(CullMode cullMode, FillMode fillMode)
 	: cullMode(cullMode)
 	, fillMode(fillMode)
-	, frontCounterClockwise(false)
+	, frontCounterClockwise(true)
 	, depthBias(0)
 	, slopeScaledDepthBias(0.0f)
 	, depthBiasClamp(0.0f)
@@ -132,10 +132,8 @@ DepthStencilStateDesc::DepthStencilStateDesc(bool enable, bool writeEnable)
 {}
 
 
-GraphicsPSO::GraphicsPSO()
-{
-	ZeroMemory(&m_desc, sizeof(GraphicsPSODesc));
-}
+GraphicsPSO::GraphicsPSO() : m_desc{}
+{}
 
 
 void GraphicsPSO::SetBlendState(const BlendStateDesc& blendDesc)
@@ -193,17 +191,16 @@ void GraphicsPSO::SetDepthStencilState(const DepthStencilStateDesc& depthStencil
 }
 
 
-void GraphicsPSO::SetInputLayout(const InputLayout& inputLayout)
+void GraphicsPSO::SetInputLayout(ID3D11InputLayout* inputLayout)
 {
-	auto d3dIL = inputLayout.inputLayout;
-	m_desc.inputLayout = d3dIL.Get();
-	m_inputLayout = d3dIL;
+	m_desc.inputLayout = inputLayout;
+	m_inputLayout = inputLayout;
 }
 
 
 void GraphicsPSO::SetVertexShader(VertexShader* vertexShader)
 {
-	auto d3dVS = vertexShader->GetShader();
+	auto d3dVS = vertexShader->GetResource()->GetShader();
 	m_desc.vertexShader = d3dVS;
 	m_vertexShader = d3dVS;
 }
@@ -211,7 +208,7 @@ void GraphicsPSO::SetVertexShader(VertexShader* vertexShader)
 
 void GraphicsPSO::SetPixelShader(PixelShader* pixelShader)
 {
-	auto d3dPS = pixelShader->GetShader();
+	auto d3dPS = pixelShader->GetResource()->GetShader();
 	m_desc.pixelShader = d3dPS;
 	m_pixelShader = d3dPS;
 }
@@ -219,7 +216,7 @@ void GraphicsPSO::SetPixelShader(PixelShader* pixelShader)
 
 void GraphicsPSO::SetGeometryShader(GeometryShader* geometryShader)
 {
-	auto d3dGS = geometryShader->GetShader();
+	auto d3dGS = geometryShader->GetResource()->GetShader();
 	m_desc.geometryShader = d3dGS;
 	m_geometryShader = d3dGS;
 }
@@ -227,7 +224,7 @@ void GraphicsPSO::SetGeometryShader(GeometryShader* geometryShader)
 
 void GraphicsPSO::SetHullShader(HullShader* hullShader)
 {
-	auto d3dHS = hullShader->GetShader();
+	auto d3dHS = hullShader->GetResource()->GetShader();
 	m_desc.hullShader = d3dHS;
 	m_hullShader = d3dHS;
 }
@@ -235,7 +232,7 @@ void GraphicsPSO::SetHullShader(HullShader* hullShader)
 
 void GraphicsPSO::SetDomainShader(DomainShader* domainShader)
 {
-	auto d3dDS = domainShader->GetShader();
+	auto d3dDS = domainShader->GetResource()->GetShader();
 	m_desc.domainShader = d3dDS;
 	m_domainShader = d3dDS;
 }
@@ -370,4 +367,10 @@ void GraphicsPSO::CompileDepthStencilState()
 		}
 		m_depthStencilState = *depthStencilStateRef;
 	}
+}
+
+
+void ComputePSO::SetComputeShader(ComputeShader* computeShader)
+{
+	m_computeShader = computeShader->GetResource()->GetShader();
 }

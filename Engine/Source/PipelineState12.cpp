@@ -19,13 +19,14 @@
 #include "RenderEnums12.h"
 #include "RenderUtils.h"
 #include "RootSignature12.h"
-#include "Shader12.h"
+#include "Shader.h"
+#include "ShaderResource12.h"
 
-#include <map>
 
 using namespace Kodiak;
 using namespace std;
 using namespace Microsoft::WRL;
+
 
 namespace
 {
@@ -71,8 +72,8 @@ RenderTargetBlendDesc::RenderTargetBlendDesc(Blend srcBlend, Blend dstBlend)
 	, srcBlend(srcBlend)
 	, dstBlend(dstBlend)
 	, blendOp(BlendOp::Add)
-	, srcBlendAlpha(Blend::One)
-	, dstBlendAlpha(Blend::Zero)
+	, srcBlendAlpha(srcBlend)
+	, dstBlendAlpha(dstBlend)
 	, blendOpAlpha(BlendOp::Add)
 	, logicOp(LogicOp::Noop)
 	, writeMask(ColorWrite::All)
@@ -111,7 +112,7 @@ RasterizerStateDesc::RasterizerStateDesc()
 RasterizerStateDesc::RasterizerStateDesc(CullMode cullMode, FillMode fillMode)
 	: cullMode(cullMode)
 	, fillMode(fillMode)
-	, frontCounterClockwise(false)
+	, frontCounterClockwise(true)
 	, depthBias(0)
 	, slopeScaledDepthBias(0.0f)
 	, depthBiasClamp(0.0f)
@@ -258,7 +259,7 @@ void GraphicsPSO::SetRenderTargetFormats(uint32_t numRTVs, const ColorFormat* co
 	{
 		m_psoDesc.RTVFormats[i] = DXGIUtility::ConvertToDXGI(colorFormats[i]);
 	}
-	for (uint32_t i = numRTVs; i < m_psoDesc.NumRenderTargets; ++i)
+	for (uint32_t i = numRTVs; i < 8; ++i)
 	{
 		m_psoDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
 	}
@@ -294,31 +295,51 @@ void GraphicsPSO::SetPrimitiveRestart(IndexBufferStripCutValue ibProps)
 
 void GraphicsPSO::SetVertexShader(VertexShader* vertexShader)
 {
-	m_psoDesc.VS = CD3D12_SHADER_BYTECODE(vertexShader->GetByteCode(), vertexShader->GetByteCodeSize());
+	if (vertexShader)
+	{
+		auto resource = vertexShader->GetResource();
+		m_psoDesc.VS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetPixelShader(PixelShader* pixelShader)
 {
-	m_psoDesc.PS = CD3D12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
+	if (pixelShader)
+	{
+		auto resource = pixelShader->GetResource();
+		m_psoDesc.PS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetGeometryShader(GeometryShader* geometryShader)
 {
-	m_psoDesc.GS = CD3D12_SHADER_BYTECODE(geometryShader->GetByteCode(), geometryShader->GetByteCodeSize());
+	if (geometryShader)
+	{
+		auto resource = geometryShader->GetResource();
+		m_psoDesc.GS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetDomainShader(DomainShader* domainShader)
 {
-	m_psoDesc.DS = CD3D12_SHADER_BYTECODE(domainShader->GetByteCode(), domainShader->GetByteCodeSize());
+	if (domainShader)
+	{
+		auto resource = domainShader->GetResource();
+		m_psoDesc.DS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
+	}
 }
 
 
 void GraphicsPSO::SetHullShader(HullShader* hullShader)
 {
-	m_psoDesc.HS = CD3D12_SHADER_BYTECODE(hullShader->GetByteCode(), hullShader->GetByteCodeSize());
+	if (hullShader)
+	{
+		auto resource = hullShader->GetResource();
+		m_psoDesc.HS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
+	}
 }
 
 
@@ -377,7 +398,11 @@ ComputePSO::ComputePSO()
 
 void ComputePSO::SetComputeShader(ComputeShader* computeShader)
 {
-	m_psoDesc.CS = CD3D12_SHADER_BYTECODE(computeShader->GetByteCode(), computeShader->GetByteCodeSize());
+	if (computeShader)
+	{
+		auto resource = computeShader->GetResource();
+		m_psoDesc.CS = CD3D12_SHADER_BYTECODE(resource->GetByteCode(), resource->GetByteCodeSize());
+	}
 }
 
 

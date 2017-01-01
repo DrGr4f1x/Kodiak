@@ -16,17 +16,49 @@ namespace Kodiak
 class ColorBuffer;
 class CommandListManager;
 class ComputeCommandList;
+class ComputePSO;
 class ConstantBuffer;
 class DepthBuffer;
+class GpuBuffer;
+class GpuResource;
 class GraphicsCommandList;
 class GraphicsPSO;
 class IndexBuffer;
-class RenderTargetView;
+class StructuredBuffer;
 class VertexBuffer;
 struct Rectangle;
 struct Viewport;
+enum class ResourceState;
 
-class CommandList
+
+struct DWParam
+{
+	DWParam(FLOAT f) : Float(f) {}
+	DWParam(UINT u) : Uint(u) {}
+	DWParam(INT i) : Int(i) {}
+
+	void operator= (FLOAT f) { Float = f; }
+	void operator= (UINT u) { Uint = u; }
+	void operator= (INT i) { Int = i; }
+
+	union
+	{
+		FLOAT	Float;
+		UINT	Uint;
+		INT		Int;
+	};
+};
+
+
+struct NonCopyable
+{
+	NonCopyable() = default;
+	NonCopyable(const NonCopyable&) = delete;
+	NonCopyable & operator=(const NonCopyable&) = delete;
+};
+
+
+class CommandList : NonCopyable
 {
 public:
 	CommandList();
@@ -48,9 +80,29 @@ public:
 		return reinterpret_cast<ComputeCommandList&>(*this);
 	}
 
+	void CopyCounter(GpuBuffer& dest, size_t destOffset, StructuredBuffer& src);
+
+	static void InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src);
+
+	void WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes);
+	void FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes);
+
+	void ResetCounter(StructuredBuffer& buf, uint32_t value = 0);
+	
+	// TODO: See if we can handle resource transitions in the ComputeKernel and Material such that DX11 doesn't need to know
+	void TransitionResource(GpuResource& resource, ResourceState newState, bool flushImmediate = false) {}
+	void BeginResourceTransition(GpuResource& resource, ResourceState newState, bool flushImmediate = false) {}
+	void InsertUAVBarrier(GpuResource& resource, bool flushImmediate = false) {}
+	
+	void PIXBeginEvent(const std::string& label);
+	void PIXEndEvent();
+	void PIXSetMarker(const std::string& label);
+
 protected:
 	CommandListManager*			m_owner{ nullptr };
 	ID3D11DeviceContext*		m_context{ nullptr };
+	ID3D11DeviceContext1*		m_context1{ nullptr };
+	ID3DUserDefinedAnnotation*	m_annotation{ nullptr };
 
 	// Current state caching
 	uint32_t m_currentStencilRef{ 0 };
@@ -58,6 +110,8 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D11BlendState> m_currentBlendState;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_currentDepthStencilState;
 	GraphicsPSO* m_currentGraphicsPSO{ nullptr };
+
+	uint32_t m_pixMarkerCount{ 0 };
 
 private:
 	static CommandList* AllocateCommandList();
@@ -129,14 +183,38 @@ public:
 		uint32_t startVertexLocation = 0, uint32_t startInstanceLocation = 0);
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation);
-	//void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
+	void DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
 
 	void SetVertexShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetVertexShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
 	void SetVertexShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetVertexShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant, 
+		const uint32_t* numConstants);
+
 	void SetDomainShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetDomainShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
+	void SetDomainShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetDomainShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+
 	void SetHullShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetHullShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
+	void SetHullShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetHullShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+
 	void SetGeometryShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetGeometryShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
+	void SetGeometryShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetGeometryShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+
 	void SetPixelShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetPixelShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
+	void SetPixelShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+	void SetPixelShaderSampler(uint32_t slot, ID3D11SamplerState* state);
 };
 
 
@@ -148,6 +226,31 @@ public:
 	{
 		return CommandList::Begin().GetComputeCommandList();
 	}
+
+	void ClearUAV(ColorBuffer& target);
+	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor);
+	void ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue);
+	void ClearUAV(GpuBuffer& target);
+
+	void SetPipelineState(ComputePSO& PSO);
+
+	byte* MapConstants(const ConstantBuffer& cbuffer);
+	void UnmapConstants(const ConstantBuffer& cbuffer);
+
+	void Dispatch(size_t groupCountX = 1, size_t groupCountY = 1, size_t groupCountZ = 1);
+	void Dispatch1D(size_t threadCountX, size_t groupSizeX = 64);
+	void Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX = 8, size_t groupSizeY = 8);
+	void Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ);
+	void DispatchIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset = 0);
+
+	void SetShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv);
+	void SetShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs);
+	void SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav, const uint32_t* counterInitialValue = nullptr);
+	void SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs, const uint32_t* counterInitialValues = nullptr);
+	void SetShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer);
+	void SetShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, const uint32_t* firstConstant,
+		const uint32_t* numConstants);
+	void SetShaderSampler(uint32_t slot, ID3D11SamplerState* state);
 };
 
 
@@ -188,9 +291,21 @@ inline void GraphicsCommandList::SetVertexShaderResource(uint32_t slot, ID3D11Sh
 }
 
 
+inline void GraphicsCommandList::SetVertexShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->VSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
 inline void GraphicsCommandList::SetHullShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv)
 {
 	m_context->HSSetShaderResources(slot, 1, &srv);
+}
+
+
+inline void GraphicsCommandList::SetHullShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->HSSetShaderResources(startSlot, numResources, srvs);
 }
 
 
@@ -200,9 +315,21 @@ inline void GraphicsCommandList::SetDomainShaderResource(uint32_t slot, ID3D11Sh
 }
 
 
+inline void GraphicsCommandList::SetDomainShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->DSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
 inline void GraphicsCommandList::SetGeometryShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv)
 {
 	m_context->GSSetShaderResources(slot, 1, &srv);
+}
+
+
+inline void GraphicsCommandList::SetGeometryShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->GSSetShaderResources(startSlot, numResources, srvs);
 }
 
 
@@ -211,5 +338,72 @@ inline void GraphicsCommandList::SetPixelShaderResource(uint32_t slot, ID3D11Sha
 	m_context->PSSetShaderResources(slot, 1, &srv);
 }
 
+
+inline void GraphicsCommandList::SetPixelShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->PSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
+inline void GraphicsCommandList::SetPixelShaderSampler(uint32_t slot, ID3D11SamplerState* state)
+{
+	m_context->PSSetSamplers(slot, 1, &state);
+}
+
+
+inline void ComputeCommandList::Dispatch(size_t groupCountX, size_t groupCountY, size_t groupCountZ)
+{
+	m_context->Dispatch((UINT)groupCountX, (UINT)groupCountY, (UINT)groupCountZ);
+}
+
+inline void ComputeCommandList::Dispatch1D(size_t threadCountX, size_t groupSizeX)
+{
+	Dispatch(Math::DivideByMultiple(threadCountX, groupSizeX), 1, 1);
+}
+
+inline void ComputeCommandList::Dispatch2D(size_t threadCountX, size_t threadCountY, size_t groupSizeX, size_t groupSizeY)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY), 1);
+}
+
+inline void ComputeCommandList::Dispatch3D(size_t threadCountX, size_t threadCountY, size_t threadCountZ, size_t groupSizeX, size_t groupSizeY, size_t groupSizeZ)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY),
+		Math::DivideByMultiple(threadCountZ, groupSizeZ));
+}
+
+
+inline void ComputeCommandList::SetShaderResource(uint32_t slot, ID3D11ShaderResourceView* srv)
+{
+	m_context->CSSetShaderResources(slot, 1, &srv);
+}
+
+
+inline void ComputeCommandList::SetShaderResources(uint32_t startSlot, uint32_t numResources, ID3D11ShaderResourceView* const * srvs)
+{
+	m_context->CSSetShaderResources(startSlot, numResources, srvs);
+}
+
+
+inline void ComputeCommandList::SetShaderUAV(uint32_t slot, ID3D11UnorderedAccessView* uav, const uint32_t* counterInitialValue)
+{
+	m_context->CSSetUnorderedAccessViews(slot, 1, &uav, counterInitialValue);
+}
+
+
+inline void ComputeCommandList::SetShaderUAVs(uint32_t startSlot, uint32_t numResources, ID3D11UnorderedAccessView* const * uavs, const uint32_t* counterInitialValues)
+{
+	m_context->CSSetUnorderedAccessViews(startSlot, numResources, uavs, counterInitialValues);
+}
+
+
+inline void ComputeCommandList::SetShaderSampler(uint32_t slot, ID3D11SamplerState* state)
+{
+	m_context->CSSetSamplers(slot, 1, &state);
+}
 
 } // namespace Kodiak

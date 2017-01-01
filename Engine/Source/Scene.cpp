@@ -11,165 +11,327 @@
 
 #include "Scene.h"
 
+#include "Camera.h"
+#include "ColorBuffer.h"
 #include "CommandList.h"
 #include "ConstantBuffer.h"
+#include "DeviceManager.h"
 #include "Format.h"
+#include "IndexBuffer.h"
 #include "PipelineState.h"
+#include "Profile.h"
+#include "Material.h"
 #include "Model.h"
+#include "Renderer.h"
 #include "RenderEnums.h"
+#include "RenderPass.h"
+#include "RenderUtils.h"
 #include "Shader.h"
-#include "ShaderManager.h"
+#include "ShadowBuffer.h"
+#include "ShadowCamera.h"
+#include "VertexBuffer.h"
 
 #if defined(DX12)
 #include "RootSignature12.h"
 #endif
 
+#include <ppltasks.h>
+
 using namespace Kodiak;
 using namespace std;
-using namespace DirectX;
+using namespace Math;
+using namespace RenderThread;
 
 
-Scene::Scene(uint32_t width, uint32_t height) : m_width(width), m_height(height)
+Scene::Scene()
+#if DX11
+	: SsaoFullscreen(m_ssaoFullscreen)
+#endif
 {
-	XMStoreFloat4x4(&m_modelTransform, XMMatrixIdentity());
 	Initialize();
 }
 
 
-void Scene::AddModel(shared_ptr<Model> model)
+void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 {
-	m_models.push_back(model);
+	auto thisScene = shared_from_this();
+	auto localModel = model;
+	
+	Renderer::GetInstance().EnqueueTask([localModel, thisScene](RenderTaskEnvironment& rte)
+	{
+		thisScene->AddStaticModelDeferred(localModel->m_renderThreadData);
+	});
 }
 
 
 void Scene::Update(GraphicsCommandList& commandList)
 {
+	PROFILE_BEGIN(itt_scene_update);
+
 	// Update per-view constants
+	auto cameraProxy = m_camera->GetProxy();
+	auto shadowCameraProxy = m_shadowCamera ? m_shadowCamera->GetProxy() : nullptr;
+
+	m_perViewConstants.viewProjection = cameraProxy->Base.ViewProjMatrix;
+	m_perViewConstants.modelToShadow = shadowCameraProxy ? shadowCameraProxy->ShadowMatrix : Matrix4(kIdentity);
+	m_perViewConstants.viewPosition = cameraProxy->Base.Position;
+
 	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);
 	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
 	commandList.UnmapConstants(*m_perViewConstantBuffer);
 
-	// Visit models (HACK)
-	for (auto model : m_models)
+	// Visit static models
+	// TODO: go wide, update 32 per task or something
+	for (auto& model : m_staticModels)
 	{
-		if (model->IsDirty())
-		{
-			m_perObjectConstants.model = model->GetTransform();
+		model->UpdateConstants(commandList);
 
-			// Update per-object constants (HACK)
-			auto perObjectData = commandList.MapConstants(*m_perObjectConstantBuffer);
-			memcpy(perObjectData, &m_perObjectConstants, sizeof(PerObjectConstants));
-			commandList.UnmapConstants(*m_perObjectConstantBuffer);
-
-			model->ResetDirty();
-		}
-	}
-}
-
-
-void Scene::Render(GraphicsCommandList& commandList)
-{
-	// Visit models
-	for (auto model : m_models)
-	{
 		// Visit meshes
-		for (auto mesh : model->m_meshes)
+		for (const auto& mesh : model->meshes)
 		{
 			// Visit mesh parts
-			for (auto meshPart : mesh.m_meshParts)
+			for (const auto& meshPart : mesh->meshParts)
 			{
-				commandList.SetPipelineState(*m_pso);
-#if defined(DX12)
-				commandList.SetRootSignature(*m_rootSignature);
-				commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
-				commandList.SetConstantBuffer(1, *m_perObjectConstantBuffer);
-#elif defined(DX11)
-				commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
-				commandList.SetVertexShaderConstants(1, *m_perObjectConstantBuffer);
-#endif
-
-				commandList.SetVertexBuffer(0, *meshPart.m_vertexBuffer);
-				commandList.SetIndexBuffer(*meshPart.m_indexBuffer);
-				commandList.SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-
-				commandList.DrawIndexed(meshPart.m_indexCount, meshPart.m_startIndex, meshPart.m_baseVertexOffset);
+				meshPart.material->Update(commandList);
 			}
 		}
 	}
+	PROFILE_END();
+}
+
+
+
+void Scene::Render(shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList)
+{
+	commandList.PIXBeginEvent("Bind sampler states");
+	BindSamplerStates(commandList);
+	commandList.PIXEndEvent();
+
+	commandList.PIXBeginEvent(renderPass->GetName());
+	// Visit models
+	for (auto& model : m_staticModels)
+	{
+		PROFILE_BEGIN(itt_draw_model);
+		// Visit meshes
+		for (const auto& mesh : model->meshes)
+		{
+			PROFILE_BEGIN(itt_draw_mesh);
+			// Visit mesh parts
+			for (const auto& meshPart : mesh->meshParts)
+			{
+				if (meshPart.material->renderPass == renderPass && meshPart.material->IsReady())
+				{
+					meshPart.material->Commit(commandList);
+
+					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
+#if defined(DX12)
+					commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
+					commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
+#elif defined(DX11)
+					commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
+					commandList.SetVertexShaderConstants(1, *mesh->perObjectConstants);
+
+					// TODO bad hack, figure out a different way to handle global textures for a render pass
+					if (m_ssaoFullscreen)
+					{
+						commandList.SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+					}
+					if (m_shadowBuffer)
+					{
+						commandList.SetPixelShaderResource(4, m_shadowBuffer->GetSRV());
+					}
+#endif
+					
+					commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
+					commandList.SetIndexBuffer(*meshPart.indexBuffer);
+					commandList.SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);
+
+					commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
+				}
+			}
+			PROFILE_END();
+		}
+		PROFILE_END();
+	}
+
+#if DX11
+	commandList.SetPixelShaderResource(3, nullptr);
+	commandList.SetPixelShaderResource(4, nullptr);
+#endif
+
+	commandList.PIXEndEvent();
+}
+
+
+void Scene::RenderShadows(shared_ptr<RenderPass> renderPass, GraphicsCommandList& commandList)
+{
+	// Update per-view constants
+	auto cameraProxy = m_camera->GetProxy();
+	auto shadowCameraProxy = m_shadowCamera->GetProxy();
+
+	m_perViewConstants.viewProjection = shadowCameraProxy->Base.ViewProjMatrix;
+	m_perViewConstants.viewPosition = cameraProxy->Base.Position;
+
+	auto perViewData = commandList.MapConstants(*m_perViewConstantBuffer);
+	memcpy(perViewData, &m_perViewConstants, sizeof(PerViewConstants));
+	commandList.UnmapConstants(*m_perViewConstantBuffer);
+
+	commandList.PIXBeginEvent("Bind sampler states");
+	BindSamplerStates(commandList);
+	commandList.PIXEndEvent();
+
+	commandList.PIXBeginEvent(renderPass->GetName());
+	// Visit models
+	for (auto& model : m_staticModels)
+	{
+		PROFILE_BEGIN(itt_draw_model);
+		// Visit meshes
+		for (const auto& mesh : model->meshes)
+		{
+			PROFILE_BEGIN(itt_draw_mesh);
+			// Visit mesh parts
+			for (const auto& meshPart : mesh->meshParts)
+			{
+				if (meshPart.material->renderPass == renderPass && meshPart.material->IsReady())
+				{
+					meshPart.material->Commit(commandList);
+
+					// TODO this is dumb, figure out a better way to bind per-view and per-object constants.  Maybe through material?
+#if defined(DX12)
+					commandList.SetConstantBuffer(0, *m_perViewConstantBuffer);
+					commandList.SetConstantBuffer(1, *mesh->perObjectConstants);
+#elif defined(DX11)
+					commandList.SetVertexShaderConstants(0, *m_perViewConstantBuffer);
+					commandList.SetVertexShaderConstants(1, *mesh->perObjectConstants);
+					commandList.SetPixelShaderResource(3, m_ssaoFullscreen->GetSRV());
+#endif
+
+					commandList.SetVertexBuffer(0, *meshPart.vertexBuffer);
+					commandList.SetIndexBuffer(*meshPart.indexBuffer);
+					commandList.SetPrimitiveTopology((D3D_PRIMITIVE_TOPOLOGY)meshPart.topology);
+
+					commandList.DrawIndexed(meshPart.indexCount, meshPart.startIndex, meshPart.baseVertexOffset);
+				}
+			}
+			PROFILE_END();
+		}
+		PROFILE_END();
+	}
+
+	// TODO hack
+#if DX11
+	commandList.SetPixelShaderResource(3, nullptr);
+	commandList.SetPixelShaderResource(4, nullptr);
+#endif
+
+	commandList.PIXEndEvent();
+}
+
+
+void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
+{
+	auto thisScene = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisScene, camera](RenderTaskEnvironment& rte) { thisScene->SetCameraDeferred(camera); });
+}
+
+
+void Scene::SetShadowBuffer(shared_ptr<ShadowBuffer> buffer)
+{
+	m_shadowBuffer = buffer;
+}
+
+
+void Scene::SetShadowCamera(shared_ptr<ShadowCamera> camera)
+{
+	m_shadowCamera = camera;
 }
 
 
 void Scene::Initialize()
 {
-	using namespace DirectX;
-
-	float aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
-	float fovAngleY = 70.0f * XM_PI / 180.0f;
-
-	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(
-		fovAngleY,
-		aspectRatio,
-		0.01f,
-		100.0f);
-
-	XMStoreFloat4x4(&m_perViewConstants.projection,	XMMatrixTranspose(perspectiveMatrix));
-
-	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 0.7f, 1.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
-	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
-	XMStoreFloat4x4(&m_perViewConstants.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
-
-	XMStoreFloat4x4(&m_perObjectConstants.model, XMMatrixIdentity());
-
-	// Default blend state - no blend
-	BlendStateDesc defaultBlendState;
-
-	// Depth-stencil state - normal depth testing
-	DepthStencilStateDesc depthStencilState(true, true);
-
-	// Rasterizer state - two-sided
-	RasterizerStateDesc rasterizerState(CullMode::Back, FillMode::Solid);
-
-	// Load shaders
-	auto vs = ShaderManager::GetInstance().LoadVertexShader("Engine", "SimpleVertexShader.cso");
-	auto ps = ShaderManager::GetInstance().LoadPixelShader("Engine", "SimplePixelShader.cso");
-	(vs->loadTask && ps->loadTask).wait();
-
-#if defined(DX12)
-	// Configure root signature
-	m_rootSignature = make_shared<RootSignature>(2);
-	(*m_rootSignature)[0].InitAsConstantBuffer(0, D3D12_SHADER_VISIBILITY_VERTEX);
-	(*m_rootSignature)[1].InitAsConstantBuffer(1, D3D12_SHADER_VISIBILITY_VERTEX);
-	m_rootSignature->Finalize(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // Only the input assembler stage needs access to the constant buffer.
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS);
-#endif
-
-	// Configure PSO
-	m_pso = make_shared<GraphicsPSO>();
-#if defined(DX12)
-	m_pso->SetRootSignature(*m_rootSignature);
-#endif
-	m_pso->SetBlendState(defaultBlendState);
-	m_pso->SetRasterizerState(rasterizerState);
-	m_pso->SetDepthStencilState(depthStencilState);
-	m_pso->SetInputLayout(*vs->GetInputLayout());
-#if defined(DX12)
-	m_pso->SetPrimitiveTopology(PrimitiveTopologyType::Triangle);
-	m_pso->SetRenderTargetFormat(ColorFormat::R11G11B10_Float, DepthFormat::D32);
-#endif
-	m_pso->SetVertexShader(vs.get());
-	m_pso->SetPixelShader(ps.get());
-
-	m_pso->Finalize();
-
-	// Create constant buffers
+	// Create per-view constant buffer
 	m_perViewConstantBuffer = make_shared<ConstantBuffer>();
 	m_perViewConstantBuffer->Create(sizeof(PerViewConstants), Usage::Dynamic);
-	m_perObjectConstantBuffer = make_shared<ConstantBuffer>();
-	m_perObjectConstantBuffer->Create(sizeof(PerObjectConstants), Usage::Dynamic);
+
+	// TODO: Remove this and handle sampler state in a non-stupid way
+#if defined(DX11)
+	auto samplerDesc = CD3D11_SAMPLER_DESC(D3D11_DEFAULT);
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 8;
+	
+	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_samplerState.GetAddressOf()));
+
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_GREATER_EQUAL;
+	samplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+
+	ThrowIfFailed(g_device->CreateSamplerState(&samplerDesc, m_shadowSamplerState.GetAddressOf()));
+#endif
+}
+
+
+void Scene::SetCameraDeferred(shared_ptr<Kodiak::Camera> camera)
+{
+	// TODO: Not threadsafe!!!
+	m_camera = camera;
+}
+
+
+void Scene::AddStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> model)
+{
+	auto it = m_staticModelMap.find(model);
+
+	// Only add the model to the scene once
+	if (it == end(m_staticModelMap))
+	{
+		const auto newIndex = m_staticModels.size();
+
+		// TODO: handle other data lists here, e.g. bounding boxes
+
+		m_staticModels.emplace_back(model);
+		m_staticModelMap[model] = newIndex;
+	}
+}
+
+
+void Scene::RemoveStaticModelDeferred(shared_ptr<RenderThread::StaticModelData> model)
+{
+	auto it = m_staticModelMap.find(model);
+	if (it != end(m_staticModelMap))
+	{
+		const auto numStaticModels = m_staticModels.size();
+		const auto index = it->second;
+
+		assert(index < numStaticModels);
+
+		// TODO: handle other data lists here, e.g. bounding boxes
+
+		if (numStaticModels > 1)
+		{
+			// Update the map
+			m_staticModelMap[m_staticModels.back()] = index;
+			m_staticModelMap.erase(m_staticModels[index]);
+
+			swap(m_staticModels[index], m_staticModels.back());
+			m_staticModels.pop_back();
+		}
+		else
+		{
+			m_staticModelMap.erase(m_staticModels[0]);
+			m_staticModels.pop_back();
+		}
+	}
+}
+
+
+void Scene::BindSamplerStates(GraphicsCommandList& commandList)
+{
+#if defined(DX11)
+	commandList.SetPixelShaderSampler(0, m_samplerState.Get());
+	commandList.SetPixelShaderSampler(1, m_shadowSamplerState.Get());
+#endif
 }

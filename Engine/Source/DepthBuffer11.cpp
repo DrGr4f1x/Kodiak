@@ -9,7 +9,7 @@
 
 #include "Stdafx.h"
 
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
 
 #include "DeviceManager11.h"
 #include "DXGIUtility.h"
@@ -24,10 +24,17 @@ using namespace std;
 DepthBuffer::DepthBuffer(float clearDepth, uint32_t clearStencil)
 	: m_clearDepth(clearDepth)
 	, m_clearStencil(clearStencil)
-{}
+{
+	InitializeDSV(m_dsv);
+	InitializeDSV(m_dsvReadOnly);
+	InitializeDSV(m_dsvReadOnlyDepth);
+	InitializeDSV(m_dsvReadOnlyStencil);
+	InitializeSRV(m_depthSRV);
+	InitializeSRV(m_stencilSRV);
+}
 
 
-void DepthBuffer::Create(DeviceManager* deviceManager,const std::string& name, size_t width, size_t height, DepthFormat format)
+void DepthBuffer::Create(const std::string& name, uint32_t width, uint32_t height, DepthFormat format)
 {
 	auto textureDesc = DescribeDepthTex2D(width, height, 1, format,
 		D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL);

@@ -1,0 +1,20 @@
+Shader/Material Refactor
+* Get rid of SetSRVImmediate & friends.  Use TLS to determine deferred/immediate set mode
+* Use TransitionResource to auto-unbind DX11 SRVs and UAVs
+* Be able to set constant buffer contents directly from memory (e.g. pointer to struct), instead of requiring individual parameters
+* Be able to set a range of SRVs/UAVs directly, instead of using individual resources
+* Be able to use raw shaders without ComputeKernel/Material
+    -- Put detailed example usage code here
+* Be able to re-use ComputeKernel/Material within frame (currently DX12 stomps cbuffer memory)
+* Should have a fully valid programming pattern that uses stack objects, without requiring shared_ptrs for everything
+    -- Put detailed example usage code here
+* Better pattern for auto-waiting on ComputeKernels/Materials to load
+
+
+General Engine Stuff
+* Should be a 1-liner to switch between async renderer and serial renderer
+* Don't require shared_ptr for anything - sort out real object ownership/lifetime pattern across whole engine
+* Figure out the default texture situation for DX12 (no null SRVs)
+* Make RenderSceneTask class for rendering a pass on a Scene, w/ render targets, camera, etc.
+* System for default parameters/textures for render pass (figure out shader slot/root sig binding problem)
+* Start unifying the DX APIs, e.g. wrapper for ID3D11ShaderResourceView/D3D12_CPU_HANDLE in DepthBuffer, etc.

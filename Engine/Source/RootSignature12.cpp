@@ -10,22 +10,10 @@
 
 #include "Stdafx.h"
 
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-// Adapted from RootSignature.cpp in Microsoft's Miniengine sample
-// https://github.com/Microsoft/DirectX-Graphics-Samples
-//
-
 #include "RootSignature12.h"
 
 #include "DeviceManager12.h"
 #include "RenderUtils.h"
-
-#include <map>
 
 
 using namespace Kodiak;
@@ -68,24 +56,23 @@ void RootSignature::InitStaticSampler(
 		staticSamplerDesc.AddressV == D3D12_TEXTURE_ADDRESS_MODE_BORDER ||
 		staticSamplerDesc.AddressW == D3D12_TEXTURE_ADDRESS_MODE_BORDER)
 	{
-		// TODO: implement this macro
-		//WARN_ONCE_IF_NOT(
-		//	// Transparent Black
-		//	nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[3] == 0.0f ||
-		//	// Opaque Black
-		//	nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
-		//	nonStaticSamplerDesc.BorderColor[3] == 1.0f ||
-		//	// Opaque White
-		//	nonStaticSamplerDesc.BorderColor[0] == 1.0f &&
-		//	nonStaticSamplerDesc.BorderColor[1] == 1.0f &&
-		//	nonStaticSamplerDesc.BorderColor[2] == 1.0f &&
-		//	nonStaticSamplerDesc.BorderColor[3] == 1.0f,
-		//	"Sampler border color does not match static sampler limitations");
+		warn_once_if_not(
+			// Transparent Black
+			nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[3] == 0.0f ||
+			// Opaque Black
+			nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
+			nonStaticSamplerDesc.BorderColor[3] == 1.0f ||
+			// Opaque White
+			nonStaticSamplerDesc.BorderColor[0] == 1.0f &&
+			nonStaticSamplerDesc.BorderColor[1] == 1.0f &&
+			nonStaticSamplerDesc.BorderColor[2] == 1.0f &&
+			nonStaticSamplerDesc.BorderColor[3] == 1.0f,
+			"Sampler border color does not match static sampler limitations");
 
 		if(nonStaticSamplerDesc.BorderColor[3] == 1.0f)
 		{
@@ -179,8 +166,15 @@ void RootSignature::Finalize(D3D12_ROOT_SIGNATURE_FLAGS flags)
 	{
 		ComPtr<ID3DBlob> pOutBlob, pErrorBlob;
 
-		ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-			pOutBlob.GetAddressOf(), pErrorBlob.GetAddressOf()));
+		HRESULT hr = D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+			pOutBlob.GetAddressOf(), pErrorBlob.GetAddressOf());
+		if(FAILED(hr))
+		{ 
+			if (pErrorBlob)
+			{
+				OutputDebugStringA((char*)pErrorBlob->GetBufferPointer());
+			}
+		}
 
 		ThrowIfFailed(g_device->CreateRootSignature(1, pOutBlob->GetBufferPointer(), pOutBlob->GetBufferSize(),
 			IID_PPV_ARGS(&m_signature)));

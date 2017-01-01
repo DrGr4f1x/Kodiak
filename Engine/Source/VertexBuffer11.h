@@ -22,9 +22,10 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	uint32_t stride{ 0 };
 
-	concurrency::task<void> loadTask;
+	static std::shared_ptr<VertexBuffer> Create(const BaseVertexBufferData& data, Usage usage);
 
-	void Create(std::shared_ptr<BaseVertexBufferData> data, Usage usage, const std::string& debugName);
+private:
+	static void CreateInternal(std::shared_ptr<VertexBuffer> buffer, const BaseVertexBufferData& data, Usage usage);
 };
 
 } // namespace Kodiak

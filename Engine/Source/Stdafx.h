@@ -46,16 +46,33 @@
 #endif
 
 // Standard library
+#include <array>
 #include <chrono>
 #include <ctime>
 #include <fstream>
 #include <future>
 #include <iostream>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <shared_mutex>
 #include <sstream>
 #include <stdint.h>
 #include <string>
 #include <thread>
+#include <unordered_map>
+
+// Engine globals
+extern bool g_singleThreadedRenderer;
+extern bool g_useImmediateContext;
+
+// Engine headers
+#include "Color.h"
+#include "Constants.h"
+#include "DebugUtility.h"
+#include "Log.h"
+#include "PlatformTypes.h"
+#include "Utility.h"
+#include "VectorMath.h"

@@ -27,11 +27,23 @@ class BaseVertexBufferData
 {
 public:
 	virtual ~BaseVertexBufferData() {}
-	virtual size_t GetDataSize() const = 0;
 	virtual const void* GetData() const = 0;
-	virtual size_t GetStride() const = 0;
-	virtual size_t GetElementSize() const = 0;
-	virtual size_t GetNumElements() const = 0;
+
+	size_t GetStride() const { return m_elementSize; }
+	size_t GetDataSize() const { return m_elementSize * m_numElements; }
+	size_t GetElementSize() const { return m_elementSize; }
+	size_t GetNumElements() const { return m_numElements; }
+
+	void SetDebugName(const std::string& name) { m_debugName = name; }
+	const std::string& GetDebugName() const { return m_debugName; }
+	
+	size_t GetId() const { return m_id; }
+
+protected:
+	std::string		m_debugName;
+	size_t			m_elementSize{ 0 };
+	size_t			m_numElements{ 0 };
+	size_t			m_id{ 1 };
 };
 
 
@@ -41,9 +53,17 @@ class VertexBufferData : public BaseVertexBufferData
 public:
 	VertexBufferData(std::initializer_list<VertexType> initializer)
 	{
-		m_size = sizeof(VertexType) * initializer.size();
-		m_data = (VertexType*)_aligned_malloc(m_size, 16);
-		memcpy(m_data, initializer.begin(), m_size);
+		m_id = s_baseId++;
+
+		m_elementSize = sizeof(VertexType);
+		m_numElements = initializer.size();
+		m_data = (VertexType*)_aligned_malloc(m_elementSize * m_numElements, 16);
+
+		assert(m_data);
+		if (m_data)
+		{
+			memcpy(m_data, initializer.begin(), m_elementSize * m_numElements);
+		}
 	}
 
 	~VertexBufferData()
@@ -51,9 +71,38 @@ public:
 		_aligned_free(m_data);
 	}
 
-	size_t GetDataSize() const override
+	const void* GetData() const override
 	{
-		return sizeof(VertexType) * m_size;
+		return m_data;
+	}
+
+private:
+	VertexType*						m_data{ nullptr };
+	static std::atomic_size_t		s_baseId;
+};
+
+
+class VertexBufferDataRaw : public BaseVertexBufferData
+{
+public:
+	VertexBufferDataRaw(const byte* data, size_t stride, size_t sizeInBytes)
+	{
+		m_id = s_baseId++;
+
+		m_elementSize = stride;
+		m_numElements = sizeInBytes / stride;
+		m_data = (byte*)_aligned_malloc(m_elementSize * m_numElements, 16);
+
+		assert(m_data);
+		if (m_data)
+		{
+			memcpy(m_data, data, m_elementSize * m_numElements);
+		}
+	}
+
+	~VertexBufferDataRaw()
+	{
+		_aligned_free(m_data);
 	}
 
 	const void* GetData() const override
@@ -61,24 +110,12 @@ public:
 		return m_data;
 	}
 
-	size_t GetStride() const override
-	{
-		return sizeof(VertexType);
-	}
-
-	size_t GetElementSize() const override
-	{
-		return sizeof(VertexType);
-	}
-
-	size_t GetNumElements() const override
-	{
-		return m_size;
-	}
-
 private:
-	VertexType* m_data{ nullptr };
-	size_t		m_size{ 0 };
+	byte*						m_data{ nullptr };  // TODO: use a unique_ptr, move it into this object to avoid a memcpy
+	static std::atomic_size_t	s_baseId;
 };
+
+template <class VertexType>
+std::atomic_size_t VertexBufferData<VertexType>::s_baseId = 0;
 
 } // namespace Kodiak

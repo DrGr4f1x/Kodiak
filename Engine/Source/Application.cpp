@@ -13,8 +13,10 @@
 
 #include "CommandList.h"
 #include "DeviceManager.h"
-#include "Log.h"
+#include "InputState.h"
+#include "Profile.h"
 #include "Renderer.h"
+#include "RenderThread.h"
 #include "StepTimer.h"
 
 #include <shellapi.h>
@@ -26,16 +28,13 @@ using namespace std;
 
 Application::Application(uint32_t width, uint32_t height, const std::wstring& name)
 {
-	InitializeLogging();
+	SetThreadRole(ThreadRole::Main);
 
 	m_width = width;
 	m_height = height;
 	m_title = name;
 
 	m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
-
-	// Start up renderer
-	Renderer::Initialize();
 
 	// Create step timer
 	m_timer = make_unique<StepTimer>();
@@ -44,7 +43,9 @@ Application::Application(uint32_t width, uint32_t height, const std::wstring& na
 
 Application::~Application()
 {
+	m_inputState->Shutdown();
 	ShutdownLogging();
+	ShutdownProfiling();
 }
 
 
@@ -68,8 +69,8 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 		L"WindowClass1",
 		m_title.c_str(),
 		WS_OVERLAPPEDWINDOW,
-		100,
-		100,
+		0,
+		0,
 		windowRect.right - windowRect.left,
 		windowRect.bottom - windowRect.top,
 		NULL,		// We have no parent window, NULL.
@@ -79,8 +80,11 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 
 	ShowWindow(m_hwnd, nCmdShow);
 
-	// Initialize the sample. OnInit is defined in each child-implementation of Application.
-	OnInit();
+	m_inputState = make_shared<InputState>();
+	m_inputState->Initialize(m_hwnd);
+
+	// Initialize the sample.
+	Initialize();
 
 	// Main sample loop.
 	MSG msg = { 0 };
@@ -206,25 +210,6 @@ bool Application::OnEvent(MSG msg)
 		((MINMAXINFO*)msg.lParam)->ptMinTrackSize.y = 200;
 		return true;
 		break;
-
-	case WM_LBUTTONDOWN:
-	case WM_MBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		OnMouseDown(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
-		return true;
-		break;
-
-	case WM_LBUTTONUP:
-	case WM_MBUTTONUP:
-	case WM_RBUTTONUP:
-		OnMouseUp(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
-		return true;
-		break;
-
-	case WM_MOUSEMOVE:
-		OnMouseMove(msg.wParam, GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));
-		return true;
-		break;
 	}
 	return false;
 }
@@ -233,7 +218,7 @@ bool Application::OnEvent(MSG msg)
 // Handle window resize events
 void Application::OnResize()
 {
-	Renderer::SetWindowSize(m_width, m_height);
+	DeviceManager::GetInstance().SetWindowSize(m_width, m_height);
 }
 
 
@@ -266,14 +251,42 @@ void Application::ParseCommandLineArgs()
 }
 
 
+void Application::Initialize()
+{
+	// User-defined pre-initialization
+	OnStartup();
+
+	// Startup core systems
+	InitializeProfiling();
+	InitializeLogging();
+
+	// Start up renderer
+	Renderer::GetInstance().Initialize();
+	DeviceManager::GetInstance().SetWindow(m_width, m_height, m_hwnd);
+
+	// User-defined initialization
+	OnInit();
+}
+
+
 void Application::Update()
 {
+	PROFILE_BEGIN(itt_update);
+
 	// Update scene objects
 	m_timer->Tick([this]()
 	{
+		// Update the input state
+		m_inputState->Update(static_cast<float>(m_timer->GetElapsedSeconds()));
+
+		// Update the renderer
+		Renderer::GetInstance().Update();
+
 		// Subclasses implement OnUpdate to supply their own scene update logic
 		OnUpdate(m_timer.get());
 	});
+
+	PROFILE_END();
 }
 
 
@@ -285,7 +298,8 @@ bool Application::Render()
 		return false;
 	}
 
-	Renderer::Render();
+	// Subclasses implement OnRender to supply their own scene render logic
+	OnRender();
 
 	return true;
 }

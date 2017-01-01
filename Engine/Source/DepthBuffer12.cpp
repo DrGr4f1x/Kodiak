@@ -10,17 +10,30 @@
 
 #include "Stdafx.h"
 
-#include "DepthBuffer12.h"
+#include "DepthBuffer.h"
 
 #include "DeviceManager12.h"
 #include "DXGIUtility.h"
-
+#include "Renderer.h"
 
 using namespace Kodiak;
 using namespace std;
 
 
-void DepthBuffer::Create(DeviceManager* deviceManager, const std::string& name, size_t width, size_t height, DepthFormat format)
+DepthBuffer::DepthBuffer(float clearDepth, uint32_t clearStencil)
+	: m_clearDepth(clearDepth)
+	, m_clearStencil(clearStencil)
+{
+	InitializeDSV(m_dsv);
+	InitializeDSV(m_dsvReadOnly);
+	InitializeDSV(m_dsvReadOnlyDepth);
+	InitializeDSV(m_dsvReadOnlyStencil);
+	InitializeSRV(m_depthSRV);
+	InitializeSRV(m_stencilSRV);
+}
+
+
+void DepthBuffer::Create(const std::string& name, uint32_t width, uint32_t height, DepthFormat format)
 {
 	D3D12_RESOURCE_DESC ResourceDesc = DescribeDepthTex2D(width, height, 1, format, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
@@ -29,11 +42,11 @@ void DepthBuffer::Create(DeviceManager* deviceManager, const std::string& name, 
 	ClearValue.DepthStencil.Depth = m_clearDepth;
 	ClearValue.DepthStencil.Stencil = m_clearStencil;
 	CreateTextureResource(name, ResourceDesc, ClearValue);
-	CreateDerivedViews(deviceManager);
+	CreateDerivedViews();
 }
 
 
-void DepthBuffer::CreateDerivedViews(DeviceManager* deviceManager)
+void DepthBuffer::CreateDerivedViews()
 {
 	ID3D12Resource* resource = m_resource.Get();
 
@@ -44,8 +57,8 @@ void DepthBuffer::CreateDerivedViews(DeviceManager* deviceManager)
 
 	if (m_dsv.ptr == ~0ull)
 	{
-		m_dsv =			deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-		m_dsvReadOnly =	deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		m_dsv = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		m_dsvReadOnly = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	}
 
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
@@ -59,8 +72,8 @@ void DepthBuffer::CreateDerivedViews(DeviceManager* deviceManager)
 	{
 		if (m_dsvReadOnlyStencil.ptr == ~0ull)
 		{
-			m_dsvReadOnlyStencil =	deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-			m_dsvReadOnly =			deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+			m_dsvReadOnlyStencil = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+			m_dsvReadOnly = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		}
 
 		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_STENCIL;
@@ -77,7 +90,7 @@ void DepthBuffer::CreateDerivedViews(DeviceManager* deviceManager)
 
 	if (m_depthSRV.ptr == ~0ull)
 	{
-		m_depthSRV = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_depthSRV = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	// Create the shader resource view
@@ -92,7 +105,7 @@ void DepthBuffer::CreateDerivedViews(DeviceManager* deviceManager)
 	{
 		if (m_stencilSRV.ptr == ~0ull)
 		{
-			m_stencilSRV = deviceManager->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			m_stencilSRV = DeviceManager::GetInstance().AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		}
 
 		srvDesc.Format = stencilReadFormat;

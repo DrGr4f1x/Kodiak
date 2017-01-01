@@ -11,17 +11,22 @@
 
 #include "CommandList11.h"
 
-#include "ColorBuffer11.h"
+#include "ColorBuffer.h"
 #include "CommandListManager11.h"
 #include "ConstantBuffer11.h"
-#include "DepthBuffer11.h"
+#include "DepthBuffer.h"
+#include "DeviceManager11.h"
+#include "GpuBuffer11.h"
 #include "IndexBuffer11.h"
 #include "PipelineState11.h"
 #include "Rectangle.h"
+#include "RenderEnums11.h"
 #include "RenderUtils.h"
 #include "VertexBuffer11.h"
 #include "Viewport.h"
 
+#include <locale>
+#include <codecvt>
 
 using namespace Kodiak;
 using namespace Microsoft::WRL;
@@ -54,6 +59,113 @@ void CommandList::DestroyAllCommandLists()
 }
 
 
+void CommandList::CopyCounter(GpuBuffer& dest, size_t destOffset, StructuredBuffer& src)
+{
+	m_context->CopyStructureCount(dest.GetBuffer(), static_cast<UINT>(destOffset), src.GetUAV());
+}
+
+
+void CommandList::InitializeTextureArraySlice(GpuResource& dest, UINT sliceIndex, GpuResource& src)
+{
+	auto& commandList = CommandList::Begin();
+
+	auto destResource = dest.GetResource();
+	auto srcResource = src.GetResource();
+
+	D3D11_RESOURCE_DIMENSION destType, srcType;
+	destResource->GetType(&destType);
+	srcResource->GetType(&srcType);
+
+	// TODO: Only handling 2d textures for now
+	assert(destType == D3D11_RESOURCE_DIMENSION_TEXTURE2D);
+	assert(destType == srcType);
+
+	ID3D11Texture2D* destTexture = nullptr;
+	ID3D11Texture2D* srcTexture = nullptr;
+
+	ThrowIfFailed(destResource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&destTexture)));
+	ThrowIfFailed(srcResource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&srcTexture)));
+
+	D3D11_TEXTURE2D_DESC destDesc, srcDesc;
+	destTexture->GetDesc(&destDesc);
+	srcTexture->GetDesc(&srcDesc);
+
+	assert(sliceIndex < destDesc.ArraySize &&
+		srcDesc.ArraySize == 1 &&
+		destDesc.Width == srcDesc.Width &&
+		destDesc.Height == srcDesc.Height &&
+		destDesc.MipLevels <= srcDesc.MipLevels
+	);
+
+	UINT subresourceIndex = sliceIndex * destDesc.MipLevels;
+
+	for (UINT i = 0; i < destDesc.MipLevels; ++i)
+	{
+		commandList.m_context->CopySubresourceRegion(
+			destResource,
+			subresourceIndex + i,
+			0,
+			0,
+			0,
+			srcResource,
+			i,
+			nullptr);
+	}
+
+	commandList.CloseAndExecute(true);
+}
+
+
+void CommandList::WriteBuffer(GpuResource& dest, size_t destOffset, const void* data, size_t numBytes)
+{
+	ComPtr<ID3D11Buffer> staging;
+
+	D3D11_BUFFER_DESC desc{};
+	
+	desc.ByteWidth = static_cast<UINT>(numBytes);
+	desc.BindFlags = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = data;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	DeviceManager::GetInstance().GetDevice()->CreateBuffer(&desc, &initData, &staging);
+
+	m_context->CopySubresourceRegion(dest.GetResource(), 0, static_cast<UINT>(destOffset), 0, 0, staging.Get(), 0, nullptr);
+}
+
+
+void CommandList::FillBuffer(GpuResource& dest, size_t destOffset, DWParam value, size_t numBytes)
+{
+	ComPtr<ID3D11Buffer> staging;
+
+	D3D11_BUFFER_DESC desc{};
+	
+	desc.ByteWidth = 4;
+	desc.BindFlags = 0;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = &value;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	DeviceManager::GetInstance().GetDevice()->CreateBuffer(&desc, &initData, &staging);
+
+	m_context->CopySubresourceRegion(dest.GetResource(), 0, static_cast<UINT>(destOffset), 0, 0, staging.Get(), 0, nullptr);
+}
+
+
+void CommandList::ResetCounter(StructuredBuffer& buf, uint32_t value)
+{
+	buf.SetCounterInitialValue(value);
+}
+
+
 CommandList& CommandList::Begin()
 {
 	CommandList* newCommandList = CommandList::AllocateCommandList();
@@ -63,8 +175,9 @@ CommandList& CommandList::Begin()
 
 uint64_t CommandList::CloseAndExecute(bool waitForCompletion)
 {
-	ID3D11CommandList* commandList;
-	m_context->FinishCommandList(TRUE, &commandList);
+	assert(m_pixMarkerCount == 0);
+	ID3D11CommandList* commandList = nullptr;
+	ThrowIfFailed(m_context->FinishCommandList(TRUE, &commandList));
 
 	// ExecuteCommandList calls Release on the commandList pointer
 	m_owner->ExecuteCommandList(commandList);
@@ -78,6 +191,44 @@ void CommandList::Initialize(CommandListManager& manager)
 {
 	m_owner = &manager;
 	m_owner->CreateNewDeferredContext(&m_context);
+	ThrowIfFailed(m_context->QueryInterface(__uuidof(ID3D11DeviceContext1), reinterpret_cast<void**>(&m_context1)));
+	ThrowIfFailed(m_context->QueryInterface(__uuidof(ID3DUserDefinedAnnotation), reinterpret_cast<void**>(&m_annotation)));
+}
+
+
+void CommandList::PIXBeginEvent(const string& label)
+{
+#if defined(RELEASE)
+	(label)
+#else
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(label);
+
+	m_annotation->BeginEvent(wide.c_str());
+	++m_pixMarkerCount;
+#endif
+}
+
+
+void CommandList::PIXEndEvent()
+{
+#if !defined(RELEASE)
+	m_annotation->EndEvent();
+	--m_pixMarkerCount;
+#endif
+}
+
+
+void CommandList::PIXSetMarker(const string& label)
+{
+#if defined(RELEASE)
+	(label)
+#else
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	wstring wide = converter.from_bytes(label);
+
+	m_annotation->SetMarker(wide.c_str());
+#endif
 }
 
 
@@ -379,8 +530,166 @@ void GraphicsCommandList::SetVertexBuffers(uint32_t numVBs, uint32_t startSlot, 
 }
 
 
+void GraphicsCommandList::DrawIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+{
+	m_context->DrawInstancedIndirect(argumentBuffer.GetBuffer(), static_cast<UINT>(argumentBufferOffset));
+}
+
+
 void GraphicsCommandList::SetVertexShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
 {
 	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
 	m_context->VSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetVertexShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers, 
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->VSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetHullShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->HSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetHullShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->HSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetDomainShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->DSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetDomainShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->DSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetGeometryShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->GSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetGeometryShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->GSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void GraphicsCommandList::SetPixelShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->PSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void GraphicsCommandList::SetPixelShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->PSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		m_context->ClearUnorderedAccessViewFloat(uav, target.GetClearColor());
+	}
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORF32& clearColor)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		m_context->ClearUnorderedAccessViewFloat(uav, clearColor);
+	}
+}
+
+
+void ComputeCommandList::ClearUAV(ColorBuffer& target, const DirectX::XMVECTORU32& clearValue)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		m_context->ClearUnorderedAccessViewUint(uav, clearValue.u);
+	}
+}
+
+
+void ComputeCommandList::ClearUAV(GpuBuffer& target)
+{
+	auto uav = target.GetUAV();
+	if (uav)
+	{
+		UINT values[4] = { 0, 0, 0, 0 };
+		m_context->ClearUnorderedAccessViewUint(uav, values);
+	}
+}
+
+
+void ComputeCommandList::SetPipelineState(ComputePSO& pso)
+{
+	m_context->CSSetShader(pso.m_computeShader.Get(), nullptr, 0);
+}
+
+
+void ComputeCommandList::DispatchIndirect(GpuBuffer& argumentBuffer, size_t argumentBufferOffset)
+{
+
+	m_context->DispatchIndirect(argumentBuffer.GetBuffer(), static_cast<UINT>(argumentBufferOffset));
+}
+
+
+byte* ComputeCommandList::MapConstants(const ConstantBuffer& cbuffer)
+{
+	D3D11_MAPPED_SUBRESOURCE subresource;
+	ThrowIfFailed(m_context->Map(cbuffer.constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subresource));
+
+	return reinterpret_cast<byte*>(subresource.pData);
+}
+
+
+void ComputeCommandList::UnmapConstants(const ConstantBuffer& cbuffer)
+{
+	m_context->Unmap(cbuffer.constantBuffer.Get(), 0);
+}
+
+
+void ComputeCommandList::SetShaderConstants(uint32_t slot, const ConstantBuffer& cbuffer)
+{
+	ID3D11Buffer* d3dBuffer = cbuffer.constantBuffer.Get();
+	m_context->CSSetConstantBuffers(slot, 1, &d3dBuffer);
+}
+
+
+void ComputeCommandList::SetShaderConstants(uint32_t startSlot, uint32_t numBuffers, ID3D11Buffer* const * cbuffers,
+	const uint32_t* firstConstant, const uint32_t* numConstants)
+{
+	assert(m_context1);
+	m_context1->CSSetConstantBuffers1(startSlot, numBuffers, cbuffers, firstConstant, numConstants);
 }

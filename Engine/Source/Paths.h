@@ -19,7 +19,8 @@ public:
 
 	const std::string& BaseDir() const;
 	const std::string& BinaryDir() const;
-	const std::string& AssetDir() const;
+	const std::string& ModelDir() const;
+	const std::string& TextureDir() const;
 	const std::string& ShaderDir() const;
 	const std::string& LogDir() const;
 
@@ -30,7 +31,8 @@ private:
 private:
 	std::string m_baseDir;
 	std::string m_binaryDir;
-	std::string m_assetDir;
+	std::string m_modelDir;
+	std::string m_textureDir;
 	std::string m_shaderDir;
 	std::string m_logDir;
 };

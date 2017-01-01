@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "ColorBuffer12.h"
+#include "ColorBuffer.h"
 #include "DescriptorHeap12.h"
 #include "PipelineState12.h"
 #include "RootSignature12.h"
@@ -21,29 +21,37 @@ namespace Kodiak
 
 class GraphicsCommandList;
 
+
+
 class DeviceManager
 {
 public:
-	DeviceManager();
+	static DeviceManager& GetInstance();
 
 	void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
 	void SetWindowSize(uint32_t width, uint32_t height);
 	void Finalize();
 
 	void BeginFrame() {}
-	void Present(std::shared_ptr<ColorBuffer> presentSource);
+	void Present(std::shared_ptr<ColorBuffer> presentSource, bool bHDRPresent, const struct PresentParameters& params);
+
+	// Feature support queries
+	bool SupportsTypedUAVLoad_R11G11B10_FLOAT() const {	return m_supportsTypedUAVLoad_R11G11B10_FLOAT; }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
 	
 	ID3D12Device* GetDevice() { return m_device.Get(); }
 
 private:
+	DeviceManager();
+
 	void CreateDeviceIndependentResources();
 	void CreateDeviceResources();
 	void CreateWindowSizeDependentResources();
 	void CreatePresentState();
 
-	void PreparePresent(GraphicsCommandList& commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresentLDR(GraphicsCommandList& commandList, std::shared_ptr<ColorBuffer> presentSource);
+	void PreparePresentHDR(GraphicsCommandList& commandList, std::shared_ptr<ColorBuffer> presentSource, const struct PresentParameters& params);
 
 private:
 	// Direct3D objects
@@ -64,6 +72,7 @@ private:
 
 	// Backbuffers
 	ColorBuffer	m_backbuffers[SWAP_CHAIN_BUFFER_COUNT];
+	ColorFormat m_swapChainFormat;
 
 	// Cached device properties.
 	uint32_t								m_currentFrame{ 0 };
@@ -78,6 +87,10 @@ private:
 	// Graphics state for Present
 	RootSignature m_presentRS;
 	GraphicsPSO m_convertLDRToDisplayPSO;
+	GraphicsPSO m_convertHDRToDisplayPSO;
+
+	// Feature flags
+	bool m_supportsTypedUAVLoad_R11G11B10_FLOAT{ false };
 };
 
 // Global device handle, for convenience

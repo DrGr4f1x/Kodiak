@@ -45,10 +45,20 @@
 #endif
 
 // Standard library
+#include <array>
 #include <functional>
 #include <list>
+#include <map>
 #include <memory>
 #include <queue>
+#include <shared_mutex>
 #include <sstream>
 #include <stdint.h>
 #include <string>
+
+// Engine headers
+#include "Engine\Source\Constants.h"
+#include "Engine\Source\Log.h"
+#include "Engine\Source\PlatformTypes.h"
+#include "Engine\Source\Utility.h"
+#include "Engine\Source\VectorMath.h"

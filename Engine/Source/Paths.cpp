@@ -25,7 +25,8 @@ Paths& Paths::GetInstance()
 Paths::Paths()
 	: m_baseDir()
 	, m_binaryDir()
-	, m_assetDir()
+	, m_modelDir()
+	, m_textureDir()
 	, m_shaderDir()
 	, m_logDir()
 {
@@ -45,9 +46,15 @@ const string& Paths::BinaryDir() const
 }
 
 
-const string& Paths::AssetDir() const
+const string& Paths::ModelDir() const
 {
-	return m_assetDir;
+	return m_modelDir;
+}
+
+
+const string& Paths::TextureDir() const
+{
+	return m_textureDir;
 }
 
 
@@ -93,7 +100,8 @@ void Paths::Initialize()
 		}
 	}
 
-	m_assetDir = m_baseDir + string("Assets\\");
+	m_modelDir = m_baseDir + string("Models\\");
+	m_textureDir = m_baseDir + string("Textures\\");
 	m_shaderDir = m_baseDir + string("Shaders\\");
 	m_logDir = m_baseDir + string("Log\\");
 }

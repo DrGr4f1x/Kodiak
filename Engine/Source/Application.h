@@ -15,6 +15,7 @@ namespace Kodiak
 {
 
 // Forward declarations
+class InputState;
 class StepTimer;
 
 class Application
@@ -27,8 +28,10 @@ public:
 
 protected:
 	// Application event handlers
+	virtual void OnStartup() = 0;
 	virtual void OnInit() = 0;
 	virtual void OnUpdate(StepTimer* timer) = 0;
+	virtual void OnRender() = 0;
 	virtual void OnDestroy() = 0;
 	virtual void OnCommandlineArgument(const wchar_t* argv, size_t length) {}
 
@@ -37,9 +40,6 @@ protected:
 
 	// Windows message handlers
 	virtual void OnResize();
-	virtual void OnMouseDown(WPARAM btnState, int x, int y) { }
-	virtual void OnMouseUp(WPARAM btnState, int x, int y) { }
-	virtual void OnMouseMove(WPARAM btnState, int x, int y) { }
 
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -61,8 +61,12 @@ protected:
 	bool m_maximized{ false };
 	bool m_resizing{ false };
 
+	// Input state
+	std::shared_ptr<InputState> m_inputState;
+
 private:
 	void ParseCommandLineArgs();
+	void Initialize();
 	void Update();
 	bool Render();
 

@@ -11,7 +11,13 @@
 
 #include "Model.h"
 
+#include "CommandList.h"
+#include "ConstantBuffer.h"
+#include "Defaults.h"
 #include "IndexBuffer.h"
+#include "Material.h"
+#include "Paths.h"
+#include "Profile.h"
 #include "Renderer.h"
 #include "RenderEnums.h"
 #include "VertexBuffer.h"
@@ -19,333 +25,440 @@
 
 
 using namespace Kodiak;
-using namespace DirectX;
+using namespace Math;
 using namespace std;
 
 
-MeshPart::MeshPart(std::shared_ptr<VertexBuffer> vbuffer,
-	std::shared_ptr<IndexBuffer> ibuffer,
-	PrimitiveTopology topology,
-	uint32_t indexCount,
-	uint32_t startIndex,
-	int32_t baseVertex)
-	: m_vertexBuffer(vbuffer)
-	, m_indexBuffer(ibuffer)
-	, m_topology(topology)
-	, m_indexCount(indexCount)
-	, m_startIndex(startIndex)
-	, m_baseVertexOffset(baseVertex)
+void RenderThread::StaticModelData::UpdateConstants(GraphicsCommandList& commandList)
 {
-	m_loadTask = (vbuffer->loadTask && ibuffer->loadTask);
-}
-
-
-void Mesh::SetMeshParts(vector<MeshPart>& meshParts)
-{
-	m_meshParts = meshParts;
-
-	if (!meshParts.empty())
+	for (auto& mesh : meshes)
 	{
-		m_loadTask = meshParts[0].m_loadTask;
-	}
-
-	for (size_t i = 0; i < m_meshParts.size(); ++i)
-	{
-		m_meshParts[i].m_parent = this;
-		if (i > 1)
+#if defined(DX11)
+		if (isDirty || mesh->isDirty)
+#endif
 		{
-			m_loadTask = (m_loadTask && m_meshParts[i].m_loadTask);
+			StaticMeshPerObjectData perObjectData;
+			
+			perObjectData.matrix = matrix * mesh->matrix;
+
+			auto dest = commandList.MapConstants(*mesh->perObjectConstants);
+			memcpy(dest, &perObjectData, sizeof(perObjectData));
+			commandList.UnmapConstants(*mesh->perObjectConstants);
+
+			mesh->isDirty = false;
 		}
 	}
 
-	if (m_parent)
+	isDirty = false;
+}
+
+
+StaticMesh::StaticMesh()
+	: m_matrix(kIdentity)
+{
+	CreateRenderThreadData();
+}
+
+
+void StaticMesh::AddMeshPart(StaticMeshPart part)
+{
+	m_meshParts.emplace_back(part);
+
+	auto thisMesh = shared_from_this();
+	
+	Renderer::GetInstance().EnqueueTask([thisMesh, part](RenderTaskEnvironment& rte)
 	{
-		m_parent->loadTask = (m_parent->loadTask && m_loadTask);
-	}
+		RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.material->GetRenderThreadData(), part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
+		thisMesh->m_renderThreadData->meshParts.emplace_back(data);
+	});
 }
 
 
-Model::Model()
-{
-	XMStoreFloat4x4(&m_matrix, XMMatrixIdentity());
-}
-
-
-void Model::SetSingleMesh(Mesh& mesh)
-{
-	m_meshes.clear();
-	m_meshes.push_back(mesh);
-
-	mesh.m_parent = this;
-	m_isReady = false;
-	loadTask = mesh.m_loadTask;
-}
-
-
-void Model::SetTransform(const XMFLOAT4X4& matrix)
+void StaticMesh::SetMatrix(const Matrix4& matrix)
 {
 	m_matrix = matrix;
-	m_isDirty = true;
+
+	DirectX::XMFLOAT4X4 matrixNonAligned;
+	DirectX::XMStoreFloat4x4(&matrixNonAligned, m_matrix);
+
+	auto staticMeshData = m_renderThreadData;
+	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
+	{
+		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
+		staticMeshData->isDirty = true;
+	});
 }
 
 
-const XMFLOAT4X4& Model::GetTransform() const
+void StaticMesh::ConcatenateMatrix(const Matrix4& matrix)
 {
-	return m_matrix;
+	m_matrix = m_matrix * matrix;
+
+	DirectX::XMFLOAT4X4 matrixNonAligned;
+	DirectX::XMStoreFloat4x4(&matrixNonAligned, m_matrix);
+
+	auto staticMeshData = m_renderThreadData;
+	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
+	{
+		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
+		staticMeshData->isDirty = true;
+	});
+}
+
+
+shared_ptr<StaticMesh> StaticMesh::Clone()
+{
+	auto clone = make_shared<StaticMesh>();
+	clone->SetMatrix(m_matrix);
+
+	for (const auto& part : m_meshParts)
+	{
+		StaticMeshPart partCopy = part;
+		partCopy.material = part.material->Clone();
+		clone->AddMeshPart(partCopy);
+	}
+
+	return clone;
+}
+
+
+void StaticMesh::CreateRenderThreadData()
+{
+	m_renderThreadData = make_shared<RenderThread::StaticMeshData>();
+	m_renderThreadData->matrix = m_matrix;
+	
+	m_renderThreadData->perObjectConstants = make_shared<ConstantBuffer>();
+	m_renderThreadData->perObjectConstants->Create(sizeof(RenderThread::StaticMeshPerObjectData), Usage::Dynamic);
+}
+
+
+StaticModel::StaticModel()
+	: m_matrix(kIdentity)
+{
+	CreateRenderThreadData();
+}
+
+
+void StaticModel::AddMesh(shared_ptr<StaticMesh> mesh)
+{
+	m_meshes.emplace_back(mesh);
+
+	auto staticModelData = m_renderThreadData;
+	auto staticMeshData = mesh->m_renderThreadData;
+
+	Renderer::GetInstance().EnqueueTask([staticModelData, staticMeshData](RenderTaskEnvironment& rte)
+	{
+		staticModelData->meshes.emplace_back(staticMeshData);
+	});
+}
+
+
+shared_ptr<StaticMesh> StaticModel::GetMesh(uint32_t index)
+{
+	assert(index < m_meshes.size());
+
+	return m_meshes[index];
+}
+
+
+void StaticModel::SetMatrix(const Matrix4& matrix)
+{
+	m_matrix = matrix;
+	auto thisModel = shared_from_this();
+	Renderer::GetInstance().EnqueueTask([thisModel](RenderTaskEnvironment& rte)
+	{
+		thisModel->m_renderThreadData->matrix = thisModel->GetMatrix();
+		thisModel->m_renderThreadData->isDirty = true;
+	});
+}
+
+
+void StaticModel::CreateRenderThreadData()
+{
+	const auto numMeshes = m_meshes.size();
+
+	m_renderThreadData = make_shared<RenderThread::StaticModelData>();
+	m_renderThreadData->matrix = m_matrix;
+	m_renderThreadData->meshes.reserve(numMeshes);
 }
 
 
 namespace Kodiak
 {
 
-shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc)
+shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc)
 {
-	auto model = make_shared<Model>();
+	shared_ptr<VertexBuffer> vbuffer;
 
-	auto vbuffer = make_shared<VertexBuffer>();
-	shared_ptr<BaseVertexBufferData> vdata;
+	auto material = make_shared<Material>();
+	material->SetEffect(GetDefaultBaseEffect());
+	material->SetRenderPass(GetDefaultBasePass());
 
 	if (desc.genNormals && desc.genColors)
 	{
-		vdata.reset(new VertexBufferData<VertexPositionNormalColor>(
+		VertexBufferData<VertexPositionNormalColor> vdata
 		{
 			// -X face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[0]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[7]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[6]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[1]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[0]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[7]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f), Vector3(desc.colors[6]) },
 			// +X face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[5]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[4]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f), XMFLOAT3(desc.colors[2]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[5]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[4]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f), Vector3(desc.colors[2]) },
 			// -Y face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[7]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT3(desc.colors[5]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[1]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[7]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f), Vector3(desc.colors[5]) },
 			// +Y face
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[2]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[4]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[0]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(desc.colors[6]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[2]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[4]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[0]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f), Vector3(desc.colors[6]) },
 			// -Z face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[2]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT3(desc.colors[0]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[2]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[1]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f), Vector3(desc.colors[0]) },
 			// +Z face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[7]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[6]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[5]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(desc.colors[4]) }
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[7]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[6]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[5]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f), Vector3(desc.colors[4]) }
+		};
 
-		}
-		));
-
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with normals and colors");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else if (desc.genNormals)
 	{
-		vdata.reset(new VertexBufferData<VertexPositionNormal>(
+		VertexBufferData<VertexPositionNormal> vdata
 		{
 			// -X face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(-1.0f, 0.0f, 0.0f) },
 			// +X face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(1.0f, 0.0f, 0.0f) },
 			// -Y face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, -1.0f, 0.0f) },
 			// +Y face
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 1.0f, 0.0f) },
 			// -Z face
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, -1.0f) },
 			// +Z face
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(0.0f, 0.0f, 1.0f) }
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(0.0f, 0.0f, 1.0f) }
+		};
 
-		}
-		));
-
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with normals");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else if (desc.genColors)
 	{
-		vdata.reset(new VertexBufferData<VertexPositionColor>(
+		VertexBufferData<VertexPositionColor> vdata
 		{
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[0]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[1]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[2]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), XMFLOAT3(desc.colors[3]) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[4]) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[5]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[6]) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), XMFLOAT3(desc.colors[7]) }
-		}
-		));
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[0]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[1]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[2]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ), Vector3(desc.colors[3]) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[4]) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[5]) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[6]) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ), Vector3(desc.colors[7]) }
+		};
 
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer with colors");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 	else
 	{
-		vdata.reset(new VertexBufferData<VertexPosition>(
+		VertexBufferData<VertexPosition> vdata
 		{
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
-			{ XMFLOAT3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
-			{ XMFLOAT3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
-			{ XMFLOAT3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) }
-		}
-		));
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY, -0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ Vector3(0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ Vector3(-0.5f * desc.sizeX,  0.5f * desc.sizeY,  0.5f * desc.sizeZ) },
+			{ Vector3(-0.5f * desc.sizeX, -0.5f * desc.sizeY,  0.5f * desc.sizeZ) }
+		};
 
-		vbuffer->Create(vdata, Usage::Immutable, "Box vertex buffer");
+		vbuffer = VertexBuffer::Create(vdata, Usage::Immutable);
 	}
 
 	// Create the mesh and mesh parts
-	Mesh mesh;
-	vector<MeshPart> meshParts;
-	
+	auto mesh = make_shared<StaticMesh>();
 
 	if (desc.genNormals)
 	{
-		meshParts.reserve(6);
-
 		// -X face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 0, 1, 2, 3 }));
+			IndexBufferData16 idata{ { 0, 1, 2, 3 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "-X face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// +X face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 4, 5, 6, 7 }));
+			IndexBufferData16 idata{ { 4, 5, 6, 7 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "+X face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// -Y face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 8, 9, 10, 11 }));
+			IndexBufferData16 idata{ { 8, 9, 10, 11 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "-Y face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// +Y face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 12, 13, 14, 15 }));
+			IndexBufferData16 idata{ { 12, 13, 14, 15 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "+Y face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// -Z face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 16, 17, 18, 19 }));
+			IndexBufferData16 idata{ { 16, 17, 18, 19 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "-Z face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// +Z face
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 20, 21, 22, 23 }));
+			IndexBufferData16 idata{ { 20, 21, 22, 23 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "+Z face");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 	}
 	else
 	{
-		meshParts.reserve(3);
-
 		// Body
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 }));
+			IndexBufferData16 idata{ { 0, 1, 2, 3, 4, 5, 6, 7, 0, 1 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "Body");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 10, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 10, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// Top
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 6, 0, 4, 2 }));
+			IndexBufferData16 idata{ { 6, 0, 4, 2 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "Top");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 
 		// Bottom
 		{
-			auto ibuffer = make_shared<IndexBuffer>();
-			shared_ptr<BaseIndexBufferData> idata;
-			idata.reset(new IndexBufferData16({ 5, 3, 7, 1 }));
+			IndexBufferData16 idata{ { 5, 3, 7, 1 } };
 
-			ibuffer->Create(idata, Usage::Immutable, "Bottom");
+			auto ibuffer = IndexBuffer::Create(idata, Usage::Immutable);
 
-			auto meshPart = MeshPart(vbuffer, ibuffer, PrimitiveTopology::TriangleStrip, 4, 0, 0);
-			meshParts.emplace_back(meshPart);
+			StaticMeshPart meshPart{ vbuffer, ibuffer, material, PrimitiveTopology::TriangleStrip, 4, 0, 0 };
+			mesh->AddMeshPart(meshPart);
 		}
 	}
 
-	mesh.SetMeshParts(meshParts);
-	model->SetSingleMesh(mesh);
-
-	return model;
+	return mesh;
 }
+
+
+namespace
+{
+
+enum class ModelFormat : uint32_t
+{
+	None,
+	H3D,
+
+	NumFormats
+};
+
+const string s_formatString[] =
+{
+	"none",
+	"h3d",
+};
+
+} // Anonymous namespace
+
+
+std::shared_ptr<StaticModel> LoadModel(const string& path)
+{
+	ModelFormat format = ModelFormat::None;
+
+	auto sepIndex = path.rfind('.');
+	if (sepIndex != string::npos)
+	{
+		string extension = path.substr(sepIndex + 1);
+		transform(begin(extension), end(extension), begin(extension), ::tolower);
+
+		for (uint32_t i = 0; i < static_cast<uint32_t>(ModelFormat::NumFormats); ++i)
+		{
+			if (extension == s_formatString[i])
+			{
+				format = static_cast<ModelFormat>(i);
+				break;
+			}
+		}
+
+		if (format != ModelFormat::None)
+		{
+			string fullPath = Paths::GetInstance().ModelDir() + path;
+
+			switch (format)
+			{
+			case ModelFormat::H3D:
+				return LoadModelH3D(fullPath);
+				break;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
 
 } // namespace Kodiak

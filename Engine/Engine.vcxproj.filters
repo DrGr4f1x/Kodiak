@@ -10,9 +10,6 @@
     <Filter Include="Rendering\DX12">
       <UniqueIdentifier>{923144e8-eaf0-4a1a-8ffe-212ac2f50024}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Rendering\Operations">
-      <UniqueIdentifier>{41482bc2-1884-4aef-9460-9ce54fcd54f7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Rendering\DXCommon">
       <UniqueIdentifier>{450e1881-4871-48f4-9546-69626d6341ce}</UniqueIdentifier>
     </Filter>
@@ -27,6 +24,45 @@
     </Filter>
     <Filter Include="Shaders\Common">
       <UniqueIdentifier>{e1ebbbc6-7fe8-4200-a1c9-9b71b0aeac9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{59ae5e08-4ad2-4e40-ab63-e911482b8c60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\Remotery">
+      <UniqueIdentifier>{3000e89b-ca1c-44e9-8f08-4c287b2e6aeb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{de54e161-9360-47a5-99c2-ca9c917cb901}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Techniques">
+      <UniqueIdentifier>{80aa177c-d0a7-47e5-b495-86a44b697afd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Techniques\SSAO">
+      <UniqueIdentifier>{e616f374-cc3a-49c5-ab61-3db6f2620ee8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Common\SSAO">
+      <UniqueIdentifier>{635776ea-46ed-47cf-8a1a-730aef48db7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Techniques\PostProcessing">
+      <UniqueIdentifier>{d8e38b30-2739-4cd7-9855-c314d00edefe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Common\PostProcessing">
+      <UniqueIdentifier>{064b8f3e-452c-4abc-84ca-e0361a50da46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Common\Present">
+      <UniqueIdentifier>{ce44a8bd-b6ab-4406-9ac7-cb6d6c7880e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Techniques\FXAA">
+      <UniqueIdentifier>{c01e8367-c6ea-48d1-801d-0c417605ad30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Common\FXAA">
+      <UniqueIdentifier>{6514b411-aa1f-42b1-86e1-242f07528bdd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Techniques\Particles">
+      <UniqueIdentifier>{d4d46e6c-4ff8-415b-928e-1ae295ba48a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Common\Particles">
+      <UniqueIdentifier>{c0763778-3bf8-4acf-b8c5-dbfb56fa24fb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -49,12 +85,6 @@
     </ClInclude>
     <ClInclude Include="Source\Paths.h" />
     <ClInclude Include="Source\Log.h" />
-    <ClInclude Include="Source\IRenderOperation.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Model.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -62,9 +92,6 @@
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\VertexFormats.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\IAsyncRenderTask.h">
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderEnums.h">
@@ -84,12 +111,6 @@
     </ClInclude>
     <ClInclude Include="Source\CommandListManager11.h">
       <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ColorBuffer11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ColorBuffer12.h">
-      <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\ColorBuffer.h">
       <Filter>Rendering</Filter>
@@ -118,9 +139,6 @@
     <ClInclude Include="Source\GpuResource11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ClearColorBufferOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\GpuResource12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
@@ -139,16 +157,10 @@
     <ClInclude Include="Source\Format.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\DepthBuffer11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RootSignature12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\DynamicDescriptorHeap12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DepthBuffer12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\DXGIUtility.h">
@@ -169,18 +181,11 @@
     <ClInclude Include="Source\Shader.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Shader11.h">
-      <Filter>Rendering\DX11</Filter>
-    </ClInclude>
     <ClInclude Include="Source\DepthBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\BinaryReader.h" />
-    <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\PipelineState12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Shader12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Source\InputLayout.h">
@@ -188,12 +193,6 @@
     </ClInclude>
     <ClInclude Include="Source\InputLayout12.h">
       <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ShaderManager12.h">
-      <Filter>Rendering\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ShaderManager11.h">
-      <Filter>Rendering\DX11</Filter>
     </ClInclude>
     <ClInclude Include="Source\IndexBuffer.h">
       <Filter>Rendering</Filter>
@@ -207,7 +206,6 @@
     <ClInclude Include="Source\IndexBuffer12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Source\MathUtil.h" />
     <ClInclude Include="Source\VertexBuffer11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
@@ -217,26 +215,11 @@
     <ClInclude Include="Source\InputLayout11.h">
       <Filter>Rendering\DX11</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderSceneOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ConstantBuffer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\ConstantBuffer11.h">
       <Filter>Rendering\DX11</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ShaderManager.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ClearDepthBufferOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SetRenderTargetOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SetViewportOp.h">
-      <Filter>Rendering\Operations</Filter>
     </ClInclude>
     <ClInclude Include="Source\ConstantBuffer12.h">
       <Filter>Rendering\DX12</Filter>
@@ -244,12 +227,209 @@
     <ClInclude Include="Source\LinearAllocator12.h">
       <Filter>Rendering\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SetScissorOp.h">
-      <Filter>Rendering\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="Source\StepTimer.h" />
-    <ClInclude Include="Source\UpdateSceneOp.h">
-      <Filter>Rendering\Operations</Filter>
+    <ClInclude Include="Source\Material.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utility.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Camera.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPass.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommonStates.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Material11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Material12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Effect.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Effect12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Effect11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderReflection.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\Remotery\lib\Remotery.h">
+      <Filter>External\Remotery</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Profile.h" />
+    <ClInclude Include="Source\Batch.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DrawParameters.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Texture.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DDSTextureLoader12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\dds.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DDSCommon.h">
+      <Filter>Rendering\DXCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DDSTextureLoader11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Defaults.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialParameter.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InputState.h" />
+    <ClInclude Include="Source\Constants.h" />
+    <ClInclude Include="Source\MaterialResource11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\DebugUtility.h" />
+    <ClInclude Include="Source\MaterialResource12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SamplerManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sampler.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sampler11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sampler12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vector.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scalar.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommonMath.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VectorMath.h" />
+    <ClInclude Include="Source\Matrix3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Quaternion.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Matrix4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Transform.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Random.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CameraController.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderTask.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeKernel.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeKernel12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeParameter.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeResource12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeResource11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeKernel11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderThread.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SSAO.h">
+      <Filter>Rendering\Techniques\SSAO</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PostProcessing.h">
+      <Filter>Rendering\Techniques\PostProcessing</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShadowCamera.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShadowBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\FXAA.h">
+      <Filter>Rendering\Techniques\FXAA</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlatformTypes.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\CommandSignature12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Color.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleEffect.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleEffectManager.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleEffectProperties.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParticleShaderStructs.h">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComputeConstantBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\MaterialConstantBuffer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Filesystem.h" />
+    <ClInclude Include="Source\ResourceLoader.h" />
+    <ClInclude Include="Source\TextureResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\LoaderEnums.h" />
+    <ClInclude Include="Source\ShaderResource.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderResource11.h">
+      <Filter>Rendering\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ShaderResource12.h">
+      <Filter>Rendering\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\IAsyncResource.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -264,9 +444,6 @@
     <ClCompile Include="Source\Paths.cpp" />
     <ClCompile Include="Source\Log.cpp" />
     <ClCompile Include="Source\Renderer.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderPipeline.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\Model.cpp">
@@ -296,9 +473,6 @@
     <ClCompile Include="Source\GpuBuffer11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ClearColorBufferOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="Source\GpuBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
@@ -326,23 +500,11 @@
     <ClCompile Include="Source\PipelineState11.cpp">
       <Filter>Rendering\DX11</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Shader11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
     <ClCompile Include="Source\DXGIUtility.cpp">
       <Filter>Rendering\DXCommon</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ShaderManager11.cpp">
-      <Filter>Rendering\DX11</Filter>
-    </ClCompile>
     <ClCompile Include="Source\BinaryReader.cpp" />
     <ClCompile Include="Source\PipelineState12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Shader12.cpp">
-      <Filter>Rendering\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ShaderManager12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Source\IndexBuffer11.cpp">
@@ -360,17 +522,8 @@
     <ClCompile Include="Source\VertexBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderSceneOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ConstantBuffer11.cpp">
       <Filter>Rendering\DX11</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ClearDepthBufferOp.cpp">
-      <Filter>Rendering\Operations</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\SetRenderTargetOp.cpp">
-      <Filter>Rendering\Operations</Filter>
     </ClCompile>
     <ClCompile Include="Source\ConstantBuffer12.cpp">
       <Filter>Rendering\DX12</Filter>
@@ -378,19 +531,164 @@
     <ClCompile Include="Source\LinearAllocator12.cpp">
       <Filter>Rendering\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Source\SetScissorOp.cpp">
-      <Filter>Rendering\Operations</Filter>
+    <ClCompile Include="Source\Material11.cpp">
+      <Filter>Rendering\DX11</Filter>
     </ClCompile>
-    <ClCompile Include="Source\SetViewportOp.cpp" />
-    <ClCompile Include="Source\UpdateSceneOp.cpp">
-      <Filter>Rendering\Operations</Filter>
+    <ClCompile Include="Source\Material12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Material.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Camera.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPass.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CommonStates.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Effect12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Effect11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Effect.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\Remotery\lib\Remotery.c">
+      <Filter>External\Remotery</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Profile.cpp" />
+    <ClCompile Include="Source\Model_H3D.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VertexBuffer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DDSTextureLoader12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\DDSTextureLoader11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Defaults.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\InputState.cpp" />
+    <ClCompile Include="Source\Constants.cpp" />
+    <ClCompile Include="Source\MaterialResource11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderReflection.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialResource12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SamplerManager.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sampler12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sampler11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Random.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CameraController.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialParameter.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderTask.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeKernel12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeParameter.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeResource12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeResource11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeKernel11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SSAO.cpp">
+      <Filter>Rendering\Techniques\SSAO</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PostProcessing.cpp">
+      <Filter>Rendering\Techniques\PostProcessing</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderEnums.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderThread.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShadowCamera.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\FXAA.cpp">
+      <Filter>Rendering\Techniques\FXAA</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShadowBuffer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CommandSignature12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParticleEffect.cpp">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParticleEffectManager.cpp">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParticleEmissionProperties.cpp">
+      <Filter>Rendering\Techniques\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ComputeConstantBuffer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\MaterialConstantBuffer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Filesystem.cpp" />
+    <ClCompile Include="Source\ResourceLoader.cpp" />
+    <ClCompile Include="Source\TextureResource11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TextureResource12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Texture.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shader.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderResource11.cpp">
+      <Filter>Rendering\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ShaderResource12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\IAsyncResource.cpp">
+      <Filter>Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\Shaders\Common\ScreenQuadVS.hlsl">
-      <Filter>Shaders\Common</Filter>
-    </FxCompile>
-    <FxCompile Include="Source\Shaders\Common\BufferCopyPS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
     <FxCompile Include="Source\Shaders\Common\SimpleVertexShader.hlsl">
@@ -399,5 +697,256 @@
     <FxCompile Include="Source\Shaders\Common\SimplePixelShader.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoPrepareDepthBuffers1CS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoPrepareDepthBuffers2CS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoRender1CS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoRender2CS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsampleBlendOutCS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsampleCS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsamplePreMinBlendOutCS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AoBlurUpsamplePreMinCS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugSSAOCS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\LinearizeDepthCS.hlsl">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BloomExtractAndDownsampleHdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BloomExtractAndDownsampleLdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ExtractLumaCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BlurCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\UpsampleAndBlurCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMapCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMap2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\GenerateHistogramCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AdaptExposureCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\BufferCopyPS.hlsl">
+      <Filter>Shaders\Common\Present</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ConvertLDRToDisplayPS.hlsl">
+      <Filter>Shaders\Common\Present</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugDrawHistogramCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_Luma_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_RGB_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2H2CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2HCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2HDebugCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2V2CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2VCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass2VDebugCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAResolveWorkQueueCS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ApplyBloom2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ApplyBloomCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\AverageLumaCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceHdr2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceHdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceLdr2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DebugLuminanceLdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DownsampleBloomAllCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\DownsampleBloomCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMapHdr2CS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ToneMapHdrCS.hlsl">
+      <Filter>Shaders\Common\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\CopyBackPostBufferCS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ConvertHDRToDisplayPS.hlsl">
+      <Filter>Shaders\Common\Present</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_Luma2_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\FXAAPass1_RGB2_CS.hlsl">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleBinCullingCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleDepthBoundsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleDispatchIndirectArgsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleFinalDispatchIndirectArgsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleInnerSortCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleLargeBinCullingCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleOuterSortCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticlePreSortCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticlePS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleSortIndirectArgsCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleSpawnCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileCullingCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRender2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFast2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastDynamic2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastDynamicCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastLowRes2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderFastLowResCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowDynamic2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowDynamicCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowLowRes2CS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleTileRenderSlowLowResCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleUpdateCS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="Source\Shaders\Common\ParticleVS.hlsl">
+      <Filter>Shaders\Common\Particles</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Shaders\Common\PerViewData.hlsli">
+      <Filter>Shaders\Common</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\StaticMeshPerObjectData.hlsli">
+      <Filter>Shaders\Common</Filter>
+    </None>
+    <None Include="Source\Functions.inl">
+      <Filter>Math</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\AoRenderCS.hlsli">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\AoBlurAndUpsampleCS.hlsli">
+      <Filter>Shaders\Common\SSAO</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\ShaderUtility.hlsli">
+      <Filter>Shaders\Common</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\FXAAPass1CS.hlsli">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\FXAAPass2CS.hlsli">
+      <Filter>Shaders\Common\FXAA</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\PixelPacking.hlsli">
+      <Filter>Shaders\Common</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\ParticleUtility.hlsli">
+      <Filter>Shaders\Common\Particles</Filter>
+    </None>
+    <None Include="Source\Shaders\Common\ParticleUpdateCommon.hlsli">
+      <Filter>Shaders\Common\Particles</Filter>
+    </None>
   </ItemGroup>
 </Project>

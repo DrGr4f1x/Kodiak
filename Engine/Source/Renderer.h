@@ -9,58 +9,72 @@
 
 #pragma once
 
-
+#include <concurrent_queue.h>
 
 namespace Kodiak
 {
 
 // Forward declarations
+class Camera;
 class ColorBuffer;
 class CommandList;
 class DepthBuffer;
 class DeviceManager;
-class IAsyncRenderTask;
-class Model;
-class Pipeline;
+class RootRenderTask;
 class Scene;
+class StaticModel;
 
 enum class ColorFormat;
 enum class DepthFormat;
 enum class Usage;
 
+
 struct RenderTaskEnvironment
 {
 	DeviceManager* deviceManager;
-	std::shared_ptr<Pipeline> rootPipeline;
+	std::shared_ptr<RootRenderTask> rootTask;
 	std::atomic<uint64_t> currentFrame{ 0 };
 	std::atomic<bool> stopRenderTask{ false };
 	std::atomic<bool> frameCompleted{ true };
 };
 
-// TODO: Move this shit elsewhere
-std::shared_ptr<ColorBuffer> CreateColorBuffer(const std::string& name, uint32_t width, uint32_t height, uint32_t arraySize, ColorFormat format,
-	const DirectX::XMVECTORF32& clearColor);
 
-std::shared_ptr<DepthBuffer> CreateDepthBuffer(const std::string& name, uint32_t width, uint32_t height, DepthFormat format, float clearDepth = 1.0f,
-	uint32_t clearStencil = 0);
+struct PresentParameters
+{
+	float PaperWhite;
+	float MaxBrightness;
+	float ToeStrength;
+	uint32_t DebugMode;
+};
+
+
+class Renderer
+{
+public:
+	static Renderer& GetInstance();
+
+	void Initialize();
+	void Finalize();
+
+	void EnableRenderThread(bool enable) { /* TODO */ }
+
+	void EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback);
+
+	void Update();
+	void Render(std::shared_ptr<RootRenderTask> rootTask, bool bHDRPresent, const PresentParameters& params);
+
+private:
+	void StartRenderTask();
+	void StopRenderTask();
+
+	void UpdateStaticModels();
+
+private:
+	RenderTaskEnvironment				m_renderTaskEnvironment;
+	bool								m_renderTaskStarted{ false };
+	Concurrency::task<void>				m_renderTask;
+	Concurrency::concurrent_queue<std::function<void(RenderTaskEnvironment&)>>	m_renderTaskQueue;
+};
+
 
 } // namespace Kodiak
-
-
-namespace Renderer
-{
-
-void Initialize();
-void Finalize();
-
-void SetWindow(uint32_t width, uint32_t height, HWND hwnd);
-void SetWindowSize(uint32_t width, uint32_t height);
-
-void Render();
-
-std::shared_ptr<Kodiak::Pipeline> GetRootPipeline();
-
-void AddModel(std::shared_ptr<Kodiak::Scene> scene, std::shared_ptr<Kodiak::Model> model);
-void UpdateModelTransform(std::shared_ptr<Kodiak::Model> model, const DirectX::XMFLOAT4X4& matrix);
-
-} // namespace Renderer

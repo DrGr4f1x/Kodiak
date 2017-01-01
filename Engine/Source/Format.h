@@ -15,8 +15,15 @@ namespace Kodiak
 enum class ColorFormat
 {
 	Unknown,
+	BC3_UNorm_sRGB,
 	R8G8B8A8,
-	R11G11B10_Float
+	R8_UNorm,
+	R8_UInt,
+	R10G10B10A2_UNorm,
+	R11G11B10_Float,
+	R16_Float,
+	R32_Float,
+	R32_UInt
 };
 
 enum class DepthFormat

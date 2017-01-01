@@ -23,53 +23,89 @@ using namespace Kodiak;
 using namespace std;
 
 
+namespace
+{
+map<size_t, shared_ptr<VertexBuffer>>	s_vertexBufferMap;
+}
+
+
 void VertexBuffer::Destroy()
 {
 	GpuResource::Destroy();
 }
 
 
-void VertexBuffer::Create(shared_ptr<BaseVertexBufferData> data, Usage usage, const string& debugName)
+shared_ptr<VertexBuffer> VertexBuffer::Create(const BaseVertexBufferData& data, Usage usage)
 {
-	loadTask = concurrency::create_task([this, data, usage, debugName]()
+	const auto hashCode = data.GetId();
+
+	shared_ptr<VertexBuffer> vbuffer;
+
 	{
-		D3D12_RESOURCE_DESC resourceDesc = DescribeBuffer(data->GetNumElements(), data->GetElementSize());
+		static mutex vertexBufferMutex;
+		lock_guard<mutex> CS(vertexBufferMutex);
 
-		m_usageState = D3D12_RESOURCE_STATE_COMMON;
+		auto iter = s_vertexBufferMap.find(hashCode);
 
-		D3D12_HEAP_PROPERTIES heapProps;
-		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-		heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapProps.CreationNodeMask = 1;
-		heapProps.VisibleNodeMask = 1;
-
-		ThrowIfFailed(g_device->CreateCommittedResource(
-			&heapProps,
-			D3D12_HEAP_FLAG_NONE,
-			&resourceDesc,
-			m_usageState,
-			nullptr,
-			IID_PPV_ARGS(&m_resource)));
-
-		m_gpuVirtualAddress = m_resource->GetGPUVirtualAddress();
-
-		if (data->GetData())
+		if (iter == s_vertexBufferMap.end())
 		{
-			CommandList::InitializeBuffer(*this, data->GetData(), data->GetDataSize());
-		}
+			vbuffer = make_shared<VertexBuffer>();
+			s_vertexBufferMap[hashCode] = vbuffer;
 
-		// Set debug name
+			CreateInternal(vbuffer, data, usage);
+		}
+		else
+		{
+			vbuffer = iter->second;
+		}
+	}
+
+	return vbuffer;
+}
+
+
+void VertexBuffer::CreateInternal(std::shared_ptr<VertexBuffer> vbuffer, const BaseVertexBufferData& data, Usage usage)
+{
+	D3D12_RESOURCE_DESC resourceDesc = vbuffer->DescribeBuffer(data.GetNumElements(), data.GetElementSize());
+
+	vbuffer->m_usageState = D3D12_RESOURCE_STATE_COMMON;
+
+	D3D12_HEAP_PROPERTIES heapProps{};
+	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heapProps.CreationNodeMask = 1;
+	heapProps.VisibleNodeMask = 1;
+
+	ThrowIfFailed(g_device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		vbuffer->m_usageState,
+		nullptr,
+		IID_PPV_ARGS(&vbuffer->m_resource)));
+
+	vbuffer->m_gpuVirtualAddress = vbuffer->m_resource->GetGPUVirtualAddress();
+
+	if (data.GetData())
+	{
+		CommandList::InitializeBuffer(*vbuffer, data.GetData(), data.GetDataSize());
+	}
+
+	// Set debug name
+	const auto& debugName = data.GetDebugName();
+	if (!debugName.empty())
+	{
 		wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
 		wstring wide = converter.from_bytes(debugName);
 
-		m_resource->SetName(wide.c_str());
+		vbuffer->m_resource->SetName(wide.c_str());
+	}
 
-		// Create the VBV
-		m_vbv.BufferLocation = m_gpuVirtualAddress;
-		m_vbv.StrideInBytes = (UINT)data->GetStride();
-		m_vbv.SizeInBytes = (UINT)data->GetDataSize();
-	});
+	// Create the VBV
+	vbuffer->m_vbv.BufferLocation = vbuffer->m_gpuVirtualAddress;
+	vbuffer->m_vbv.StrideInBytes = (UINT)data.GetStride();
+	vbuffer->m_vbv.SizeInBytes = (UINT)data.GetDataSize();
 }
 
 
@@ -79,18 +115,18 @@ D3D12_RESOURCE_DESC VertexBuffer::DescribeBuffer(size_t numElements, size_t elem
 	m_elementCount = numElements;
 	m_elementSize = elementSize;
 
-	D3D12_RESOURCE_DESC Desc = {};
-	Desc.Alignment = 0;
-	Desc.DepthOrArraySize = 1;
-	Desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	Desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-	Desc.Format = DXGI_FORMAT_UNKNOWN;
-	Desc.Height = 1;
-	Desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	Desc.MipLevels = 1;
-	Desc.SampleDesc.Count = 1;
-	Desc.SampleDesc.Quality = 0;
-	Desc.Width = (UINT64)(numElements * elementSize);
+	D3D12_RESOURCE_DESC desc{};
+	desc.Alignment = 0;
+	desc.DepthOrArraySize = 1;
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	desc.Format = DXGI_FORMAT_UNKNOWN;
+	desc.Height = 1;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	desc.MipLevels = 1;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Width = (UINT64)(numElements * elementSize);
 
-	return Desc;
+	return desc;
 }

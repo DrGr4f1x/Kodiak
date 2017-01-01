@@ -1,22 +1,10 @@
-// A constant buffer that stores the three basic column-major matrices for composing geometry.
-cbuffer PerViewConstants : register(b0)
-{
-	matrix view;
-	matrix projection;
-};
+#include "PerViewData.hlsli"
+#include "StaticMeshPerObjectData.hlsli"
 
-
-cbuffer PerObjectConstants : register(b1)
-{
-	matrix model;
-};
-
-
-// Per-vertex data used as input to the vertex shader.
 struct VertexShaderInput
 {
-	float3 pos : POSITION;
-	float3 color : COLOR0;
+	float4 pos : POSITION;
+	float4 color : COLOR0;
 };
 
 
@@ -32,16 +20,15 @@ struct PixelShaderInput
 PixelShaderInput main(VertexShaderInput input)
 {
 	PixelShaderInput output;
-	float4 pos = float4(input.pos, 1.0f);
+	float4 pos = float4(input.pos.xyz, 1.0f);
 
 	// Transform the vertex position into projected space.
-	pos = mul(pos, model);
-	pos = mul(pos, view);
-	pos = mul(pos, projection);
+	pos = mul(model, pos);
+	pos = mul(viewProjection, pos);
 	output.pos = pos;
 
 	// Pass the color through without modification.
-	output.color = input.color;
+	output.color = input.color.rgb;
 
 	return output;
 }

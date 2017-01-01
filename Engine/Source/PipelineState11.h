@@ -127,7 +127,7 @@ public:
 	void SetRasterizerState(const RasterizerStateDesc& rasterizerDesc);
 	void SetDepthStencilState(const DepthStencilStateDesc& depthStencilDesc);
 
-	void SetInputLayout(const InputLayout& inputLayout);
+	void SetInputLayout(ID3D11InputLayout* inputLayout);
 
 	void SetVertexShader(VertexShader* vertexShader);
 	void SetHullShader(HullShader* hullShader);
@@ -160,7 +160,15 @@ private:
 
 class ComputePSO
 {
+	friend class ComputeCommandList;
 
+public:
+	void SetComputeShader(ComputeShader* computeShader);
+
+	void Finalize() {} // Provided for API symmetry
+
+private:
+	Microsoft::WRL::ComPtr<ID3D11ComputeShader>		m_computeShader;
 };
 
 

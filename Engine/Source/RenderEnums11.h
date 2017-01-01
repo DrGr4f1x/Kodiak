@@ -110,4 +110,38 @@ enum class StencilOp
 	Decr =		D3D11_STENCIL_OP_DECR
 };
 
+
+enum class PrimitiveTopologyType
+{
+	Undefined,
+	Point,
+	Line,
+	Triangle,
+	Patch 
+};
+
+
+enum class ResourceState
+{
+	Common,
+	VertexAndConstantBuffer,
+	IndexBuffer,
+	RenderTarget,
+	UnorderedAccess,
+	DepthWrite,
+	DepthRead,
+	NonPixelShaderResource,
+	PixelShaderResource,
+	StreamOut,
+	IndirectArgument,
+	CopyDest,
+	CopySource,
+	ResolveDest,
+	ResolveSource,
+	GenericRead,
+	Present,
+	Predication,
+	ShaderResourceGeneric
+};
+
 } // namespace Kodiak

@@ -15,7 +15,9 @@ namespace Kodiak
 class InputLayout
 {
 public:
-	std::vector<D3D12_INPUT_ELEMENT_DESC> elements;
+	std::vector<D3D12_INPUT_ELEMENT_DESC>	elements;
+	std::vector<std::string>				semantics; // Memory lifetime issue with LPCSTR SemanticName field
+	                                                   // on D3D12_INPUT_ELEMENT_DESC.  Remember this from Trinity?
 };
 
 

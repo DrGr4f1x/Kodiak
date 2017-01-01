@@ -10,94 +10,158 @@
 #pragma once
 
 #include <ppltasks.h>
+#include <unordered_set>
 
 namespace Kodiak
 {
 
 // Forward declarations
+class ConstantBuffer;
+class GraphicsCommandList;
 class IndexBuffer;
+class Material;
+class Scene;
 class VertexBuffer;
 
 enum class PrimitiveTopology;
 
 
-class MeshPart
+namespace RenderThread
 {
-	friend class Mesh;
-	friend class Scene;
+struct MaterialData;
 
-public:
-	MeshPart(
-		std::shared_ptr<VertexBuffer> vbuffer,
-		std::shared_ptr<IndexBuffer> ibuffer,
-		PrimitiveTopology topology,
-		uint32_t indexCount,
-		uint32_t startIndex,
-		int32_t baseVertex);
-
-private:
-	std::shared_ptr<VertexBuffer>	m_vertexBuffer;
-	std::shared_ptr<IndexBuffer>	m_indexBuffer;
-	PrimitiveTopology				m_topology;
-	uint32_t						m_indexCount;
-	uint32_t						m_startIndex;
-	int32_t							m_baseVertexOffset;
-	class Mesh*						m_parent{ nullptr };
-	concurrency::task<void>			m_loadTask;
+struct StaticMeshPartData
+{
+	std::shared_ptr<VertexBuffer>	vertexBuffer;
+	std::shared_ptr<IndexBuffer>	indexBuffer;
+	std::shared_ptr<MaterialData>	material;
+	PrimitiveTopology				topology;
+	uint32_t						indexCount;
+	uint32_t						startIndex;
+	int32_t							baseVertexOffset;
 };
 
 
-class Mesh
+struct StaticMeshData
 {
-	friend class Model;
-	friend class Scene;
+	std::vector<StaticMeshPartData>		meshParts;
+	Math::Matrix4						matrix;
 
-public:
-	void SetMeshParts(std::vector<MeshPart>& meshParts);
-	
-private:
-	std::vector<MeshPart>		m_meshParts;
-	class Model*				m_parent{ nullptr };
-	concurrency::task<void>		m_loadTask;
+	std::shared_ptr<ConstantBuffer>		perObjectConstants;
+	bool								isDirty{ true };
 };
 
 
-class Model
+struct StaticMeshPerObjectData
 {
-	friend class Scene;
-public:
-	Model();
-
-	void SetSingleMesh(Mesh& mesh);
-
-	concurrency::task<void>	loadTask;
-
-	void SetTransform(const DirectX::XMFLOAT4X4& matrix);
-	const DirectX::XMFLOAT4X4& GetTransform() const;
-
-	bool IsDirty() const { return m_isDirty; }
-	void ResetDirty() { m_isDirty = false; }
-
-private:
-	std::vector<Mesh>	m_meshes;
-
-	DirectX::XMFLOAT4X4	m_matrix;
-	bool				m_isReady{ false };
-	bool				m_isDirty{ true };
+	Math::Matrix4 matrix;
 };
 
 
-struct BoxModelDesc
+struct StaticModelData
+{
+	std::vector<std::shared_ptr<StaticMeshData>>	meshes;
+	Math::Matrix4									matrix;
+
+	bool											isDirty{ true };
+
+	void UpdateConstants(GraphicsCommandList& commandList);
+};
+
+
+} // namespace RenderThread
+
+
+struct StaticMeshPart
+{
+	friend class StaticMesh;
+
+	std::shared_ptr<VertexBuffer>	vertexBuffer;
+	std::shared_ptr<IndexBuffer>	indexBuffer;
+	std::shared_ptr<Material>		material;
+
+	PrimitiveTopology				topology;
+	uint32_t						indexCount;
+	uint32_t						startIndex;
+	int32_t							baseVertexOffset;
+};
+
+
+class StaticMesh : public std::enable_shared_from_this<StaticMesh>
+{
+	friend class Scene;
+	friend class StaticModel;
+public:
+	StaticMesh();
+
+	void AddMeshPart(StaticMeshPart part);
+	size_t GetNumMeshParts() const { return m_meshParts.size(); }
+
+	void SetMatrix(const Math::Matrix4& matrix);
+	void ConcatenateMatrix(const Math::Matrix4& matrix);
+	const Math::Matrix4& GetMatrix() const { return m_matrix; }
+
+	std::shared_ptr<Material> GetMaterial(uint32_t meshPartIndex)
+	{
+		return m_meshParts[meshPartIndex].material;
+	}
+
+	std::shared_ptr<StaticMesh> Clone();
+
+private:
+	void CreateRenderThreadData();
+
+private:
+	std::vector<StaticMeshPart>	m_meshParts;
+	Math::Matrix4				m_matrix;
+
+	std::shared_ptr<RenderThread::StaticMeshData>	m_renderThreadData;
+};
+
+
+class StaticModel : public std::enable_shared_from_this<StaticModel>
+{
+	friend class Scene;
+
+public:
+	StaticModel();
+
+	void AddMesh(std::shared_ptr<StaticMesh> mesh);
+	std::shared_ptr<StaticMesh> GetMesh(uint32_t index);
+	size_t GetNumMeshes() const { return m_meshes.size(); }
+
+	void SetMatrix(const Math::Matrix4& matrix);
+	const Math::Matrix4& GetMatrix() const { return m_matrix; }
+
+private:
+	void CreateRenderThreadData();
+
+private:
+	std::mutex									m_meshMutex;
+	std::vector<std::shared_ptr<StaticMesh>>	m_meshes;
+	Math::Matrix4								m_matrix;
+
+	std::shared_ptr<RenderThread::StaticModelData>	m_renderThreadData;
+};
+
+
+// Factory methods
+struct BoxMeshDesc
 {
 	float sizeX{ 1.0f };
 	float sizeY{ 1.0f };
 	float sizeZ{ 1.0f };
-	DirectX::XMFLOAT3 colors[8];
+	Math::Vector3 colors[8];
 	bool genColors{ false };
 	bool genNormals{ false };
 	bool facesIn{ false };
 };
 
-std::shared_ptr<Model> MakeBoxModel(const BoxModelDesc& desc);
+
+std::shared_ptr<StaticMesh> MakeBoxMesh(const BoxMeshDesc& desc);
+
+// Loaders
+std::shared_ptr<StaticModel> LoadModel(const std::string& path);
+std::shared_ptr<StaticModel> LoadModelH3D(const std::string& fullPath);
 
 } // namespace Kodiak

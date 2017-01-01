@@ -31,10 +31,81 @@ enum class PrimitiveTopology
 	TriangleStrip = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP
 };
 
+
 enum class IndexBufferFormat
 {
 	UInt16 = DXGI_FORMAT_R16_UINT,
 	UInt32 = DXGI_FORMAT_R32_UINT
 };
+
+
+enum class ShaderType
+{
+	Vertex,
+	Domain,
+	Hull,
+	Geometry,
+	Pixel,
+	Compute
+};
+
+
+enum class ShaderVariableType
+{
+	Bool,
+	Int,
+	Int2,
+	Int3,
+	Int4,
+	UInt,
+	UInt2,
+	UInt3,
+	UInt4,
+	Float,
+	Float2,
+	Float3,
+	Float4,
+	Float4x4,
+
+	Unsupported
+};
+
+
+enum class ShaderResourceType
+{
+	Texture,
+	TBuffer,
+	UAVRWTyped,
+	Structured,
+	UAVRWStructured,
+	ByteAddress,
+	UAVRWByteAddress,
+	UAVAppendStructured,
+	UAVConsumeStructured,
+	UAVRWStructuredWithCounter,
+
+	Unsupported
+};
+
+bool IsSRVType(ShaderResourceType type);
+bool IsUAVType(ShaderResourceType type);
+
+
+enum class ShaderResourceDimension
+{
+	Buffer,
+	Texture1d,
+	Texture1dArray,
+	Texture2d,
+	Texture2dArray,
+	Texture2dMS,
+	Texture2dMSArray,
+	Texture3d,
+	TextureCube,
+	TextureCubeArray,
+
+	Unsupported
+};
+
 
 } // namespace Kodiak

@@ -18,15 +18,17 @@ namespace Kodiak
 class BaseIndexBufferData;
 enum class Usage;
 
+
 class IndexBuffer
 {
 public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 	DXGI_FORMAT format;
 	
-	concurrency::task<void> loadTask;
+	static std::shared_ptr<IndexBuffer> Create(const BaseIndexBufferData& data, Usage usage);
 
-	void Create(std::shared_ptr<BaseIndexBufferData> data, Usage usage, const std::string& debugName);
+private:
+	static void CreateInternal(std::shared_ptr<IndexBuffer>ibuffer, const BaseIndexBufferData& data, Usage usage);
 };
 
 
