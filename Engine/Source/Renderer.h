@@ -29,14 +29,7 @@ enum class DepthFormat;
 enum class Usage;
 
 
-struct RenderTaskEnvironment
-{
-	DeviceManager* deviceManager;
-	std::shared_ptr<RootRenderTask> rootTask;
-	std::atomic<uint64_t> currentFrame{ 0 };
-	std::atomic<bool> stopRenderTask{ false };
-	std::atomic<bool> frameCompleted{ true };
-};
+void EnqueueRenderCommand(std::function<void()>&& command);
 
 
 struct PresentParameters
@@ -56,24 +49,24 @@ public:
 	void Initialize();
 	void Finalize();
 
-	void EnableRenderThread(bool enable) { /* TODO */ }
+	void EnableRenderThread(bool enable);
+	bool IsRenderThreadRunning() const;
+	void ToggleRenderThread();
 
-	void EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback);
+	void EnqueueRenderCommand(std::function<void()>&& command);
 
 	void Update();
-	void Render(std::shared_ptr<RootRenderTask> rootTask, bool bHDRPresent, const PresentParameters& params);
+	void Render();
 
 private:
-	void StartRenderTask();
-	void StopRenderTask();
-
-	void UpdateStaticModels();
+	void StartRenderThread();
+	void StopRenderThread();
 
 private:
-	RenderTaskEnvironment				m_renderTaskEnvironment;
-	bool								m_renderTaskStarted{ false };
-	Concurrency::task<void>				m_renderTask;
-	Concurrency::concurrent_queue<std::function<void(RenderTaskEnvironment&)>>	m_renderTaskQueue;
+	bool m_renderThreadRunning{ false };
+	bool m_renderThreadStateChanged{ false };
+	Concurrency::concurrent_queue<std::function<void()>> m_renderCommandQueue;
+	std::future<void> m_renderThreadFuture;
 };
 
 

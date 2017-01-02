@@ -39,7 +39,7 @@ ThreadParameter<T>::ThreadParameter(T& target)
 template <class T>
 void ThreadParameter<T>::operator=(T other)
 {
-	Renderer::GetInstance().EnqueueTask([this, other](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([this, other]()
 	{
 		m_target = other;
 		postAssignment();

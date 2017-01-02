@@ -102,7 +102,7 @@ void Camera::Update()
 	BaseCamera::Update();
 
 	auto thisCamera = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisCamera](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([thisCamera]()
 	{
 		auto proxy = thisCamera->GetProxy();
 		proxy->CopyFromCamera(thisCamera.get());

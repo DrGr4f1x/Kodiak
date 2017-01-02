@@ -141,7 +141,7 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 
 void SponzaApplication::OnRender()
 {
-	auto rootTask = SetupFrame();
+	//auto rootTask = SetupFrame();
 
 	PresentParameters params;
 	params.ToeStrength = 0.01f;
@@ -150,7 +150,139 @@ void SponzaApplication::OnRender()
 	params.DebugMode = 0;
 
 	const bool bHDRPresent = false;
-	Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
+	//Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
+
+	const bool ssaoEnabled = true;
+
+	EnqueueRenderCommand([params, ssaoEnabled, this, bHDRPresent]()
+	{
+		{
+			PROFILE_BEGIN(itt_frame_setup);
+			auto& commandList = GraphicsCommandList::Begin();
+
+			commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+			commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+			commandList.SetScissor(0, 0, m_width, m_height);
+			commandList.ClearColor(*m_colorTarget);
+			commandList.ClearDepth(*m_depthBuffer);
+
+			commandList.CloseAndExecute();
+			PROFILE_END();
+		}
+
+		{
+			PROFILE_BEGIN(itt_depth_prepass);
+
+			auto& commandList = GraphicsCommandList::Begin();
+
+			commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+			commandList.SetScissor(0, 0, m_width, m_height);
+			commandList.SetDepthStencilTarget(*m_depthBuffer);
+
+			m_mainScene->Update(commandList);
+			m_mainScene->Render(GetDefaultDepthPass(), commandList);
+
+			commandList.UnbindRenderTargets();
+
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			PROFILE_BEGIN(itt_ssao);
+
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_ssao->Render(commandList);
+
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			PROFILE_BEGIN(itt_shadows);
+
+			auto& commandList = GraphicsCommandList::Begin();
+			commandList.PIXBeginEvent("Shadows");
+
+			m_shadowBuffer->BeginRendering(commandList);
+
+			m_mainScene->RenderShadows(GetDefaultShadowPass(), commandList);
+
+			m_shadowBuffer->EndRendering(commandList);
+
+			commandList.PIXEndEvent();
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			if (!m_ssao->DebugDraw || !ssaoEnabled)
+			{
+				PROFILE_BEGIN(itt_opaque_pass);
+				auto& commandList = GraphicsCommandList::Begin();
+
+				commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+				commandList.SetScissor(0, 0, m_width, m_height);
+				commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+
+				m_mainScene->Update(commandList);
+				m_mainScene->Render(GetDefaultBasePass(), commandList);
+
+#if 0
+				if (true)
+				{
+					PROFILE_BEGIN(itt_particles);
+
+					auto& compCommandList = commandList.GetComputeCommandList();
+					m_particleEffectManager->Update(compCommandList, m_elapsedTime);
+					m_particleEffectManager->Render(commandList, m_camera, *m_colorTarget, *m_depthBuffer, *m_linearDepthBuffer);
+
+					PROFILE_END();
+				}
+#endif
+
+				commandList.CloseAndExecute();
+				PROFILE_END();
+			}
+		}
+
+		{
+			PROFILE_BEGIN(itt_postprocessing);
+
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_postProcessing->Render(commandList);
+
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_fxaa->Render(commandList);
+
+			commandList.CloseAndExecute();
+		}
+
+		if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+		{
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_postProcessing->FinalizePostProcessing(commandList);
+
+			commandList.CloseAndExecute();
+		}
+
+		DeviceManager::GetInstance().Present(m_colorTarget, bHDRPresent, params);
+	});
+
+	Renderer::GetInstance().Render();
 }
 
 

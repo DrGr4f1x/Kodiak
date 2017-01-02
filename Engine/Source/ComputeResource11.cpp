@@ -207,7 +207,7 @@ void ComputeResource::DispatchToRenderThread(ID3D11ShaderResourceView* srv, bool
 			auto thisResource = shared_from_this();
 			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> thisSRV = srv;
 
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisSRV](RenderTaskEnvironment& rte)
+			EnqueueRenderCommand([renderThreadData, thisResource, thisSRV]()
 			{
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisSRV.Get());
 			});
@@ -231,7 +231,7 @@ void ComputeResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav, uin
 			Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> thisUAV = uav;
 
 			// Texture is either null or fully loaded.  Either way, we can update the material on the render thread now
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisUAV, counterInitialValue](RenderTaskEnvironment& rte)
+			EnqueueRenderCommand([renderThreadData, thisResource, thisUAV, counterInitialValue]()
 			{
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisUAV.Get(), counterInitialValue);
 			});

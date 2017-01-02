@@ -46,6 +46,7 @@
 
 // Standard library
 #include <functional>
+#include <future>
 #include <list>
 #include <map>
 #include <memory>

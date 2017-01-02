@@ -434,7 +434,7 @@ void ComputeParameter::SubmitToRenderThread(array<byte, 64> data, int32_t index)
 	if (auto computeData = m_renderThreadData.lock())
 	{
 		auto thisParameter = shared_from_this();
-		Renderer::GetInstance().EnqueueTask([computeData, thisParameter, data, index](RenderTaskEnvironment& rte)
+		EnqueueRenderCommand([computeData, thisParameter, data, index]()
 		{
 			thisParameter->UpdateParameterOnRenderThread(data, index);
 			computeData->cbufferDirty = true;

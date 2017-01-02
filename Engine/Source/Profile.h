@@ -15,7 +15,6 @@
 
 extern __itt_domain* domain;
 extern __itt_string_handle* itt_update;
-extern __itt_string_handle* itt_render;
 extern __itt_string_handle* itt_draw_mesh;
 extern __itt_string_handle* itt_draw_model;
 extern __itt_string_handle* itt_scene_update;

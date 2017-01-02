@@ -49,7 +49,7 @@ void ShadowCamera::UpdateMatrix(
 	m_ShadowMatrix = Matrix4(AffineTransform(Matrix3::MakeScale(0.5f, -0.5f, 1.0f), Vector3(0.5f, 0.5f, 0.0f))) * m_viewProjMatrix;
 
 	auto thisCamera = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisCamera](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([thisCamera]()
 	{
 		auto proxy = thisCamera->GetProxy();
 		proxy->CopyFromShadowCamera(thisCamera.get());

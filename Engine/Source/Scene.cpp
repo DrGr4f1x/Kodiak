@@ -57,7 +57,7 @@ void Scene::AddStaticModel(shared_ptr<StaticModel> model)
 	auto thisScene = shared_from_this();
 	auto localModel = model;
 	
-	Renderer::GetInstance().EnqueueTask([localModel, thisScene](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([localModel, thisScene]()
 	{
 		thisScene->AddStaticModelDeferred(localModel->m_renderThreadData);
 	});
@@ -231,7 +231,7 @@ void Scene::RenderShadows(shared_ptr<RenderPass> renderPass, GraphicsCommandList
 void Scene::SetCamera(shared_ptr<Kodiak::Camera> camera)
 {
 	auto thisScene = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisScene, camera](RenderTaskEnvironment& rte) { thisScene->SetCameraDeferred(camera); });
+	EnqueueRenderCommand([thisScene, camera]() { thisScene->SetCameraDeferred(camera); });
 }
 
 

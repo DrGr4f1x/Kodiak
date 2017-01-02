@@ -66,7 +66,7 @@ void StaticMesh::AddMeshPart(StaticMeshPart part)
 
 	auto thisMesh = shared_from_this();
 	
-	Renderer::GetInstance().EnqueueTask([thisMesh, part](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([thisMesh, part]()
 	{
 		RenderThread::StaticMeshPartData data = { part.vertexBuffer, part.indexBuffer, part.material->GetRenderThreadData(), part.topology, part.indexCount, part.startIndex, part.baseVertexOffset };
 		thisMesh->m_renderThreadData->meshParts.emplace_back(data);
@@ -82,7 +82,7 @@ void StaticMesh::SetMatrix(const Matrix4& matrix)
 	DirectX::XMStoreFloat4x4(&matrixNonAligned, m_matrix);
 
 	auto staticMeshData = m_renderThreadData;
-	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([staticMeshData, matrixNonAligned]()
 	{
 		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
 		staticMeshData->isDirty = true;
@@ -98,7 +98,7 @@ void StaticMesh::ConcatenateMatrix(const Matrix4& matrix)
 	DirectX::XMStoreFloat4x4(&matrixNonAligned, m_matrix);
 
 	auto staticMeshData = m_renderThreadData;
-	Renderer::GetInstance().EnqueueTask([staticMeshData, matrixNonAligned](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([staticMeshData, matrixNonAligned]()
 	{
 		staticMeshData->matrix = Matrix4(DirectX::XMLoadFloat4x4(&matrixNonAligned));
 		staticMeshData->isDirty = true;
@@ -146,7 +146,7 @@ void StaticModel::AddMesh(shared_ptr<StaticMesh> mesh)
 	auto staticModelData = m_renderThreadData;
 	auto staticMeshData = mesh->m_renderThreadData;
 
-	Renderer::GetInstance().EnqueueTask([staticModelData, staticMeshData](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([staticModelData, staticMeshData]()
 	{
 		staticModelData->meshes.emplace_back(staticMeshData);
 	});
@@ -165,7 +165,7 @@ void StaticModel::SetMatrix(const Matrix4& matrix)
 {
 	m_matrix = matrix;
 	auto thisModel = shared_from_this();
-	Renderer::GetInstance().EnqueueTask([thisModel](RenderTaskEnvironment& rte)
+	EnqueueRenderCommand([thisModel]()
 	{
 		thisModel->m_renderThreadData->matrix = thisModel->GetMatrix();
 		thisModel->m_renderThreadData->isDirty = true;

@@ -34,6 +34,33 @@ using namespace DirectX;
 using namespace std;
 
 
+namespace Kodiak
+{
+
+void EnqueueRenderCommand(function<void()>&& command)
+{
+	auto& renderer = Renderer::GetInstance();
+
+	if (renderer.IsRenderThreadRunning())
+	{
+		renderer.EnqueueRenderCommand(move(command));
+	}
+	else
+	{
+		assert(GetThreadRole() == ThreadRole::Main);
+		command();
+	}
+}
+
+} // Kodiak namespace
+
+
+namespace
+{
+atomic_bool g_terminateRenderThread{ false };
+} // anonymous namespace
+
+
 Renderer& Renderer::GetInstance()
 {
 	static Renderer instance;
@@ -43,32 +70,46 @@ Renderer& Renderer::GetInstance()
 
 void Renderer::Initialize()
 {
-	m_renderTaskEnvironment.rootTask = nullptr;
-
 	SamplerManager::GetInstance().Initialize();
-
-	StartRenderTask();
 }
 
 
 void Renderer::Finalize()
 {
-	StopRenderTask();
-
-	m_renderTaskEnvironment.rootTask = nullptr;
-
+	if (m_renderThreadRunning)
+	{
+		StopRenderThread();
+	}
+	
 	SamplerManager::GetInstance().Shutdown();
 
 	DeviceManager::GetInstance().Finalize();
 }
 
 
-void Renderer::EnqueueTask(std::function<void(RenderTaskEnvironment&)> callback)
+void Renderer::EnableRenderThread(bool enable)
 {
-	if (!m_renderTaskEnvironment.stopRenderTask)
-	{
-		m_renderTaskQueue.push(callback);
-	}
+	assert(GetThreadRole() == ThreadRole::Main);
+
+	m_renderThreadStateChanged = (enable != m_renderThreadRunning);
+}
+
+
+void Renderer::ToggleRenderThread()
+{
+	EnableRenderThread(!m_renderThreadRunning);
+}
+
+
+bool Renderer::IsRenderThreadRunning() const
+{
+	return m_renderThreadRunning;
+}
+
+
+void Renderer::EnqueueRenderCommand(function<void()>&& command)
+{
+	m_renderCommandQueue.push(move(command));
 }
 
 
@@ -78,90 +119,64 @@ void Renderer::Update()
 }
 
 
-void Renderer::Render(shared_ptr<RootRenderTask> rootTask, bool bHDRPresent, const PresentParameters& params)
+void Renderer::Render()
 {
-	PROFILE_BEGIN(itt_render);
-
-	// Wait on the previous frame
-	while (!m_renderTaskEnvironment.frameCompleted)
+	// Start or stop the render thread if needed
+	if (m_renderThreadStateChanged)
 	{
-		this_thread::yield();
-	}
-
-	m_renderTaskEnvironment.frameCompleted = false;
-	m_renderTaskEnvironment.rootTask = rootTask;
-
-	// Start new frame
-	EnqueueTask([](RenderTaskEnvironment& rte) 
-	{ 
-		DeviceManager::GetInstance().BeginFrame(); 
-	});
-	
-	// Kick off rendering of root pipeline
-	EnqueueTask([](RenderTaskEnvironment& rte) { rte.rootTask->Start(); });
-
-	// Signal end of frame
-	EnqueueTask([bHDRPresent, params](RenderTaskEnvironment& rte)
-	{
-		rte.rootTask->Wait();
-
-		DeviceManager::GetInstance().Present(rte.rootTask->GetPresentSource(), bHDRPresent, params);
-
-		rte.currentFrame += 1;
-		rte.frameCompleted = true;
-	});
-
-	PROFILE_END();
-}
-
-
-void Renderer::StartRenderTask()
-{
-	if (m_renderTaskStarted)
-	{
-		StopRenderTask();
-	}
-
-	m_renderTaskEnvironment.stopRenderTask = false;
-
-	m_renderTask = create_task([&]
-	{
-		SetThreadRole(ThreadRole::RenderMain);
-
-		bool endRenderLoop = false;
-
-		// Loop until we're signalled to stop
-		while (!endRenderLoop)
+		if (m_renderThreadRunning)
 		{
-			// Process tasks until we've signalled frame complete
-			while (!m_renderTaskEnvironment.frameCompleted)
-			{
-				// Execute a render command, if one is available
-				std::function<void(RenderTaskEnvironment&)> command;
-				if (m_renderTaskQueue.try_pop(command))
-				{
-					command(m_renderTaskEnvironment);
-				}
-			}
-
-			// Only permit exit after completing the current frame
-			endRenderLoop = m_renderTaskEnvironment.stopRenderTask;
+			StopRenderThread();
 		}
+		else
+		{
+			StartRenderThread();
+		}
+		m_renderThreadStateChanged = false;
+	}
+
+	if (m_renderThreadRunning)
+	{
+		// TODO: Allow multiple frames in flight
+		atomic_bool frameComplete{ false };
+		EnqueueRenderCommand([&frameComplete]() { frameComplete = true; });
+		while (!frameComplete)
+		{
+			this_thread::yield();
+		}
+	}
+}
+
+
+void Renderer::StartRenderThread()
+{
+	assert(!m_renderThreadRunning);
+
+	g_terminateRenderThread = false;
+
+	m_renderThreadFuture = async(launch::async, [this]()
+	{
+		while (!g_terminateRenderThread)
+		{
+			function<void()> command;
+			if (this->m_renderCommandQueue.try_pop(command))
+			{
+				command();
+			}
+		}
+		this->m_renderCommandQueue.clear();
 	});
 
-	m_renderTaskStarted = true;
+	m_renderThreadRunning = true;
 }
 
 
-void Renderer::StopRenderTask()
+void Renderer::StopRenderThread()
 {
-	m_renderTaskEnvironment.stopRenderTask = true;
-	m_renderTask.wait();
-	m_renderTaskStarted = false;
-}
+	assert(m_renderThreadRunning);
+	assert(m_renderThreadFuture.valid());
 
-
-void Renderer::UpdateStaticModels()
-{
-	
+	g_terminateRenderThread = true;
+	m_renderThreadFuture.get();
+	m_renderThreadRunning = false;
 }
