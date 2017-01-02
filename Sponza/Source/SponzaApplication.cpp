@@ -126,6 +126,11 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 		PostQuitMessage(0);
 	}
 
+	if (m_inputState->IsFirstPressed(InputState::kKey_t))
+	{
+		Renderer::GetInstance().ToggleRenderThread();
+	}
+
 	m_cameraController->Update(static_cast<float>(timer->GetElapsedSeconds()));
 	const Vector3 sunDirection = Vector3(0.336f, 0.924f, -0.183f);
 	const float shadowDimX = 5000.0f;
@@ -140,8 +145,6 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 
 void SponzaApplication::OnRender()
 {
-	//auto rootTask = SetupFrame();
-
 	PresentParameters params;
 	params.ToeStrength = 0.01f;
 	params.PaperWhite = 200.0f;
@@ -149,8 +152,6 @@ void SponzaApplication::OnRender()
 	params.DebugMode = 0;
 
 	const bool bHDRPresent = false;
-	//Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
-
 	const bool ssaoEnabled = true;
 
 	EnqueueRenderCommand([params, ssaoEnabled, this, bHDRPresent]()
@@ -283,14 +284,6 @@ void SponzaApplication::OnRender()
 
 	Renderer::GetInstance().Render();
 }
-
-
-/*
-void SponzaApplication::OnRender()
-{
-
-}
-*/
 
 
 void SponzaApplication::OnDestroy()
