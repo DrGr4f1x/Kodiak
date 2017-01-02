@@ -24,7 +24,6 @@ class DepthBuffer;
 class FXAA;
 class ParticleEffectManager;
 class PostProcessing;
-class RootRenderTask;
 class SSAO;
 class Scene;
 class ShadowBuffer;
@@ -53,7 +52,6 @@ private:
 	void CreateEffects();
 	void CreateModel();
 	void SetupScene();
-	std::shared_ptr<RootRenderTask> SetupFrame();
 
 private:
 	std::shared_ptr<ColorBuffer>		m_colorTarget;

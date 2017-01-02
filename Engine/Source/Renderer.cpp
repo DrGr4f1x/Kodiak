@@ -20,7 +20,6 @@
 #include "IndexBuffer.h"
 #include "Model.h"
 #include "Profile.h"
-#include "RenderTask.h"
 #include "RenderUtils.h"
 #include "ResourceLoader.h"
 #include "SamplerManager.h"

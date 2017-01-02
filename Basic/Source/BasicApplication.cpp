@@ -29,7 +29,6 @@
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
-#include "Engine\Source\RenderTask.h"
 #include "Engine\Source\Scene.h"
 #include "Engine\Source\StepTimer.h"
 
@@ -318,31 +317,4 @@ void BasicApplication::SetupScene()
 	// Add camera and model to scene
 	m_mainScene->SetCamera(m_camera);
 	m_mainScene->AddStaticModel(m_boxModel);
-}
-
-
-shared_ptr<RootRenderTask> BasicApplication::SetupFrame()
-{
-	auto rootTask = make_shared<RootRenderTask>();
-	rootTask->SetName("Root task");
-	rootTask->Render = [this]
-	{
-		auto& commandList = GraphicsCommandList::Begin();
-
-		commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
-		commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-		commandList.SetScissor(0, 0, m_width, m_height);
-		commandList.ClearColor(*m_colorTarget);
-		commandList.ClearDepth(*m_depthBuffer);
-
-		m_mainScene->Update(commandList);
-		m_mainScene->Render(GetDefaultBasePass(), commandList);
-
-		commandList.CloseAndExecute();
-	};
-	
-
-	rootTask->Present(m_colorTarget);
-
-	return rootTask;
 }

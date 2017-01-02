@@ -14,20 +14,6 @@
 namespace Kodiak
 {
 
-// Forward declarations
-class Camera;
-class ColorBuffer;
-class CommandList;
-class DepthBuffer;
-class DeviceManager;
-class RootRenderTask;
-class Scene;
-class StaticModel;
-
-enum class ColorFormat;
-enum class DepthFormat;
-enum class Usage;
-
 
 void EnqueueRenderCommand(std::function<void()>&& command);
 

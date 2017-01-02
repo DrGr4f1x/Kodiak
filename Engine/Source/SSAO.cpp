@@ -20,7 +20,6 @@
 #include "DeviceManager.h"
 #include "Format.h"
 #include "Renderer.h"
-#include "RenderTask.h"
 #include "RenderUtils.h"
 
 
