@@ -344,9 +344,6 @@
     <ClInclude Include="Source\CameraController.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderTask.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ComputeKernel.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -604,9 +601,6 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\MaterialParameter.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderTask.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\ComputeKernel12.cpp">

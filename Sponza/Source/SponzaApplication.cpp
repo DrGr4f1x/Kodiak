@@ -34,7 +34,6 @@
 #include "Engine\Source\Profile.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
-#include "Engine\Source\RenderTask.h"
 #include "Engine\Source\SSAO.h"
 #include "Engine\Source\Scene.h"
 #include "Engine\Source\ShadowBuffer.h"
@@ -127,6 +126,11 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 		PostQuitMessage(0);
 	}
 
+	if (m_inputState->IsFirstPressed(InputState::kKey_t))
+	{
+		Renderer::GetInstance().ToggleRenderThread();
+	}
+
 	m_cameraController->Update(static_cast<float>(timer->GetElapsedSeconds()));
 	const Vector3 sunDirection = Vector3(0.336f, 0.924f, -0.183f);
 	const float shadowDimX = 5000.0f;
@@ -141,8 +145,6 @@ void SponzaApplication::OnUpdate(StepTimer* timer)
 
 void SponzaApplication::OnRender()
 {
-	auto rootTask = SetupFrame();
-
 	PresentParameters params;
 	params.ToeStrength = 0.01f;
 	params.PaperWhite = 200.0f;
@@ -150,16 +152,138 @@ void SponzaApplication::OnRender()
 	params.DebugMode = 0;
 
 	const bool bHDRPresent = false;
-	Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
+	const bool ssaoEnabled = true;
+
+	EnqueueRenderCommand([params, ssaoEnabled, this, bHDRPresent]()
+	{
+		{
+			PROFILE_BEGIN(itt_frame_setup);
+			auto& commandList = GraphicsCommandList::Begin();
+
+			commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+			commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+			commandList.SetScissor(0, 0, m_width, m_height);
+			commandList.ClearColor(*m_colorTarget);
+			commandList.ClearDepth(*m_depthBuffer);
+
+			commandList.CloseAndExecute();
+			PROFILE_END();
+		}
+
+		{
+			PROFILE_BEGIN(itt_depth_prepass);
+
+			auto& commandList = GraphicsCommandList::Begin();
+
+			commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+			commandList.SetScissor(0, 0, m_width, m_height);
+			commandList.SetDepthStencilTarget(*m_depthBuffer);
+
+			m_mainScene->Update(commandList);
+			m_mainScene->Render(GetDefaultDepthPass(), commandList);
+
+			commandList.UnbindRenderTargets();
+
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			PROFILE_BEGIN(itt_ssao);
+
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_ssao->Render(commandList);
+
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			PROFILE_BEGIN(itt_shadows);
+
+			auto& commandList = GraphicsCommandList::Begin();
+			commandList.PIXBeginEvent("Shadows");
+
+			m_shadowBuffer->BeginRendering(commandList);
+
+			m_mainScene->RenderShadows(GetDefaultShadowPass(), commandList);
+
+			m_shadowBuffer->EndRendering(commandList);
+
+			commandList.PIXEndEvent();
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			if (!m_ssao->DebugDraw || !ssaoEnabled)
+			{
+				PROFILE_BEGIN(itt_opaque_pass);
+				auto& commandList = GraphicsCommandList::Begin();
+
+				commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+				commandList.SetScissor(0, 0, m_width, m_height);
+				commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+
+				m_mainScene->Update(commandList);
+				m_mainScene->Render(GetDefaultBasePass(), commandList);
+
+#if 0
+				if (true)
+				{
+					PROFILE_BEGIN(itt_particles);
+
+					auto& compCommandList = commandList.GetComputeCommandList();
+					m_particleEffectManager->Update(compCommandList, m_elapsedTime);
+					m_particleEffectManager->Render(commandList, m_camera, *m_colorTarget, *m_depthBuffer, *m_linearDepthBuffer);
+
+					PROFILE_END();
+				}
+#endif
+
+				commandList.CloseAndExecute();
+				PROFILE_END();
+			}
+		}
+
+		{
+			PROFILE_BEGIN(itt_postprocessing);
+
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_postProcessing->Render(commandList);
+
+			commandList.CloseAndExecute();
+
+			PROFILE_END();
+		}
+
+		{
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_fxaa->Render(commandList);
+
+			commandList.CloseAndExecute();
+		}
+
+		if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
+		{
+			auto& commandList = GraphicsCommandList::Begin();
+
+			m_postProcessing->FinalizePostProcessing(commandList);
+
+			commandList.CloseAndExecute();
+		}
+
+		DeviceManager::GetInstance().Present(m_colorTarget, bHDRPresent, params);
+	});
+
+	Renderer::GetInstance().Render();
 }
-
-
-/*
-void SponzaApplication::OnRender()
-{
-
-}
-*/
 
 
 void SponzaApplication::OnDestroy()
@@ -395,177 +519,4 @@ void SponzaApplication::SetupScene()
 	m_mainScene->SsaoFullscreen = m_ssaoFullscreen;
 #endif
 	m_mainScene->AddStaticModel(m_sponzaModel);
-}
-
-
-shared_ptr<RootRenderTask> SponzaApplication::SetupFrame()
-{
-	auto rootTask = make_shared<RootRenderTask>();
-	rootTask->SetName("Root task");
-	rootTask->Render = [this]
-	{
-		PROFILE_BEGIN(itt_frame_setup);
-		auto& commandList = GraphicsCommandList::Begin();
-
-		commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
-		commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-		commandList.SetScissor(0, 0, m_width, m_height);
-		commandList.ClearColor(*m_colorTarget);
-		commandList.ClearDepth(*m_depthBuffer);
-
-		commandList.CloseAndExecute();
-		PROFILE_END();
-	};
-	
-
-	auto depthTask = make_shared<RenderTask>();
-	depthTask->SetName("Depth prepass");
-	depthTask->Render = [this]
-	{
-		PROFILE_BEGIN(itt_depth_prepass);
-
-		auto& commandList = GraphicsCommandList::Begin();
-
-		commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-		commandList.SetScissor(0, 0, m_width, m_height);
-		commandList.SetDepthStencilTarget(*m_depthBuffer);
-
-		m_mainScene->Update(commandList);
-		m_mainScene->Render(GetDefaultDepthPass(), commandList);
-		
-		commandList.UnbindRenderTargets();
-
-		commandList.CloseAndExecute();
-
-		PROFILE_END();
-	};
-	rootTask->Continue(depthTask);
-
-
-	bool ssaoEnabled = true;
-
-	auto ssaoTask = make_shared<RenderTask>();
-	ssaoTask->SetName("SSAO");
-	ssaoTask->SetEnabled(ssaoEnabled);
-	ssaoTask->Render = [this]
-	{
-		PROFILE_BEGIN(itt_ssao);
-
-		auto& commandList = GraphicsCommandList::Begin();
-
-		m_ssao->Render(commandList);
-
-		commandList.CloseAndExecute();
-
-		PROFILE_END();
-	};
-	depthTask->Continue(ssaoTask);
-
-
-	auto shadowTask = make_shared<RenderTask>();
-	shadowTask->SetName("Shadows");
-	shadowTask->Render = [this]
-	{
-		PROFILE_BEGIN(itt_shadows);
-
-		auto& commandList = GraphicsCommandList::Begin();
-		commandList.PIXBeginEvent("Shadows");
-
-		m_shadowBuffer->BeginRendering(commandList);
-
-		m_mainScene->RenderShadows(GetDefaultShadowPass(), commandList);
-
-		m_shadowBuffer->EndRendering(commandList);
-
-		commandList.PIXEndEvent();
-		commandList.CloseAndExecute();
-
-		PROFILE_END();
-	};
-	ssaoTask->Continue(shadowTask);
-
-
-	auto opaqueTask = make_shared<RenderTask>();
-	opaqueTask->SetName("Opaque pass");
-	opaqueTask->Render = [this, ssaoEnabled]
-	{
-		if (!m_ssao->DebugDraw || !ssaoEnabled)
-		{
-			PROFILE_BEGIN(itt_opaque_pass);
-			auto& commandList = GraphicsCommandList::Begin();
-
-			commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-			commandList.SetScissor(0, 0, m_width, m_height);
-			commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
-
-			m_mainScene->Update(commandList);
-			m_mainScene->Render(GetDefaultBasePass(), commandList);
-
-#if 0
-			if(true)
-			{
-				PROFILE_BEGIN(itt_particles);
-
-				auto& compCommandList = commandList.GetComputeCommandList();
-				m_particleEffectManager->Update(compCommandList, m_elapsedTime);
-				m_particleEffectManager->Render(commandList, m_camera, *m_colorTarget, *m_depthBuffer, *m_linearDepthBuffer);
-
-				PROFILE_END();
-			}
-#endif
-
-			commandList.CloseAndExecute();
-			PROFILE_END();
-		}
-	};
-	shadowTask->Continue(opaqueTask);
-
-
-	auto postTask = make_shared<RenderTask>();
-	postTask->SetName("Postprocessing");
-	postTask->Render = [this]
-	{
-		PROFILE_BEGIN(itt_postprocessing);
-
-		auto& commandList = GraphicsCommandList::Begin();
-
-		m_postProcessing->Render(commandList);
-
-		commandList.CloseAndExecute();
-
-		PROFILE_END();
-	};
-	opaqueTask->Continue(postTask);
-
-	auto fxaaTask = make_shared<RenderTask>();
-	fxaaTask->SetName("FXAA");
-	fxaaTask->Render = [this]
-	{
-		auto& commandList = GraphicsCommandList::Begin();
-
-		m_fxaa->Render(commandList);
-
-		commandList.CloseAndExecute();
-	};
-	postTask->Continue(fxaaTask);
-
-	if (!DeviceManager::GetInstance().SupportsTypedUAVLoad_R11G11B10_FLOAT())
-	{
-		auto finalizePostTask = make_shared<RenderTask>();
-		finalizePostTask->SetName("Finalize Post");
-
-		finalizePostTask->Render = [this]
-		{
-			auto& commandList = GraphicsCommandList::Begin();
-
-			m_postProcessing->FinalizePostProcessing(commandList);
-
-			commandList.CloseAndExecute();
-		};
-		fxaaTask->Continue(finalizePostTask);
-	}
-
-	rootTask->Present(m_colorTarget);
-
-	return rootTask;
 }

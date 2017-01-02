@@ -192,7 +192,7 @@ void ComputeResource::DispatchToRenderThread(D3D12_CPU_DESCRIPTOR_HANDLE cpuHand
 		else
 		{
 			auto thisResource = shared_from_this();
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, cpuHandle](RenderTaskEnvironment& rte)
+			EnqueueRenderCommand([renderThreadData, thisResource, cpuHandle]()
 			{
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), cpuHandle);
 			});

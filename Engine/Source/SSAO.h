@@ -22,7 +22,6 @@ class Camera;
 class ComputeCommandList;
 class DepthBuffer;
 class GraphicsCommandList;
-class RenderTask;
 
 
 class SSAO : public std::enable_shared_from_this<SSAO>

@@ -186,7 +186,7 @@ void MaterialParameter::SubmitToRenderThread()
 	{
 		auto thisParameter = shared_from_this();
 		auto thisData = m_data;
-		Renderer::GetInstance().EnqueueTask([materialData, thisParameter, thisData](RenderTaskEnvironment& rte)
+		EnqueueRenderCommand([materialData, thisParameter, thisData]()
 		{
 			thisParameter->UpdateParameterOnRenderThread(thisData);
 		});

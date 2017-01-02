@@ -47,6 +47,7 @@
 // Standard library
 #include <array>
 #include <functional>
+#include <future>
 #include <list>
 #include <map>
 #include <memory>

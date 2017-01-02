@@ -29,7 +29,6 @@
 #include "Engine\Source\Model.h"
 #include "Engine\Source\Renderer.h"
 #include "Engine\Source\RenderPass.h"
-#include "Engine\Source\RenderTask.h"
 #include "Engine\Source\Scene.h"
 #include "Engine\Source\StepTimer.h"
 
@@ -67,7 +66,7 @@ void BasicApplication::OnStartup()
 
 	// Setup renderer
 	auto& renderer = Renderer::GetInstance();
-	renderer.EnableRenderThread(false);
+	renderer.EnableRenderThread(true);
 }
 
 
@@ -89,6 +88,11 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 	if (m_inputState->IsFirstPressed(InputState::kKey_escape))
 	{
 		PostQuitMessage(0);
+	}
+
+	if (m_inputState->IsFirstPressed(InputState::kKey_t))
+	{
+		Renderer::GetInstance().ToggleRenderThread();
 	}
 
 	m_cameraController->Update(static_cast<float>(timer->GetElapsedSeconds()));
@@ -165,7 +169,7 @@ void BasicApplication::OnUpdate(StepTimer* timer)
 
 void BasicApplication::OnRender()
 {
-	auto rootTask = SetupFrame();
+	//auto rootTask = SetupFrame();
 
 	PresentParameters params;
 	params.ToeStrength = 0.01f;
@@ -175,7 +179,27 @@ void BasicApplication::OnRender()
 
 	const bool bHDRPresent = true;
 
-	Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
+	//Renderer::GetInstance().Render(rootTask, bHDRPresent, params);
+
+	EnqueueRenderCommand([params, bHDRPresent, this]()
+	{
+		auto& commandList = GraphicsCommandList::Begin();
+
+		commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
+		commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
+		commandList.SetScissor(0, 0, m_width, m_height);
+		commandList.ClearColor(*m_colorTarget);
+		commandList.ClearDepth(*m_depthBuffer);
+
+		m_mainScene->Update(commandList);
+		m_mainScene->Render(GetDefaultBasePass(), commandList);
+
+		commandList.CloseAndExecute();
+
+		DeviceManager::GetInstance().Present(m_colorTarget, bHDRPresent, params);
+	});
+
+	Renderer::GetInstance().Render();
 }
 
 
@@ -293,31 +317,4 @@ void BasicApplication::SetupScene()
 	// Add camera and model to scene
 	m_mainScene->SetCamera(m_camera);
 	m_mainScene->AddStaticModel(m_boxModel);
-}
-
-
-shared_ptr<RootRenderTask> BasicApplication::SetupFrame()
-{
-	auto rootTask = make_shared<RootRenderTask>();
-	rootTask->SetName("Root task");
-	rootTask->Render = [this]
-	{
-		auto& commandList = GraphicsCommandList::Begin();
-
-		commandList.SetRenderTarget(*m_colorTarget, *m_depthBuffer);
-		commandList.SetViewport(0.0f, 0.0f, static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 1.0f);
-		commandList.SetScissor(0, 0, m_width, m_height);
-		commandList.ClearColor(*m_colorTarget);
-		commandList.ClearDepth(*m_depthBuffer);
-
-		m_mainScene->Update(commandList);
-		m_mainScene->Render(GetDefaultBasePass(), commandList);
-
-		commandList.CloseAndExecute();
-	};
-	
-
-	rootTask->Present(m_colorTarget);
-
-	return rootTask;
 }

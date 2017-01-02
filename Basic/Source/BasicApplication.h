@@ -20,7 +20,6 @@ class Camera;
 class CameraController;
 class ColorBuffer;
 class DepthBuffer;
-class RootRenderTask;
 class Scene;
 class StaticModel;
 
@@ -43,7 +42,6 @@ private:
 	void CreateMaterials();
 	void CreateModel();
 	void SetupScene();
-	std::shared_ptr<RootRenderTask> SetupFrame();
 
 private:
 	std::shared_ptr<ColorBuffer>		m_colorTarget;

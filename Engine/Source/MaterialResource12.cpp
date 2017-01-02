@@ -204,7 +204,7 @@ void MaterialResource::DispatchToRenderThread(D3D12_CPU_DESCRIPTOR_HANDLE cpuHan
 		else
 		{
 			auto thisResource = shared_from_this();
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, cpuHandle](RenderTaskEnvironment& rte)
+			EnqueueRenderCommand([renderThreadData, thisResource, cpuHandle]()
 			{
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), cpuHandle);
 			});
@@ -222,7 +222,7 @@ void MaterialResource::DispatchToRenderThreadNoLock(shared_ptr<RenderThread::Mat
 	else
 	{
 		auto thisResource = shared_from_this();
-		Renderer::GetInstance().EnqueueTask([materialData, thisResource, cpuHandle](RenderTaskEnvironment& rte)
+		EnqueueRenderCommand([materialData, thisResource, cpuHandle]()
 		{
 			thisResource->UpdateResourceOnRenderThread(materialData.get(), cpuHandle);
 		});

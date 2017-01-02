@@ -218,7 +218,7 @@ void MaterialResource::DispatchToRenderThread(ID3D11ShaderResourceView* srv, boo
 			auto thisResource = shared_from_this();
 			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> thisSRV = srv;
 
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisSRV](RenderTaskEnvironment& rte)
+			EnqueueRenderCommand([renderThreadData, thisResource, thisSRV]()
 			{
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisSRV.Get());
 			});
@@ -241,7 +241,7 @@ void MaterialResource::DispatchToRenderThread(ID3D11UnorderedAccessView* uav, bo
 			auto thisResource = shared_from_this();
 			Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> thisUAV = uav;
 
-			Renderer::GetInstance().EnqueueTask([renderThreadData, thisResource, thisUAV](RenderTaskEnvironment& rte)
+			EnqueueRenderCommand([renderThreadData, thisResource, thisUAV]()
 			{
 				thisResource->UpdateResourceOnRenderThread(renderThreadData.get(), thisUAV.Get());
 			});
