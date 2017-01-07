@@ -428,6 +428,9 @@
     <ClInclude Include="Source\IAsyncResource.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SamplerDesc.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Stdafx.cpp" />
@@ -679,6 +682,12 @@
     </ClCompile>
     <ClCompile Include="Source\IAsyncResource.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderEnums12.cpp">
+      <Filter>Rendering\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderEnums11.cpp">
+      <Filter>Rendering\DX11</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

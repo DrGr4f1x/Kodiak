@@ -13,10 +13,34 @@
 
 #include "RenderEnums.h"
 #include "PipelineState.h"
+#include "SamplerDesc.h"
 
 
 using namespace Kodiak;
+using namespace std;
 
+
+static vector<pair<string, SamplerDesc>> s_namedSamplers;
+static bool s_namedSamplersInitialized{ false };
+static std::shared_mutex s_namedSamplerMutex;
+
+
+void InitializeNamedSamplers()
+{
+	if (s_namedSamplersInitialized) return;
+
+	unique_lock<shared_mutex> CS(s_namedSamplerMutex);
+
+	s_namedSamplers.reserve(16);
+	s_namedSamplers.push_back(make_pair("AnisotropicWrap", CommonStates::AnisotropicWrap()));
+	s_namedSamplers.push_back(make_pair("LinearSampler", CommonStates::LinearClamp()));
+	s_namedSamplers.push_back(make_pair("PointSampler", CommonStates::PointClamp()));
+	s_namedSamplers.push_back(make_pair("LinearBorderSampler", CommonStates::LinearBorder()));
+	s_namedSamplers.push_back(make_pair("PointBorderSampler", CommonStates::PointBorder()));
+	s_namedSamplers.push_back(make_pair("ShadowSampler", CommonStates::ShadowSampler()));
+
+	s_namedSamplersInitialized = true;
+}
 
 const BlendStateDesc& CommonStates::Opaque()
 {
@@ -117,4 +141,97 @@ const RasterizerStateDesc& CommonStates::Shadow()
 	desc.slopeScaledDepthBias = -1.5f;
 	desc.depthBias = -100;
 	return desc;
+}
+
+
+const SamplerDesc& CommonStates::AnisotropicWrap()
+{
+	static SamplerDesc desc{};
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::LinearClamp()
+{
+	static SamplerDesc desc{ TextureFilter::MinMagMipLinear };
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::PointClamp()
+{
+	static SamplerDesc desc{ TextureFilter::MinMagMipPoint };
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::LinearBorder()
+{
+	static SamplerDesc desc{ TextureFilter::MinMagMipLinear, TextureAddress::Border };
+	desc.SetBorderColor(Color{ 0.0f, 0.0f, 0.0f, 0.0f });
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::PointBorder()
+{
+	static SamplerDesc desc{ TextureFilter::MinMagMipPoint, TextureAddress::Border };
+	desc.SetBorderColor(Color{ 0.0f, 0.0f, 0.0f, 0.0f });
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::ShadowSampler()
+{
+	static SamplerDesc desc{ TextureFilter::ComparisonMinMagLinearMipPoint, TextureAddress::Clamp };
+	desc.comparisonFunc = ComparisonFunc::GreaterEqual;
+	desc.SetBorderColor(Color{ 0.0f, 0.0f, 0.0f, 0.0f });
+	return desc;
+}
+
+
+void CommonStates::AddNamedSampler(const string& name, const SamplerDesc& samplerDesc)
+{
+	InitializeNamedSamplers();
+
+	bool found = false;
+	{
+		shared_lock<shared_mutex> CS(s_namedSamplerMutex);
+
+		for (const auto& namedSampler : s_namedSamplers)
+		{
+			if (namedSampler.first == name)
+			{
+				found = true;
+				break;
+			}
+		}
+	}
+
+	if (!found)
+	{
+		unique_lock<shared_mutex> CS(s_namedSamplerMutex);
+
+		s_namedSamplers.push_back(make_pair(name, samplerDesc));
+	}
+}
+
+
+const SamplerDesc& CommonStates::NamedSampler(const string& name)
+{
+	InitializeNamedSamplers();
+
+	shared_lock<shared_mutex> CS(s_namedSamplerMutex);
+
+	for (const auto& namedSampler : s_namedSamplers)
+	{
+		if (namedSampler.first == name)
+		{
+			return namedSampler.second;
+		}
+	}
+
+	assert_msg(false, "Named sampler %s not found!", name.c_str());
+	static SamplerDesc defaultDesc;
+	return defaultDesc;
 }

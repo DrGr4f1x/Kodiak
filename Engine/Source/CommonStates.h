@@ -16,6 +16,7 @@ namespace Kodiak
 struct BlendStateDesc;
 struct DepthStencilStateDesc;
 struct RasterizerStateDesc;
+struct SamplerDesc;
 
 class CommonStates
 {
@@ -39,6 +40,16 @@ public:
 	static const RasterizerStateDesc& CullCounterClockwise();
 	static const RasterizerStateDesc& Wireframe();
 	static const RasterizerStateDesc& Shadow();
+
+	// Sampler states
+	static const SamplerDesc& AnisotropicWrap();
+	static const SamplerDesc& LinearClamp();
+	static const SamplerDesc& PointClamp();
+	static const SamplerDesc& LinearBorder();
+	static const SamplerDesc& PointBorder();
+	static const SamplerDesc& ShadowSampler();
+	static void AddNamedSampler(const std::string& name, const SamplerDesc& desc);
+	static const SamplerDesc& NamedSampler(const std::string& name);
 };
 
 } // namespace Kodiak

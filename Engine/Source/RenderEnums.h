@@ -22,6 +22,9 @@
 namespace Kodiak
 {
 
+extern const float Float32Max;
+
+
 enum class PrimitiveTopology
 {
 	PointList = D3D_PRIMITIVE_TOPOLOGY_POINTLIST,
