@@ -71,7 +71,7 @@ void FXAA::Initialize(uint32_t width, uint32_t height)
 }
 
 
-void FXAA::Render(GraphicsCommandList& commandList)
+void FXAA::Render(ComputeCommandList& commandList)
 {
 	commandList.PIXBeginEvent("FXAA");
 
@@ -112,9 +112,8 @@ void FXAA::Render(GraphicsCommandList& commandList)
 			computeKernel.GetResource("Luma")->SetUAVImmediate(*m_lumaBuffer);
 		}
 
-		auto& compCommandList = commandList.GetComputeCommandList();
-		computeKernel.Dispatch2D(compCommandList, target->GetWidth(), target->GetHeight());
-		computeKernel.UnbindUAVs(compCommandList);
+		computeKernel.Dispatch2D(commandList, target->GetWidth(), target->GetHeight());
+		computeKernel.UnbindUAVs(commandList);
 
 		commandList.PIXEndEvent();
 	}
@@ -148,9 +147,8 @@ void FXAA::Render(GraphicsCommandList& commandList)
 		m_resolveWorkCs.GetResource("WorkCounterH")->SetSRVImmediate(*m_fxaaWorkQueueH.GetCounterBuffer());
 		m_resolveWorkCs.GetResource("WorkCounterV")->SetSRVImmediate(*m_fxaaWorkQueueV.GetCounterBuffer());
 
-		auto& compCommandList = commandList.GetComputeCommandList();
-		m_resolveWorkCs.Dispatch(compCommandList, 1, 1, 1);
-		m_resolveWorkCs.UnbindUAVs(compCommandList);
+		m_resolveWorkCs.Dispatch(commandList, 1, 1, 1);
+		m_resolveWorkCs.UnbindUAVs(commandList);
 
 		commandList.TransitionResource(*target, ResourceState::UnorderedAccess);
 		commandList.TransitionResource(m_indirectParameters, ResourceState::IndirectArgument);
@@ -169,8 +167,8 @@ void FXAA::Render(GraphicsCommandList& commandList)
 			computeKernel.GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueH);
 			computeKernel.GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueH);
 
-			computeKernel.DispatchIndirect(compCommandList, m_indirectParameters, 0);
-			computeKernel.UnbindUAVs(compCommandList);
+			computeKernel.DispatchIndirect(commandList, m_indirectParameters, 0);
+			computeKernel.UnbindUAVs(commandList);
 		}
 
 
@@ -184,11 +182,11 @@ void FXAA::Render(GraphicsCommandList& commandList)
 			computeKernel.GetResource("WorkQueue")->SetSRVImmediate(m_fxaaWorkQueueV);
 			computeKernel.GetResource("ColorQueue")->SetSRVImmediate(m_fxaaColorQueueV);
 
-			computeKernel.DispatchIndirect(compCommandList, m_indirectParameters, 12);
-			computeKernel.UnbindUAVs(compCommandList);
+			computeKernel.DispatchIndirect(commandList, m_indirectParameters, 12);
+			computeKernel.UnbindUAVs(commandList);
 		}
 
-		compCommandList.InsertUAVBarrier(*target);
+		commandList.InsertUAVBarrier(*target);
 
 		commandList.PIXEndEvent();
 	}

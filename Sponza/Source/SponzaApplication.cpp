@@ -263,7 +263,7 @@ void SponzaApplication::OnRender()
 		}
 
 		{
-			auto& commandList = GraphicsCommandList::Begin();
+			auto& commandList = ComputeCommandList::Begin();
 
 			m_fxaa->Render(commandList);
 
