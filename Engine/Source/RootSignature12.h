@@ -16,6 +16,8 @@ namespace Kodiak
 // Forward declarations
 class DescriptorCache;
 class DeviceManager;
+struct SamplerDesc;
+
 
 class RootParameter
 {
@@ -172,7 +174,7 @@ public:
 	}
 
 
-	void InitStaticSampler(uint32_t _register, const D3D12_SAMPLER_DESC& nonStaticSamplerDesc,
+	void InitStaticSampler(uint32_t _register, const SamplerDesc& nonStaticSamplerDesc,
 		D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL);
 
 

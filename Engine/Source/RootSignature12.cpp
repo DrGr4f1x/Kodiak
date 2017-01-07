@@ -14,6 +14,7 @@
 
 #include "DeviceManager12.h"
 #include "RenderUtils.h"
+#include "SamplerDesc.h"
 
 
 using namespace Kodiak;
@@ -32,22 +33,22 @@ void RootSignature::DestroyAll(void)
 
 void RootSignature::InitStaticSampler(
 	uint32_t _register,
-	const D3D12_SAMPLER_DESC& nonStaticSamplerDesc,
+	const SamplerDesc& nonStaticSamplerDesc,
 	D3D12_SHADER_VISIBILITY visibility)
 {
 	assert(m_numInitializedStaticSamplers < m_numSamplers);
 	D3D12_STATIC_SAMPLER_DESC& staticSamplerDesc = m_samplerArray[m_numInitializedStaticSamplers++];
 
-	staticSamplerDesc.Filter = nonStaticSamplerDesc.Filter;
-	staticSamplerDesc.AddressU = nonStaticSamplerDesc.AddressU;
-	staticSamplerDesc.AddressV = nonStaticSamplerDesc.AddressV;
-	staticSamplerDesc.AddressW = nonStaticSamplerDesc.AddressW;
-	staticSamplerDesc.MipLODBias = nonStaticSamplerDesc.MipLODBias;
-	staticSamplerDesc.MaxAnisotropy = nonStaticSamplerDesc.MaxAnisotropy;
-	staticSamplerDesc.ComparisonFunc = nonStaticSamplerDesc.ComparisonFunc;
+	staticSamplerDesc.Filter = static_cast<D3D12_FILTER>(nonStaticSamplerDesc.filter);
+	staticSamplerDesc.AddressU = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(nonStaticSamplerDesc.addressU);
+	staticSamplerDesc.AddressV = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(nonStaticSamplerDesc.addressV);
+	staticSamplerDesc.AddressW = static_cast<D3D12_TEXTURE_ADDRESS_MODE>(nonStaticSamplerDesc.addressW);
+	staticSamplerDesc.MipLODBias = nonStaticSamplerDesc.mipLODBias;
+	staticSamplerDesc.MaxAnisotropy = nonStaticSamplerDesc.maxAnisotropy;
+	staticSamplerDesc.ComparisonFunc = static_cast<D3D12_COMPARISON_FUNC>(nonStaticSamplerDesc.comparisonFunc);
 	staticSamplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-	staticSamplerDesc.MinLOD = nonStaticSamplerDesc.MinLOD;
-	staticSamplerDesc.MaxLOD = nonStaticSamplerDesc.MaxLOD;
+	staticSamplerDesc.MinLOD = nonStaticSamplerDesc.minLOD;
+	staticSamplerDesc.MaxLOD = nonStaticSamplerDesc.maxLOD;
 	staticSamplerDesc.ShaderRegister = _register;
 	staticSamplerDesc.RegisterSpace = 0;
 	staticSamplerDesc.ShaderVisibility = visibility;
@@ -58,25 +59,25 @@ void RootSignature::InitStaticSampler(
 	{
 		warn_once_if_not(
 			// Transparent Black
-			nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
-			nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
-			nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
-			nonStaticSamplerDesc.BorderColor[3] == 0.0f ||
+			nonStaticSamplerDesc.borderColor[0] == 0.0f &&
+			nonStaticSamplerDesc.borderColor[1] == 0.0f &&
+			nonStaticSamplerDesc.borderColor[2] == 0.0f &&
+			nonStaticSamplerDesc.borderColor[3] == 0.0f ||
 			// Opaque Black
-			nonStaticSamplerDesc.BorderColor[0] == 0.0f &&
-			nonStaticSamplerDesc.BorderColor[1] == 0.0f &&
-			nonStaticSamplerDesc.BorderColor[2] == 0.0f &&
-			nonStaticSamplerDesc.BorderColor[3] == 1.0f ||
+			nonStaticSamplerDesc.borderColor[0] == 0.0f &&
+			nonStaticSamplerDesc.borderColor[1] == 0.0f &&
+			nonStaticSamplerDesc.borderColor[2] == 0.0f &&
+			nonStaticSamplerDesc.borderColor[3] == 1.0f ||
 			// Opaque White
-			nonStaticSamplerDesc.BorderColor[0] == 1.0f &&
-			nonStaticSamplerDesc.BorderColor[1] == 1.0f &&
-			nonStaticSamplerDesc.BorderColor[2] == 1.0f &&
-			nonStaticSamplerDesc.BorderColor[3] == 1.0f,
+			nonStaticSamplerDesc.borderColor[0] == 1.0f &&
+			nonStaticSamplerDesc.borderColor[1] == 1.0f &&
+			nonStaticSamplerDesc.borderColor[2] == 1.0f &&
+			nonStaticSamplerDesc.borderColor[3] == 1.0f,
 			"Sampler border color does not match static sampler limitations");
 
-		if(nonStaticSamplerDesc.BorderColor[3] == 1.0f)
+		if(nonStaticSamplerDesc.borderColor[3] == 1.0f)
 		{
-			if(nonStaticSamplerDesc.BorderColor[0] == 1.0f)
+			if(nonStaticSamplerDesc.borderColor[0] == 1.0f)
 			{
 				staticSamplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
 			}

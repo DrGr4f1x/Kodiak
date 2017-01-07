@@ -153,14 +153,14 @@ const SamplerDesc& CommonStates::AnisotropicWrap()
 
 const SamplerDesc& CommonStates::LinearClamp()
 {
-	static SamplerDesc desc{ TextureFilter::MinMagMipLinear };
+	static SamplerDesc desc{ TextureFilter::MinMagMipLinear, TextureAddress::Clamp };
 	return desc;
 }
 
 
 const SamplerDesc& CommonStates::PointClamp()
 {
-	static SamplerDesc desc{ TextureFilter::MinMagMipPoint };
+	static SamplerDesc desc{ TextureFilter::MinMagMipPoint, TextureAddress::Clamp };
 	return desc;
 }
 

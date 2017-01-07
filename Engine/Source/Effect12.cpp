@@ -11,11 +11,11 @@
 
 #include "Effect.h"
 
+#include "CommonStates.h"
 #include "InputLayout12.h"
 #include "Material.h"
 #include "RenderEnums.h"
 #include "RootSignature12.h"
-#include "SamplerManager.h"
 #include "Shader.h"
 #include "ShaderResource12.h"
 
@@ -463,15 +463,11 @@ void Effect::ProcessShaderBindings(uint32_t& rootIndex, IShader* shader)
 	}
 
 	// Samplers
-	auto& samplerManager = SamplerManager::GetInstance();
-
 	for (const auto& sampler : shaderSig.samplers)
 	{
-		assert(samplerManager.IsBuiltInSamplerState(sampler.name));
+		const auto& samplerDesc = CommonStates::NamedSampler(sampler.name);
 
-		auto state = samplerManager.GetSamplerState(sampler.name);
-
-		rootSig.InitStaticSampler(sampler.shaderRegister[0], state->GetDesc(), s_shaderVisibility[shaderIndex]);
+		rootSig.InitStaticSampler(sampler.shaderRegister[0], samplerDesc, s_shaderVisibility[shaderIndex]);
 	}
 }
 

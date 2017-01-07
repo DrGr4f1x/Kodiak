@@ -12,12 +12,12 @@
 #include "ComputeKernel12.h"
 
 #include "CommandList12.h"
+#include "CommonStates.h"
 #include "ComputeConstantBuffer.h"
 #include "ComputeParameter.h"
 #include "ComputeResource12.h"
 #include "PipelineState12.h"
 #include "RootSignature12.h"
-#include "SamplerManager.h"
 
 
 using namespace Kodiak;
@@ -334,15 +334,11 @@ void ComputeKernel::SetupKernel()
 	}
 
 	// Samplers
-	auto& samplerManager = SamplerManager::GetInstance();
-
 	for (const auto& sampler : shaderSig.samplers)
 	{
-		assert(samplerManager.IsBuiltInSamplerState(sampler.name));
+		const auto& samplerDesc = CommonStates::NamedSampler(sampler.name);
 
-		auto state = samplerManager.GetSamplerState(sampler.name);
-
-		rootSig.InitStaticSampler(sampler.shaderRegister[0], state->GetDesc(), D3D12_SHADER_VISIBILITY_ALL);
+		rootSig.InitStaticSampler(sampler.shaderRegister[0], samplerDesc, D3D12_SHADER_VISIBILITY_ALL);
 	}
 
 	// Finalize the Root Signature

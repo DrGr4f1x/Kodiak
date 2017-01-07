@@ -14,6 +14,7 @@
 #include "CommandList12.h"
 #include "CommandListManager12.h"
 #include "CommandSignature12.h"
+#include "CommonStates.h"
 #include "DXGIUtility.h"
 #include "Format.h"
 #include "Renderer.h"
@@ -340,36 +341,13 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 void DeviceManager::CreatePresentState()
 {
-	// TODO: put this sampler desc in some factory class for standard samplers
-	D3D12_SAMPLER_DESC samplerLinearClampDesc;
-	ZeroMemory(&samplerLinearClampDesc, sizeof(D3D12_SAMPLER_DESC));
-	samplerLinearClampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerLinearClampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerLinearClampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerLinearClampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerLinearClampDesc.MinLOD = -FLT_MAX;
-	samplerLinearClampDesc.MaxLOD = FLT_MAX;
-	samplerLinearClampDesc.MaxAnisotropy = 16;
-	samplerLinearClampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-
-	D3D12_SAMPLER_DESC samplerPointClampDesc;
-	ZeroMemory(&samplerPointClampDesc, sizeof(D3D12_SAMPLER_DESC));
-	samplerPointClampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-	samplerPointClampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerPointClampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerPointClampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	samplerPointClampDesc.MinLOD = -FLT_MAX;
-	samplerPointClampDesc.MaxLOD = FLT_MAX;
-	samplerPointClampDesc.MaxAnisotropy = 16;
-	samplerPointClampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-
 	// Configure the root signature for a single input SRV and sampler
 	m_presentRS.Reset(3, 2);
 	m_presentRS[0].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 2, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_presentRS[1].InitAsConstants(0, 6, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_presentRS[2].InitAsBufferSRV(2, D3D12_SHADER_VISIBILITY_PIXEL);
-	m_presentRS.InitStaticSampler(0, samplerLinearClampDesc, D3D12_SHADER_VISIBILITY_PIXEL);
-	m_presentRS.InitStaticSampler(1, samplerPointClampDesc, D3D12_SHADER_VISIBILITY_PIXEL);
+	m_presentRS.InitStaticSampler(0, CommonStates::LinearClamp(), D3D12_SHADER_VISIBILITY_PIXEL);
+	m_presentRS.InitStaticSampler(1, CommonStates::PointClamp(), D3D12_SHADER_VISIBILITY_PIXEL);
 	m_presentRS.Finalize();
 
 	// Default blend state - no blend

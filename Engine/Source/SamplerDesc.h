@@ -19,7 +19,7 @@ struct SamplerDesc
 	SamplerDesc()
 	{
 		filter = TextureFilter::Anisotropic;
-		addressU = addressV = addressW = TextureAddress::Clamp;
+		addressU = addressV = addressW = TextureAddress::Wrap;
 		minLOD = 0.0f;
 		maxLOD = Float32Max;
 		mipLODBias = 0.0f;
